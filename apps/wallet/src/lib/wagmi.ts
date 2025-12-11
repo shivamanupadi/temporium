@@ -1,12 +1,12 @@
-import { createConfig, http } from 'wagmi'
-import { webAuthn, KeyManager } from 'tempo.ts/wagmi'
-import { tempoChain } from './tempo-client'
+import { createConfig, http } from 'wagmi';
+import { webAuthn, KeyManager } from 'tempo.ts/wagmi';
+import { tempoChain } from './tempo-client';
 
 /**
  * Key manager for storing passkey credentials
  * Uses localStorage for persistence
  */
-const keyManager = KeyManager.localStorage()
+const keyManager = KeyManager.localStorage();
 
 /**
  * Tempo passkey connector configuration
@@ -15,7 +15,7 @@ const keyManager = KeyManager.localStorage()
 export const tempoPasskeyConnector = webAuthn({
   keyManager,
   rpId: typeof window !== 'undefined' ? window.location.hostname : 'localhost',
-})
+});
 
 /**
  * Wagmi configuration for Tempo
@@ -26,4 +26,4 @@ export const wagmiConfig = createConfig({
   transports: {
     [tempoChain.id]: http(tempoChain.rpcUrls.default.http[0]),
   },
-})
+});

@@ -1,19 +1,19 @@
-import type { ReactElement } from 'react'
-import { useNavigate } from '@tanstack/react-router'
-import { CircleDollarSign, ChevronRight } from 'lucide-react'
-import { formatAmount, formatAddress } from '@/lib/utils'
-import type { StablecoinWithMetadata } from '@/hooks/useStablecoins'
+import type { ReactElement } from 'react';
+import { useNavigate } from '@tanstack/react-router';
+import { CircleDollarSign, ChevronRight } from 'lucide-react';
+import { formatAmount, formatAddress } from '@/lib/utils';
+import type { StablecoinWithMetadata } from '@/hooks/useStablecoins';
 
 interface StablecoinCardProps {
-  coin: StablecoinWithMetadata
+  coin: StablecoinWithMetadata;
 }
 
 export function StablecoinCard({ coin }: StablecoinCardProps): ReactElement {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const handleClick = (): void => {
-    navigate({ to: '/portal/stablecoins/$address', params: { address: coin.address } })
-  }
+    navigate({ to: '/portal/stablecoins/$address', params: { address: coin.address } });
+  };
 
   return (
     <button
@@ -56,5 +56,5 @@ export function StablecoinCard({ coin }: StablecoinCardProps): ReactElement {
         </div>
       </div>
     </button>
-  )
+  );
 }

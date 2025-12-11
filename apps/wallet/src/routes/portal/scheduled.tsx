@@ -1,29 +1,24 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState, useEffect, type ReactElement } from 'react'
-import { ArrowLeft, Clock, Check, X, ExternalLink, RefreshCw, Calendar } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { useScheduledTransactions } from '@/hooks/useScheduledTransactions'
-import { formatAddress, formatAmount, formatTimeAgo, cn } from '@/lib/utils'
-import { TIMING } from '@/lib/constants'
-import { getExplorerTxUrl } from '@/lib/tempo-client'
-import type { ScheduledTransaction } from '@/lib/scheduled-storage'
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useState, useEffect, type ReactElement } from 'react';
+import { ArrowLeft, Clock, Check, X, ExternalLink, RefreshCw, Calendar } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useScheduledTransactions } from '@/hooks/useScheduledTransactions';
+import { formatAddress, formatAmount, formatTimeAgo, cn } from '@/lib/utils';
+import { TIMING } from '@/lib/constants';
+import { getExplorerTxUrl } from '@/lib/tempo-client';
+import type { ScheduledTransaction } from '@/lib/scheduled-storage';
 
 export const Route = createFileRoute('/portal/scheduled')({
   component: ScheduledPage,
-})
+});
 
 function ScheduledPage(): ReactElement {
-  const navigate = useNavigate()
-  const {
-    pendingTransactions,
-    completedTransactions,
-    isLoading,
-    isChecking,
-    refresh,
-  } = useScheduledTransactions()
+  const navigate = useNavigate();
+  const { pendingTransactions, completedTransactions, isLoading, isChecking, refresh } =
+    useScheduledTransactions();
 
-  const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending')
+  const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
 
   return (
     <div className="max-w-md mx-auto">
@@ -50,7 +45,7 @@ function ScheduledPage(): ReactElement {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'pending' | 'completed')}>
+      <Tabs value={activeTab} onValueChange={v => setActiveTab(v as 'pending' | 'completed')}>
         <TabsList className="w-full mb-4">
           <TabsTrigger value="pending" className="flex-1">
             Pending
@@ -77,7 +72,7 @@ function ScheduledPage(): ReactElement {
             <EmptyState type="pending" />
           ) : (
             <div className="space-y-3">
-              {pendingTransactions.map((tx) => (
+              {pendingTransactions.map(tx => (
                 <TransactionCard key={tx.id} transaction={tx} />
               ))}
             </div>
@@ -91,7 +86,7 @@ function ScheduledPage(): ReactElement {
             <EmptyState type="completed" />
           ) : (
             <div className="space-y-3">
-              {completedTransactions.map((tx) => (
+              {completedTransactions.map(tx => (
                 <TransactionCard key={tx.id} transaction={tx} />
               ))}
             </div>
@@ -99,15 +94,15 @@ function ScheduledPage(): ReactElement {
         </TabsContent>
       </Tabs>
     </div>
-  )
+  );
 }
 
 function TransactionCard({ transaction }: { transaction: ScheduledTransaction }): ReactElement {
-  const now = Math.floor(Date.now() / 1000)
-  const isPending = transaction.status === 'pending'
-  const isPastSchedule = transaction.scheduledFor <= now
-  const isExecuted = transaction.status === 'executed'
-  const isFailed = transaction.status === 'failed'
+  const now = Math.floor(Date.now() / 1000);
+  const isPending = transaction.status === 'pending';
+  const isPastSchedule = transaction.scheduledFor <= now;
+  const isExecuted = transaction.status === 'executed';
+  const isFailed = transaction.status === 'failed';
 
   return (
     <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_1px_2px_-1px_rgba(0,0,0,0.03)] p-4">
@@ -129,9 +124,7 @@ function TransactionCard({ transaction }: { transaction: ScheduledTransaction })
 
       {/* Time Info */}
       <div className="flex items-center gap-2 mb-3">
-        {isPending && !isPastSchedule && (
-          <CountdownTimer scheduledFor={transaction.scheduledFor} />
-        )}
+        {isPending && !isPastSchedule && <CountdownTimer scheduledFor={transaction.scheduledFor} />}
         {isPending && isPastSchedule && (
           <div className="flex items-center gap-1.5 text-[12px] text-muted-foreground">
             <Clock className="h-3.5 w-3.5 animate-pulse" />
@@ -154,9 +147,7 @@ function TransactionCard({ transaction }: { transaction: ScheduledTransaction })
 
       {/* Memo */}
       {transaction.memo && (
-        <p className="text-[12px] text-muted-foreground mb-3 truncate">
-          Memo: {transaction.memo}
-        </p>
+        <p className="text-[12px] text-muted-foreground mb-3 truncate">Memo: {transaction.memo}</p>
       )}
 
       {/* Actions */}
@@ -175,16 +166,22 @@ function TransactionCard({ transaction }: { transaction: ScheduledTransaction })
         </span>
       </div>
     </div>
-  )
+  );
 }
 
-function StatusBadge({ status, isPastSchedule }: { status: string; isPastSchedule: boolean }): ReactElement | null {
+function StatusBadge({
+  status,
+  isPastSchedule,
+}: {
+  status: string;
+  isPastSchedule: boolean;
+}): ReactElement | null {
   if (status === 'pending' && isPastSchedule) {
     return (
       <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium">
         Processing
       </span>
-    )
+    );
   }
 
   if (status === 'pending') {
@@ -193,7 +190,7 @@ function StatusBadge({ status, isPastSchedule }: { status: string; isPastSchedul
         <Clock className="h-3 w-3" />
         Scheduled
       </span>
-    )
+    );
   }
 
   if (status === 'executed') {
@@ -202,7 +199,7 @@ function StatusBadge({ status, isPastSchedule }: { status: string; isPastSchedul
         <Check className="h-3 w-3" />
         Executed
       </span>
-    )
+    );
   }
 
   if (status === 'failed') {
@@ -211,53 +208,56 @@ function StatusBadge({ status, isPastSchedule }: { status: string; isPastSchedul
         <X className="h-3 w-3" />
         Failed
       </span>
-    )
+    );
   }
 
-  return null
+  return null;
 }
 
 function CountdownTimer({ scheduledFor }: { scheduledFor: number }): ReactElement {
-  const [countdown, setCountdown] = useState('')
+  const [countdown, setCountdown] = useState('');
 
   useEffect(() => {
     const updateCountdown = (): void => {
-      const now = Math.floor(Date.now() / 1000)
-      const remaining = scheduledFor - now
+      const now = Math.floor(Date.now() / 1000);
+      const remaining = scheduledFor - now;
 
       if (remaining <= 0) {
-        setCountdown('Now')
-        return
+        setCountdown('Now');
+        return;
       }
 
-      const minutes = Math.floor(remaining / 60)
-      const seconds = remaining % 60
+      const minutes = Math.floor(remaining / 60);
+      const seconds = remaining % 60;
 
       if (minutes > 0) {
-        setCountdown(`${minutes}m ${seconds}s`)
+        setCountdown(`${minutes}m ${seconds}s`);
       } else {
-        setCountdown(`${seconds}s`)
+        setCountdown(`${seconds}s`);
       }
-    }
+    };
 
-    updateCountdown()
-    const interval = setInterval(updateCountdown, TIMING.COUNTDOWN_INTERVAL_MS)
-    return () => clearInterval(interval)
-  }, [scheduledFor])
+    updateCountdown();
+    const interval = setInterval(updateCountdown, TIMING.COUNTDOWN_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [scheduledFor]);
 
   return (
     <div className="flex items-center gap-1.5 text-[12px] text-primary font-medium">
       <Clock className="h-3.5 w-3.5" />
       <span>Executes in {countdown}</span>
     </div>
-  )
+  );
 }
 
 function LoadingState(): ReactElement {
   return (
     <div className="space-y-3">
-      {[1, 2].map((i) => (
-        <div key={i} className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_1px_2px_-1px_rgba(0,0,0,0.03)] p-4 animate-pulse">
+      {[1, 2].map(i => (
+        <div
+          key={i}
+          className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_1px_2px_-1px_rgba(0,0,0,0.03)] p-4 animate-pulse"
+        >
           <div className="flex items-start justify-between mb-3">
             <div>
               <div className="h-6 w-24 bg-muted rounded mb-2" />
@@ -269,11 +269,11 @@ function LoadingState(): ReactElement {
         </div>
       ))}
     </div>
-  )
+  );
 }
 
 function EmptyState({ type }: { type: 'pending' | 'completed' }): ReactElement {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   return (
     <div className="text-center py-12">
@@ -289,14 +289,10 @@ function EmptyState({ type }: { type: 'pending' | 'completed' }): ReactElement {
           : 'Completed scheduled payments will appear here'}
       </p>
       {type === 'pending' && (
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => navigate({ to: '/portal/send' })}
-        >
+        <Button variant="outline" size="sm" onClick={() => navigate({ to: '/portal/send' })}>
           Schedule a Payment
         </Button>
       )}
     </div>
-  )
+  );
 }

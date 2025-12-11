@@ -1,22 +1,21 @@
-import type { ReactElement } from 'react'
-import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import type { StablecoinWithMetadata } from '@/hooks/useStablecoins'
+import type { ReactElement } from 'react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import type { StablecoinWithMetadata } from '@/hooks/useStablecoins';
 
 interface RemoveConfirmModalProps {
-  coin: StablecoinWithMetadata | null
-  onConfirm: () => void
-  onCancel: () => void
+  coin: StablecoinWithMetadata | null;
+  onConfirm: () => void;
+  onCancel: () => void;
 }
 
-export function RemoveConfirmModal({ coin, onConfirm, onCancel }: RemoveConfirmModalProps): ReactElement {
+export function RemoveConfirmModal({
+  coin,
+  onConfirm,
+  onCancel,
+}: RemoveConfirmModalProps): ReactElement {
   return (
-    <Dialog open={!!coin} onOpenChange={(open) => !open && onCancel()}>
+    <Dialog open={!!coin} onOpenChange={open => !open && onCancel()}>
       <DialogContent className="sm:max-w-md">
         <DialogTitle className="text-[15px] font-semibold text-foreground">
           Remove Stablecoin
@@ -26,7 +25,8 @@ export function RemoveConfirmModal({ coin, onConfirm, onCancel }: RemoveConfirmM
         </DialogDescription>
         <div className="py-4">
           <p className="text-[13px] text-muted-foreground">
-            Remove <span className="font-medium text-foreground">{coin?.symbol}</span> from your list?
+            Remove <span className="font-medium text-foreground">{coin?.symbol}</span> from your
+            list?
           </p>
           <p className="text-[12px] text-muted-foreground mt-2">
             This only removes it from your local list, not from the blockchain.
@@ -42,5 +42,5 @@ export function RemoveConfirmModal({ coin, onConfirm, onCancel }: RemoveConfirmM
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

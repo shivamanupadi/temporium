@@ -1,26 +1,39 @@
-import type { ReactElement, ReactNode } from 'react'
-import { Pause, Play, Plus, Flame, Gauge, UserPlus, UserMinus, Ban, Trash2, Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import type { ReactElement, ReactNode } from 'react';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { formatAddress } from '@/lib/utils'
-import { getExplorerAddressUrl } from '@/lib/tempo-client'
-import type { ManageModalProps } from './types'
+  Pause,
+  Play,
+  Plus,
+  Flame,
+  Gauge,
+  UserPlus,
+  UserMinus,
+  Ban,
+  Trash2,
+  Loader2,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { formatAddress } from '@/lib/utils';
+import { getExplorerAddressUrl } from '@/lib/tempo-client';
+import type { ManageModalProps } from './types';
 
 interface ManageActionButtonProps {
-  icon: ReactNode
-  title: string
-  description: string
-  onClick: () => void
-  variant?: 'default' | 'danger'
-  disabled?: boolean
+  icon: ReactNode;
+  title: string;
+  description: string;
+  onClick: () => void;
+  variant?: 'default' | 'danger';
+  disabled?: boolean;
 }
 
-function ManageActionButton({ icon, title, description, onClick, variant = 'default', disabled }: ManageActionButtonProps): ReactElement {
+function ManageActionButton({
+  icon,
+  title,
+  description,
+  onClick,
+  variant = 'default',
+  disabled,
+}: ManageActionButtonProps): ReactElement {
   return (
     <button
       onClick={onClick}
@@ -31,13 +44,15 @@ function ManageActionButton({ icon, title, description, onClick, variant = 'defa
     >
       {icon}
       <div>
-        <p className={`text-[13px] font-medium ${variant === 'danger' ? 'text-red-600' : 'text-foreground'}`}>
+        <p
+          className={`text-[13px] font-medium ${variant === 'danger' ? 'text-red-600' : 'text-foreground'}`}
+        >
           {title}
         </p>
         <p className="text-[11px] text-muted-foreground">{description}</p>
       </div>
     </button>
-  )
+  );
 }
 
 export function ManageStablecoinModal({
@@ -55,9 +70,9 @@ export function ManageStablecoinModal({
   onRemove,
   onClose,
 }: ManageModalProps): ReactElement | null {
-  if (!selectedCoin) return null
+  if (!selectedCoin) return null;
 
-  const isPaused = selectedCoin.metadata?.paused
+  const isPaused = selectedCoin.metadata?.paused;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -83,9 +98,17 @@ export function ManageStablecoinModal({
           ) : (
             <div className="space-y-1">
               <ManageActionButton
-                icon={isPaused ? <Play className="h-4 w-4 text-success" /> : <Pause className="h-4 w-4 text-amber-500" />}
+                icon={
+                  isPaused ? (
+                    <Play className="h-4 w-4 text-success" />
+                  ) : (
+                    <Pause className="h-4 w-4 text-amber-500" />
+                  )
+                }
                 title={isPaused ? 'Unpause Token' : 'Pause Token'}
-                description={isPaused ? 'Allow transfers to resume' : 'Temporarily stop all transfers'}
+                description={
+                  isPaused ? 'Allow transfers to resume' : 'Temporarily stop all transfers'
+                }
                 onClick={isPaused ? onUnpause : onPause}
               />
 
@@ -147,5 +170,5 @@ export function ManageStablecoinModal({
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

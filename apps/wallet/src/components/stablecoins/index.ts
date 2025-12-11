@@ -1,11 +1,14 @@
-export { StablecoinCard } from './StablecoinCard'
-export { StablecoinEmptyState } from './StablecoinEmptyState'
-export { CreateStablecoinModal } from './CreateStablecoinModal'
-export { ManageStablecoinModal } from './ManageStablecoinModal'
-export { MintTokensModal } from './MintTokensModal'
-export { BurnTokensModal } from './BurnTokensModal'
-export { SupplyCapModal } from './SupplyCapModal'
-export { RoleModal } from './RoleModal'
-export { BurnBlockedModal } from './BurnBlockedModal'
-export { RemoveConfirmModal } from './RemoveConfirmModal'
-export * from './types'
+export { StablecoinCard } from './StablecoinCard';
+export { StablecoinEmptyState } from './StablecoinEmptyState';
+export { CreateStablecoinModal } from './CreateStablecoinModal';
+export { ManageStablecoinModal } from './ManageStablecoinModal';
+export { MintTokensModal } from './MintTokensModal';
+export { BurnTokensModal } from './BurnTokensModal';
+export { SendTokensModal } from './SendTokensModal';
+export { SupplyCapModal } from './SupplyCapModal';
+export { RoleModal } from './RoleModal';
+export { BurnBlockedModal } from './BurnBlockedModal';
+export { PauseTokenModal } from './PauseTokenModal';
+export { RemoveConfirmModal } from './RemoveConfirmModal';
+export { YourAccessCard } from './YourAccessCard';
+export * from './types';

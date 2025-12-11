@@ -1,128 +1,123 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState, type ReactElement } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Plus, Search, User, Pencil, Trash2 } from 'lucide-react'
-import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { useContacts, type Contact } from '@/hooks/useContacts'
-import { formatAddress, isValidAddress } from '@/lib/utils'
-import { getExplorerAddressUrl } from '@/lib/tempo-client'
-import type { Address } from 'viem'
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useState, type ReactElement } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ArrowLeft, Plus, Search, User, Pencil, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { useContacts, type Contact } from '@/hooks/useContacts';
+import { formatAddress, isValidAddress } from '@/lib/utils';
+import { getExplorerAddressUrl } from '@/lib/tempo-client';
+import type { Address } from 'viem';
 
 export const Route = createFileRoute('/portal/contacts')({
   component: ContactsPage,
-})
+});
 
-type ModalState = 'add' | 'edit' | 'delete' | null
+type ModalState = 'add' | 'edit' | 'delete' | null;
 
 function ContactsPage(): ReactElement {
-  const navigate = useNavigate()
-  const { contacts, isLoading, addContact, editContact, removeContact } = useContacts()
+  const navigate = useNavigate();
+  const { contacts, isLoading, addContact, editContact, removeContact } = useContacts();
 
-  const [searchQuery, setSearchQuery] = useState('')
-  const [modalState, setModalState] = useState<ModalState>(null)
-  const [selectedContact, setSelectedContact] = useState<Contact | null>(null)
-  const [name, setName] = useState('')
-  const [address, setAddress] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('');
+  const [modalState, setModalState] = useState<ModalState>(null);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [name, setName] = useState('');
+  const [address, setAddress] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const filteredContacts = contacts.filter(
-    (contact) =>
+    contact =>
       contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       contact.address.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  );
 
   const resetForm = (): void => {
-    setName('')
-    setAddress('')
-    setSelectedContact(null)
-    setModalState(null)
-  }
+    setName('');
+    setAddress('');
+    setSelectedContact(null);
+    setModalState(null);
+  };
 
   const handleOpenAdd = (): void => {
-    resetForm()
-    setModalState('add')
-  }
+    resetForm();
+    setModalState('add');
+  };
 
   const handleOpenEdit = (contact: Contact): void => {
-    setSelectedContact(contact)
-    setName(contact.name)
-    setAddress(contact.address)
-    setModalState('edit')
-  }
+    setSelectedContact(contact);
+    setName(contact.name);
+    setAddress(contact.address);
+    setModalState('edit');
+  };
 
   const handleOpenDelete = (contact: Contact): void => {
-    setSelectedContact(contact)
-    setModalState('delete')
-  }
+    setSelectedContact(contact);
+    setModalState('delete');
+  };
 
   const handleAdd = async (): Promise<void> => {
     if (!name.trim() || !address.trim()) {
-      toast.error('Please fill in all fields')
-      return
+      toast.error('Please fill in all fields');
+      return;
     }
     if (!isValidAddress(address)) {
-      toast.error('Invalid address')
-      return
+      toast.error('Invalid address');
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
-      await addContact(name.trim(), address as Address)
-      toast.success('Contact added')
-      resetForm()
+      await addContact(name.trim(), address as Address);
+      toast.success('Contact added');
+      resetForm();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to add contact'
-      toast.error(message)
+      const message = error instanceof Error ? error.message : 'Failed to add contact';
+      toast.error(message);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleEdit = async (): Promise<void> => {
     if (!selectedContact || !name.trim() || !address.trim()) {
-      toast.error('Please fill in all fields')
-      return
+      toast.error('Please fill in all fields');
+      return;
     }
     if (!isValidAddress(address)) {
-      toast.error('Invalid address')
-      return
+      toast.error('Invalid address');
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
-      await editContact(selectedContact.id, { name: name.trim(), address: address as Address })
-      toast.success('Contact updated')
-      resetForm()
+      await editContact(selectedContact.id, { name: name.trim(), address: address as Address });
+      toast.success('Contact updated');
+      resetForm();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to update contact'
-      toast.error(message)
+      const message = error instanceof Error ? error.message : 'Failed to update contact';
+      toast.error(message);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleDelete = async (): Promise<void> => {
-    if (!selectedContact) return
+    if (!selectedContact) return;
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
     try {
-      await removeContact(selectedContact.id)
-      toast.success('Contact deleted')
-      resetForm()
+      await removeContact(selectedContact.id);
+      toast.success('Contact deleted');
+      resetForm();
     } catch (error) {
-      toast.error('Failed to delete contact')
+      toast.error('Failed to delete contact');
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <div className="max-w-md mx-auto">
@@ -149,7 +144,7 @@ function ContactsPage(): ReactElement {
         <Input
           placeholder="Search contacts..."
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={e => setSearchQuery(e.target.value)}
           className="pl-9 h-10"
         />
       </div>
@@ -198,7 +193,9 @@ function ContactsPage(): ReactElement {
                     </span>
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[13px] font-medium text-foreground truncate">{contact.name}</p>
+                    <p className="text-[13px] font-medium text-foreground truncate">
+                      {contact.name}
+                    </p>
                     <button
                       onClick={() => window.open(getExplorerAddressUrl(contact.address), '_blank')}
                       className="text-[11px] text-muted-foreground hover:text-primary font-mono transition-colors"
@@ -246,7 +243,7 @@ function ContactsPage(): ReactElement {
                 <Input
                   placeholder="e.g., Alice, Bob..."
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={e => setName(e.target.value)}
                   className="h-10"
                 />
               </div>
@@ -257,7 +254,7 @@ function ContactsPage(): ReactElement {
                 <Input
                   placeholder="0x..."
                   value={address}
-                  onChange={(e) => setAddress(e.target.value)}
+                  onChange={e => setAddress(e.target.value)}
                   className="h-10 font-mono text-[13px]"
                 />
               </div>
@@ -292,7 +289,8 @@ function ContactsPage(): ReactElement {
 
             <p className="text-[15px] font-semibold text-foreground mb-1">Delete Contact?</p>
             <p className="text-[13px] text-muted-foreground mb-6">
-              Are you sure you want to delete <strong>{selectedContact?.name}</strong>? This action cannot be undone.
+              Are you sure you want to delete <strong>{selectedContact?.name}</strong>? This action
+              cannot be undone.
             </p>
 
             <div className="flex gap-2">
@@ -312,5 +310,5 @@ function ContactsPage(): ReactElement {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

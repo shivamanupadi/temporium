@@ -16,7 +16,7 @@
     "clean": "turbo clean && rimraf node_modules .turbo dist yarn.lock",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "reset": "yarn clean && yarn install",
-    "check": "yarn lint && yarn build"
+    "check:push": "yarn lint && yarn build"
   },
   "devDependencies": {
     "prettier": "^3.2.5",

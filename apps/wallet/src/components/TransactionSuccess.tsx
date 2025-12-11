@@ -1,14 +1,14 @@
-import type { ReactElement } from 'react'
-import { motion } from 'framer-motion'
-import { Check, ExternalLink } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { getExplorerTxUrl } from '@/lib/tempo-client'
+import type { ReactElement } from 'react';
+import { motion } from 'framer-motion';
+import { Check, ExternalLink } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { getExplorerTxUrl } from '@/lib/tempo-client';
 
 interface TransactionSuccessProps {
-  message: string
-  txHash: string
-  onDone: () => void
-  doneLabel?: string
+  message: string;
+  txHash: string;
+  onDone: () => void;
+  doneLabel?: string;
 }
 
 export function TransactionSuccess({
@@ -41,5 +41,5 @@ export function TransactionSuccess({
         </Button>
       </div>
     </div>
-  )
+  );
 }

@@ -28,6 +28,7 @@
     "@tanstack/react-router": "^1.140.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dexie": "^4.2.1",
     "framer-motion": "^12.18.0",
     "lucide-react": "^0.556.0",
     "qrcode.react": "^4.2.0",
@@ -42,8 +43,8 @@
     "zustand": "^5.0.5"
   },
   "devDependencies": {
-    "@tollr/eslint-config": "*",
     "@tanstack/router-vite-plugin": "^1.140.1",
+    "@tollr/eslint-config": "*",
     "@types/node": "^24.10.2",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",

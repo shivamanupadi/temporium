@@ -1,77 +1,66 @@
 import { useState, useEffect, useCallback, type ReactElement } from 'react';
 import { motion } from 'framer-motion';
-import { Loader2, Check, ExternalLink } from 'lucide-react';
+import { Loader2, Check, ExternalLink, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { DecimalInput } from '@/components/DecimalInput';
-import { AddressInput } from '@/components/AddressInput';
 import { FeeTokenSelector } from '@/components/FeeTokenSelector';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { getExplorerTxUrl } from '@/lib/tempo-client';
-import { parseAmount } from '@/lib/utils';
 import { useStablecoins, type StablecoinWithMetadata } from '@/hooks/useStablecoins';
 import type { Token } from '@/lib/tokenlist';
 
-interface BurnBlockedModalProps {
+interface PauseTokenModalProps {
   isOpen: boolean;
+  mode: 'pause' | 'unpause';
   selectedCoin: StablecoinWithMetadata | null;
   onSuccess: () => void;
   onClose: () => void;
 }
 
-export function BurnBlockedModal({
+export function PauseTokenModal({
   isOpen,
+  mode,
   selectedCoin,
   onSuccess,
   onClose,
-}: BurnBlockedModalProps): ReactElement {
-  const { burnBlocked } = useStablecoins();
+}: PauseTokenModalProps): ReactElement {
+  const { pauseToken, unpauseToken } = useStablecoins();
 
-  const [burnFrom, setBurnFrom] = useState('');
-  const [amount, setAmount] = useState('');
   const [feeToken, setFeeToken] = useState<Token | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
 
+  const isPause = mode === 'pause';
+  const title = isPause ? 'Pause Token' : 'Unpause Token';
+  const actionLabel = isPause ? 'Pause' : 'Unpause';
+
   useEffect(() => {
     if (isOpen) {
-      setBurnFrom('');
-      setAmount('');
       setTxHash(null);
       setIsSubmitting(false);
+      setFeeToken(null);
     }
   }, [isOpen]);
 
   const handleSubmit = useCallback(async (): Promise<void> => {
-    if (!selectedCoin || !burnFrom || !amount) {
-      toast.error('Please fill in all fields');
-      return;
-    }
-
-    const parsedAmount = parseAmount(amount, selectedCoin.metadata?.decimals ?? 6);
-    if (parsedAmount <= 0n) {
-      toast.error('Invalid amount');
-      return;
-    }
+    if (!selectedCoin) return;
 
     setIsSubmitting(true);
     try {
-      const result = await burnBlocked({
-        token: selectedCoin.address,
-        from: burnFrom as `0x${string}`,
-        amount: parsedAmount,
-        feeToken: feeToken?.address,
-      });
+      const result = isPause
+        ? await pauseToken({ token: selectedCoin.address, feeToken: feeToken?.address })
+        : await unpauseToken({ token: selectedCoin.address, feeToken: feeToken?.address });
+
       setTxHash(result.receipt.transactionHash);
-      toast.success('Tokens burned from blocked address!');
+      toast.success(isPause ? 'Token paused!' : 'Token unpaused!');
       onSuccess();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to burn blocked tokens';
+      const message = error instanceof Error ? error.message : `Failed to ${mode} token`;
       toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
-  }, [selectedCoin, burnFrom, amount, feeToken, burnBlocked, onSuccess]);
+  }, [selectedCoin, isPause, feeToken, pauseToken, unpauseToken, mode, onSuccess]);
 
   const handleClose = useCallback((): void => {
     if (!isSubmitting) {
@@ -84,11 +73,11 @@ export function BurnBlockedModal({
       <DialogContent className="sm:max-w-sm p-0 overflow-hidden">
         <div className="p-5">
           <DialogTitle className="text-[15px] font-semibold mb-4">
-            {txHash ? 'Tokens Burned!' : `Burn Blocked - ${selectedCoin?.symbol}`}
+            {txHash
+              ? `Token ${isPause ? 'Paused' : 'Unpaused'}!`
+              : `${title} - ${selectedCoin?.symbol}`}
           </DialogTitle>
-          <DialogDescription className="sr-only">
-            Burn tokens from blocked address
-          </DialogDescription>
+          <DialogDescription className="sr-only">{title}</DialogDescription>
 
           {txHash ? (
             <div className="text-center">
@@ -100,7 +89,9 @@ export function BurnBlockedModal({
                 <Check className="h-6 w-6 text-success" />
               </motion.div>
               <p className="text-[13px] text-muted-foreground mb-4">
-                Successfully burned {amount} {selectedCoin?.symbol} from blocked address
+                {isPause
+                  ? `${selectedCoin?.symbol} has been paused. All transfers are now blocked.`
+                  : `${selectedCoin?.symbol} has been unpaused. Transfers are now enabled.`}
               </p>
               <div className="flex gap-2">
                 <a
@@ -118,22 +109,46 @@ export function BurnBlockedModal({
             </div>
           ) : (
             <>
-              <div className="space-y-4">
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                  <p className="text-[12px] text-amber-700">
-                    <span className="font-medium">Compliance Action:</span> Burn tokens from another
-                    address that has been blocked. The target address must be on the blocklist.{' '}
-                    <span className="font-medium">Requires Burn Blocked role.</span>
+              {isPause ? (
+                <div className="space-y-4">
+                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex gap-3">
+                    <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-[12px] text-amber-700">
+                      <p className="font-medium mb-1">This will pause ALL token transfers</p>
+                      <p>
+                        When paused, no one can transfer, send, or receive {selectedCoin?.symbol}{' '}
+                        tokens. This affects all holders, not just you.
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-[13px] text-muted-foreground">
+                    Use this for emergencies or compliance requirements. You can unpause later to
+                    restore normal operations.
+                    <br />
+                    <br />
+                    <span className="text-amber-600">Requires Pause role.</span>
                   </p>
                 </div>
-                <AddressInput label="Blocked Address" value={burnFrom} onChange={setBurnFrom} />
-                <div>
-                  <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5 block">
-                    Amount to Burn
-                  </label>
-                  <DecimalInput value={amount} onChange={setAmount} />
+              ) : (
+                <div className="space-y-4">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 flex gap-3">
+                    <Check className="h-5 w-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-[12px] text-green-700">
+                      <p className="font-medium mb-1">This will resume ALL token transfers</p>
+                      <p>
+                        When unpaused, {selectedCoin?.symbol} tokens can be transferred normally
+                        again. All holders will be able to send and receive tokens.
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-[13px] text-muted-foreground">
+                    Make sure any issues that caused the pause have been resolved before unpausing.
+                    <br />
+                    <br />
+                    <span className="text-amber-600">Requires Unpause role.</span>
+                  </p>
                 </div>
-              </div>
+              )}
 
               <FeeTokenSelector
                 value={feeToken}
@@ -151,12 +166,12 @@ export function BurnBlockedModal({
                   Cancel
                 </Button>
                 <Button
-                  variant="destructive"
                   className="flex-1 h-10"
+                  variant={isPause ? 'destructive' : 'default'}
                   onClick={handleSubmit}
-                  disabled={isSubmitting || !burnFrom || !amount}
+                  disabled={isSubmitting}
                 >
-                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Burn'}
+                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : actionLabel}
                 </Button>
               </div>
             </>

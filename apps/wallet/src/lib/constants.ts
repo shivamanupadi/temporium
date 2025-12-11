@@ -1,4 +1,4 @@
-import type { Address } from 'viem'
+import type { Address } from 'viem';
 
 /**
  * Tempo Testnet Configuration
@@ -25,13 +25,13 @@ export const TEMPO_TESTNET = {
   blockExplorers: {
     default: { name: 'Tempo Explorer', url: 'https://explore.tempo.xyz' },
   },
-} as const
+} as const;
 
 /**
  * Default fee token address (AlphaUSD)
  * This is used when the tokenlist hasn't loaded yet
  */
-export const DEFAULT_FEE_TOKEN_ADDRESS = '0x20c0000000000000000000000000000000000001' as Address
+export const DEFAULT_FEE_TOKEN_ADDRESS = '0x20c0000000000000000000000000000000000001' as Address;
 
 /**
  * Scheduling presets (in seconds)
@@ -41,12 +41,12 @@ export const SCHEDULE_PRESETS = [
   { label: '15 min', seconds: 15 * 60 },
   { label: '30 min', seconds: 30 * 60 },
   { label: '1 hour', seconds: 60 * 60 },
-] as const
+] as const;
 
 /**
  * Max scheduling time on testnet (approximately 1 hour)
  */
-export const MAX_SCHEDULE_SECONDS = 3600
+export const MAX_SCHEDULE_SECONDS = 3600;
 
 /**
  * External links
@@ -56,7 +56,7 @@ export const LINKS = {
   explorer: 'https://explore.tempo.xyz',
   docs: 'https://docs.tempo.xyz',
   tokenlist: 'https://tokenlist.tempo.xyz',
-} as const
+} as const;
 
 /**
  * Supported currencies for stablecoin creation
@@ -67,7 +67,7 @@ export const CURRENCIES = [
   { value: 'GBP', label: 'British Pound (GBP)' },
   { value: 'JPY', label: 'Japanese Yen (JPY)' },
   { value: 'CHF', label: 'Swiss Franc (CHF)' },
-] as const
+] as const;
 
 /**
  * Token role options for TIP-20 stablecoins
@@ -78,7 +78,7 @@ export const ROLE_OPTIONS = [
   { value: 'unpause', label: 'Unpause', description: 'Can unpause transfers' },
   { value: 'burnBlocked', label: 'Burn Blocked', description: 'Can burn from blocked addresses' },
   { value: 'defaultAdmin', label: 'Admin', description: 'Full administrative control' },
-] as const
+] as const;
 
 /**
  * Timing constants (in milliseconds)
@@ -98,4 +98,4 @@ export const TIMING = {
   SCHEDULED_TX_CHECK_MS: 30000,
   /** Countdown update interval */
   COUNTDOWN_INTERVAL_MS: 1000,
-} as const
+} as const;

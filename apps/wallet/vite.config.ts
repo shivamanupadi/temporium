@@ -1,8 +1,8 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import { TanStackRouterVite } from '@tanstack/router-vite-plugin'
-import { nodePolyfills } from 'vite-plugin-node-polyfills'
-import path from 'path'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { TanStackRouterVite } from '@tanstack/router-vite-plugin';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import path from 'path';
 
 export default defineConfig({
   plugins: [
@@ -21,4 +21,4 @@ export default defineConfig({
   server: {
     port: 3000,
   },
-})
+});

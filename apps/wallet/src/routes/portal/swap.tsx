@@ -1,125 +1,123 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState, useEffect, useCallback, type ReactElement } from 'react'
-import { motion } from 'framer-motion'
-import { ArrowLeft, ArrowUpDown, Check, ExternalLink, DollarSign, Loader2, AlertCircle } from 'lucide-react'
-import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useState, useEffect, useCallback, type ReactElement } from 'react';
+import { motion } from 'framer-motion';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { useTempo, useTokenBalance } from '@/hooks/useTempo'
-import { useTokenList } from '@/hooks/useTokenList'
-import { formatAmount, parseAmount, cn } from '@/lib/utils'
-import { TIMING } from '@/lib/constants'
-import { getSwapQuote, getExplorerTxUrl } from '@/lib/tempo-client'
-import type { Address } from 'viem'
-import { getTokenColors, type Token } from '@/lib/tokenlist'
+  ArrowLeft,
+  ArrowUpDown,
+  Check,
+  ExternalLink,
+  DollarSign,
+  Loader2,
+  AlertCircle,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { FeeTokenSelector } from '@/components/FeeTokenSelector';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
+import { useTempo, useTokenBalance } from '@/hooks/useTempo';
+import { useTokenList } from '@/hooks/useTokenList';
+import { formatAmount, parseAmount, cn } from '@/lib/utils';
+import { TIMING } from '@/lib/constants';
+import { getSwapQuote, getExplorerTxUrl } from '@/lib/tempo-client';
+import type { Address } from 'viem';
+import { getTokenColors, type Token } from '@/lib/tokenlist';
 
 export const Route = createFileRoute('/portal/swap')({
   component: SwapPage,
-})
+});
 
-type ModalState = 'confirm' | 'pending' | 'success' | null
+type ModalState = 'confirm' | 'pending' | 'success' | null;
 
 function SwapPage(): ReactElement | null {
-  const { address, swapTokens } = useTempo()
-  const navigate = useNavigate()
-  const { tokens } = useTokenList()
+  const { address, swapTokens } = useTempo();
+  const navigate = useNavigate();
+  const { tokens } = useTokenList();
 
-  const [tokenIn, setTokenIn] = useState<Token | null>(null)
-  const [tokenOut, setTokenOut] = useState<Token | null>(null)
-  const [amountIn, setAmountIn] = useState('')
-  const [amountOut, setAmountOut] = useState('')
-  const [feeToken, setFeeToken] = useState<Token | null>(null)
-  const [modalState, setModalState] = useState<ModalState>(null)
-  const [txHash, setTxHash] = useState<string | null>(null)
-  const [isQuoting, setIsQuoting] = useState(false)
-  const [slippage] = useState(0.5) // 0.5% default slippage
+  const [tokenIn, setTokenIn] = useState<Token | null>(null);
+  const [tokenOut, setTokenOut] = useState<Token | null>(null);
+  const [amountIn, setAmountIn] = useState('');
+  const [amountOut, setAmountOut] = useState('');
+  const [feeToken, setFeeToken] = useState<Token | null>(null);
+  const [modalState, setModalState] = useState<ModalState>(null);
+  const [txHash, setTxHash] = useState<string | null>(null);
+  const [isQuoting, setIsQuoting] = useState(false);
+  const [slippage] = useState(0.5); // 0.5% default slippage
 
   // Set default tokens
   useEffect(() => {
     if (tokens.length >= 2 && !tokenIn) {
-      const defaultIn = tokens.find(t => t.symbol === 'AlphaUSD') || tokens[0]
-      const defaultOut = tokens.find(t => t.symbol !== defaultIn.symbol) || tokens[1]
-      setTokenIn(defaultIn)
-      setTokenOut(defaultOut)
-      setFeeToken(defaultIn)
+      const defaultIn = tokens.find(t => t.symbol === 'AlphaUSD') || tokens[0];
+      const defaultOut = tokens.find(t => t.symbol !== defaultIn.symbol) || tokens[1];
+      setTokenIn(defaultIn);
+      setTokenOut(defaultOut);
     }
-  }, [tokens, tokenIn])
+  }, [tokens, tokenIn]);
 
-  const balanceIn = useTokenBalance(tokenIn?.address as Address)
-  const balanceOut = useTokenBalance(tokenOut?.address as Address)
+  const balanceIn = useTokenBalance(tokenIn?.address as Address);
+  const balanceOut = useTokenBalance(tokenOut?.address as Address);
 
   // Fetch quote when amount or tokens change
   useEffect(() => {
     if (!tokenIn || !tokenOut || !amountIn) {
-      setAmountOut('')
-      return
+      setAmountOut('');
+      return;
     }
 
-    const parsedIn = parseAmount(amountIn, tokenIn.decimals)
+    const parsedIn = parseAmount(amountIn, tokenIn.decimals);
     if (parsedIn === 0n) {
-      setAmountOut('')
-      return
+      setAmountOut('');
+      return;
     }
 
-    let cancelled = false
-    setIsQuoting(true)
+    let cancelled = false;
+    setIsQuoting(true);
 
     const fetchQuote = async (): Promise<void> => {
       try {
-        const quote = await getSwapQuote(tokenIn.address, tokenOut.address, parsedIn)
+        const quote = await getSwapQuote(tokenIn.address, tokenOut.address, parsedIn);
         if (!cancelled) {
           // If quote is 0, it means no liquidity
-          setAmountOut(formatAmount(quote.toString(), tokenOut.decimals))
+          setAmountOut(formatAmount(quote.toString(), tokenOut.decimals));
         }
       } catch (err) {
-        console.error('Quote error:', err)
+        console.error('Quote error:', err);
         if (!cancelled) {
-          setAmountOut('0') // Set to '0' to indicate no liquidity
+          setAmountOut('0'); // Set to '0' to indicate no liquidity
         }
       } finally {
         if (!cancelled) {
-          setIsQuoting(false)
+          setIsQuoting(false);
         }
       }
-    }
+    };
 
-    const debounce = setTimeout(fetchQuote, TIMING.DEBOUNCE_MS)
+    const debounce = setTimeout(fetchQuote, TIMING.DEBOUNCE_MS);
     return () => {
-      cancelled = true
-      clearTimeout(debounce)
-    }
-  }, [tokenIn, tokenOut, amountIn])
+      cancelled = true;
+      clearTimeout(debounce);
+    };
+  }, [tokenIn, tokenOut, amountIn]);
 
   const handleSwapTokens = useCallback(() => {
-    const tempToken = tokenIn
-    const tempAmount = amountIn
-    setTokenIn(tokenOut)
-    setTokenOut(tempToken)
-    setAmountIn(amountOut)
-    setAmountOut(tempAmount)
-  }, [tokenIn, tokenOut, amountIn, amountOut])
+    const tempToken = tokenIn;
+    const tempAmount = amountIn;
+    setTokenIn(tokenOut);
+    setTokenOut(tempToken);
+    setAmountIn(amountOut);
+    setAmountOut(tempAmount);
+  }, [tokenIn, tokenOut, amountIn, amountOut]);
 
-  if (!address) return null
+  if (!address) return null;
 
-  const parsedAmountIn = tokenIn ? parseAmount(amountIn, tokenIn.decimals) : 0n
-  const parsedAmountOut = tokenOut ? parseAmount(amountOut, tokenOut.decimals) : 0n
-  const hasBalance = balanceIn.data?.value && balanceIn.data.value >= parsedAmountIn
-  const minAmountOut = parsedAmountOut - (parsedAmountOut * BigInt(Math.floor(slippage * 100))) / 10000n
+  const parsedAmountIn = tokenIn ? parseAmount(amountIn, tokenIn.decimals) : 0n;
+  const parsedAmountOut = tokenOut ? parseAmount(amountOut, tokenOut.decimals) : 0n;
+  const hasBalance = balanceIn.data?.value && balanceIn.data.value >= parsedAmountIn;
+  const minAmountOut =
+    parsedAmountOut - (parsedAmountOut * BigInt(Math.floor(slippage * 100))) / 10000n;
 
   // Check if there's no liquidity (quote returned 0 but we have input)
-  const noLiquidity = amountIn && parsedAmountIn > 0n && !isQuoting && amountOut === '0.00'
+  const noLiquidity = amountIn && parsedAmountIn > 0n && !isQuoting && amountOut === '0.00';
 
   const isValidForm =
     tokenIn &&
@@ -129,11 +127,11 @@ function SwapPage(): ReactElement | null {
     hasBalance &&
     feeToken &&
     tokenIn.address !== tokenOut.address &&
-    !noLiquidity
+    !noLiquidity;
 
   const handleSubmit = async (): Promise<void> => {
-    if (!isValidForm || !tokenIn || !tokenOut || !feeToken) return
-    setModalState('pending')
+    if (!isValidForm || !tokenIn || !tokenOut || !feeToken) return;
+    setModalState('pending');
     try {
       const hash = await swapTokens({
         tokenIn: tokenIn.address,
@@ -141,43 +139,43 @@ function SwapPage(): ReactElement | null {
         amountIn: parsedAmountIn,
         minAmountOut,
         feeToken: feeToken.address,
-      })
-      setTxHash(hash)
-      setModalState('success')
+      });
+      setTxHash(hash);
+      setModalState('success');
       toast.success('Swap completed!', {
         description: `Swapped ${amountIn} ${tokenIn.symbol} for ${amountOut} ${tokenOut.symbol}`,
-      })
+      });
     } catch (err) {
-      console.error(err)
+      console.error(err);
       // Check for InsufficientLiquidity error (0x13be252b)
-      const errorMessage = err instanceof Error ? err.message : String(err)
+      const errorMessage = err instanceof Error ? err.message : String(err);
       if (errorMessage.includes('0x13be252b') || errorMessage.includes('InsufficientLiquidity')) {
         toast.error('No liquidity available', {
           description: 'This trading pair has no liquidity on testnet',
-        })
+        });
       } else {
         toast.error('Swap failed', {
           description: 'Please try again or contact support',
-        })
+        });
       }
-      setModalState(null)
+      setModalState(null);
     }
-  }
+  };
 
   const resetForm = (): void => {
-    setAmountIn('')
-    setAmountOut('')
-    setTxHash(null)
-    setModalState(null)
-  }
+    setAmountIn('');
+    setAmountOut('');
+    setTxHash(null);
+    setModalState(null);
+  };
 
   const handleCloseModal = (): void => {
     if (modalState === 'success') {
-      resetForm()
+      resetForm();
     } else if (modalState !== 'pending') {
-      setModalState(null)
+      setModalState(null);
     }
-  }
+  };
 
   return (
     <div className="max-w-md mx-auto">
@@ -197,16 +195,21 @@ function SwapPage(): ReactElement | null {
         {/* Token In Section */}
         <div className="bg-muted/50 rounded-xl p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">You Pay</span>
+            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+              You Pay
+            </span>
             <button
               onClick={() => {
                 if (balanceIn.data?.value && tokenIn) {
-                  setAmountIn(formatAmount(balanceIn.data.value.toString(), tokenIn.decimals))
+                  setAmountIn(formatAmount(balanceIn.data.value.toString(), tokenIn.decimals));
                 }
               }}
               className="text-[11px] text-primary hover:text-primary/80 transition-colors font-medium"
             >
-              Balance: {balanceIn.isLoading ? '...' : formatAmount(balanceIn.data?.value.toString() || '0', tokenIn?.decimals)}
+              Balance:{' '}
+              {balanceIn.isLoading
+                ? '...'
+                : formatAmount(balanceIn.data?.value.toString() || '0', tokenIn?.decimals)}
             </button>
           </div>
 
@@ -216,9 +219,9 @@ function SwapPage(): ReactElement | null {
               inputMode="decimal"
               placeholder="0"
               value={amountIn}
-              onChange={(e) => {
-                const val = e.target.value.replace(/[^0-9.]/g, '')
-                if (val.split('.').length <= 2) setAmountIn(val)
+              onChange={e => {
+                const val = e.target.value.replace(/[^0-9.]/g, '');
+                if (val.split('.').length <= 2) setAmountIn(val);
               }}
               className="flex-1 text-2xl font-medium text-foreground bg-transparent border-none outline-none placeholder:text-muted-foreground/40"
             />
@@ -226,13 +229,13 @@ function SwapPage(): ReactElement | null {
             {/* Token Selector */}
             <Select
               value={tokenIn?.address}
-              onValueChange={(value) => {
-                const token = tokens.find(t => t.address === value)
+              onValueChange={value => {
+                const token = tokens.find(t => t.address === value);
                 if (token) {
                   if (token.address === tokenOut?.address) {
-                    setTokenOut(tokenIn)
+                    setTokenOut(tokenIn);
                   }
-                  setTokenIn(token)
+                  setTokenIn(token);
                 }
               }}
             >
@@ -243,21 +246,27 @@ function SwapPage(): ReactElement | null {
                       className="w-5 h-5 rounded-full flex items-center justify-center"
                       style={{ backgroundColor: getTokenColors(tokenIn.symbol).bg }}
                     >
-                      <DollarSign className="h-3 w-3" style={{ color: getTokenColors(tokenIn.symbol).text }} />
+                      <DollarSign
+                        className="h-3 w-3"
+                        style={{ color: getTokenColors(tokenIn.symbol).text }}
+                      />
                     </div>
                     <span className="text-[13px] font-medium">{tokenIn.symbol}</span>
                   </div>
                 )}
               </SelectTrigger>
               <SelectContent>
-                {tokens.map((token) => (
+                {tokens.map(token => (
                   <SelectItem key={token.address} value={token.address}>
                     <div className="flex items-center gap-2">
                       <div
                         className="w-5 h-5 rounded-full flex items-center justify-center"
                         style={{ backgroundColor: getTokenColors(token.symbol).bg }}
                       >
-                        <DollarSign className="h-3 w-3" style={{ color: getTokenColors(token.symbol).text }} />
+                        <DollarSign
+                          className="h-3 w-3"
+                          style={{ color: getTokenColors(token.symbol).text }}
+                        />
                       </div>
                       {token.symbol}
                     </div>
@@ -288,9 +297,14 @@ function SwapPage(): ReactElement | null {
         {/* Token Out Section */}
         <div className="bg-muted/50 rounded-xl p-4">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">You Receive</span>
+            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+              You Receive
+            </span>
             <span className="text-[11px] text-muted-foreground">
-              Balance: {balanceOut.isLoading ? '...' : formatAmount(balanceOut.data?.value.toString() || '0', tokenOut?.decimals)}
+              Balance:{' '}
+              {balanceOut.isLoading
+                ? '...'
+                : formatAmount(balanceOut.data?.value.toString() || '0', tokenOut?.decimals)}
             </span>
           </div>
 
@@ -299,10 +313,12 @@ function SwapPage(): ReactElement | null {
               {isQuoting ? (
                 <Loader2 className="h-5 w-5 text-muted-foreground animate-spin" />
               ) : (
-                <span className={cn(
-                  "text-2xl font-medium",
-                  amountOut ? "text-foreground" : "text-muted-foreground/40"
-                )}>
+                <span
+                  className={cn(
+                    'text-2xl font-medium',
+                    amountOut ? 'text-foreground' : 'text-muted-foreground/40'
+                  )}
+                >
                   {amountOut || '0'}
                 </span>
               )}
@@ -311,13 +327,13 @@ function SwapPage(): ReactElement | null {
             {/* Token Selector */}
             <Select
               value={tokenOut?.address}
-              onValueChange={(value) => {
-                const token = tokens.find(t => t.address === value)
+              onValueChange={value => {
+                const token = tokens.find(t => t.address === value);
                 if (token) {
                   if (token.address === tokenIn?.address) {
-                    setTokenIn(tokenOut)
+                    setTokenIn(tokenOut);
                   }
-                  setTokenOut(token)
+                  setTokenOut(token);
                 }
               }}
             >
@@ -328,21 +344,27 @@ function SwapPage(): ReactElement | null {
                       className="w-5 h-5 rounded-full flex items-center justify-center"
                       style={{ backgroundColor: getTokenColors(tokenOut.symbol).bg }}
                     >
-                      <DollarSign className="h-3 w-3" style={{ color: getTokenColors(tokenOut.symbol).text }} />
+                      <DollarSign
+                        className="h-3 w-3"
+                        style={{ color: getTokenColors(tokenOut.symbol).text }}
+                      />
                     </div>
                     <span className="text-[13px] font-medium">{tokenOut.symbol}</span>
                   </div>
                 )}
               </SelectTrigger>
               <SelectContent>
-                {tokens.map((token) => (
+                {tokens.map(token => (
                   <SelectItem key={token.address} value={token.address}>
                     <div className="flex items-center gap-2">
                       <div
                         className="w-5 h-5 rounded-full flex items-center justify-center"
                         style={{ backgroundColor: getTokenColors(token.symbol).bg }}
                       >
-                        <DollarSign className="h-3 w-3" style={{ color: getTokenColors(token.symbol).text }} />
+                        <DollarSign
+                          className="h-3 w-3"
+                          style={{ color: getTokenColors(token.symbol).text }}
+                        />
                       </div>
                       {token.symbol}
                     </div>
@@ -367,7 +389,8 @@ function SwapPage(): ReactElement | null {
             <div className="flex justify-between text-[12px]">
               <span className="text-muted-foreground">Rate</span>
               <span className="text-foreground">
-                1 {tokenIn.symbol} = {(Number(amountOut) / Number(amountIn)).toFixed(4)} {tokenOut.symbol}
+                1 {tokenIn.symbol} = {(Number(amountOut) / Number(amountIn)).toFixed(4)}{' '}
+                {tokenOut.symbol}
               </span>
             </div>
             <div className="flex justify-between text-[12px]">
@@ -383,28 +406,11 @@ function SwapPage(): ReactElement | null {
           </div>
         )}
 
-        {/* Fee Token */}
-        <div className="flex items-center justify-between pt-2 border-t border-border">
-          <span className="text-[12px] text-muted-foreground">Pay fee with</span>
-          <Select
-            value={feeToken?.address}
-            onValueChange={(value) => {
-              const token = tokens.find(t => t.address === value)
-              if (token) setFeeToken(token)
-            }}
-          >
-            <SelectTrigger className="w-auto h-8 min-w-[100px] text-[12px]">
-              <SelectValue placeholder="Select token" />
-            </SelectTrigger>
-            <SelectContent>
-              {tokens.map((token) => (
-                <SelectItem key={token.address} value={token.address}>
-                  {token.symbol}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <FeeTokenSelector
+          value={feeToken}
+          onChange={setFeeToken}
+          className="pt-2 border-t border-border"
+        />
 
         {/* Submit */}
         <Button
@@ -418,7 +424,10 @@ function SwapPage(): ReactElement | null {
 
       {/* Modal */}
       <Dialog open={modalState !== null} onOpenChange={handleCloseModal}>
-        <DialogContent hideClose={modalState === 'pending'} className="sm:max-w-sm p-0 overflow-hidden">
+        <DialogContent
+          hideClose={modalState === 'pending'}
+          className="sm:max-w-sm p-0 overflow-hidden"
+        >
           {modalState === 'confirm' && tokenIn && tokenOut && (
             <div className="p-5">
               <DialogTitle className="sr-only">Confirm Swap</DialogTitle>
@@ -427,11 +436,13 @@ function SwapPage(): ReactElement | null {
               <div className="text-center mb-5">
                 <p className="text-[13px] text-muted-foreground mb-1">Swap</p>
                 <p className="text-2xl font-semibold text-foreground">
-                  {amountIn} <span className="text-muted-foreground font-normal">{tokenIn.symbol}</span>
+                  {amountIn}{' '}
+                  <span className="text-muted-foreground font-normal">{tokenIn.symbol}</span>
                 </p>
                 <ArrowUpDown className="h-4 w-4 text-muted-foreground mx-auto my-2" />
                 <p className="text-2xl font-semibold text-foreground">
-                  {amountOut} <span className="text-muted-foreground font-normal">{tokenOut.symbol}</span>
+                  {amountOut}{' '}
+                  <span className="text-muted-foreground font-normal">{tokenOut.symbol}</span>
                 </p>
               </div>
 
@@ -439,7 +450,8 @@ function SwapPage(): ReactElement | null {
                 <div className="flex justify-between text-[13px]">
                   <span className="text-muted-foreground">Rate</span>
                   <span className="text-foreground">
-                    1 {tokenIn.symbol} = {(Number(amountOut) / Number(amountIn)).toFixed(4)} {tokenOut.symbol}
+                    1 {tokenIn.symbol} = {(Number(amountOut) / Number(amountIn)).toFixed(4)}{' '}
+                    {tokenOut.symbol}
                   </span>
                 </div>
                 <div className="flex justify-between text-[13px]">
@@ -450,12 +462,18 @@ function SwapPage(): ReactElement | null {
                 </div>
                 <div className="flex justify-between text-[13px]">
                   <span className="text-muted-foreground">Fee</span>
-                  <span className="text-success">&lt;$0.001 <span className="text-muted-foreground">({feeToken?.symbol})</span></span>
+                  <span className="text-success">
+                    &lt;$0.001 <span className="text-muted-foreground">({feeToken?.symbol})</span>
+                  </span>
                 </div>
               </div>
 
               <div className="flex gap-2">
-                <Button variant="outline" className="flex-1 h-10" onClick={() => setModalState(null)}>
+                <Button
+                  variant="outline"
+                  className="flex-1 h-10"
+                  onClick={() => setModalState(null)}
+                >
                   Cancel
                 </Button>
                 <Button className="flex-1 h-10" onClick={handleSubmit}>
@@ -497,7 +515,9 @@ function SwapPage(): ReactElement | null {
               </p>
 
               <div className="bg-muted/50 rounded-lg p-3 mb-4">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Transaction</p>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
+                  Transaction
+                </p>
                 <p className="font-mono text-[11px] text-foreground break-all">{txHash}</p>
               </div>
 
@@ -519,5 +539,5 @@ function SwapPage(): ReactElement | null {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

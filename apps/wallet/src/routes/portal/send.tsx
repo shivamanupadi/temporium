@@ -1,85 +1,80 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState, useEffect, type ReactElement } from 'react'
-import { motion } from 'framer-motion'
-import { ArrowLeft, Check, ExternalLink, DollarSign, Loader2, Clock, AlertTriangle, Users, ChevronDown } from 'lucide-react'
-import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useState, useEffect, type ReactElement } from 'react';
+import { motion } from 'framer-motion';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { useTempo, useTokenBalance } from '@/hooks/useTempo'
-import { useTokenList } from '@/hooks/useTokenList'
-import { formatAddress, formatAmount, parseAmount, isValidAddress, cn } from '@/lib/utils'
-import { SCHEDULE_PRESETS } from '@/lib/constants'
-import { getExplorerTxUrl } from '@/lib/tempo-client'
-import { saveScheduledTransaction } from '@/lib/scheduled-storage'
-import type { Address } from 'viem'
-import { getTokenColors, type Token } from '@/lib/tokenlist'
-import { useContacts } from '@/hooks/useContacts'
+  ArrowLeft,
+  Check,
+  ExternalLink,
+  DollarSign,
+  Loader2,
+  Clock,
+  AlertTriangle,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { AddressInput } from '@/components/AddressInput';
+import { FeeTokenSelector } from '@/components/FeeTokenSelector';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { useTempo, useTokenBalance } from '@/hooks/useTempo';
+import { useTokenList } from '@/hooks/useTokenList';
+import { formatAddress, formatAmount, parseAmount, isValidAddress, cn } from '@/lib/utils';
+import { SCHEDULE_PRESETS } from '@/lib/constants';
+import { getExplorerTxUrl } from '@/lib/tempo-client';
+import { saveScheduledTransaction } from '@/lib/scheduled-storage';
+import type { Address } from 'viem';
+import { getTokenColors, type Token } from '@/lib/tokenlist';
 
 export const Route = createFileRoute('/portal/send')({
   component: SendPage,
-})
+});
 
-type ModalState = 'confirm' | 'pending' | 'success' | null
+type ModalState = 'confirm' | 'pending' | 'success' | null;
 
 function SendPage(): ReactElement | null {
-  const { address, sendPayment, sendScheduledPayment } = useTempo()
-  const navigate = useNavigate()
-  const { tokens, isLoading: tokensLoading } = useTokenList()
-  const { contacts } = useContacts()
-  const [showContacts, setShowContacts] = useState(false)
+  const { address, sendPayment, sendScheduledPayment } = useTempo();
+  const navigate = useNavigate();
+  const { tokens, isLoading: tokensLoading } = useTokenList();
 
-  const [recipient, setRecipient] = useState('')
-  const [amount, setAmount] = useState('')
-  const [memo, setMemo] = useState('')
-  const [selectedToken, setSelectedToken] = useState<Token | null>(null)
-  const [feeToken, setFeeToken] = useState<Token | null>(null)
-  const [modalState, setModalState] = useState<ModalState>(null)
-  const [txHash, setTxHash] = useState<string | null>(null)
+  const [recipient, setRecipient] = useState('');
+  const [amount, setAmount] = useState('');
+  const [memo, setMemo] = useState('');
+  const [selectedToken, setSelectedToken] = useState<Token | null>(null);
+  const [feeToken, setFeeToken] = useState<Token | null>(null);
+  const [modalState, setModalState] = useState<ModalState>(null);
+  const [txHash, setTxHash] = useState<string | null>(null);
 
   // Scheduling state
-  const [isScheduled, setIsScheduled] = useState(false)
-  const [scheduleSeconds, setScheduleSeconds] = useState(SCHEDULE_PRESETS[0].seconds)
-  const [scheduledForTimestamp, setScheduledForTimestamp] = useState<number | null>(null)
+  const [isScheduled, setIsScheduled] = useState(false);
+  const [scheduleSeconds, setScheduleSeconds] = useState(SCHEDULE_PRESETS[0].seconds);
+  const [scheduledForTimestamp, setScheduledForTimestamp] = useState<number | null>(null);
 
   useEffect(() => {
     if (tokens.length > 0 && !selectedToken) {
-      const defaultToken = tokens.find(t => t.symbol === 'AlphaUSD') || tokens[0]
-      setSelectedToken(defaultToken)
-      setFeeToken(defaultToken)
+      const defaultToken = tokens.find(t => t.symbol === 'AlphaUSD') || tokens[0];
+      setSelectedToken(defaultToken);
     }
-  }, [tokens, selectedToken])
+  }, [tokens, selectedToken]);
 
-  const balance = useTokenBalance(selectedToken?.address)
+  const balance = useTokenBalance(selectedToken?.address);
 
-  if (!address) return null
+  if (!address) return null;
 
-  const parsedAmount = selectedToken ? parseAmount(amount, selectedToken.decimals) : 0n
-  const hasBalance = balance.data?.value && balance.data.value >= parsedAmount
-  const isValidForm = isValidAddress(recipient) && parsedAmount > 0n && hasBalance && selectedToken && feeToken
+  const parsedAmount = selectedToken ? parseAmount(amount, selectedToken.decimals) : 0n;
+  const hasBalance = balance.data?.value && balance.data.value >= parsedAmount;
+  const isValidForm =
+    isValidAddress(recipient) && parsedAmount > 0n && hasBalance && selectedToken && feeToken;
 
   const handleSubmit = async (): Promise<void> => {
-    if (!isValidForm || !selectedToken || !feeToken || !address) return
-    setModalState('pending')
+    if (!isValidForm || !selectedToken || !feeToken || !address) return;
+    setModalState('pending');
     try {
-      let hash: string
+      let hash: string;
 
       if (isScheduled) {
         // Calculate the scheduled timestamp
-        const scheduledFor = Math.floor(Date.now() / 1000) + scheduleSeconds
-        setScheduledForTimestamp(scheduledFor)
+        const scheduledFor = Math.floor(Date.now() / 1000) + scheduleSeconds;
+        setScheduledForTimestamp(scheduledFor);
 
         // Send scheduled payment with validAfter
         hash = await sendScheduledPayment({
@@ -89,7 +84,7 @@ function SendPage(): ReactElement | null {
           feeToken: feeToken.address,
           memo: memo || undefined,
           scheduledFor,
-        })
+        });
 
         // Save to IndexedDB for tracking
         await saveScheduledTransaction({
@@ -103,9 +98,9 @@ function SendPage(): ReactElement | null {
           feeToken: feeToken.address,
           memo: memo || undefined,
           scheduledFor,
-        })
+        });
 
-        toast.success('Payment scheduled!')
+        toast.success('Payment scheduled!');
       } else {
         // Send immediate payment
         hash = await sendPayment({
@@ -114,37 +109,37 @@ function SendPage(): ReactElement | null {
           token: selectedToken.address,
           feeToken: feeToken.address,
           memo: memo || undefined,
-        })
-        toast.success('Payment sent!')
+        });
+        toast.success('Payment sent!');
       }
 
-      setTxHash(hash)
-      setModalState('success')
+      setTxHash(hash);
+      setModalState('success');
     } catch (err) {
-      console.error(err)
-      toast.error(isScheduled ? 'Failed to schedule payment' : 'Failed to send payment')
-      setModalState(null)
+      console.error(err);
+      toast.error(isScheduled ? 'Failed to schedule payment' : 'Failed to send payment');
+      setModalState(null);
     }
-  }
+  };
 
   const resetForm = (): void => {
-    setRecipient('')
-    setAmount('')
-    setMemo('')
-    setTxHash(null)
-    setModalState(null)
-    setIsScheduled(false)
-    setScheduleSeconds(SCHEDULE_PRESETS[0].seconds)
-    setScheduledForTimestamp(null)
-  }
+    setRecipient('');
+    setAmount('');
+    setMemo('');
+    setTxHash(null);
+    setModalState(null);
+    setIsScheduled(false);
+    setScheduleSeconds(SCHEDULE_PRESETS[0].seconds);
+    setScheduledForTimestamp(null);
+  };
 
   const handleCloseModal = (): void => {
     if (modalState === 'success') {
-      resetForm()
+      resetForm();
     } else if (modalState !== 'pending') {
-      setModalState(null)
+      setModalState(null);
     }
-  }
+  };
 
   return (
     <div className="max-w-md mx-auto">
@@ -163,57 +158,61 @@ function SendPage(): ReactElement | null {
       <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_1px_2px_-1px_rgba(0,0,0,0.03)] p-5 space-y-5">
         {/* Token Pills */}
         <div>
-          <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2 block">Token</label>
+          <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2 block">
+            Token
+          </label>
           <div className="flex gap-1.5 flex-wrap">
-            {tokensLoading ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="h-8 w-20 bg-muted rounded-full animate-pulse" />
-              ))
-            ) : (
-              tokens.map((token) => {
-                const colors = getTokenColors(token.symbol)
-                const isSelected = selectedToken?.address === token.address
-                return (
-                  <button
-                    key={token.address}
-                    onClick={() => setSelectedToken(token)}
-                    className={cn(
-                      'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-medium transition-all',
-                      isSelected
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                    )}
-                  >
-                    <span
-                      className="w-4 h-4 rounded-full flex items-center justify-center"
-                      style={{
-                        backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : colors.bg,
-                        color: isSelected ? 'white' : colors.text
-                      }}
+            {tokensLoading
+              ? Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="h-8 w-20 bg-muted rounded-full animate-pulse" />
+                ))
+              : tokens.map(token => {
+                  const colors = getTokenColors(token.symbol);
+                  const isSelected = selectedToken?.address === token.address;
+                  return (
+                    <button
+                      key={token.address}
+                      onClick={() => setSelectedToken(token)}
+                      className={cn(
+                        'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-medium transition-all',
+                        isSelected
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                      )}
                     >
-                      <DollarSign className="h-2.5 w-2.5" />
-                    </span>
-                    {token.symbol}
-                  </button>
-                )
-              })
-            )}
+                      <span
+                        className="w-4 h-4 rounded-full flex items-center justify-center"
+                        style={{
+                          backgroundColor: isSelected ? 'rgba(255,255,255,0.2)' : colors.bg,
+                          color: isSelected ? 'white' : colors.text,
+                        }}
+                      >
+                        <DollarSign className="h-2.5 w-2.5" />
+                      </span>
+                      {token.symbol}
+                    </button>
+                  );
+                })}
           </div>
         </div>
 
         {/* Amount Input */}
         <div>
-          <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2 block">Amount</label>
+          <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2 block">
+            Amount
+          </label>
           <div className="relative">
-            <span className="absolute left-0 top-1/2 -translate-y-1/2 text-4xl font-light text-border">$</span>
+            <span className="absolute left-0 top-1/2 -translate-y-1/2 text-4xl font-light text-border">
+              $
+            </span>
             <input
               type="text"
               inputMode="decimal"
               placeholder="0"
               value={amount}
-              onChange={(e) => {
-                const val = e.target.value.replace(/[^0-9.]/g, '')
-                if (val.split('.').length <= 2) setAmount(val)
+              onChange={e => {
+                const val = e.target.value.replace(/[^0-9.]/g, '');
+                if (val.split('.').length <= 2) setAmount(val);
               }}
               className="w-full text-4xl font-light text-foreground bg-transparent border-none outline-none pl-7 placeholder:text-border"
             />
@@ -223,12 +222,15 @@ function SendPage(): ReactElement | null {
             <button
               onClick={() => {
                 if (balance.data?.value && selectedToken) {
-                  setAmount(formatAmount(balance.data.value.toString(), selectedToken.decimals))
+                  setAmount(formatAmount(balance.data.value.toString(), selectedToken.decimals));
                 }
               }}
               className="text-[12px] text-primary hover:text-primary/80 transition-colors font-medium"
             >
-              {balance.isLoading ? '...' : formatAmount(balance.data?.value.toString() || '0', selectedToken?.decimals)} available
+              {balance.isLoading
+                ? '...'
+                : formatAmount(balance.data?.value.toString() || '0', selectedToken?.decimals)}{' '}
+              available
             </button>
           </div>
           {amount && parsedAmount > 0n && !hasBalance && (
@@ -240,71 +242,17 @@ function SendPage(): ReactElement | null {
         <div className="border-t border-border" />
 
         {/* Recipient */}
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Recipient</label>
-            {contacts.length > 0 && (
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowContacts(!showContacts)}
-                  className="flex items-center gap-1 text-[11px] text-primary hover:text-primary/80 font-medium transition-colors"
-                >
-                  <Users className="h-3 w-3" />
-                  Contacts
-                  <ChevronDown className={cn('h-3 w-3 transition-transform', showContacts && 'rotate-180')} />
-                </button>
-                {showContacts && (
-                  <>
-                    <div className="fixed inset-0 z-10" onClick={() => setShowContacts(false)} />
-                    <div className="absolute right-0 top-full mt-1 w-56 rounded-lg border border-border bg-white shadow-lg z-20 overflow-hidden">
-                      <div className="max-h-48 overflow-y-auto">
-                        {contacts.map((contact) => (
-                          <button
-                            key={contact.id}
-                            type="button"
-                            onClick={() => {
-                              setRecipient(contact.address)
-                              setShowContacts(false)
-                            }}
-                            className="flex items-center gap-2 w-full px-3 py-2 text-left hover:bg-muted transition-colors"
-                          >
-                            <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                              <span className="text-[11px] font-semibold text-primary">
-                                {contact.name.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-[12px] font-medium text-foreground truncate">{contact.name}</p>
-                              <p className="text-[10px] text-muted-foreground font-mono truncate">{contact.address.slice(0, 10)}...{contact.address.slice(-6)}</p>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-          <Input
-            placeholder="0x..."
-            value={recipient}
-            onChange={(e) => setRecipient(e.target.value)}
-            className="font-mono text-[13px] h-10"
-          />
-          {recipient && !isValidAddress(recipient) && (
-            <p className="text-[11px] text-destructive mt-1.5">Invalid address</p>
-          )}
-        </div>
+        <AddressInput label="Recipient" value={recipient} onChange={setRecipient} />
 
         {/* Memo */}
         <div>
-          <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2 block">Memo <span className="text-muted-foreground/60 normal-case">(optional)</span></label>
+          <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2 block">
+            Memo <span className="text-muted-foreground/60 normal-case">(optional)</span>
+          </label>
           <Input
             placeholder="Add a note..."
             value={memo}
-            onChange={(e) => setMemo(e.target.value)}
+            onChange={e => setMemo(e.target.value)}
             className="text-[13px] h-10"
           />
         </div>
@@ -314,7 +262,9 @@ function SendPage(): ReactElement | null {
 
         {/* Schedule Toggle */}
         <div>
-          <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-3 block">When to send</label>
+          <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-3 block">
+            When to send
+          </label>
           <div className="flex gap-2">
             <label
               className={cn(
@@ -324,10 +274,12 @@ function SendPage(): ReactElement | null {
                   : 'border-border hover:border-muted-foreground/30'
               )}
             >
-              <div className={cn(
-                'w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all shrink-0',
-                !isScheduled ? 'border-primary' : 'border-muted-foreground/30'
-              )}>
+              <div
+                className={cn(
+                  'w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all shrink-0',
+                  !isScheduled ? 'border-primary' : 'border-muted-foreground/30'
+                )}
+              >
                 {!isScheduled && <div className="w-2 h-2 rounded-full bg-primary" />}
               </div>
               <input
@@ -337,10 +289,12 @@ function SendPage(): ReactElement | null {
                 onChange={() => setIsScheduled(false)}
                 className="sr-only"
               />
-              <span className={cn(
-                'text-[13px] font-medium',
-                !isScheduled ? 'text-foreground' : 'text-muted-foreground'
-              )}>
+              <span
+                className={cn(
+                  'text-[13px] font-medium',
+                  !isScheduled ? 'text-foreground' : 'text-muted-foreground'
+                )}
+              >
                 Send now
               </span>
             </label>
@@ -353,10 +307,12 @@ function SendPage(): ReactElement | null {
                   : 'border-border hover:border-muted-foreground/30'
               )}
             >
-              <div className={cn(
-                'w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all shrink-0',
-                isScheduled ? 'border-primary' : 'border-muted-foreground/30'
-              )}>
+              <div
+                className={cn(
+                  'w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all shrink-0',
+                  isScheduled ? 'border-primary' : 'border-muted-foreground/30'
+                )}
+              >
                 {isScheduled && <div className="w-2 h-2 rounded-full bg-primary" />}
               </div>
               <input
@@ -366,14 +322,18 @@ function SendPage(): ReactElement | null {
                 onChange={() => setIsScheduled(true)}
                 className="sr-only"
               />
-              <Clock className={cn(
-                'h-4 w-4 shrink-0',
-                isScheduled ? 'text-primary' : 'text-muted-foreground'
-              )} />
-              <span className={cn(
-                'text-[13px] font-medium',
-                isScheduled ? 'text-foreground' : 'text-muted-foreground'
-              )}>
+              <Clock
+                className={cn(
+                  'h-4 w-4 shrink-0',
+                  isScheduled ? 'text-primary' : 'text-muted-foreground'
+                )}
+              />
+              <span
+                className={cn(
+                  'text-[13px] font-medium',
+                  isScheduled ? 'text-foreground' : 'text-muted-foreground'
+                )}
+              >
                 Schedule
               </span>
             </label>
@@ -383,9 +343,11 @@ function SendPage(): ReactElement | null {
         {/* Schedule Time Selection */}
         {isScheduled && (
           <div className="space-y-3">
-            <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider block">Execute in</label>
+            <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider block">
+              Execute in
+            </label>
             <div className="flex gap-1.5 flex-wrap">
-              {SCHEDULE_PRESETS.map((preset) => (
+              {SCHEDULE_PRESETS.map(preset => (
                 <button
                   key={preset.seconds}
                   onClick={() => setScheduleSeconds(preset.seconds)}
@@ -405,34 +367,18 @@ function SendPage(): ReactElement | null {
             <div className="flex items-start gap-2 p-3 rounded-lg bg-warning/10 border border-warning/20">
               <AlertTriangle className="h-4 w-4 text-warning mt-0.5 shrink-0" />
               <p className="text-[12px] text-warning leading-relaxed">
-                Scheduled transactions cannot be cancelled once submitted. The payment will execute automatically at the scheduled time.
+                Scheduled transactions cannot be cancelled once submitted. The payment will execute
+                automatically at the scheduled time.
               </p>
             </div>
           </div>
         )}
 
-        {/* Fee Token */}
-        <div className="flex items-center justify-between pt-2 border-t border-border">
-          <span className="text-[12px] text-muted-foreground">Pay fee with</span>
-          <Select
-            value={feeToken?.address}
-            onValueChange={(value) => {
-              const token = tokens.find(t => t.address === value)
-              if (token) setFeeToken(token)
-            }}
-          >
-            <SelectTrigger className="w-auto h-8 min-w-[100px] text-[12px]">
-              <SelectValue placeholder="Select token" />
-            </SelectTrigger>
-            <SelectContent>
-              {tokens.map((token) => (
-                <SelectItem key={token.address} value={token.address}>
-                  {token.symbol}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <FeeTokenSelector
+          value={feeToken}
+          onChange={setFeeToken}
+          className="pt-2 border-t border-border"
+        />
 
         {/* Submit */}
         <Button
@@ -446,13 +392,22 @@ function SendPage(): ReactElement | null {
 
       {/* Modal */}
       <Dialog open={modalState !== null} onOpenChange={handleCloseModal}>
-        <DialogContent hideClose={modalState === 'pending'} className="sm:max-w-sm p-0 overflow-hidden">
-          {modalState === 'confirm' && selectedToken && (() => {
-              const colors = getTokenColors(selectedToken.symbol)
+        <DialogContent
+          hideClose={modalState === 'pending'}
+          className="sm:max-w-sm p-0 overflow-hidden"
+        >
+          {modalState === 'confirm' &&
+            selectedToken &&
+            (() => {
+              const colors = getTokenColors(selectedToken.symbol);
               return (
                 <div className="p-6">
-                  <DialogTitle className="sr-only">{isScheduled ? 'Confirm Scheduled Payment' : 'Confirm Payment'}</DialogTitle>
-                  <DialogDescription className="sr-only">{isScheduled ? 'Confirm your scheduled payment' : 'Confirm your payment'}</DialogDescription>
+                  <DialogTitle className="sr-only">
+                    {isScheduled ? 'Confirm Scheduled Payment' : 'Confirm Payment'}
+                  </DialogTitle>
+                  <DialogDescription className="sr-only">
+                    {isScheduled ? 'Confirm your scheduled payment' : 'Confirm your payment'}
+                  </DialogDescription>
 
                   {/* Amount Display */}
                   <div className="text-center mb-6">
@@ -463,14 +418,21 @@ function SendPage(): ReactElement | null {
                       <DollarSign className="h-7 w-7" style={{ color: colors.text }} />
                     </div>
                     <div className="flex items-baseline justify-center gap-1.5">
-                      <span className="text-4xl font-semibold tracking-tight text-foreground">{amount}</span>
-                      <span className="text-xl font-medium text-muted-foreground">{selectedToken.symbol}</span>
+                      <span className="text-4xl font-semibold tracking-tight text-foreground">
+                        {amount}
+                      </span>
+                      <span className="text-xl font-medium text-muted-foreground">
+                        {selectedToken.symbol}
+                      </span>
                     </div>
                     {isScheduled && (
                       <div className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-full bg-primary/10">
                         <Clock className="h-3.5 w-3.5 text-primary" />
                         <span className="text-[12px] font-medium text-primary">
-                          {new Date(Date.now() + scheduleSeconds * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          {new Date(Date.now() + scheduleSeconds * 1000).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
                         </span>
                       </div>
                     )}
@@ -480,12 +442,16 @@ function SendPage(): ReactElement | null {
                   <div className="space-y-2 mb-6">
                     <div className="flex items-center justify-between py-2">
                       <span className="text-[13px] text-muted-foreground">To</span>
-                      <span className="font-mono text-[13px] text-foreground">{formatAddress(recipient, 8)}</span>
+                      <span className="font-mono text-[13px] text-foreground">
+                        {formatAddress(recipient, 8)}
+                      </span>
                     </div>
                     {memo && (
                       <div className="flex items-center justify-between py-2">
                         <span className="text-[13px] text-muted-foreground">Memo</span>
-                        <span className="text-[13px] text-foreground truncate max-w-[180px]">{memo}</span>
+                        <span className="text-[13px] text-foreground truncate max-w-[180px]">
+                          {memo}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -502,18 +468,24 @@ function SendPage(): ReactElement | null {
                     <Button className="w-full h-11" onClick={handleSubmit}>
                       {isScheduled ? 'Schedule Payment' : 'Send Payment'}
                     </Button>
-                    <Button variant="ghost" className="w-full h-10 text-muted-foreground" onClick={() => setModalState(null)}>
+                    <Button
+                      variant="ghost"
+                      className="w-full h-10 text-muted-foreground"
+                      onClick={() => setModalState(null)}
+                    >
                       Cancel
                     </Button>
                   </div>
                 </div>
-              )
+              );
             })()}
 
           {modalState === 'pending' && selectedToken && (
             <div className="p-8 text-center">
               <DialogTitle className="sr-only">Processing</DialogTitle>
-              <DialogDescription className="sr-only">{isScheduled ? 'Scheduling payment' : 'Processing payment'}</DialogDescription>
+              <DialogDescription className="sr-only">
+                {isScheduled ? 'Scheduling payment' : 'Processing payment'}
+              </DialogDescription>
 
               <Loader2 className="h-8 w-8 text-primary animate-spin mx-auto mb-4" />
               <p className="text-[14px] text-muted-foreground">
@@ -525,7 +497,9 @@ function SendPage(): ReactElement | null {
           {modalState === 'success' && txHash && selectedToken && (
             <div className="p-6 text-center">
               <DialogTitle className="sr-only">{isScheduled ? 'Scheduled' : 'Success'}</DialogTitle>
-              <DialogDescription className="sr-only">{isScheduled ? 'Payment scheduled' : 'Payment sent'}</DialogDescription>
+              <DialogDescription className="sr-only">
+                {isScheduled ? 'Payment scheduled' : 'Payment sent'}
+              </DialogDescription>
 
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
@@ -551,7 +525,11 @@ function SendPage(): ReactElement | null {
               </p>
               {isScheduled && scheduledForTimestamp && (
                 <p className="text-[13px] text-primary mt-2">
-                  Executes at {new Date(scheduledForTimestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  Executes at{' '}
+                  {new Date(scheduledForTimestamp * 1000).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </p>
               )}
 
@@ -559,7 +537,9 @@ function SendPage(): ReactElement | null {
                 onClick={() => window.open(getExplorerTxUrl(txHash), '_blank')}
                 className="inline-flex items-center gap-1.5 mt-5 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
               >
-                <span className="font-mono">{txHash.slice(0, 8)}...{txHash.slice(-6)}</span>
+                <span className="font-mono">
+                  {txHash.slice(0, 8)}...{txHash.slice(-6)}
+                </span>
                 <ExternalLink className="h-3 w-3" />
               </button>
 
@@ -568,7 +548,11 @@ function SendPage(): ReactElement | null {
                   Send Another
                 </Button>
                 {isScheduled && (
-                  <Button variant="ghost" className="w-full h-10 text-muted-foreground" onClick={() => navigate({ to: '/portal/scheduled' })}>
+                  <Button
+                    variant="ghost"
+                    className="w-full h-10 text-muted-foreground"
+                    onClick={() => navigate({ to: '/portal/scheduled' })}
+                  >
                     View Scheduled
                   </Button>
                 )}
@@ -578,5 +562,5 @@ function SendPage(): ReactElement | null {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

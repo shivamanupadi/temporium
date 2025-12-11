@@ -1,9 +1,9 @@
-import type { ReactElement } from 'react'
-import { Coins, Plus } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import type { ReactElement } from 'react';
+import { Coins, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface StablecoinEmptyStateProps {
-  onCreate: () => void
+  onCreate: () => void;
 }
 
 export function StablecoinEmptyState({ onCreate }: StablecoinEmptyStateProps): ReactElement {
@@ -21,5 +21,5 @@ export function StablecoinEmptyState({ onCreate }: StablecoinEmptyStateProps): R
         Create Stablecoin
       </Button>
     </div>
-  )
+  );
 }

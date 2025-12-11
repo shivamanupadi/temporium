@@ -1,6 +1,6 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useEffect, useState, type ReactElement } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useEffect, useState, type ReactElement } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Fingerprint,
   Wallet,
@@ -12,26 +12,26 @@ import {
   X,
   Check,
   Smartphone,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { useTempo } from '@/hooks/useTempo'
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useTempo } from '@/hooks/useTempo';
 
 export const Route = createFileRoute('/')({
   component: HomePage,
-})
+});
 
 function HomePage(): ReactElement {
-  const { isConnected, isConnecting, signUp, signIn } = useTempo()
-  const navigate = useNavigate()
-  const [showPasskeyModal, setShowPasskeyModal] = useState(false)
-  const [walletName, setWalletName] = useState('')
+  const { isConnected, isConnecting, signUp, signIn } = useTempo();
+  const navigate = useNavigate();
+  const [showPasskeyModal, setShowPasskeyModal] = useState(false);
+  const [walletName, setWalletName] = useState('');
 
   useEffect(() => {
     if (isConnected) {
-      navigate({ to: '/portal/dashboard' })
+      navigate({ to: '/portal/dashboard' });
     }
-  }, [isConnected, navigate])
+  }, [isConnected, navigate]);
 
   const features = [
     {
@@ -58,13 +58,13 @@ function HomePage(): ReactElement {
       description: 'Pay fees in USD',
       color: '#8b5cf6',
     },
-  ]
+  ];
 
   const handleCreateWallet = (): void => {
-    setShowPasskeyModal(false)
-    signUp(walletName.trim() || undefined)
-    setWalletName('')
-  }
+    setShowPasskeyModal(false);
+    signUp(walletName.trim() || undefined);
+    setWalletName('');
+  };
 
   return (
     <>
@@ -109,7 +109,9 @@ function HomePage(): ReactElement {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
             </span>
-            <span className="text-[13px] font-medium text-foreground">Built for Tempo Blockchain</span>
+            <span className="text-[13px] font-medium text-foreground">
+              Built for Tempo Blockchain
+            </span>
           </motion.div>
 
           {/* Heading */}
@@ -119,8 +121,7 @@ function HomePage(): ReactElement {
             transition={{ delay: 0.05 }}
             className="text-4xl sm:text-5xl font-bold tracking-tight mb-4"
           >
-            The{' '}
-            <span className="text-primary">Passkey Wallet</span>
+            The <span className="text-primary">Passkey Wallet</span>
             <br />
             for Stablecoin Payments
           </motion.h1>
@@ -132,8 +133,8 @@ function HomePage(): ReactElement {
             transition={{ delay: 0.1 }}
             className="text-[16px] text-muted-foreground mb-8 max-w-lg mx-auto"
           >
-            Send, receive, and schedule payments with sub-cent fees.
-            No seed phrases. No browser extensions. Just passkeys.
+            Send, receive, and schedule payments with sub-cent fees. No seed phrases. No browser
+            extensions. Just passkeys.
           </motion.p>
 
           {/* CTAs */}
@@ -185,7 +186,9 @@ function HomePage(): ReactElement {
                 {/* Hover glow */}
                 <div
                   className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"
-                  style={{ background: `radial-gradient(circle at center, ${feature.color}15 0%, transparent 70%)` }}
+                  style={{
+                    background: `radial-gradient(circle at center, ${feature.color}15 0%, transparent 70%)`,
+                  }}
                 />
 
                 {/* Icon */}
@@ -269,12 +272,15 @@ function HomePage(): ReactElement {
                     <Input
                       placeholder="e.g., Personal, Business, Savings..."
                       value={walletName}
-                      onChange={(e) => setWalletName(e.target.value)}
+                      onChange={e => setWalletName(e.target.value)}
                       className="text-[13px] h-10"
                       maxLength={30}
                     />
                     <p className="text-[10px] text-gray-400 mt-1">
-                      Saved as: <span className="font-medium text-gray-600">Tollr: {walletName || 'Wallet'}</span>
+                      Saved as:{' '}
+                      <span className="font-medium text-gray-600">
+                        Tollr: {walletName || 'Wallet'}
+                      </span>
                     </p>
                   </div>
 
@@ -282,7 +288,8 @@ function HomePage(): ReactElement {
                   <div className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 mb-3">
                     <Smartphone className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                     <p className="text-[11px] text-gray-600 leading-relaxed">
-                      Your device creates a cryptographic key protected by Face ID, Touch ID, or PIN. The private key never leaves your device.
+                      Your device creates a cryptographic key protected by Face ID, Touch ID, or
+                      PIN. The private key never leaves your device.
                     </p>
                   </div>
 
@@ -293,11 +300,8 @@ function HomePage(): ReactElement {
                       'Protected by biometrics',
                       'Cannot be phished',
                       'Works across devices',
-                    ].map((benefit) => (
-                      <div
-                        key={benefit}
-                        className="flex items-center gap-2"
-                      >
+                    ].map(benefit => (
+                      <div key={benefit} className="flex items-center gap-2">
                         <Check className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
                         <span className="text-[12px] text-gray-700">{benefit}</span>
                       </div>
@@ -325,5 +329,5 @@ function HomePage(): ReactElement {
         )}
       </AnimatePresence>
     </>
-  )
+  );
 }

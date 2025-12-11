@@ -1,45 +1,44 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState, useRef, useEffect, type ReactElement } from 'react'
-import { motion } from 'framer-motion'
-import { QRCodeSVG } from 'qrcode.react'
-import { ArrowLeft, Copy, Check, ExternalLink } from 'lucide-react'
-import { toast } from 'sonner'
-import { Button } from '@/components/ui/button'
-import { useTempo } from '@/hooks/useTempo'
-import { copyToClipboard, formatAddress } from '@/lib/utils'
-import { getExplorerAddressUrl } from '@/lib/tempo-client'
-import { TIMING } from '@/lib/constants'
+import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { useState, useRef, useEffect, type ReactElement } from 'react';
+import { motion } from 'framer-motion';
+import { QRCodeSVG } from 'qrcode.react';
+import { ArrowLeft, Copy, Check, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { useTempo } from '@/hooks/useTempo';
+import { copyToClipboard, formatAddress } from '@/lib/utils';
+import { getExplorerAddressUrl } from '@/lib/tempo-client';
+import { TIMING } from '@/lib/constants';
 
 export const Route = createFileRoute('/portal/receive')({
   component: ReceivePage,
-})
+});
 
 function ReceivePage(): ReactElement | null {
-  const { address } = useTempo()
-  const navigate = useNavigate()
-  const [copied, setCopied] = useState(false)
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const { address } = useTempo();
+  const navigate = useNavigate();
+  const [copied, setCopied] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
+        clearTimeout(timeoutRef.current);
       }
-    }
-  }, [])
+    };
+  }, []);
 
-  if (!address) return null
+  if (!address) return null;
 
   const handleCopy = async (): Promise<void> => {
-    const success = await copyToClipboard(address)
+    const success = await copyToClipboard(address);
     if (success) {
-      setCopied(true)
-      toast.success('Address copied!')
-      timeoutRef.current = setTimeout(() => setCopied(false), TIMING.COPY_FEEDBACK_MS)
+      setCopied(true);
+      toast.success('Address copied!');
+      timeoutRef.current = setTimeout(() => setCopied(false), TIMING.COPY_FEEDBACK_MS);
     }
-  }
-
+  };
 
   return (
     <div className="max-w-md mx-auto">
@@ -102,16 +101,8 @@ function ReceivePage(): ReactElement | null {
 
         {/* Actions */}
         <div className="grid grid-cols-2 gap-2">
-          <Button
-            variant="outline"
-            className="h-10"
-            onClick={handleCopy}
-          >
-            {copied ? (
-              <Check className="h-4 w-4 text-emerald-500" />
-            ) : (
-              <Copy className="h-4 w-4" />
-            )}
+          <Button variant="outline" className="h-10" onClick={handleCopy}>
+            {copied ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
             {copied ? 'Copied' : 'Copy'}
           </Button>
           <Button
@@ -135,5 +126,5 @@ function ReceivePage(): ReactElement | null {
         Share this address or QR code to receive payments
       </motion.p>
     </div>
-  )
+  );
 }

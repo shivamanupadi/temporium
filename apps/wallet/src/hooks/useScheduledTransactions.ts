@@ -1,13 +1,13 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useAccount } from 'wagmi'
-import type { Address } from 'viem'
+import { useState, useEffect, useCallback } from 'react';
+import { useAccount } from 'wagmi';
+import type { Address } from 'viem';
 import {
   getScheduledTransactions,
   updateTransactionStatus,
   type ScheduledTransaction,
-} from '@/lib/scheduled-storage'
-import { tempoPublicClient } from '@/lib/tempo-client'
-import { TIMING } from '@/lib/constants'
+} from '@/lib/scheduled-storage';
+import { tempoPublicClient } from '@/lib/tempo-client';
+import { TIMING } from '@/lib/constants';
 
 /**
  * Hook to manage and display scheduled transactions
@@ -16,122 +16,119 @@ import { TIMING } from '@/lib/constants'
  * - Updates status when confirmed on-chain
  */
 interface UseScheduledTransactionsReturn {
-  transactions: ScheduledTransaction[]
-  pendingTransactions: ScheduledTransaction[]
-  completedTransactions: ScheduledTransaction[]
-  isLoading: boolean
-  isChecking: boolean
-  refresh: () => Promise<void>
+  transactions: ScheduledTransaction[];
+  pendingTransactions: ScheduledTransaction[];
+  completedTransactions: ScheduledTransaction[];
+  isLoading: boolean;
+  isChecking: boolean;
+  refresh: () => Promise<void>;
 }
 
 export function useScheduledTransactions(): UseScheduledTransactionsReturn {
-  const { address } = useAccount()
-  const [transactions, setTransactions] = useState<ScheduledTransaction[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [isChecking, setIsChecking] = useState(false)
+  const { address } = useAccount();
+  const [transactions, setTransactions] = useState<ScheduledTransaction[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isChecking, setIsChecking] = useState(false);
 
   // Load transactions from IndexedDB
   const loadTransactions = useCallback(async () => {
     if (!address) {
-      setTransactions([])
-      setIsLoading(false)
-      return
+      setTransactions([]);
+      setIsLoading(false);
+      return;
     }
 
     try {
       // Query with lowercase address to match stored normalized addresses
-      const txns = await getScheduledTransactions(address.toLowerCase() as Address)
-      setTransactions(txns)
+      const txns = await getScheduledTransactions(address.toLowerCase() as Address);
+      setTransactions(txns);
     } catch (error) {
-      console.error('Failed to load scheduled transactions:', error)
+      console.error('Failed to load scheduled transactions:', error);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }, [address])
+  }, [address]);
 
   // Check on-chain status for a single transaction
-  const checkTransactionStatus = useCallback(
-    async (tx: ScheduledTransaction): Promise<boolean> => {
-      try {
-        const receipt = await tempoPublicClient.getTransactionReceipt({
-          hash: tx.txHash as `0x${string}`,
-        })
+  const checkTransactionStatus = useCallback(async (tx: ScheduledTransaction): Promise<boolean> => {
+    try {
+      const receipt = await tempoPublicClient.getTransactionReceipt({
+        hash: tx.txHash as `0x${string}`,
+      });
 
-        if (receipt) {
-          // Transaction has been executed
-          const executedAt = Math.floor(Date.now() / 1000)
-          const status = receipt.status === 'success' ? 'executed' : 'failed'
+      if (receipt) {
+        // Transaction has been executed
+        const executedAt = Math.floor(Date.now() / 1000);
+        const status = receipt.status === 'success' ? 'executed' : 'failed';
 
-          await updateTransactionStatus(tx.id, status, executedAt)
-          return true // Status changed
-        }
-      } catch (error) {
-        // Transaction not found or not yet executed - this is expected for pending transactions
-        console.debug(`Transaction ${tx.txHash} not yet executed`)
+        await updateTransactionStatus(tx.id, status, executedAt);
+        return true; // Status changed
       }
-      return false // Status unchanged
-    },
-    []
-  )
+    } catch (error) {
+      // Transaction not found or not yet executed - this is expected for pending transactions
+      console.debug(`Transaction ${tx.txHash} not yet executed`);
+    }
+    return false; // Status unchanged
+  }, []);
 
   // Check status for all pending transactions past their scheduled time
   const checkPendingStatuses = useCallback(async () => {
-    if (!address || isChecking) return
+    if (!address || isChecking) return;
 
-    const now = Math.floor(Date.now() / 1000)
+    const now = Math.floor(Date.now() / 1000);
     const pendingPastSchedule = transactions.filter(
-      (tx) => tx.status === 'pending' && tx.scheduledFor <= now
-    )
+      tx => tx.status === 'pending' && tx.scheduledFor <= now
+    );
 
-    if (pendingPastSchedule.length === 0) return
+    if (pendingPastSchedule.length === 0) return;
 
-    setIsChecking(true)
-    let hasChanges = false
+    setIsChecking(true);
+    let hasChanges = false;
 
     try {
       for (const tx of pendingPastSchedule) {
-        const changed = await checkTransactionStatus(tx)
-        if (changed) hasChanges = true
+        const changed = await checkTransactionStatus(tx);
+        if (changed) hasChanges = true;
       }
 
       // Reload if any status changed
       if (hasChanges) {
-        await loadTransactions()
+        await loadTransactions();
       }
     } finally {
-      setIsChecking(false)
+      setIsChecking(false);
     }
-  }, [address, transactions, isChecking, checkTransactionStatus, loadTransactions])
+  }, [address, transactions, isChecking, checkTransactionStatus, loadTransactions]);
 
   // Initial load
   useEffect(() => {
-    loadTransactions()
-  }, [loadTransactions])
+    loadTransactions();
+  }, [loadTransactions]);
 
   // Poll for status updates periodically
   useEffect(() => {
     const interval = setInterval(() => {
-      checkPendingStatuses()
-    }, TIMING.SCHEDULED_TX_CHECK_MS)
+      checkPendingStatuses();
+    }, TIMING.SCHEDULED_TX_CHECK_MS);
 
     // Also check immediately when transactions change
-    checkPendingStatuses()
+    checkPendingStatuses();
 
-    return () => clearInterval(interval)
-  }, [checkPendingStatuses])
+    return () => clearInterval(interval);
+  }, [checkPendingStatuses]);
 
   // Separate pending and completed transactions
-  const pendingTransactions = transactions.filter((tx) => tx.status === 'pending')
+  const pendingTransactions = transactions.filter(tx => tx.status === 'pending');
   const completedTransactions = transactions.filter(
-    (tx) => tx.status === 'executed' || tx.status === 'failed'
-  )
+    tx => tx.status === 'executed' || tx.status === 'failed'
+  );
 
   // Force refresh
   const refresh = useCallback(async () => {
-    setIsLoading(true)
-    await loadTransactions()
-    await checkPendingStatuses()
-  }, [loadTransactions, checkPendingStatuses])
+    setIsLoading(true);
+    await loadTransactions();
+    await checkPendingStatuses();
+  }, [loadTransactions, checkPendingStatuses]);
 
   return {
     transactions,
@@ -140,5 +137,5 @@ export function useScheduledTransactions(): UseScheduledTransactionsReturn {
     isLoading,
     isChecking,
     refresh,
-  }
+  };
 }
