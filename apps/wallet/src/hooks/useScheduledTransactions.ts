@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAccount } from 'wagmi';
-import type { Address } from 'viem';
 import {
-  getScheduledTransactions,
+  getScheduledTransactionsByOwner,
   updateTransactionStatus,
   type ScheduledTransaction,
 } from '@/lib/scheduled-storage';
@@ -39,8 +38,7 @@ export function useScheduledTransactions(): UseScheduledTransactionsReturn {
     }
 
     try {
-      // Query with lowercase address to match stored normalized addresses
-      const txns = await getScheduledTransactions(address.toLowerCase() as Address);
+      const txns = await getScheduledTransactionsByOwner(address);
       setTransactions(txns);
     } catch (error) {
       console.error('Failed to load scheduled transactions:', error);
@@ -50,26 +48,31 @@ export function useScheduledTransactions(): UseScheduledTransactionsReturn {
   }, [address]);
 
   // Check on-chain status for a single transaction
-  const checkTransactionStatus = useCallback(async (tx: ScheduledTransaction): Promise<boolean> => {
-    try {
-      const receipt = await tempoPublicClient.getTransactionReceipt({
-        hash: tx.txHash as `0x${string}`,
-      });
+  const checkTransactionStatus = useCallback(
+    async (tx: ScheduledTransaction): Promise<boolean> => {
+      if (!address) return false;
 
-      if (receipt) {
-        // Transaction has been executed
-        const executedAt = Math.floor(Date.now() / 1000);
-        const status = receipt.status === 'success' ? 'executed' : 'failed';
+      try {
+        const receipt = await tempoPublicClient.getTransactionReceipt({
+          hash: tx.txHash as `0x${string}`,
+        });
 
-        await updateTransactionStatus(tx.id, status, executedAt);
-        return true; // Status changed
+        if (receipt) {
+          // Transaction has been executed
+          const executedAt = Math.floor(Date.now() / 1000);
+          const status = receipt.status === 'success' ? 'executed' : 'failed';
+
+          await updateTransactionStatus(tx.id, address, status, executedAt);
+          return true; // Status changed
+        }
+      } catch (error) {
+        // Transaction not found or not yet executed - this is expected for pending transactions
+        console.debug(`Transaction ${tx.txHash} not yet executed`);
       }
-    } catch (error) {
-      // Transaction not found or not yet executed - this is expected for pending transactions
-      console.debug(`Transaction ${tx.txHash} not yet executed`);
-    }
-    return false; // Status unchanged
-  }, []);
+      return false; // Status unchanged
+    },
+    [address]
+  );
 
   // Check status for all pending transactions past their scheduled time
   const checkPendingStatuses = useCallback(async () => {

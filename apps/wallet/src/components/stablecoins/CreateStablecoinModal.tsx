@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback, type ReactElement } from 'react';
-import { motion } from 'framer-motion';
 import { Loader2, Lock, Check, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -91,13 +90,9 @@ export function CreateStablecoinModal({
 
           {txHash ? (
             <div className="text-center">
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4"
-              >
+              <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
                 <Check className="h-6 w-6 text-success" />
-              </motion.div>
+              </div>
               <p className="text-[13px] text-muted-foreground mb-4">
                 Your stablecoin has been created successfully
               </p>

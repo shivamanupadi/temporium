@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useAccount } from 'wagmi';
 import {
-  getAllContacts,
+  getContactsByOwner,
   saveContact,
   updateContact,
   deleteContact,
@@ -25,33 +26,45 @@ interface UseContactsReturn {
 }
 
 export function useContacts(): UseContactsReturn {
+  const { address: ownerAddress } = useAccount();
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const loadContacts = useCallback(async () => {
+    if (!ownerAddress) {
+      setContacts([]);
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const allContacts = await getAllContacts();
+      const allContacts = await getContactsByOwner(ownerAddress);
       setContacts(allContacts);
     } catch (error) {
       console.error('Failed to load contacts:', error);
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [ownerAddress]);
 
   useEffect(() => {
     loadContacts();
   }, [loadContacts]);
 
-  const addContact = useCallback(async (name: string, address: Address) => {
-    const contact = await saveContact({ name, address });
-    setContacts(prev => [...prev, contact].sort((a, b) => a.name.localeCompare(b.name)));
-    return contact;
-  }, []);
+  const addContact = useCallback(
+    async (name: string, address: Address) => {
+      if (!ownerAddress) throw new Error('Wallet not connected');
+      const contact = await saveContact({ owner: ownerAddress, name, address });
+      setContacts(prev => [...prev, contact].sort((a, b) => a.name.localeCompare(b.name)));
+      return contact;
+    },
+    [ownerAddress]
+  );
 
   const editContact = useCallback(
     async (id: string, updates: { name?: string; address?: Address }) => {
-      const updated = await updateContact(id, updates);
+      if (!ownerAddress) throw new Error('Wallet not connected');
+      const updated = await updateContact(id, ownerAddress, updates);
       if (updated) {
         setContacts(prev =>
           prev.map(c => (c.id === id ? updated : c)).sort((a, b) => a.name.localeCompare(b.name))
@@ -59,24 +72,33 @@ export function useContacts(): UseContactsReturn {
       }
       return updated;
     },
-    []
+    [ownerAddress]
   );
 
-  const removeContact = useCallback(async (id: string) => {
-    await deleteContact(id);
-    setContacts(prev => prev.filter(c => c.id !== id));
-  }, []);
+  const removeContact = useCallback(
+    async (id: string) => {
+      if (!ownerAddress) throw new Error('Wallet not connected');
+      await deleteContact(id, ownerAddress);
+      setContacts(prev => prev.filter(c => c.id !== id));
+    },
+    [ownerAddress]
+  );
 
-  const findContactByAddress = useCallback(async (address: Address) => {
-    return getContactByAddress(address);
-  }, []);
+  const findContactByAddress = useCallback(
+    async (address: Address) => {
+      if (!ownerAddress) return null;
+      return getContactByAddress(ownerAddress, address);
+    },
+    [ownerAddress]
+  );
 
   const search = useCallback(
     async (query: string) => {
+      if (!ownerAddress) return [];
       if (!query.trim()) return contacts;
-      return searchContacts(query);
+      return searchContacts(ownerAddress, query);
     },
-    [contacts]
+    [ownerAddress, contacts]
   );
 
   return {

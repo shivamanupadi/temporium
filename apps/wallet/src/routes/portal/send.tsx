@@ -88,6 +88,7 @@ function SendPage(): ReactElement | null {
 
         // Save to IndexedDB for tracking
         await saveScheduledTransaction({
+          owner: address as Address,
           txHash: hash,
           from: address as Address,
           to: recipient as Address,

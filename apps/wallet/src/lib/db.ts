@@ -6,11 +6,12 @@ import type { Address } from 'viem';
  */
 export interface Stablecoin {
   id: string;
+  owner: Address; // The wallet address that owns this record
   address: Address;
   name: string;
   symbol: string;
   currency: string;
-  creator: Address;
+  creator: Address; // Keep for backwards compatibility, same as owner
   txHash: string;
   createdAt: number;
 }
@@ -20,6 +21,7 @@ export interface Stablecoin {
  */
 export interface Contact {
   id: string;
+  owner: Address; // The wallet address that owns this contact
   name: string;
   address: Address;
   createdAt: number;
@@ -31,6 +33,7 @@ export interface Contact {
  */
 export interface ScheduledTransaction {
   id: string;
+  owner: Address; // The wallet address that owns this record
   txHash: string;
   from: Address;
   to: Address;
@@ -60,6 +63,20 @@ db.version(1).stores({
   stablecoins: 'id, creator, &address',
   contacts: 'id, address, name',
   scheduledTransactions: 'id, from, status, [from+status]',
+});
+
+// Version 2: Add owner field to contacts for multi-address support
+db.version(2).stores({
+  stablecoins: 'id, creator, &address',
+  contacts: 'id, owner, address, name, [owner+address]',
+  scheduledTransactions: 'id, from, status, [from+status]',
+});
+
+// Version 3: Add owner field to all tables for consistent multi-address support
+db.version(3).stores({
+  stablecoins: 'id, owner, &address, creator',
+  contacts: 'id, owner, address, name, [owner+address]',
+  scheduledTransactions: 'id, owner, from, to, status, [owner+status]',
 });
 
 export { db };

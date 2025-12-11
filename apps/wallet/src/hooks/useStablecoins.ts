@@ -2,7 +2,7 @@ import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useWalletClient, useAccount } from 'wagmi';
 import {
-  getStablecoinsByCreator,
+  getStablecoinsByOwner,
   saveStablecoin,
   deleteStablecoin,
   type Stablecoin,
@@ -107,7 +107,7 @@ export function useStablecoins(): UseStablecoinsReturn {
     queryFn: async (): Promise<StablecoinWithMetadata[]> => {
       if (!address) return [];
 
-      const stored = await getStablecoinsByCreator(address.toLowerCase() as Address);
+      const stored = await getStablecoinsByOwner(address);
 
       // Fetch metadata for each stablecoin
       const withMetadata = await Promise.all(
@@ -169,6 +169,7 @@ export function useStablecoins(): UseStablecoinsReturn {
 
       // Save to local storage
       const stablecoin = await saveStablecoin({
+        owner: address,
         address: tokenAddress.toLowerCase() as Address,
         name: params.name,
         symbol: params.symbol,
@@ -312,10 +313,11 @@ export function useStablecoins(): UseStablecoinsReturn {
 
   const removeStablecoin = useCallback(
     async (id: string) => {
-      await deleteStablecoin(id);
+      if (!address) throw new Error('Wallet not connected');
+      await deleteStablecoin(id, address);
       await refresh();
     },
-    [refresh]
+    [address, refresh]
   );
 
   const grantRoles = useCallback(

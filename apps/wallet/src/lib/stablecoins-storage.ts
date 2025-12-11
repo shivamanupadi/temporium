@@ -4,13 +4,19 @@ import { db, type Stablecoin } from './db';
 export type { Stablecoin };
 
 export async function saveStablecoin(
-  stablecoin: Omit<Stablecoin, 'id' | 'createdAt'>
+  stablecoin: Omit<Stablecoin, 'id' | 'createdAt' | 'owner'> & { owner?: Address }
 ): Promise<Stablecoin> {
+  const normalizedAddress = stablecoin.address.toLowerCase() as Address;
+  const normalizedCreator = stablecoin.creator.toLowerCase() as Address;
+  // Use owner if provided, otherwise fall back to creator for backwards compatibility
+  const normalizedOwner = (stablecoin.owner ?? stablecoin.creator).toLowerCase() as Address;
+
   const newStablecoin: Stablecoin = {
     ...stablecoin,
-    address: stablecoin.address.toLowerCase() as Address,
-    creator: stablecoin.creator.toLowerCase() as Address,
     id: crypto.randomUUID(),
+    owner: normalizedOwner,
+    address: normalizedAddress,
+    creator: normalizedCreator,
     createdAt: Date.now(),
   };
 
@@ -18,9 +24,9 @@ export async function saveStablecoin(
   return newStablecoin;
 }
 
-export async function getStablecoinsByCreator(creator: Address): Promise<Stablecoin[]> {
-  const normalizedCreator = creator.toLowerCase() as Address;
-  const stablecoins = await db.stablecoins.where('creator').equals(normalizedCreator).toArray();
+export async function getStablecoinsByOwner(owner: Address): Promise<Stablecoin[]> {
+  const normalizedOwner = owner.toLowerCase() as Address;
+  const stablecoins = await db.stablecoins.where('owner').equals(normalizedOwner).toArray();
 
   // Sort by createdAt descending
   return stablecoins.sort((a, b) => b.createdAt - a.createdAt);
@@ -33,6 +39,10 @@ export async function getStablecoinByAddress(address: Address): Promise<Stableco
   return stablecoin ?? null;
 }
 
-export async function deleteStablecoin(id: string): Promise<void> {
+export async function deleteStablecoin(id: string, owner: Address): Promise<void> {
+  const existing = await db.stablecoins.get(id);
+  if (existing && existing.owner?.toLowerCase() !== owner.toLowerCase()) {
+    throw new Error('Not authorized to delete this stablecoin');
+  }
   await db.stablecoins.delete(id);
 }
