@@ -8,11 +8,16 @@ import {
   Zap,
   Clock,
   Shield,
-  DollarSign,
   X,
   Check,
   Smartphone,
+  Send,
+  ArrowLeftRight,
+  Droplets,
+  Coins,
+  Users,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTempo } from '@/hooks/useTempo';
@@ -35,35 +40,71 @@ function HomePage(): ReactElement {
 
   const features = [
     {
-      icon: Zap,
-      title: 'Sub-cent Fees',
-      description: 'Transactions under $0.001',
-      color: '#f59e0b',
-    },
-    {
-      icon: Clock,
-      title: 'Scheduled Payments',
-      description: 'Sign once, execute later',
-      color: '#3b82f6',
-    },
-    {
       icon: Shield,
       title: 'Passkey Security',
       description: 'Face ID, Touch ID, or PIN',
       color: '#10b981',
     },
     {
-      icon: DollarSign,
-      title: 'Stablecoin Native',
-      description: 'Pay fees in USD',
+      icon: Send,
+      title: 'Send & Receive',
+      description: 'Instant transfers',
+      color: '#635bff',
+    },
+    {
+      icon: ArrowLeftRight,
+      title: 'Token Swap',
+      description: 'Exchange tokens easily',
+      color: '#f59e0b',
+    },
+    {
+      icon: Droplets,
+      title: 'Liquidity Pools',
+      description: 'Provide liquidity & earn',
+      color: '#06b6d4',
+    },
+    {
+      icon: Coins,
+      title: 'Stablecoins',
+      description: 'Mint & manage USD',
+      color: '#f97316',
+    },
+    {
+      icon: Users,
+      title: 'Contacts',
+      description: 'Save frequent addresses',
+      color: '#64748b',
+    },
+    {
+      icon: Clock,
+      title: 'Scheduled Payments',
+      description: 'Sign once, execute later',
       color: '#8b5cf6',
+    },
+    {
+      icon: Zap,
+      title: 'Sub-cent Fees',
+      description: 'Transactions under $0.001',
+      color: '#3b82f6',
     },
   ];
 
-  const handleCreateWallet = (): void => {
-    setShowPasskeyModal(false);
-    signUp(walletName.trim() || undefined);
+  const openModal = (): void => {
     setWalletName('');
+    setShowPasskeyModal(true);
+  };
+
+  const closeModal = (): void => {
+    setWalletName('');
+    setShowPasskeyModal(false);
+  };
+
+  const handleCreateWallet = async (): Promise<void> => {
+    try {
+      await signUp(walletName.trim() || undefined);
+    } catch {
+      toast.error('Wallet creation cancelled');
+    }
   };
 
   return (
@@ -123,7 +164,7 @@ function HomePage(): ReactElement {
           >
             The <span className="text-primary">Passkey Wallet</span>
             <br />
-            for Stablecoin Payments
+            for Tempo Blockchain
           </motion.h1>
 
           {/* Subtitle */}
@@ -144,12 +185,7 @@ function HomePage(): ReactElement {
             transition={{ delay: 0.15 }}
             className="flex flex-wrap justify-center gap-3 mb-12"
           >
-            <Button
-              size="lg"
-              onClick={() => setShowPasskeyModal(true)}
-              isLoading={isConnecting}
-              className="group px-6"
-            >
+            <Button size="lg" onClick={openModal} isLoading={isConnecting} className="group px-6">
               <Wallet className="h-4 w-4" />
               Create Wallet
               <ArrowRight className="h-4 w-4 ml-1 opacity-60 group-hover:translate-x-0.5 transition-transform" />
@@ -172,7 +208,7 @@ function HomePage(): ReactElement {
             initial={{ y: 24, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+            className="grid grid-cols-2 sm:grid-cols-4 gap-2.5"
           >
             {features.map((feature, index) => (
               <motion.div
@@ -215,7 +251,14 @@ function HomePage(): ReactElement {
             className="mt-10 flex items-center justify-center gap-2 text-muted-foreground"
           >
             <span className="text-[12px]">Powered by</span>
-            <span className="text-[13px] font-semibold text-foreground">Tempo</span>
+            <a
+              href="https://tempo.xyz/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[13px] font-semibold text-foreground hover:text-primary transition-colors"
+            >
+              Tempo
+            </a>
           </motion.div>
         </div>
       </main>
@@ -230,7 +273,7 @@ function HomePage(): ReactElement {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.15 }}
-              onClick={() => setShowPasskeyModal(false)}
+              onClick={closeModal}
               className="fixed inset-0 bg-black/50 z-50"
             />
 
@@ -246,7 +289,7 @@ function HomePage(): ReactElement {
                 {/* Header */}
                 <div className="relative px-5 pt-5 pb-4">
                   <button
-                    onClick={() => setShowPasskeyModal(false)}
+                    onClick={closeModal}
                     className="absolute right-4 top-4 p-1 rounded-md hover:bg-gray-100 transition-colors"
                   >
                     <X className="h-4 w-4 text-gray-400" />

@@ -3,12 +3,13 @@ import { useState, useEffect, type ReactElement } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
-  Check,
   ExternalLink,
   DollarSign,
   Loader2,
   Clock,
   AlertTriangle,
+  Wallet,
+  StickyNote,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -100,8 +101,6 @@ function SendPage(): ReactElement | null {
           memo: memo || undefined,
           scheduledFor,
         });
-
-        toast.success('Payment scheduled!');
       } else {
         // Send immediate payment
         hash = await sendPayment({
@@ -111,7 +110,6 @@ function SendPage(): ReactElement | null {
           feeToken: feeToken.address,
           memo: memo || undefined,
         });
-        toast.success('Payment sent!');
       }
 
       setTxHash(hash);
@@ -119,7 +117,7 @@ function SendPage(): ReactElement | null {
     } catch (err) {
       console.error(err);
       toast.error(isScheduled ? 'Failed to schedule payment' : 'Failed to send payment');
-      setModalState(null);
+      setModalState('confirm');
     }
   };
 
@@ -143,7 +141,7 @@ function SendPage(): ReactElement | null {
   };
 
   return (
-    <div className="max-w-md mx-auto">
+    <div className="max-w-lg mx-auto">
       {/* Header */}
       <div className="flex items-center gap-2 mb-6">
         <button
@@ -156,16 +154,16 @@ function SendPage(): ReactElement | null {
       </div>
 
       {/* Form Card */}
-      <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_1px_2px_-1px_rgba(0,0,0,0.03)] p-5 space-y-5">
+      <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_1px_2px_-1px_rgba(0,0,0,0.03)] p-5 space-y-5 min-h-[520px]">
         {/* Token Pills */}
         <div>
           <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2 block">
             Token
           </label>
-          <div className="flex gap-1.5 flex-wrap">
+          <div className="flex gap-1.5 overflow-x-auto min-h-[34px]">
             {tokensLoading
               ? Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="h-8 w-20 bg-muted rounded-full animate-pulse" />
+                  <div key={i} className="h-[34px] w-20 bg-muted rounded-full animate-pulse" />
                 ))
               : tokens.map(token => {
                   const colors = getTokenColors(token.symbol);
@@ -175,7 +173,7 @@ function SendPage(): ReactElement | null {
                       key={token.address}
                       onClick={() => setSelectedToken(token)}
                       className={cn(
-                        'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-medium transition-all',
+                        'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-medium transition-all shrink-0',
                         isSelected
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-muted text-muted-foreground hover:bg-muted/80'
@@ -226,10 +224,10 @@ function SendPage(): ReactElement | null {
                   setAmount(formatAmount(balance.data.value.toString(), selectedToken.decimals));
                 }
               }}
-              className="text-[12px] text-primary hover:text-primary/80 transition-colors font-medium"
+              className="text-[12px] text-primary hover:text-primary/80 transition-colors font-medium min-w-[80px] text-right"
             >
               {balance.isLoading
-                ? '...'
+                ? '-.--'
                 : formatAmount(balance.data?.value.toString() || '0', selectedToken?.decimals)}{' '}
               available
             </button>
@@ -240,7 +238,7 @@ function SendPage(): ReactElement | null {
         </div>
 
         {/* Divider */}
-        <div className="border-t border-border" />
+        <div className="border-t border-border/50" />
 
         {/* Recipient */}
         <AddressInput label="Recipient" value={recipient} onChange={setRecipient} />
@@ -259,7 +257,7 @@ function SendPage(): ReactElement | null {
         </div>
 
         {/* Divider */}
-        <div className="border-t border-border" />
+        <div className="border-t border-border/50" />
 
         {/* Schedule Toggle */}
         <div>
@@ -378,7 +376,7 @@ function SendPage(): ReactElement | null {
         <FeeTokenSelector
           value={feeToken}
           onChange={setFeeToken}
-          className="pt-2 border-t border-border"
+          className="pt-2 border-t border-border/50"
         />
 
         {/* Submit */}
@@ -395,169 +393,345 @@ function SendPage(): ReactElement | null {
       <Dialog open={modalState !== null} onOpenChange={handleCloseModal}>
         <DialogContent
           hideClose={modalState === 'pending'}
-          className="sm:max-w-sm p-0 overflow-hidden"
+          className="sm:max-w-sm p-0 gap-0 overflow-hidden rounded-2xl"
         >
-          {modalState === 'confirm' &&
-            selectedToken &&
-            (() => {
-              const colors = getTokenColors(selectedToken.symbol);
-              return (
-                <div className="p-6">
-                  <DialogTitle className="sr-only">
-                    {isScheduled ? 'Confirm Scheduled Payment' : 'Confirm Payment'}
-                  </DialogTitle>
-                  <DialogDescription className="sr-only">
-                    {isScheduled ? 'Confirm your scheduled payment' : 'Confirm your payment'}
-                  </DialogDescription>
+          {/* CONFIRM STATE */}
+          {modalState === 'confirm' && selectedToken && feeToken && (
+            <>
+              <div className="px-6 pt-6 pb-4">
+                <DialogTitle className="text-lg font-semibold">
+                  {isScheduled ? 'Schedule Payment' : 'Confirm Payment'}
+                </DialogTitle>
+                <DialogDescription className="text-sm text-muted-foreground">
+                  Review the details before confirming
+                </DialogDescription>
+              </div>
 
-                  {/* Amount Display */}
-                  <div className="text-center mb-6">
-                    <div
-                      className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
-                      style={{ backgroundColor: colors.bg }}
-                    >
-                      <DollarSign className="h-7 w-7" style={{ color: colors.text }} />
+              <div className="px-6 pb-6">
+                {/* Amount Card */}
+                <div className="bg-muted/50 rounded-xl p-4 mb-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: getTokenColors(selectedToken.symbol).bg }}
+                      >
+                        <DollarSign
+                          className="h-5 w-5"
+                          style={{ color: getTokenColors(selectedToken.symbol).text }}
+                        />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Amount</p>
+                        <p className="text-lg font-semibold text-foreground">
+                          {amount} {selectedToken.symbol}
+                        </p>
+                      </div>
                     </div>
-                    <div className="flex items-baseline justify-center gap-1.5">
-                      <span className="text-4xl font-semibold tracking-tight text-foreground">
-                        {amount}
-                      </span>
-                      <span className="text-xl font-medium text-muted-foreground">
-                        {selectedToken.symbol}
-                      </span>
+                  </div>
+                </div>
+
+                {/* Recipient Card */}
+                <div className="bg-muted/50 rounded-xl p-4 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Wallet className="h-5 w-5 text-primary" />
                     </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-muted-foreground">Recipient</p>
+                      <p className="font-mono text-sm text-foreground truncate">
+                        {formatAddress(recipient, 10)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Details */}
+                {(memo || isScheduled) && (
+                  <div className="bg-muted/50 rounded-xl p-4 mb-4 space-y-3">
+                    {memo && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-full bg-violet-50 flex items-center justify-center shrink-0">
+                          <StickyNote className="h-4 w-4 text-violet-400" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs text-muted-foreground">Memo</p>
+                          <p className="text-sm text-foreground mt-0.5 break-words">{memo}</p>
+                        </div>
+                      </div>
+                    )}
                     {isScheduled && (
-                      <div className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-full bg-primary/10">
-                        <Clock className="h-3.5 w-3.5 text-primary" />
-                        <span className="text-[12px] font-medium text-primary">
-                          {new Date(Date.now() + scheduleSeconds * 1000).toLocaleTimeString([], {
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-sky-50 flex items-center justify-center shrink-0">
+                          <Clock className="h-4 w-4 text-sky-400" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-xs text-muted-foreground">Scheduled for</p>
+                          <p className="text-sm text-foreground font-medium mt-0.5">
+                            {new Date(Date.now() + scheduleSeconds * 1000).toLocaleTimeString([], {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 pb-6 flex items-center justify-end gap-2">
+                <Button variant="outline" onClick={() => setModalState(null)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSubmit}>{isScheduled ? 'Schedule' : 'Confirm'}</Button>
+              </div>
+            </>
+          )}
+
+          {/* PENDING STATE */}
+          {modalState === 'pending' && selectedToken && (
+            <div className="relative overflow-hidden">
+              <DialogTitle className="sr-only">Processing</DialogTitle>
+              <DialogDescription className="sr-only">Processing your payment</DialogDescription>
+
+              {/* Ambient background glow */}
+              <div className="absolute inset-0 overflow-hidden">
+                <motion.div
+                  animate={{
+                    scale: [1, 1.2, 1],
+                    opacity: [0.3, 0.5, 0.3],
+                  }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute -top-20 -left-20 w-40 h-40 rounded-full"
+                  style={{
+                    background:
+                      'radial-gradient(circle, rgba(52,211,153,0.15) 0%, transparent 70%)',
+                  }}
+                />
+                <motion.div
+                  animate={{
+                    scale: [1, 1.3, 1],
+                    opacity: [0.2, 0.4, 0.2],
+                  }}
+                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+                  className="absolute -bottom-20 -right-20 w-48 h-48 rounded-full"
+                  style={{
+                    background:
+                      'radial-gradient(circle, rgba(52,211,153,0.12) 0%, transparent 70%)',
+                  }}
+                />
+              </div>
+
+              <div className="relative px-6 py-12 text-center">
+                {/* Animated icon container */}
+                <div className="relative inline-flex items-center justify-center mb-6">
+                  {/* Outer rotating ring */}
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                    className="absolute w-16 h-16"
+                  >
+                    <svg viewBox="0 0 64 64" className="w-full h-full">
+                      <circle
+                        cx="32"
+                        cy="32"
+                        r="30"
+                        fill="none"
+                        stroke="url(#pendingGradient)"
+                        strokeWidth="1.5"
+                        strokeDasharray="50 140"
+                        strokeLinecap="round"
+                      />
+                      <defs>
+                        <linearGradient id="pendingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="rgba(52,211,153,0.7)" />
+                          <stop offset="100%" stopColor="rgba(52,211,153,0.1)" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </motion.div>
+
+                  {/* Inner pulsing circle */}
+                  <motion.div
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                    className="w-11 h-11 rounded-full flex items-center justify-center bg-emerald-50"
+                  >
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+                    >
+                      <Loader2 className="w-5 h-5 text-emerald-500" />
+                    </motion.div>
+                  </motion.div>
+                </div>
+
+                {/* Content */}
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1, duration: 0.4 }}
+                >
+                  <p className="text-[13px] font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                    {isScheduled ? 'Scheduling' : 'Sending'}
+                  </p>
+                  <p className="text-[32px] font-semibold text-foreground tracking-tight leading-none">
+                    {amount}
+                    <span className="text-[20px] font-medium text-muted-foreground ml-2">
+                      {selectedToken.symbol}
+                    </span>
+                  </p>
+                </motion.div>
+
+                {/* Recipient */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2, duration: 0.4 }}
+                  className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/60"
+                >
+                  <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="font-mono text-[12px] text-muted-foreground">
+                    {formatAddress(recipient, 6)}
+                  </span>
+                </motion.div>
+              </div>
+            </div>
+          )}
+
+          {/* SUCCESS STATE */}
+          {modalState === 'success' && txHash && selectedToken && (
+            <div className="relative overflow-hidden bg-white">
+              <DialogTitle className="sr-only">Success</DialogTitle>
+              <DialogDescription className="sr-only">Payment completed</DialogDescription>
+
+              <div className="relative px-6 pt-10 pb-8 text-center">
+                {/* Animated success icon */}
+                <div className="relative inline-flex items-center justify-center mb-8">
+                  {/* Circle container */}
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                    className="w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center"
+                  >
+                    {/* Animated checkmark SVG */}
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      className="text-white"
+                    >
+                      <motion.path
+                        d="M5 13l4 4L19 7"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{ duration: 0.4, delay: 0.3, ease: 'easeOut' }}
+                      />
+                    </svg>
+                  </motion.div>
+                </div>
+
+                {/* Success text */}
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.4 }}
+                  className="text-foreground text-sm font-semibold mb-1"
+                >
+                  {isScheduled ? 'Payment Scheduled' : 'Payment Successful'}
+                </motion.p>
+
+                {/* Amount */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.4 }}
+                  className="mb-6"
+                >
+                  <span className="text-3xl font-semibold text-foreground">{amount}</span>
+                  <span className="text-lg text-muted-foreground ml-1.5">
+                    {selectedToken.symbol}
+                  </span>
+                </motion.div>
+
+                {/* Details card */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6, duration: 0.4 }}
+                  className="bg-muted/50 rounded-xl p-4 space-y-3 text-left"
+                >
+                  {/* Recipient */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">To</span>
+                    <div className="flex items-center gap-1.5">
+                      <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="font-mono text-xs text-foreground">
+                        {formatAddress(recipient, 8)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Scheduled time */}
+                  {isScheduled && scheduledForTimestamp && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Executes</span>
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-sky-500" />
+                        <span className="text-xs font-medium text-foreground">
+                          {new Date(scheduledForTimestamp * 1000).toLocaleTimeString([], {
                             hour: '2-digit',
                             minute: '2-digit',
                           })}
                         </span>
                       </div>
-                    )}
-                  </div>
-
-                  {/* Details */}
-                  <div className="space-y-2 mb-6">
-                    <div className="flex items-center justify-between py-2">
-                      <span className="text-[13px] text-muted-foreground">To</span>
-                      <span className="font-mono text-[13px] text-foreground">
-                        {formatAddress(recipient, 8)}
-                      </span>
                     </div>
-                    {memo && (
-                      <div className="flex items-center justify-between py-2">
-                        <span className="text-[13px] text-muted-foreground">Memo</span>
-                        <span className="text-[13px] text-foreground truncate max-w-[180px]">
-                          {memo}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Warning for scheduled */}
-                  {isScheduled && (
-                    <p className="text-[11px] text-center text-muted-foreground mb-5">
-                      Scheduled payments cannot be cancelled
-                    </p>
                   )}
 
-                  {/* Actions */}
-                  <div className="space-y-2">
-                    <Button className="w-full h-11" onClick={handleSubmit}>
-                      {isScheduled ? 'Schedule Payment' : 'Send Payment'}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      className="w-full h-10 text-muted-foreground"
-                      onClick={() => setModalState(null)}
+                  {/* Transaction hash */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Transaction</span>
+                    <button
+                      onClick={() => window.open(getExplorerTxUrl(txHash), '_blank')}
+                      className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
                     >
-                      Cancel
-                    </Button>
+                      <span className="font-mono">
+                        {txHash.slice(0, 8)}...{txHash.slice(-4)}
+                      </span>
+                      <ExternalLink className="w-3 h-3" />
+                    </button>
                   </div>
-                </div>
-              );
-            })()}
+                </motion.div>
+              </div>
 
-          {modalState === 'pending' && selectedToken && (
-            <div className="p-8 text-center">
-              <DialogTitle className="sr-only">Processing</DialogTitle>
-              <DialogDescription className="sr-only">
-                {isScheduled ? 'Scheduling payment' : 'Processing payment'}
-              </DialogDescription>
-
-              <Loader2 className="h-8 w-8 text-primary animate-spin mx-auto mb-4" />
-              <p className="text-[14px] text-muted-foreground">
-                {isScheduled ? 'Scheduling' : 'Sending'} {amount} {selectedToken.symbol}
-              </p>
-            </div>
-          )}
-
-          {modalState === 'success' && txHash && selectedToken && (
-            <div className="p-6 text-center">
-              <DialogTitle className="sr-only">{isScheduled ? 'Scheduled' : 'Success'}</DialogTitle>
-              <DialogDescription className="sr-only">
-                {isScheduled ? 'Payment scheduled' : 'Payment sent'}
-              </DialogDescription>
-
+              {/* Footer */}
               <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.2 }}
-                className={cn(
-                  'w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4',
-                  isScheduled ? 'bg-primary/10' : 'bg-emerald-500/10'
-                )}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.7, duration: 0.4 }}
+                className="px-6 pb-6 flex items-center gap-2"
               >
-                {isScheduled ? (
-                  <Clock className="h-7 w-7 text-primary" />
-                ) : (
-                  <Check className="h-7 w-7 text-emerald-500" />
-                )}
-              </motion.div>
-
-              <p className="text-xl font-semibold text-foreground mb-1">
-                {isScheduled ? 'Payment Scheduled' : 'Payment Sent'}
-              </p>
-              <p className="text-[14px] text-muted-foreground">
-                {amount} {selectedToken.symbol} to {formatAddress(recipient, 4)}
-              </p>
-              {isScheduled && scheduledForTimestamp && (
-                <p className="text-[13px] text-primary mt-2">
-                  Executes at{' '}
-                  {new Date(scheduledForTimestamp * 1000).toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </p>
-              )}
-
-              <button
-                onClick={() => window.open(getExplorerTxUrl(txHash), '_blank')}
-                className="inline-flex items-center gap-1.5 mt-5 text-[12px] text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <span className="font-mono">
-                  {txHash.slice(0, 8)}...{txHash.slice(-6)}
-                </span>
-                <ExternalLink className="h-3 w-3" />
-              </button>
-
-              <div className="mt-6 space-y-2">
-                <Button className="w-full h-11" onClick={resetForm}>
-                  Send Another
-                </Button>
                 {isScheduled && (
                   <Button
-                    variant="ghost"
-                    className="w-full h-10 text-muted-foreground"
+                    variant="outline"
+                    className="flex-1"
                     onClick={() => navigate({ to: '/portal/scheduled' })}
                   >
                     View Scheduled
                   </Button>
                 )}
-              </div>
+                <Button className="flex-1" onClick={resetForm}>
+                  Done
+                </Button>
+              </motion.div>
             </div>
           )}
         </DialogContent>

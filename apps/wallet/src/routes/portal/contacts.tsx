@@ -1,7 +1,17 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, type ReactElement } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Plus, Search, User, Pencil, Trash2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  Plus,
+  Search,
+  User,
+  Copy,
+  Check,
+  Pencil,
+  Trash2,
+  ExternalLink,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -27,6 +37,13 @@ function ContactsPage(): ReactElement {
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  const handleCopy = (contact: Contact): void => {
+    navigator.clipboard.writeText(contact.address);
+    setCopiedId(contact.id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
 
   const filteredContacts = contacts.filter(
     contact =>
@@ -67,6 +84,18 @@ function ContactsPage(): ReactElement {
       toast.error('Invalid address');
       return;
     }
+    // Check for duplicate name
+    const duplicateName = contacts.find(c => c.name.toLowerCase() === name.trim().toLowerCase());
+    if (duplicateName) {
+      toast.error('Contact with this name already exists');
+      return;
+    }
+    // Check for duplicate address
+    const duplicateAddress = contacts.find(c => c.address.toLowerCase() === address.toLowerCase());
+    if (duplicateAddress) {
+      toast.error('Contact with this address already exists');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -88,6 +117,22 @@ function ContactsPage(): ReactElement {
     }
     if (!isValidAddress(address)) {
       toast.error('Invalid address');
+      return;
+    }
+    // Check for duplicate name (excluding current contact)
+    const duplicateName = contacts.find(
+      c => c.id !== selectedContact.id && c.name.toLowerCase() === name.trim().toLowerCase()
+    );
+    if (duplicateName) {
+      toast.error('Contact with this name already exists');
+      return;
+    }
+    // Check for duplicate address (excluding current contact)
+    const duplicateAddress = contacts.find(
+      c => c.id !== selectedContact.id && c.address.toLowerCase() === address.toLowerCase()
+    );
+    if (duplicateAddress) {
+      toast.error('Contact with this address already exists');
       return;
     }
 
@@ -196,15 +241,32 @@ function ContactsPage(): ReactElement {
                     <p className="text-[13px] font-medium text-foreground truncate">
                       {contact.name}
                     </p>
-                    <button
-                      onClick={() => window.open(getExplorerAddressUrl(contact.address), '_blank')}
-                      className="text-[11px] text-muted-foreground hover:text-primary font-mono transition-colors"
-                    >
-                      {formatAddress(contact.address, 6)}
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[11px] text-muted-foreground font-mono">
+                        {formatAddress(contact.address, 6)}
+                      </span>
+                      <button
+                        onClick={() =>
+                          window.open(getExplorerAddressUrl(contact.address), '_blank')
+                        }
+                        className="p-0.5 rounded hover:bg-muted transition-colors"
+                      >
+                        <ExternalLink className="h-3 w-3 text-muted-foreground hover:text-primary" />
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handleCopy(contact)}
+                    className="p-2 rounded-md hover:bg-muted transition-colors"
+                  >
+                    {copiedId === contact.id ? (
+                      <Check className="h-3.5 w-3.5 text-emerald-500" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                    )}
+                  </button>
                   <button
                     onClick={() => handleOpenEdit(contact)}
                     className="p-2 rounded-md hover:bg-muted transition-colors"

@@ -9,12 +9,18 @@ import {
   DollarSign,
   Loader2,
   AlertCircle,
+  ChevronDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { FeeTokenSelector } from '@/components/FeeTokenSelector';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useTempo, useTokenBalance } from '@/hooks/useTempo';
 import { useTokenList } from '@/hooks/useTokenList';
 import { formatAmount, parseAmount, cn } from '@/lib/utils';
@@ -142,9 +148,6 @@ function SwapPage(): ReactElement | null {
       });
       setTxHash(hash);
       setModalState('success');
-      toast.success('Swap completed!', {
-        description: `Swapped ${amountIn} ${tokenIn.symbol} for ${amountOut} ${tokenOut.symbol}`,
-      });
     } catch (err) {
       console.error(err);
       // Check for InsufficientLiquidity error (0x13be252b)
@@ -158,7 +161,7 @@ function SwapPage(): ReactElement | null {
           description: 'Please try again or contact support',
         });
       }
-      setModalState(null);
+      setModalState('confirm');
     }
   };
 
@@ -204,7 +207,7 @@ function SwapPage(): ReactElement | null {
                   setAmountIn(formatAmount(balanceIn.data.value.toString(), tokenIn.decimals));
                 }
               }}
-              className="text-[11px] text-primary hover:text-primary/80 transition-colors font-medium"
+              className="text-[11px] text-muted-foreground"
             >
               Balance:{' '}
               {balanceIn.isLoading
@@ -214,50 +217,56 @@ function SwapPage(): ReactElement | null {
           </div>
 
           <div className="flex items-center gap-3">
-            <input
-              type="text"
-              inputMode="decimal"
-              placeholder="0"
-              value={amountIn}
-              onChange={e => {
-                const val = e.target.value.replace(/[^0-9.]/g, '');
-                if (val.split('.').length <= 2) setAmountIn(val);
-              }}
-              className="flex-1 text-2xl font-medium text-foreground bg-transparent border-none outline-none placeholder:text-muted-foreground/40"
-            />
+            <div className="flex-1">
+              <input
+                type="text"
+                inputMode="decimal"
+                placeholder="0"
+                value={amountIn}
+                onChange={e => {
+                  const val = e.target.value.replace(/[^0-9.]/g, '');
+                  if (val.split('.').length <= 2) setAmountIn(val);
+                }}
+                className="w-full text-2xl font-medium text-foreground bg-transparent border-none outline-none placeholder:text-muted-foreground/40"
+              />
+            </div>
 
             {/* Token Selector */}
-            <Select
-              value={tokenIn?.address}
-              onValueChange={value => {
-                const token = tokens.find(t => t.address === value);
-                if (token) {
-                  if (token.address === tokenOut?.address) {
-                    setTokenOut(tokenIn);
-                  }
-                  setTokenIn(token);
-                }
-              }}
-            >
-              <SelectTrigger className="w-auto h-9 min-w-[110px] bg-white shadow-sm border-gray-200">
-                {tokenIn && (
-                  <div className="flex items-center gap-1.5">
-                    <div
-                      className="w-5 h-5 rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: getTokenColors(tokenIn.symbol).bg }}
-                    >
-                      <DollarSign
-                        className="h-3 w-3"
-                        style={{ color: getTokenColors(tokenIn.symbol).text }}
-                      />
-                    </div>
-                    <span className="text-[13px] font-medium">{tokenIn.symbol}</span>
-                  </div>
-                )}
-              </SelectTrigger>
-              <SelectContent>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 h-9 px-3 min-w-[110px] bg-white shadow-sm border border-gray-200 rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  {tokenIn && (
+                    <>
+                      <div
+                        className="w-5 h-5 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: getTokenColors(tokenIn.symbol).bg }}
+                      >
+                        <DollarSign
+                          className="h-3 w-3"
+                          style={{ color: getTokenColors(tokenIn.symbol).text }}
+                        />
+                      </div>
+                      <span className="text-[13px] font-medium">{tokenIn.symbol}</span>
+                    </>
+                  )}
+                  <ChevronDown className="h-3.5 w-3.5 opacity-50 ml-auto" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
                 {tokens.map(token => (
-                  <SelectItem key={token.address} value={token.address}>
+                  <DropdownMenuItem
+                    key={token.address}
+                    onClick={() => {
+                      if (token.address === tokenOut?.address) {
+                        setTokenOut(tokenIn);
+                      }
+                      setTokenIn(token);
+                    }}
+                    className="flex items-center justify-between gap-2"
+                  >
                     <div className="flex items-center gap-2">
                       <div
                         className="w-5 h-5 rounded-full flex items-center justify-center"
@@ -270,10 +279,13 @@ function SwapPage(): ReactElement | null {
                       </div>
                       {token.symbol}
                     </div>
-                  </SelectItem>
+                    {tokenIn?.address === token.address && (
+                      <Check className="h-3.5 w-3.5 text-primary" />
+                    )}
+                  </DropdownMenuItem>
                 ))}
-              </SelectContent>
-            </Select>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {amountIn && parsedAmountIn > 0n && !hasBalance && (
@@ -325,37 +337,41 @@ function SwapPage(): ReactElement | null {
             </div>
 
             {/* Token Selector */}
-            <Select
-              value={tokenOut?.address}
-              onValueChange={value => {
-                const token = tokens.find(t => t.address === value);
-                if (token) {
-                  if (token.address === tokenIn?.address) {
-                    setTokenIn(tokenOut);
-                  }
-                  setTokenOut(token);
-                }
-              }}
-            >
-              <SelectTrigger className="w-auto h-9 min-w-[110px] bg-white shadow-sm border-gray-200">
-                {tokenOut && (
-                  <div className="flex items-center gap-1.5">
-                    <div
-                      className="w-5 h-5 rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: getTokenColors(tokenOut.symbol).bg }}
-                    >
-                      <DollarSign
-                        className="h-3 w-3"
-                        style={{ color: getTokenColors(tokenOut.symbol).text }}
-                      />
-                    </div>
-                    <span className="text-[13px] font-medium">{tokenOut.symbol}</span>
-                  </div>
-                )}
-              </SelectTrigger>
-              <SelectContent>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="flex items-center gap-1.5 h-9 px-3 min-w-[110px] bg-white shadow-sm border border-gray-200 rounded-lg hover:bg-muted/50 transition-colors"
+                >
+                  {tokenOut && (
+                    <>
+                      <div
+                        className="w-5 h-5 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: getTokenColors(tokenOut.symbol).bg }}
+                      >
+                        <DollarSign
+                          className="h-3 w-3"
+                          style={{ color: getTokenColors(tokenOut.symbol).text }}
+                        />
+                      </div>
+                      <span className="text-[13px] font-medium">{tokenOut.symbol}</span>
+                    </>
+                  )}
+                  <ChevronDown className="h-3.5 w-3.5 opacity-50 ml-auto" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
                 {tokens.map(token => (
-                  <SelectItem key={token.address} value={token.address}>
+                  <DropdownMenuItem
+                    key={token.address}
+                    onClick={() => {
+                      if (token.address === tokenIn?.address) {
+                        setTokenIn(tokenOut);
+                      }
+                      setTokenOut(token);
+                    }}
+                    className="flex items-center justify-between gap-2"
+                  >
                     <div className="flex items-center gap-2">
                       <div
                         className="w-5 h-5 rounded-full flex items-center justify-center"
@@ -368,10 +384,13 @@ function SwapPage(): ReactElement | null {
                       </div>
                       {token.symbol}
                     </div>
-                  </SelectItem>
+                    {tokenOut?.address === token.address && (
+                      <Check className="h-3.5 w-3.5 text-primary" />
+                    )}
+                  </DropdownMenuItem>
                 ))}
-              </SelectContent>
-            </Select>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* No Liquidity Warning */}
@@ -426,114 +445,322 @@ function SwapPage(): ReactElement | null {
       <Dialog open={modalState !== null} onOpenChange={handleCloseModal}>
         <DialogContent
           hideClose={modalState === 'pending'}
-          className="sm:max-w-sm p-0 overflow-hidden"
+          className="sm:max-w-sm p-0 gap-0 overflow-hidden rounded-2xl"
         >
-          {modalState === 'confirm' && tokenIn && tokenOut && (
-            <div className="p-5">
-              <DialogTitle className="sr-only">Confirm Swap</DialogTitle>
-              <DialogDescription className="sr-only">Confirm your swap</DialogDescription>
-
-              <div className="text-center mb-5">
-                <p className="text-[13px] text-muted-foreground mb-1">Swap</p>
-                <p className="text-2xl font-semibold text-foreground">
-                  {amountIn}{' '}
-                  <span className="text-muted-foreground font-normal">{tokenIn.symbol}</span>
-                </p>
-                <ArrowUpDown className="h-4 w-4 text-muted-foreground mx-auto my-2" />
-                <p className="text-2xl font-semibold text-foreground">
-                  {amountOut}{' '}
-                  <span className="text-muted-foreground font-normal">{tokenOut.symbol}</span>
-                </p>
+          {/* CONFIRM STATE */}
+          {modalState === 'confirm' && tokenIn && tokenOut && feeToken && (
+            <>
+              <div className="px-6 pt-6 pb-4">
+                <DialogTitle className="text-lg font-semibold">Confirm Swap</DialogTitle>
+                <DialogDescription className="text-sm text-muted-foreground">
+                  Review the details before confirming
+                </DialogDescription>
               </div>
 
-              <div className="bg-muted/50 rounded-lg p-3 space-y-2.5 mb-5">
-                <div className="flex justify-between text-[13px]">
-                  <span className="text-muted-foreground">Rate</span>
-                  <span className="text-foreground">
-                    1 {tokenIn.symbol} = {(Number(amountOut) / Number(amountIn)).toFixed(4)}{' '}
-                    {tokenOut.symbol}
-                  </span>
+              <div className="px-6 pb-6">
+                {/* From Token Card */}
+                <div className="bg-muted/50 rounded-xl p-4 mb-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: getTokenColors(tokenIn.symbol).bg }}
+                      >
+                        <DollarSign
+                          className="h-5 w-5"
+                          style={{ color: getTokenColors(tokenIn.symbol).text }}
+                        />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">You Pay</p>
+                        <p className="text-lg font-semibold text-foreground">
+                          {amountIn} {tokenIn.symbol}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex justify-between text-[13px]">
-                  <span className="text-muted-foreground">Min. received</span>
-                  <span className="text-foreground">
-                    {formatAmount(minAmountOut.toString(), tokenOut.decimals)} {tokenOut.symbol}
-                  </span>
+
+                {/* Arrow */}
+                <div className="flex justify-center -my-1.5 relative z-10">
+                  <div className="w-8 h-8 rounded-full bg-white border border-border/50 flex items-center justify-center">
+                    <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                  </div>
                 </div>
-                <div className="flex justify-between text-[13px]">
-                  <span className="text-muted-foreground">Fee</span>
-                  <span className="text-success">
-                    &lt;$0.001 <span className="text-muted-foreground">({feeToken?.symbol})</span>
-                  </span>
+
+                {/* To Token Card */}
+                <div className="bg-muted/50 rounded-xl p-4 mb-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-10 h-10 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: getTokenColors(tokenOut.symbol).bg }}
+                      >
+                        <DollarSign
+                          className="h-5 w-5"
+                          style={{ color: getTokenColors(tokenOut.symbol).text }}
+                        />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">You Receive</p>
+                        <p className="text-lg font-semibold text-foreground">
+                          {amountOut} {tokenOut.symbol}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Details Card */}
+                <div className="bg-muted/50 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Rate</span>
+                    <span className="text-xs font-medium text-foreground">
+                      1 {tokenIn.symbol} = {(Number(amountOut) / Number(amountIn)).toFixed(4)}{' '}
+                      {tokenOut.symbol}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Min. received</span>
+                    <span className="text-xs font-medium text-foreground">
+                      {formatAmount(minAmountOut.toString(), tokenOut.decimals)} {tokenOut.symbol}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Slippage</span>
+                    <span className="text-xs font-medium text-foreground">{slippage}%</span>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1 h-10"
-                  onClick={() => setModalState(null)}
-                >
+              {/* Footer */}
+              <div className="px-6 pb-6 flex items-center justify-end gap-2">
+                <Button variant="outline" onClick={() => setModalState(null)}>
                   Cancel
                 </Button>
-                <Button className="flex-1 h-10" onClick={handleSubmit}>
-                  Confirm Swap
-                </Button>
+                <Button onClick={handleSubmit}>Confirm</Button>
+              </div>
+            </>
+          )}
+
+          {/* PENDING STATE */}
+          {modalState === 'pending' && tokenIn && tokenOut && (
+            <div className="relative overflow-hidden">
+              <DialogTitle className="sr-only">Processing</DialogTitle>
+              <DialogDescription className="sr-only">Processing your swap</DialogDescription>
+
+              {/* Ambient background glow */}
+              <div className="absolute inset-0 overflow-hidden">
+                <motion.div
+                  animate={{
+                    scale: [1, 1.2, 1],
+                    opacity: [0.3, 0.5, 0.3],
+                  }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute -top-20 -left-20 w-40 h-40 rounded-full"
+                  style={{
+                    background:
+                      'radial-gradient(circle, rgba(52,211,153,0.15) 0%, transparent 70%)',
+                  }}
+                />
+                <motion.div
+                  animate={{
+                    scale: [1, 1.3, 1],
+                    opacity: [0.2, 0.4, 0.2],
+                  }}
+                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+                  className="absolute -bottom-20 -right-20 w-48 h-48 rounded-full"
+                  style={{
+                    background:
+                      'radial-gradient(circle, rgba(52,211,153,0.12) 0%, transparent 70%)',
+                  }}
+                />
+              </div>
+
+              <div className="relative px-6 py-12 text-center">
+                {/* Animated icon container */}
+                <div className="relative inline-flex items-center justify-center mb-6">
+                  {/* Outer rotating ring */}
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                    className="absolute w-16 h-16"
+                  >
+                    <svg viewBox="0 0 64 64" className="w-full h-full">
+                      <circle
+                        cx="32"
+                        cy="32"
+                        r="30"
+                        fill="none"
+                        stroke="url(#swapPendingGradient)"
+                        strokeWidth="1.5"
+                        strokeDasharray="50 140"
+                        strokeLinecap="round"
+                      />
+                      <defs>
+                        <linearGradient
+                          id="swapPendingGradient"
+                          x1="0%"
+                          y1="0%"
+                          x2="100%"
+                          y2="100%"
+                        >
+                          <stop offset="0%" stopColor="rgba(52,211,153,0.7)" />
+                          <stop offset="100%" stopColor="rgba(52,211,153,0.1)" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </motion.div>
+
+                  {/* Inner pulsing circle */}
+                  <motion.div
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                    className="w-11 h-11 rounded-full flex items-center justify-center bg-emerald-50"
+                  >
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+                    >
+                      <Loader2 className="w-5 h-5 text-emerald-500" />
+                    </motion.div>
+                  </motion.div>
+                </div>
+
+                {/* Content */}
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1, duration: 0.4 }}
+                >
+                  <p className="text-[13px] font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                    Swapping
+                  </p>
+                  <p className="text-[28px] font-semibold text-foreground tracking-tight leading-none">
+                    {amountIn}
+                    <span className="text-[18px] font-medium text-muted-foreground ml-2">
+                      {tokenIn.symbol}
+                    </span>
+                  </p>
+                  <div className="flex items-center justify-center my-2">
+                    <ArrowUpDown className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                  <p className="text-[28px] font-semibold text-foreground tracking-tight leading-none">
+                    {amountOut}
+                    <span className="text-[18px] font-medium text-muted-foreground ml-2">
+                      {tokenOut.symbol}
+                    </span>
+                  </p>
+                </motion.div>
               </div>
             </div>
           )}
 
-          {modalState === 'pending' && tokenIn && tokenOut && (
-            <div className="p-8 text-center">
-              <DialogTitle className="sr-only">Processing</DialogTitle>
-              <DialogDescription className="sr-only">Processing swap</DialogDescription>
-
-              <Loader2 className="h-8 w-8 text-primary animate-spin mx-auto mb-4" />
-              <p className="text-[14px] text-muted-foreground">
-                Swapping {amountIn} {tokenIn.symbol} for {tokenOut.symbol}
-              </p>
-            </div>
-          )}
-
+          {/* SUCCESS STATE */}
           {modalState === 'success' && txHash && tokenIn && tokenOut && (
-            <div className="p-5 text-center">
+            <div className="relative overflow-hidden bg-white">
               <DialogTitle className="sr-only">Success</DialogTitle>
               <DialogDescription className="sr-only">Swap completed</DialogDescription>
 
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.2 }}
-                className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4"
-              >
-                <Check className="h-6 w-6 text-success" />
-              </motion.div>
+              <div className="relative px-6 pt-10 pb-8 text-center">
+                {/* Animated success icon */}
+                <div className="relative inline-flex items-center justify-center mb-8">
+                  {/* Circle container */}
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                    className="w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center"
+                  >
+                    {/* Animated checkmark SVG */}
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      className="text-white"
+                    >
+                      <motion.path
+                        d="M5 13l4 4L19 7"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{ duration: 0.4, delay: 0.3, ease: 'easeOut' }}
+                      />
+                    </svg>
+                  </motion.div>
+                </div>
 
-              <p className="text-[15px] font-semibold text-foreground mb-0.5">Swap Completed</p>
-              <p className="text-[13px] text-muted-foreground mb-4">
-                {amountIn} {tokenIn.symbol} for {amountOut} {tokenOut.symbol}
-              </p>
-
-              <div className="bg-muted/50 rounded-lg p-3 mb-4">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
-                  Transaction
-                </p>
-                <p className="font-mono text-[11px] text-foreground break-all">{txHash}</p>
-              </div>
-
-              <div className="flex gap-2">
-                <a
-                  href={getExplorerTxUrl(txHash)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-lg border border-border text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                {/* Success text */}
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.4 }}
+                  className="text-foreground text-sm font-semibold mb-1"
                 >
-                  Explorer <ExternalLink className="h-3 w-3" />
-                </a>
-                <Button className="flex-1 h-10" onClick={resetForm}>
-                  Swap Again
-                </Button>
+                  Swap Successful
+                </motion.p>
+
+                {/* Amount */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.4 }}
+                  className="mb-6"
+                >
+                  <span className="text-2xl font-semibold text-foreground">{amountIn}</span>
+                  <span className="text-base text-muted-foreground ml-1.5">{tokenIn.symbol}</span>
+                  <span className="text-muted-foreground mx-2">→</span>
+                  <span className="text-2xl font-semibold text-foreground">{amountOut}</span>
+                  <span className="text-base text-muted-foreground ml-1.5">{tokenOut.symbol}</span>
+                </motion.div>
+
+                {/* Details card */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6, duration: 0.4 }}
+                  className="bg-muted/50 rounded-xl p-4 space-y-3 text-left"
+                >
+                  {/* Rate */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Rate</span>
+                    <span className="text-xs font-medium text-foreground">
+                      1 {tokenIn.symbol} = {(Number(amountOut) / Number(amountIn)).toFixed(4)}{' '}
+                      {tokenOut.symbol}
+                    </span>
+                  </div>
+
+                  {/* Transaction hash */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Transaction</span>
+                    <button
+                      onClick={() => window.open(getExplorerTxUrl(txHash), '_blank')}
+                      className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+                    >
+                      <span className="font-mono">
+                        {txHash.slice(0, 8)}...{txHash.slice(-4)}
+                      </span>
+                      <ExternalLink className="w-3 h-3" />
+                    </button>
+                  </div>
+                </motion.div>
               </div>
+
+              {/* Footer */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.7, duration: 0.4 }}
+                className="px-6 pb-6 flex items-center gap-2"
+              >
+                <Button className="flex-1" onClick={resetForm}>
+                  Done
+                </Button>
+              </motion.div>
             </div>
           )}
         </DialogContent>

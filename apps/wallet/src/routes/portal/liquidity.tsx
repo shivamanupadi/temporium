@@ -11,12 +11,18 @@ import {
   Loader2,
   Droplets,
   AlertCircle,
+  ChevronDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { FeeTokenSelector } from '@/components/FeeTokenSelector';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger } from '@/components/ui/select';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTempo, useTokenBalance } from '@/hooks/useTempo';
 import { useTokenList } from '@/hooks/useTokenList';
@@ -146,17 +152,13 @@ function LiquidityPage(): ReactElement | null {
       }
       setTxHash(hash);
       setModalState('success');
-      const actionText = actionType === 'add' ? 'added' : 'removed';
-      toast.success(`Liquidity ${actionText}!`, {
-        description: `Successfully ${actionText} liquidity to ${userToken.symbol}/${validatorToken.symbol} pool`,
-      });
     } catch (err) {
       console.error(err);
       const errorMessage = err instanceof Error ? err.message : String(err);
       toast.error(`Failed to ${actionType} liquidity`, {
         description: errorMessage.slice(0, 100),
       });
-      setModalState(null);
+      setModalState('confirm');
     }
   };
 
@@ -217,37 +219,41 @@ function LiquidityPage(): ReactElement | null {
               <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5 block">
                 Token A
               </label>
-              <Select
-                value={userToken?.address}
-                onValueChange={value => {
-                  const token = tokens.find(t => t.address === value);
-                  if (token) {
-                    if (token.address === validatorToken?.address) {
-                      setValidatorToken(userToken);
-                    }
-                    setUserToken(token);
-                  }
-                }}
-              >
-                <SelectTrigger className="w-full h-10 bg-white shadow-sm border-gray-200">
-                  {userToken && (
-                    <div className="flex items-center gap-1.5">
-                      <div
-                        className="w-5 h-5 rounded-full flex items-center justify-center"
-                        style={{ backgroundColor: getTokenColors(userToken.symbol).bg }}
-                      >
-                        <DollarSign
-                          className="h-3 w-3"
-                          style={{ color: getTokenColors(userToken.symbol).text }}
-                        />
-                      </div>
-                      <span className="text-[13px] font-medium">{userToken.symbol}</span>
-                    </div>
-                  )}
-                </SelectTrigger>
-                <SelectContent>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex items-center gap-1.5 w-full h-10 px-3 bg-white shadow-sm border border-gray-200 rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    {userToken && (
+                      <>
+                        <div
+                          className="w-5 h-5 rounded-full flex items-center justify-center"
+                          style={{ backgroundColor: getTokenColors(userToken.symbol).bg }}
+                        >
+                          <DollarSign
+                            className="h-3 w-3"
+                            style={{ color: getTokenColors(userToken.symbol).text }}
+                          />
+                        </div>
+                        <span className="text-[13px] font-medium">{userToken.symbol}</span>
+                      </>
+                    )}
+                    <ChevronDown className="h-3.5 w-3.5 opacity-50 ml-auto" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
                   {tokens.map(token => (
-                    <SelectItem key={token.address} value={token.address}>
+                    <DropdownMenuItem
+                      key={token.address}
+                      onClick={() => {
+                        if (token.address === validatorToken?.address) {
+                          setValidatorToken(userToken);
+                        }
+                        setUserToken(token);
+                      }}
+                      className="flex items-center justify-between gap-2"
+                    >
                       <div className="flex items-center gap-2">
                         <div
                           className="w-5 h-5 rounded-full flex items-center justify-center"
@@ -260,10 +266,13 @@ function LiquidityPage(): ReactElement | null {
                         </div>
                         {token.symbol}
                       </div>
-                    </SelectItem>
+                      {userToken?.address === token.address && (
+                        <Check className="h-3.5 w-3.5 text-primary" />
+                      )}
+                    </DropdownMenuItem>
                   ))}
-                </SelectContent>
-              </Select>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
 
             {/* Validator Token */}
@@ -271,37 +280,41 @@ function LiquidityPage(): ReactElement | null {
               <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5 block">
                 Token B
               </label>
-              <Select
-                value={validatorToken?.address}
-                onValueChange={value => {
-                  const token = tokens.find(t => t.address === value);
-                  if (token) {
-                    if (token.address === userToken?.address) {
-                      setUserToken(validatorToken);
-                    }
-                    setValidatorToken(token);
-                  }
-                }}
-              >
-                <SelectTrigger className="w-full h-10 bg-white shadow-sm border-gray-200">
-                  {validatorToken && (
-                    <div className="flex items-center gap-1.5">
-                      <div
-                        className="w-5 h-5 rounded-full flex items-center justify-center"
-                        style={{ backgroundColor: getTokenColors(validatorToken.symbol).bg }}
-                      >
-                        <DollarSign
-                          className="h-3 w-3"
-                          style={{ color: getTokenColors(validatorToken.symbol).text }}
-                        />
-                      </div>
-                      <span className="text-[13px] font-medium">{validatorToken.symbol}</span>
-                    </div>
-                  )}
-                </SelectTrigger>
-                <SelectContent>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex items-center gap-1.5 w-full h-10 px-3 bg-white shadow-sm border border-gray-200 rounded-lg hover:bg-muted/50 transition-colors"
+                  >
+                    {validatorToken && (
+                      <>
+                        <div
+                          className="w-5 h-5 rounded-full flex items-center justify-center"
+                          style={{ backgroundColor: getTokenColors(validatorToken.symbol).bg }}
+                        >
+                          <DollarSign
+                            className="h-3 w-3"
+                            style={{ color: getTokenColors(validatorToken.symbol).text }}
+                          />
+                        </div>
+                        <span className="text-[13px] font-medium">{validatorToken.symbol}</span>
+                      </>
+                    )}
+                    <ChevronDown className="h-3.5 w-3.5 opacity-50 ml-auto" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
                   {tokens.map(token => (
-                    <SelectItem key={token.address} value={token.address}>
+                    <DropdownMenuItem
+                      key={token.address}
+                      onClick={() => {
+                        if (token.address === userToken?.address) {
+                          setUserToken(validatorToken);
+                        }
+                        setValidatorToken(token);
+                      }}
+                      className="flex items-center justify-between gap-2"
+                    >
                       <div className="flex items-center gap-2">
                         <div
                           className="w-5 h-5 rounded-full flex items-center justify-center"
@@ -314,10 +327,13 @@ function LiquidityPage(): ReactElement | null {
                         </div>
                         {token.symbol}
                       </div>
-                    </SelectItem>
+                      {validatorToken?.address === token.address && (
+                        <Check className="h-3.5 w-3.5 text-primary" />
+                      )}
+                    </DropdownMenuItem>
                   ))}
-                </SelectContent>
-              </Select>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
@@ -446,128 +462,299 @@ function LiquidityPage(): ReactElement | null {
       <Dialog open={modalState !== null} onOpenChange={handleCloseModal}>
         <DialogContent
           hideClose={modalState === 'pending'}
-          className="sm:max-w-sm p-0 overflow-hidden"
+          className="sm:max-w-sm p-0 gap-0 overflow-hidden rounded-2xl"
         >
-          {modalState === 'confirm' && userToken && validatorToken && (
-            <div className="p-5">
-              <DialogTitle className="sr-only">
-                Confirm {actionType === 'add' ? 'Add' : 'Remove'} Liquidity
-              </DialogTitle>
-              <DialogDescription className="sr-only">
-                Confirm your liquidity action
-              </DialogDescription>
+          {/* CONFIRM STATE */}
+          {modalState === 'confirm' && userToken && validatorToken && feeToken && (
+            <>
+              <div className="px-6 pt-6 pb-4">
+                <DialogTitle className="text-lg font-semibold">
+                  {actionType === 'add' ? 'Add Liquidity' : 'Remove Liquidity'}
+                </DialogTitle>
+                <DialogDescription className="text-sm text-muted-foreground">
+                  Review the details before confirming
+                </DialogDescription>
+              </div>
 
-              <div className="text-center mb-5">
-                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                  {actionType === 'add' ? (
-                    <Plus className="h-6 w-6 text-primary" />
-                  ) : (
-                    <Minus className="h-6 w-6 text-primary" />
+              <div className="px-6 pb-6">
+                {/* Amount Card */}
+                <div className="bg-muted/50 rounded-xl p-4 mb-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                        {actionType === 'add' ? (
+                          <Plus className="h-5 w-5 text-primary" />
+                        ) : (
+                          <Minus className="h-5 w-5 text-primary" />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Amount</p>
+                        <p className="text-lg font-semibold text-foreground">
+                          {amount} {actionType === 'add' ? validatorToken.symbol : 'LP'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pool Card */}
+                <div className="bg-muted/50 rounded-xl p-4 mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Droplets className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground">Pool</p>
+                      <p className="text-sm font-medium text-foreground">
+                        {userToken.symbol}/{validatorToken.symbol}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Details Card */}
+                <div className="bg-muted/50 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Action</span>
+                    <span className="text-xs font-medium text-foreground capitalize">
+                      {actionType} Liquidity
+                    </span>
+                  </div>
+                  {poolInfo && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">Your LP Balance</span>
+                      <span className="text-xs font-medium text-foreground">
+                        {formatAmount(lpBalance.toString(), 18, 4)} LP
+                      </span>
+                    </div>
                   )}
                 </div>
-                <p className="text-[13px] text-muted-foreground mb-1">
-                  {actionType === 'add' ? 'Add Liquidity' : 'Remove Liquidity'}
-                </p>
-                <p className="text-2xl font-semibold text-foreground">
-                  {amount}{' '}
-                  <span className="text-muted-foreground font-normal">
-                    {actionType === 'add' ? validatorToken.symbol : 'LP'}
-                  </span>
-                </p>
-                <p className="text-[13px] text-muted-foreground mt-1">
-                  {userToken.symbol}/{validatorToken.symbol} Pool
-                </p>
               </div>
 
-              <div className="bg-muted/50 rounded-lg p-3 space-y-2.5 mb-5">
-                <div className="flex justify-between text-[13px]">
-                  <span className="text-muted-foreground">Pool</span>
-                  <span className="text-foreground">
-                    {userToken.symbol}/{validatorToken.symbol}
-                  </span>
-                </div>
-                <div className="flex justify-between text-[13px]">
-                  <span className="text-muted-foreground">Action</span>
-                  <span className="text-foreground capitalize">{actionType} Liquidity</span>
-                </div>
-                <div className="flex justify-between text-[13px]">
-                  <span className="text-muted-foreground">Fee</span>
-                  <span className="text-success">
-                    &lt;$0.001 <span className="text-muted-foreground">({feeToken?.symbol})</span>
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="flex-1 h-10"
-                  onClick={() => setModalState(null)}
-                >
+              {/* Footer */}
+              <div className="px-6 pb-6 flex items-center justify-end gap-2">
+                <Button variant="outline" onClick={() => setModalState(null)}>
                   Cancel
                 </Button>
-                <Button className="flex-1 h-10" onClick={handleSubmit}>
-                  Confirm
-                </Button>
+                <Button onClick={handleSubmit}>Confirm</Button>
               </div>
-            </div>
+            </>
           )}
 
+          {/* PENDING STATE */}
           {modalState === 'pending' && userToken && validatorToken && (
-            <div className="p-8 text-center">
+            <div className="relative overflow-hidden">
               <DialogTitle className="sr-only">Processing</DialogTitle>
               <DialogDescription className="sr-only">Processing liquidity action</DialogDescription>
 
-              <Loader2 className="h-8 w-8 text-primary animate-spin mx-auto mb-4" />
-              <p className="text-[14px] text-muted-foreground">
-                {actionType === 'add' ? 'Adding' : 'Removing'} {amount}{' '}
-                {actionType === 'add' ? validatorToken.symbol : 'LP'}
-              </p>
+              {/* Ambient background glow */}
+              <div className="absolute inset-0 overflow-hidden">
+                <motion.div
+                  animate={{
+                    scale: [1, 1.2, 1],
+                    opacity: [0.3, 0.5, 0.3],
+                  }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute -top-20 -left-20 w-40 h-40 rounded-full"
+                  style={{
+                    background:
+                      'radial-gradient(circle, rgba(52,211,153,0.15) 0%, transparent 70%)',
+                  }}
+                />
+                <motion.div
+                  animate={{
+                    scale: [1, 1.3, 1],
+                    opacity: [0.2, 0.4, 0.2],
+                  }}
+                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+                  className="absolute -bottom-20 -right-20 w-48 h-48 rounded-full"
+                  style={{
+                    background:
+                      'radial-gradient(circle, rgba(52,211,153,0.12) 0%, transparent 70%)',
+                  }}
+                />
+              </div>
+
+              <div className="relative px-6 py-12 text-center">
+                {/* Animated icon container */}
+                <div className="relative inline-flex items-center justify-center mb-6">
+                  {/* Outer rotating ring */}
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                    className="absolute w-16 h-16"
+                  >
+                    <svg viewBox="0 0 64 64" className="w-full h-full">
+                      <circle
+                        cx="32"
+                        cy="32"
+                        r="30"
+                        fill="none"
+                        stroke="url(#liquidityPendingGradient)"
+                        strokeWidth="1.5"
+                        strokeDasharray="50 140"
+                        strokeLinecap="round"
+                      />
+                      <defs>
+                        <linearGradient
+                          id="liquidityPendingGradient"
+                          x1="0%"
+                          y1="0%"
+                          x2="100%"
+                          y2="100%"
+                        >
+                          <stop offset="0%" stopColor="rgba(52,211,153,0.7)" />
+                          <stop offset="100%" stopColor="rgba(52,211,153,0.1)" />
+                        </linearGradient>
+                      </defs>
+                    </svg>
+                  </motion.div>
+
+                  {/* Inner pulsing circle */}
+                  <motion.div
+                    animate={{ scale: [1, 1.05, 1] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                    className="w-11 h-11 rounded-full flex items-center justify-center bg-emerald-50"
+                  >
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
+                    >
+                      <Loader2 className="w-5 h-5 text-emerald-500" />
+                    </motion.div>
+                  </motion.div>
+                </div>
+
+                {/* Content */}
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1, duration: 0.4 }}
+                >
+                  <p className="text-[13px] font-medium text-muted-foreground uppercase tracking-wider mb-3">
+                    {actionType === 'add' ? 'Adding Liquidity' : 'Removing Liquidity'}
+                  </p>
+                  <p className="text-[28px] font-semibold text-foreground tracking-tight leading-none">
+                    {amount}
+                    <span className="text-[18px] font-medium text-muted-foreground ml-2">
+                      {actionType === 'add' ? validatorToken.symbol : 'LP'}
+                    </span>
+                  </p>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    {userToken.symbol}/{validatorToken.symbol} Pool
+                  </p>
+                </motion.div>
+              </div>
             </div>
           )}
 
+          {/* SUCCESS STATE */}
           {modalState === 'success' && txHash && userToken && validatorToken && (
-            <div className="p-5 text-center">
+            <div className="relative overflow-hidden bg-white">
               <DialogTitle className="sr-only">Success</DialogTitle>
               <DialogDescription className="sr-only">Liquidity action completed</DialogDescription>
 
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.2 }}
-                className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4"
-              >
-                <Check className="h-6 w-6 text-success" />
-              </motion.div>
+              <div className="relative px-6 pt-10 pb-8 text-center">
+                {/* Animated success icon */}
+                <div className="relative inline-flex items-center justify-center mb-8">
+                  {/* Circle container */}
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                    className="w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center"
+                  >
+                    {/* Animated checkmark SVG */}
+                    <svg
+                      width="28"
+                      height="28"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      className="text-white"
+                    >
+                      <motion.path
+                        d="M5 13l4 4L19 7"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{ duration: 0.4, delay: 0.3, ease: 'easeOut' }}
+                      />
+                    </svg>
+                  </motion.div>
+                </div>
 
-              <p className="text-[15px] font-semibold text-foreground mb-0.5">
-                Liquidity {actionType === 'add' ? 'Added' : 'Removed'}!
-              </p>
-              <p className="text-[13px] text-muted-foreground mb-4">
-                {amount} {actionType === 'add' ? validatorToken.symbol : 'LP'} in {userToken.symbol}
-                /{validatorToken.symbol} pool
-              </p>
-
-              <div className="bg-muted/50 rounded-lg p-3 mb-4">
-                <p className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">
-                  Transaction
-                </p>
-                <p className="font-mono text-[11px] text-foreground break-all">{txHash}</p>
-              </div>
-
-              <div className="flex gap-2">
-                <a
-                  href={getExplorerTxUrl(txHash)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-lg border border-border text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                {/* Success text */}
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.4 }}
+                  className="text-foreground text-sm font-semibold mb-1"
                 >
-                  Explorer <ExternalLink className="h-3 w-3" />
-                </a>
-                <Button className="flex-1 h-10" onClick={resetForm}>
-                  Continue
-                </Button>
+                  Liquidity {actionType === 'add' ? 'Added' : 'Removed'}
+                </motion.p>
+
+                {/* Amount */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.4 }}
+                  className="mb-6"
+                >
+                  <span className="text-2xl font-semibold text-foreground">{amount}</span>
+                  <span className="text-base text-muted-foreground ml-1.5">
+                    {actionType === 'add' ? validatorToken.symbol : 'LP'}
+                  </span>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    {userToken.symbol}/{validatorToken.symbol} Pool
+                  </p>
+                </motion.div>
+
+                {/* Details card */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6, duration: 0.4 }}
+                  className="bg-muted/50 rounded-xl p-4 space-y-3 text-left"
+                >
+                  {/* Action */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Action</span>
+                    <span className="text-xs font-medium text-foreground capitalize">
+                      {actionType} Liquidity
+                    </span>
+                  </div>
+
+                  {/* Transaction hash */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Transaction</span>
+                    <button
+                      onClick={() => window.open(getExplorerTxUrl(txHash), '_blank')}
+                      className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+                    >
+                      <span className="font-mono">
+                        {txHash.slice(0, 8)}...{txHash.slice(-4)}
+                      </span>
+                      <ExternalLink className="w-3 h-3" />
+                    </button>
+                  </div>
+                </motion.div>
               </div>
+
+              {/* Footer */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.7, duration: 0.4 }}
+                className="px-6 pb-6 flex items-center gap-2"
+              >
+                <Button className="flex-1" onClick={resetForm}>
+                  Done
+                </Button>
+              </motion.div>
             </div>
           )}
         </DialogContent>

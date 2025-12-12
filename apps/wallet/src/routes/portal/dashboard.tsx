@@ -75,7 +75,7 @@ function DashboardPage(): ReactElement | null {
   };
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div>
       {/* Two Column Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
         {/* Left Column - Balance & Assets */}

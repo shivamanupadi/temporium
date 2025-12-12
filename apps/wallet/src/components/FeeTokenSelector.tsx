@@ -1,11 +1,11 @@
 import { useEffect, type ReactElement } from 'react';
+import { ChevronDown, Check } from 'lucide-react';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useTokenList } from '@/hooks/useTokenList';
 import { cn } from '@/lib/utils';
 import type { Token } from '@/lib/tokenlist';
@@ -34,24 +34,29 @@ export function FeeTokenSelector({
   return (
     <div className={cn('flex items-center justify-between', className)}>
       <span className="text-[12px] text-muted-foreground">Pay fee with</span>
-      <Select
-        value={value?.address}
-        onValueChange={address => {
-          const token = tokens.find(t => t.address === address);
-          if (token) onChange(token);
-        }}
-      >
-        <SelectTrigger className="w-auto h-8 min-w-[100px] text-[12px]">
-          <SelectValue placeholder="Select token" />
-        </SelectTrigger>
-        <SelectContent>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button
+            type="button"
+            className="flex items-center justify-between gap-2 h-8 px-3 min-w-[100px] rounded-lg border border-border/50 bg-card text-[12px] font-medium hover:bg-muted/50 transition-colors"
+          >
+            <span>{value?.symbol || 'Select'}</span>
+            <ChevronDown className="h-3.5 w-3.5 opacity-50" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
           {tokens.map(token => (
-            <SelectItem key={token.address} value={token.address}>
-              {token.symbol}
-            </SelectItem>
+            <DropdownMenuItem
+              key={token.address}
+              onClick={() => onChange(token)}
+              className="flex items-center justify-between text-[12px]"
+            >
+              <span>{token.symbol}</span>
+              {value?.address === token.address && <Check className="h-3.5 w-3.5 text-primary" />}
+            </DropdownMenuItem>
           ))}
-        </SelectContent>
-      </Select>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }

@@ -49,19 +49,15 @@ function ScheduledPage(): ReactElement {
         <TabsList className="w-full mb-4">
           <TabsTrigger value="pending" className="flex-1">
             Pending
-            {pendingTransactions.length > 0 && (
-              <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-medium">
-                {pendingTransactions.length}
-              </span>
-            )}
+            <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-medium">
+              {pendingTransactions.length}
+            </span>
           </TabsTrigger>
           <TabsTrigger value="completed" className="flex-1">
             Completed
-            {completedTransactions.length > 0 && (
-              <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground text-[10px] font-medium">
-                {completedTransactions.length}
-              </span>
-            )}
+            <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground text-[10px] font-medium">
+              {completedTransactions.length}
+            </span>
           </TabsTrigger>
         </TabsList>
 

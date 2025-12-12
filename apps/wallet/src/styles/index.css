@@ -35,7 +35,7 @@
   --color-card-foreground: #0a2540;
   --color-muted: #f4f5f7;
   --color-muted-foreground: #526070;
-  --color-border: #e6e9ed;
+  --color-border: #eef0f3;
   --color-input: #e6e9ed;
   --color-ring: #635bff;
 
@@ -69,6 +69,23 @@
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-y: scroll;
+}
+
+/* Prevent layout shift when Radix components open */
+body[data-scroll-locked] {
+  margin-right: 0 !important;
+  overflow: visible !important;
+  padding-right: 0 !important;
+}
+
+/* Prevent scroll jump when select opens */
+[data-radix-popper-content-wrapper] {
+  position: fixed !important;
+}
+
+[data-radix-select-viewport] {
+  scroll-behavior: auto !important;
 }
 
 body {

@@ -20,10 +20,12 @@ function PortalLayout(): ReactElement | null {
   if (!isConnected) return null;
 
   return (
-    <div className="min-h-screen bg-background" style={{ scrollbarGutter: 'stable' }}>
+    <div className="min-h-screen bg-background">
       <PortalHeader />
-      <main className="mx-auto max-w-6xl px-6 py-6">
-        <Outlet />
+      <main className="pt-14 pb-6">
+        <div className="mx-auto max-w-6xl px-6">
+          <Outlet />
+        </div>
       </main>
     </div>
   );
