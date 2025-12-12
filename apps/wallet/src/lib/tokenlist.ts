@@ -1,4 +1,7 @@
 import type { Address } from 'viem';
+import { TOKENLIST_API_URL } from './api';
+
+const CHAIN_ID = 42429;
 
 /**
  * Pastel color scheme for tokens
@@ -48,106 +51,71 @@ export interface TokenList {
   tokens: Token[];
 }
 
-/**
- * Static tokenlist data from https://tokenlist.tempo.xyz/list/42429
- * Bundled to avoid CORS issues with client-side fetching
- */
-const STATIC_TOKENLIST: TokenList = {
-  $schema: 'https://esm.sh/gh/uniswap/token-lists/src/tokenlist.schema.json',
-  name: 'Tempo Testnet',
-  logoURI: 'https://esm.sh/gh/tempoxyz/tokenlist/data/42429/icon.svg',
-  timestamp: '2025-12-06T00:00:00Z',
-  version: {
-    major: 1,
-    minor: 0,
-    patch: 0,
-  },
-  tokens: [
-    {
-      name: 'pathUSD',
-      symbol: 'pathUSD',
-      decimals: 6,
-      chainId: 42429,
-      address: '0x20c0000000000000000000000000000000000000' as Address,
-      logoURI: '',
-      extensions: {
-        chain: 'tempo',
-      },
-    },
-    {
-      name: 'AlphaUSD',
-      symbol: 'AlphaUSD',
-      decimals: 6,
-      chainId: 42429,
-      address: '0x20c0000000000000000000000000000000000001' as Address,
-      logoURI: '',
-      extensions: {
-        chain: 'tempo',
-      },
-    },
-    {
-      name: 'BetaUSD',
-      symbol: 'BetaUSD',
-      decimals: 6,
-      chainId: 42429,
-      address: '0x20c0000000000000000000000000000000000002' as Address,
-      logoURI: '',
-      extensions: {
-        chain: 'tempo',
-      },
-    },
-    {
-      name: 'ThetaUSD',
-      symbol: 'ThetaUSD',
-      decimals: 6,
-      chainId: 42429,
-      address: '0x20c0000000000000000000000000000000000003' as Address,
-      logoURI: '',
-      extensions: {
-        chain: 'tempo',
-      },
-    },
-  ],
-} as TokenList;
+// Cache for tokenlist
+let cachedTokenList: TokenList | null = null;
+let tokenMap = new Map<string, Token>();
 
-// Token map for quick lookups
-const tokenMap = new Map<string, Token>();
-for (const token of STATIC_TOKENLIST.tokens) {
-  tokenMap.set(token.address.toLowerCase(), token);
-  tokenMap.set(token.symbol.toLowerCase(), token);
+/**
+ * Fetch tokenlist from proxy (bypasses CORS)
+ */
+async function fetchTokenList(): Promise<TokenList> {
+  if (cachedTokenList) {
+    return cachedTokenList;
+  }
+
+  const response = await fetch(`${TOKENLIST_API_URL}/list/${CHAIN_ID}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch tokenlist: ${response.status}`);
+  }
+
+  const data = await response.json();
+  cachedTokenList = data as TokenList;
+
+  // Build token map for quick lookups
+  tokenMap = new Map<string, Token>();
+  for (const token of cachedTokenList.tokens) {
+    tokenMap.set(token.address.toLowerCase(), token);
+    tokenMap.set(token.symbol.toLowerCase(), token);
+  }
+
+  return cachedTokenList;
 }
 
 /**
  * Get the full tokenlist
  */
-export function getTokenList(): TokenList {
-  return STATIC_TOKENLIST;
+export async function getTokenList(): Promise<TokenList> {
+  return fetchTokenList();
 }
 
 /**
  * Get all tokens from the tokenlist
  */
-export function getTokens(): Token[] {
-  return STATIC_TOKENLIST.tokens;
+export async function getTokens(): Promise<Token[]> {
+  const list = await fetchTokenList();
+  return list.tokens;
 }
 
 /**
  * Get a single token by address
  */
-export function getTokenByAddress(address: Address): Token | null {
+export async function getTokenByAddress(address: Address): Promise<Token | null> {
+  await fetchTokenList();
   return tokenMap.get(address.toLowerCase()) || null;
 }
 
 /**
  * Get a single token by symbol
  */
-export function getTokenBySymbol(symbol: string): Token | null {
+export async function getTokenBySymbol(symbol: string): Promise<Token | null> {
+  await fetchTokenList();
   return tokenMap.get(symbol.toLowerCase()) || null;
 }
 
 /**
- * Get the default token (AlphaUSD)
+ * Get the default token (pathUSD)
  */
-export function getDefaultToken(): Token {
-  return STATIC_TOKENLIST.tokens.find(t => t.symbol === 'AlphaUSD') || STATIC_TOKENLIST.tokens[0];
+export async function getDefaultToken(): Promise<Token> {
+  const list = await fetchTokenList();
+  return list.tokens.find(t => t.symbol === 'pathUSD') || list.tokens[0];
 }

@@ -11,16 +11,19 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PortalRouteImport } from './routes/portal'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PortalTip403FactoryRouteImport } from './routes/portal/tip403-factory'
+import { Route as PortalTip20StudioRouteImport } from './routes/portal/tip20-studio'
 import { Route as PortalSwapRouteImport } from './routes/portal/swap'
-import { Route as PortalStablecoinsRouteImport } from './routes/portal/stablecoins'
 import { Route as PortalSendRouteImport } from './routes/portal/send'
 import { Route as PortalScheduledRouteImport } from './routes/portal/scheduled'
 import { Route as PortalReceiveRouteImport } from './routes/portal/receive'
 import { Route as PortalLiquidityRouteImport } from './routes/portal/liquidity'
 import { Route as PortalDashboardRouteImport } from './routes/portal/dashboard'
 import { Route as PortalContactsRouteImport } from './routes/portal/contacts'
-import { Route as PortalStablecoinsIndexRouteImport } from './routes/portal/stablecoins.index'
-import { Route as PortalStablecoinsAddressRouteImport } from './routes/portal/stablecoins.$address'
+import { Route as PortalTip403FactoryIndexRouteImport } from './routes/portal/tip403-factory.index'
+import { Route as PortalTip20StudioIndexRouteImport } from './routes/portal/tip20-studio.index'
+import { Route as PortalTip403FactoryPolicyIdRouteImport } from './routes/portal/tip403-factory.$policyId'
+import { Route as PortalTip20StudioAddressRouteImport } from './routes/portal/tip20-studio.$address'
 
 const PortalRoute = PortalRouteImport.update({
   id: '/portal',
@@ -32,14 +35,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PortalTip403FactoryRoute = PortalTip403FactoryRouteImport.update({
+  id: '/tip403-factory',
+  path: '/tip403-factory',
+  getParentRoute: () => PortalRoute,
+} as any)
+const PortalTip20StudioRoute = PortalTip20StudioRouteImport.update({
+  id: '/tip20-studio',
+  path: '/tip20-studio',
+  getParentRoute: () => PortalRoute,
+} as any)
 const PortalSwapRoute = PortalSwapRouteImport.update({
   id: '/swap',
   path: '/swap',
-  getParentRoute: () => PortalRoute,
-} as any)
-const PortalStablecoinsRoute = PortalStablecoinsRouteImport.update({
-  id: '/stablecoins',
-  path: '/stablecoins',
   getParentRoute: () => PortalRoute,
 } as any)
 const PortalSendRoute = PortalSendRouteImport.update({
@@ -72,16 +80,28 @@ const PortalContactsRoute = PortalContactsRouteImport.update({
   path: '/contacts',
   getParentRoute: () => PortalRoute,
 } as any)
-const PortalStablecoinsIndexRoute = PortalStablecoinsIndexRouteImport.update({
+const PortalTip403FactoryIndexRoute =
+  PortalTip403FactoryIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PortalTip403FactoryRoute,
+  } as any)
+const PortalTip20StudioIndexRoute = PortalTip20StudioIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => PortalStablecoinsRoute,
+  getParentRoute: () => PortalTip20StudioRoute,
 } as any)
-const PortalStablecoinsAddressRoute =
-  PortalStablecoinsAddressRouteImport.update({
+const PortalTip403FactoryPolicyIdRoute =
+  PortalTip403FactoryPolicyIdRouteImport.update({
+    id: '/$policyId',
+    path: '/$policyId',
+    getParentRoute: () => PortalTip403FactoryRoute,
+  } as any)
+const PortalTip20StudioAddressRoute =
+  PortalTip20StudioAddressRouteImport.update({
     id: '/$address',
     path: '/$address',
-    getParentRoute: () => PortalStablecoinsRoute,
+    getParentRoute: () => PortalTip20StudioRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
@@ -93,10 +113,13 @@ export interface FileRoutesByFullPath {
   '/portal/receive': typeof PortalReceiveRoute
   '/portal/scheduled': typeof PortalScheduledRoute
   '/portal/send': typeof PortalSendRoute
-  '/portal/stablecoins': typeof PortalStablecoinsRouteWithChildren
   '/portal/swap': typeof PortalSwapRoute
-  '/portal/stablecoins/$address': typeof PortalStablecoinsAddressRoute
-  '/portal/stablecoins/': typeof PortalStablecoinsIndexRoute
+  '/portal/tip20-studio': typeof PortalTip20StudioRouteWithChildren
+  '/portal/tip403-factory': typeof PortalTip403FactoryRouteWithChildren
+  '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRoute
+  '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRoute
+  '/portal/tip20-studio/': typeof PortalTip20StudioIndexRoute
+  '/portal/tip403-factory/': typeof PortalTip403FactoryIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -108,8 +131,10 @@ export interface FileRoutesByTo {
   '/portal/scheduled': typeof PortalScheduledRoute
   '/portal/send': typeof PortalSendRoute
   '/portal/swap': typeof PortalSwapRoute
-  '/portal/stablecoins/$address': typeof PortalStablecoinsAddressRoute
-  '/portal/stablecoins': typeof PortalStablecoinsIndexRoute
+  '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRoute
+  '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRoute
+  '/portal/tip20-studio': typeof PortalTip20StudioIndexRoute
+  '/portal/tip403-factory': typeof PortalTip403FactoryIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -121,10 +146,13 @@ export interface FileRoutesById {
   '/portal/receive': typeof PortalReceiveRoute
   '/portal/scheduled': typeof PortalScheduledRoute
   '/portal/send': typeof PortalSendRoute
-  '/portal/stablecoins': typeof PortalStablecoinsRouteWithChildren
   '/portal/swap': typeof PortalSwapRoute
-  '/portal/stablecoins/$address': typeof PortalStablecoinsAddressRoute
-  '/portal/stablecoins/': typeof PortalStablecoinsIndexRoute
+  '/portal/tip20-studio': typeof PortalTip20StudioRouteWithChildren
+  '/portal/tip403-factory': typeof PortalTip403FactoryRouteWithChildren
+  '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRoute
+  '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRoute
+  '/portal/tip20-studio/': typeof PortalTip20StudioIndexRoute
+  '/portal/tip403-factory/': typeof PortalTip403FactoryIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -137,10 +165,13 @@ export interface FileRouteTypes {
     | '/portal/receive'
     | '/portal/scheduled'
     | '/portal/send'
-    | '/portal/stablecoins'
     | '/portal/swap'
-    | '/portal/stablecoins/$address'
-    | '/portal/stablecoins/'
+    | '/portal/tip20-studio'
+    | '/portal/tip403-factory'
+    | '/portal/tip20-studio/$address'
+    | '/portal/tip403-factory/$policyId'
+    | '/portal/tip20-studio/'
+    | '/portal/tip403-factory/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -152,8 +183,10 @@ export interface FileRouteTypes {
     | '/portal/scheduled'
     | '/portal/send'
     | '/portal/swap'
-    | '/portal/stablecoins/$address'
-    | '/portal/stablecoins'
+    | '/portal/tip20-studio/$address'
+    | '/portal/tip403-factory/$policyId'
+    | '/portal/tip20-studio'
+    | '/portal/tip403-factory'
   id:
     | '__root__'
     | '/'
@@ -164,10 +197,13 @@ export interface FileRouteTypes {
     | '/portal/receive'
     | '/portal/scheduled'
     | '/portal/send'
-    | '/portal/stablecoins'
     | '/portal/swap'
-    | '/portal/stablecoins/$address'
-    | '/portal/stablecoins/'
+    | '/portal/tip20-studio'
+    | '/portal/tip403-factory'
+    | '/portal/tip20-studio/$address'
+    | '/portal/tip403-factory/$policyId'
+    | '/portal/tip20-studio/'
+    | '/portal/tip403-factory/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -191,18 +227,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/portal/tip403-factory': {
+      id: '/portal/tip403-factory'
+      path: '/tip403-factory'
+      fullPath: '/portal/tip403-factory'
+      preLoaderRoute: typeof PortalTip403FactoryRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/portal/tip20-studio': {
+      id: '/portal/tip20-studio'
+      path: '/tip20-studio'
+      fullPath: '/portal/tip20-studio'
+      preLoaderRoute: typeof PortalTip20StudioRouteImport
+      parentRoute: typeof PortalRoute
+    }
     '/portal/swap': {
       id: '/portal/swap'
       path: '/swap'
       fullPath: '/portal/swap'
       preLoaderRoute: typeof PortalSwapRouteImport
-      parentRoute: typeof PortalRoute
-    }
-    '/portal/stablecoins': {
-      id: '/portal/stablecoins'
-      path: '/stablecoins'
-      fullPath: '/portal/stablecoins'
-      preLoaderRoute: typeof PortalStablecoinsRouteImport
       parentRoute: typeof PortalRoute
     }
     '/portal/send': {
@@ -247,35 +290,62 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalContactsRouteImport
       parentRoute: typeof PortalRoute
     }
-    '/portal/stablecoins/': {
-      id: '/portal/stablecoins/'
+    '/portal/tip403-factory/': {
+      id: '/portal/tip403-factory/'
       path: '/'
-      fullPath: '/portal/stablecoins/'
-      preLoaderRoute: typeof PortalStablecoinsIndexRouteImport
-      parentRoute: typeof PortalStablecoinsRoute
+      fullPath: '/portal/tip403-factory/'
+      preLoaderRoute: typeof PortalTip403FactoryIndexRouteImport
+      parentRoute: typeof PortalTip403FactoryRoute
     }
-    '/portal/stablecoins/$address': {
-      id: '/portal/stablecoins/$address'
+    '/portal/tip20-studio/': {
+      id: '/portal/tip20-studio/'
+      path: '/'
+      fullPath: '/portal/tip20-studio/'
+      preLoaderRoute: typeof PortalTip20StudioIndexRouteImport
+      parentRoute: typeof PortalTip20StudioRoute
+    }
+    '/portal/tip403-factory/$policyId': {
+      id: '/portal/tip403-factory/$policyId'
+      path: '/$policyId'
+      fullPath: '/portal/tip403-factory/$policyId'
+      preLoaderRoute: typeof PortalTip403FactoryPolicyIdRouteImport
+      parentRoute: typeof PortalTip403FactoryRoute
+    }
+    '/portal/tip20-studio/$address': {
+      id: '/portal/tip20-studio/$address'
       path: '/$address'
-      fullPath: '/portal/stablecoins/$address'
-      preLoaderRoute: typeof PortalStablecoinsAddressRouteImport
-      parentRoute: typeof PortalStablecoinsRoute
+      fullPath: '/portal/tip20-studio/$address'
+      preLoaderRoute: typeof PortalTip20StudioAddressRouteImport
+      parentRoute: typeof PortalTip20StudioRoute
     }
   }
 }
 
-interface PortalStablecoinsRouteChildren {
-  PortalStablecoinsAddressRoute: typeof PortalStablecoinsAddressRoute
-  PortalStablecoinsIndexRoute: typeof PortalStablecoinsIndexRoute
+interface PortalTip20StudioRouteChildren {
+  PortalTip20StudioAddressRoute: typeof PortalTip20StudioAddressRoute
+  PortalTip20StudioIndexRoute: typeof PortalTip20StudioIndexRoute
 }
 
-const PortalStablecoinsRouteChildren: PortalStablecoinsRouteChildren = {
-  PortalStablecoinsAddressRoute: PortalStablecoinsAddressRoute,
-  PortalStablecoinsIndexRoute: PortalStablecoinsIndexRoute,
+const PortalTip20StudioRouteChildren: PortalTip20StudioRouteChildren = {
+  PortalTip20StudioAddressRoute: PortalTip20StudioAddressRoute,
+  PortalTip20StudioIndexRoute: PortalTip20StudioIndexRoute,
 }
 
-const PortalStablecoinsRouteWithChildren =
-  PortalStablecoinsRoute._addFileChildren(PortalStablecoinsRouteChildren)
+const PortalTip20StudioRouteWithChildren =
+  PortalTip20StudioRoute._addFileChildren(PortalTip20StudioRouteChildren)
+
+interface PortalTip403FactoryRouteChildren {
+  PortalTip403FactoryPolicyIdRoute: typeof PortalTip403FactoryPolicyIdRoute
+  PortalTip403FactoryIndexRoute: typeof PortalTip403FactoryIndexRoute
+}
+
+const PortalTip403FactoryRouteChildren: PortalTip403FactoryRouteChildren = {
+  PortalTip403FactoryPolicyIdRoute: PortalTip403FactoryPolicyIdRoute,
+  PortalTip403FactoryIndexRoute: PortalTip403FactoryIndexRoute,
+}
+
+const PortalTip403FactoryRouteWithChildren =
+  PortalTip403FactoryRoute._addFileChildren(PortalTip403FactoryRouteChildren)
 
 interface PortalRouteChildren {
   PortalContactsRoute: typeof PortalContactsRoute
@@ -284,8 +354,9 @@ interface PortalRouteChildren {
   PortalReceiveRoute: typeof PortalReceiveRoute
   PortalScheduledRoute: typeof PortalScheduledRoute
   PortalSendRoute: typeof PortalSendRoute
-  PortalStablecoinsRoute: typeof PortalStablecoinsRouteWithChildren
   PortalSwapRoute: typeof PortalSwapRoute
+  PortalTip20StudioRoute: typeof PortalTip20StudioRouteWithChildren
+  PortalTip403FactoryRoute: typeof PortalTip403FactoryRouteWithChildren
 }
 
 const PortalRouteChildren: PortalRouteChildren = {
@@ -295,8 +366,9 @@ const PortalRouteChildren: PortalRouteChildren = {
   PortalReceiveRoute: PortalReceiveRoute,
   PortalScheduledRoute: PortalScheduledRoute,
   PortalSendRoute: PortalSendRoute,
-  PortalStablecoinsRoute: PortalStablecoinsRouteWithChildren,
   PortalSwapRoute: PortalSwapRoute,
+  PortalTip20StudioRoute: PortalTip20StudioRouteWithChildren,
+  PortalTip403FactoryRoute: PortalTip403FactoryRouteWithChildren,
 }
 
 const PortalRouteWithChildren =

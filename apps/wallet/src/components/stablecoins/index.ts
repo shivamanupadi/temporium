@@ -1,6 +1,7 @@
 export { StablecoinCard } from './StablecoinCard';
 export { StablecoinEmptyState } from './StablecoinEmptyState';
 export { CreateStablecoinModal } from './CreateStablecoinModal';
+export { ImportStablecoinModal } from './ImportStablecoinModal';
 export { ManageStablecoinModal } from './ManageStablecoinModal';
 export { MintTokensModal } from './MintTokensModal';
 export { BurnTokensModal } from './BurnTokensModal';
@@ -10,5 +11,8 @@ export { RoleModal } from './RoleModal';
 export { BurnBlockedModal } from './BurnBlockedModal';
 export { PauseTokenModal } from './PauseTokenModal';
 export { RemoveConfirmModal } from './RemoveConfirmModal';
+export { LinkPolicyModal } from './LinkPolicyModal';
+export { UnlinkPolicyModal } from './UnlinkPolicyModal';
+export { CreateAndLinkPolicyModal } from './CreateAndLinkPolicyModal';
 export { YourAccessCard } from './YourAccessCard';
 export * from './types';

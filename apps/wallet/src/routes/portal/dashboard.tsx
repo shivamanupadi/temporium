@@ -11,6 +11,7 @@ import {
   Clock,
   Users,
   Coins,
+  Shield,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useTempo } from '@/hooks/useTempo';
@@ -48,7 +49,8 @@ function DashboardPage(): ReactElement | null {
     { icon: ArrowDownLeft, label: 'Receive', href: '/portal/receive', color: '#00a67e' },
     { icon: ArrowLeftRight, label: 'Swap', href: '/portal/swap', color: '#f59e0b' },
     { icon: Droplets, label: 'Liquidity', href: '/portal/liquidity', color: '#06b6d4' },
-    { icon: Coins, label: 'Stablecoins', href: '/portal/stablecoins', color: '#f97316' },
+    { icon: Coins, label: 'TIP20 Studio', href: '/portal/tip20-studio', color: '#f97316' },
+    { icon: Shield, label: 'TIP403 Factory', href: '/portal/tip403-factory', color: '#10b981' },
     { icon: Users, label: 'Contacts', href: '/portal/contacts', color: '#64748b' },
     { icon: Clock, label: 'Scheduled', href: '/portal/scheduled', color: '#8b5cf6' },
   ];

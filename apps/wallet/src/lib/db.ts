@@ -50,12 +50,26 @@ export interface ScheduledTransaction {
 }
 
 /**
+ * TIP-403 Policy entity
+ */
+export interface Policy {
+  id: string;
+  owner: Address; // The wallet address that owns this record
+  policyId: string; // On-chain policy ID (stored as string for IndexedDB compatibility)
+  type: 'whitelist' | 'blacklist';
+  admin: Address; // Policy admin address at time of import/creation
+  txHash?: string; // Creation tx hash (if created locally)
+  createdAt: number;
+}
+
+/**
  * Tollr Database - unified IndexedDB database for all app data
  */
 const db = new Dexie('tollr') as Dexie & {
   stablecoins: EntityTable<Stablecoin, 'id'>;
   contacts: EntityTable<Contact, 'id'>;
   scheduledTransactions: EntityTable<ScheduledTransaction, 'id'>;
+  policies: EntityTable<Policy, 'id'>;
 };
 
 // Define schema with indexes
@@ -77,6 +91,14 @@ db.version(3).stores({
   stablecoins: 'id, owner, &address, creator',
   contacts: 'id, owner, address, name, [owner+address]',
   scheduledTransactions: 'id, owner, from, to, status, [owner+status]',
+});
+
+// Version 4: Add policies table for TIP-403 policy management
+db.version(4).stores({
+  stablecoins: 'id, owner, &address, creator',
+  contacts: 'id, owner, address, name, [owner+address]',
+  scheduledTransactions: 'id, owner, from, to, status, [owner+status]',
+  policies: 'id, owner, policyId, type, [owner+policyId]',
 });
 
 export { db };

@@ -65,8 +65,8 @@ function HomePage(): ReactElement {
     },
     {
       icon: Coins,
-      title: 'Stablecoins',
-      description: 'Mint & manage USD',
+      title: 'TIP20 Studio',
+      description: 'Create & manage tokens',
       color: '#f97316',
     },
     {
@@ -102,8 +102,23 @@ function HomePage(): ReactElement {
   const handleCreateWallet = async (): Promise<void> => {
     try {
       await signUp(walletName.trim() || undefined);
-    } catch {
-      toast.error('Wallet creation cancelled');
+    } catch (err) {
+      console.error('Wallet creation error:', err);
+      toast.error(err instanceof Error ? err.message : 'Wallet creation cancelled');
+    }
+  };
+
+  const handleSignIn = async (): Promise<void> => {
+    try {
+      await signIn();
+    } catch (err) {
+      console.error('Sign in error:', err);
+      const message = err instanceof Error ? err.message : 'Sign in failed';
+      if (message.includes('publicKey not found')) {
+        toast.error('Passkey not found. Please create a wallet first.');
+      } else {
+        toast.error(message);
+      }
     }
   };
 
@@ -140,9 +155,9 @@ function HomePage(): ReactElement {
             transition={{ delay: 0.05 }}
             className="text-4xl sm:text-5xl font-bold tracking-tight mb-4"
           >
-            The <span className="text-primary">Passkey Wallet</span>
+            Your <span className="text-primary">Gateway</span> to
             <br />
-            for Tempo Blockchain
+            Tempo Blockchain
           </motion.h1>
 
           {/* Subtitle */}
@@ -152,8 +167,8 @@ function HomePage(): ReactElement {
             transition={{ delay: 0.1 }}
             className="text-[16px] text-muted-foreground mb-8 max-w-lg mx-auto"
           >
-            Send, receive, and schedule payments with sub-cent fees. No seed phrases. No browser
-            extensions. Just passkeys.
+            Send, swap, and manage tokens with sub-cent fees. Connect with passkeys or your favorite
+            wallet.
           </motion.p>
 
           {/* CTAs */}
@@ -172,7 +187,7 @@ function HomePage(): ReactElement {
             <Button
               variant="outline"
               size="lg"
-              onClick={() => signIn()}
+              onClick={handleSignIn}
               disabled={isConnecting}
               className="px-6 bg-white backdrop-blur"
             >

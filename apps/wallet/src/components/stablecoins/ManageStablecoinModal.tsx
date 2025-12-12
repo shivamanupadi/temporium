@@ -81,7 +81,7 @@ export function ManageStablecoinModal({
           <DialogTitle className="text-[15px] font-semibold mb-1">
             Manage {selectedCoin.symbol}
           </DialogTitle>
-          <DialogDescription className="sr-only">Manage stablecoin settings</DialogDescription>
+          <DialogDescription className="sr-only">Manage token settings</DialogDescription>
 
           <button
             onClick={() => window.open(getExplorerAddressUrl(selectedCoin.address), '_blank')}

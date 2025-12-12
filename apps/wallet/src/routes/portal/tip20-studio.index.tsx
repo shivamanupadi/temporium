@@ -1,36 +1,49 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, type ReactElement } from 'react';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Download, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/PageHeader';
 import {
   StablecoinCard,
   StablecoinEmptyState,
   CreateStablecoinModal,
+  ImportStablecoinModal,
 } from '@/components/stablecoins';
 import { useStablecoins } from '@/hooks/useStablecoins';
 
-export const Route = createFileRoute('/portal/stablecoins/')({
-  component: StablecoinsIndexPage,
+export const Route = createFileRoute('/portal/tip20-studio/')({
+  component: Tip20StudioIndexPage,
 });
 
-function StablecoinsIndexPage(): ReactElement {
+function Tip20StudioIndexPage(): ReactElement {
   const { stablecoins, isLoading, refresh } = useStablecoins();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   return (
     <div className="max-w-2xl mx-auto">
       <PageHeader
-        title="My Stablecoins"
+        title="TIP20 Studio"
         action={
-          <Button size="sm" onClick={() => setShowCreateModal(true)} className="h-8 px-3">
-            <Plus className="h-4 w-4" />
-            Create
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowImportModal(true)}
+              className="h-8 px-3"
+            >
+              <Download className="h-4 w-4" />
+              Import
+            </Button>
+            <Button size="sm" onClick={() => setShowCreateModal(true)} className="h-8 px-3">
+              <Plus className="h-4 w-4" />
+              Create
+            </Button>
+          </div>
         }
       />
 
-      {/* Stablecoins List */}
+      {/* Tokens List */}
       <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_1px_2px_-1px_rgba(0,0,0,0.03)] overflow-hidden">
         {isLoading ? (
           <div className="p-8 text-center">
@@ -52,6 +65,13 @@ function StablecoinsIndexPage(): ReactElement {
         isOpen={showCreateModal}
         onSuccess={refresh}
         onClose={() => setShowCreateModal(false)}
+      />
+
+      {/* Import Modal */}
+      <ImportStablecoinModal
+        isOpen={showImportModal}
+        onSuccess={refresh}
+        onClose={() => setShowImportModal(false)}
       />
     </div>
   );

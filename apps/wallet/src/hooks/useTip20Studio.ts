@@ -3,7 +3,7 @@ import type { Address } from 'viem';
 import { useStablecoins, type StablecoinWithMetadata } from './useStablecoins';
 import type { TokenRole } from '@/types';
 
-interface UseStablecoinReturn {
+interface UseTip20StudioReturn {
   stablecoin: StablecoinWithMetadata | undefined;
   isLoading: boolean;
   isNotFound: boolean;
@@ -32,15 +32,19 @@ interface UseStablecoinReturn {
     from: Address;
     amount: bigint;
   }) => Promise<{ receipt: { transactionHash: string } }>;
+  changeTransferPolicy: (params: {
+    policyId: bigint;
+    feeToken?: Address;
+  }) => Promise<{ receipt: { transactionHash: string } }>;
   removeStablecoin: () => Promise<void>;
   refresh: () => Promise<void>;
 }
 
 /**
- * Hook for managing a single stablecoin by address.
+ * Hook for managing a single TIP20 token by address.
  * Wraps useStablecoins and provides bound actions for the specific token.
  */
-export function useStablecoin(tokenAddress: string): UseStablecoinReturn {
+export function useTip20Studio(tokenAddress: string): UseTip20StudioReturn {
   const {
     stablecoins,
     isLoading,
@@ -52,6 +56,7 @@ export function useStablecoin(tokenAddress: string): UseStablecoinReturn {
     grantRoles: grantRolesBase,
     revokeRoles: revokeRolesBase,
     burnBlocked: burnBlockedBase,
+    changeTransferPolicy: changeTransferPolicyBase,
     removeStablecoin: removeStablecoinBase,
     refresh,
   } = useStablecoins();
@@ -121,6 +126,13 @@ export function useStablecoin(tokenAddress: string): UseStablecoinReturn {
     [burnBlockedBase, normalizedAddress]
   );
 
+  const changeTransferPolicy = useCallback(
+    async (params: { policyId: bigint; feeToken?: Address }) => {
+      return changeTransferPolicyBase({ token: normalizedAddress, ...params });
+    },
+    [changeTransferPolicyBase, normalizedAddress]
+  );
+
   const removeStablecoin = useCallback(async () => {
     if (stablecoin?.id) {
       await removeStablecoinBase(stablecoin.id);
@@ -139,6 +151,7 @@ export function useStablecoin(tokenAddress: string): UseStablecoinReturn {
     grantRoles,
     revokeRoles,
     burnBlocked,
+    changeTransferPolicy,
     removeStablecoin,
     refresh,
   };
