@@ -102,8 +102,9 @@ function HomePage(): ReactElement {
   const handleCreateWallet = async (): Promise<void> => {
     try {
       await signUp(walletName.trim() || undefined);
-    } catch {
-      toast.error('Wallet creation cancelled');
+    } catch (err) {
+      console.error('Wallet creation error:', err);
+      toast.error(err instanceof Error ? err.message : 'Wallet creation cancelled');
     }
   };
 
