@@ -101,4 +101,12 @@ db.version(4).stores({
   policies: 'id, owner, policyId, type, [owner+policyId]',
 });
 
+// Version 5: Change stablecoins unique constraint from global &address to per-owner [owner+address]
+db.version(5).stores({
+  stablecoins: 'id, owner, address, creator, &[owner+address]',
+  contacts: 'id, owner, address, name, &[owner+address]',
+  scheduledTransactions: 'id, owner, from, to, status, [owner+status]',
+  policies: 'id, owner, policyId, type, &[owner+policyId]',
+});
+
 export { db };

@@ -11,6 +11,16 @@ export async function saveStablecoin(
   // Use owner if provided, otherwise fall back to creator for backwards compatibility
   const normalizedOwner = (stablecoin.owner ?? stablecoin.creator).toLowerCase() as Address;
 
+  // Check if this token is already in the user's list
+  const existing = await db.stablecoins
+    .where('[owner+address]')
+    .equals([normalizedOwner, normalizedAddress])
+    .first();
+
+  if (existing) {
+    throw new Error('This token is already in your list');
+  }
+
   const newStablecoin: Stablecoin = {
     ...stablecoin,
     id: crypto.randomUUID(),
