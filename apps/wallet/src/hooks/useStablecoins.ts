@@ -41,6 +41,12 @@ interface UseStablecoinsReturn {
     currency: string;
     feeToken?: Address;
   }) => Promise<{ stablecoin: Stablecoin; receipt: { transactionHash: string } }>;
+  importStablecoin: (params: {
+    address: Address;
+    name: string;
+    symbol: string;
+    currency: string;
+  }) => Promise<Stablecoin>;
   mintTokens: (params: {
     token: Address;
     to: Address;
@@ -311,6 +317,37 @@ export function useStablecoins(): UseStablecoinsReturn {
     [walletClient, refresh]
   );
 
+  const importStablecoin = useCallback(
+    async (params: { address: Address; name: string; symbol: string; currency: string }) => {
+      if (!address) throw new Error('Wallet not connected');
+
+      // Check if already imported
+      const existing = await getStablecoinsByOwner(address);
+      const alreadyExists = existing.some(
+        coin => coin.address.toLowerCase() === params.address.toLowerCase()
+      );
+
+      if (alreadyExists) {
+        throw new Error('This stablecoin is already in your list');
+      }
+
+      // Save to IndexedDB
+      const stablecoin = await saveStablecoin({
+        owner: address,
+        address: params.address.toLowerCase() as Address,
+        name: params.name,
+        symbol: params.symbol,
+        currency: params.currency,
+        creator: address.toLowerCase() as Address, // Use current user as creator for imported tokens
+        txHash: 'imported', // Mark as imported
+      });
+
+      await refresh();
+      return stablecoin;
+    },
+    [address, refresh]
+  );
+
   const removeStablecoin = useCallback(
     async (id: string) => {
       if (!address) throw new Error('Wallet not connected');
@@ -426,6 +463,7 @@ export function useStablecoins(): UseStablecoinsReturn {
     stablecoins,
     isLoading,
     createStablecoin,
+    importStablecoin,
     mintTokens,
     burnTokens,
     sendTokens,

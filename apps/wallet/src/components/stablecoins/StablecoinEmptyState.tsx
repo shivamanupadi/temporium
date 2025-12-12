@@ -12,13 +12,13 @@ export function StablecoinEmptyState({ onCreate }: StablecoinEmptyStateProps): R
       <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
         <Coins className="h-6 w-6 text-muted-foreground" />
       </div>
-      <p className="text-[14px] font-medium text-foreground mb-1">No stablecoins yet</p>
+      <p className="text-[14px] font-medium text-foreground mb-1">No tokens yet</p>
       <p className="text-[13px] text-muted-foreground mb-4">
-        Create your own stablecoin to get started
+        Create your first TIP20 token to get started
       </p>
       <Button variant="outline" size="sm" onClick={onCreate}>
         <Plus className="h-4 w-4" />
-        Create Stablecoin
+        Create Token
       </Button>
     </div>
   );

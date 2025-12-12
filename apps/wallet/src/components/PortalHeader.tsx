@@ -27,7 +27,7 @@ const navItems = [
   { to: '/portal/receive', label: 'Receive', icon: Download },
   { to: '/portal/swap', label: 'Swap', icon: ArrowUpDown },
   { to: '/portal/liquidity', label: 'Liquidity', icon: Droplets },
-  { to: '/portal/stablecoins', label: 'Stablecoins', icon: Coins },
+  { to: '/portal/tip20-studio', label: 'TIP20 Studio', icon: Coins },
   { to: '/portal/contacts', label: 'Contacts', icon: Users },
   { to: '/portal/scheduled', label: 'Scheduled', icon: Clock },
 ];

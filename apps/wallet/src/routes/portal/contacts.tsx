@@ -11,6 +11,7 @@ import {
   Pencil,
   Trash2,
   ExternalLink,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -356,7 +357,12 @@ function ContactsPage(): ReactElement {
             </p>
 
             <div className="flex gap-2">
-              <Button variant="outline" className="flex-1 h-10" onClick={resetForm}>
+              <Button
+                variant="outline"
+                className="flex-1 h-10"
+                onClick={resetForm}
+                disabled={isSubmitting}
+              >
                 Cancel
               </Button>
               <Button
@@ -365,7 +371,14 @@ function ContactsPage(): ReactElement {
                 onClick={handleDelete}
                 disabled={isSubmitting}
               >
-                {isSubmitting ? 'Deleting...' : 'Delete'}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Deleting
+                  </>
+                ) : (
+                  'Delete'
+                )}
               </Button>
             </div>
           </div>

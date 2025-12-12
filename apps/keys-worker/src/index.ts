@@ -69,6 +69,27 @@ export default {
       });
     }
 
+    // Tokenlist proxy (bypasses CORS)
+    if (url.pathname.startsWith('/tokenlist/')) {
+      const targetPath = url.pathname.replace('/tokenlist', '');
+      const targetUrl = `https://tokenlist.tempo.xyz${targetPath}${url.search}`;
+
+      const response = await fetch(targetUrl, {
+        method: request.method,
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await response.text();
+      return new Response(data, {
+        status: response.status,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
+        },
+      });
+    }
+
     // Use tempo.ts Handler.keyManager
     const handler = Handler.keyManager({
       kv: kvFromD1(env.DB),

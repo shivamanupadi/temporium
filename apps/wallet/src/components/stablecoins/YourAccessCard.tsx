@@ -1,6 +1,6 @@
-import { useState, type ReactElement } from 'react';
+import { useState, useRef, type ReactElement } from 'react';
 import { toast } from 'sonner';
-import { Plus, Loader2, X, Flame, Send } from 'lucide-react';
+import { Plus, Loader2, X, Flame, Send, Check, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -16,6 +16,7 @@ import type { Token } from '@/lib/tokenlist';
 import { useStablecoin } from '@/hooks/useStablecoin';
 import { useTempo } from '@/hooks/useTempo';
 import { formatAmount } from '@/lib/utils';
+import { getExplorerTxUrl } from '@/lib/tempo-client';
 import { ROLE_OPTIONS } from '@/lib/constants';
 import type { TokenRole } from '@/types';
 
@@ -60,6 +61,8 @@ export function YourAccessCard({ tokenAddress }: YourAccessCardProps): ReactElem
   const [roleFeeToken, setRoleFeeToken] = useState<Token | null>(null);
   const [showBurnModal, setShowBurnModal] = useState(false);
   const [showSendModal, setShowSendModal] = useState(false);
+  const [roleTxHash, setRoleTxHash] = useState<string | null>(null);
+  const isConfirmingRef = useRef(false);
 
   const decimals = stablecoin?.metadata?.decimals ?? 6;
 
@@ -75,36 +78,37 @@ export function YourAccessCard({ tokenAddress }: YourAccessCardProps): ReactElem
     if (!userAddress || !roleConfirm) return;
     const { action, role } = roleConfirm;
     setIsConfirming(true);
+    isConfirmingRef.current = true;
     setRoleLoading(role);
 
     try {
+      let result;
       if (action === 'grant') {
-        await grantRoles({
+        result = await grantRoles({
           to: userAddress as `0x${string}`,
           roles: [role],
           feeToken: roleFeeToken?.address,
         });
-        toast.success(`${getRoleLabel(role)} role granted to you`);
       } else {
-        await revokeRoles({ from: userAddress as `0x${string}`, roles: [role] });
-        toast.success(`${getRoleLabel(role)} role removed from you`);
+        result = await revokeRoles({ from: userAddress as `0x${string}`, roles: [role] });
       }
+      setRoleTxHash(result.receipt.transactionHash);
       refresh();
     } catch (error) {
       const message = error instanceof Error ? error.message : `Failed to ${action} role`;
       toast.error(message);
     } finally {
       setIsConfirming(false);
+      isConfirmingRef.current = false;
       setRoleLoading(null);
-      setRoleConfirm(null);
-      setRoleFeeToken(null);
     }
   };
 
   const handleDialogClose = (): void => {
-    if (!isConfirming) {
+    if (!isConfirming && !isConfirmingRef.current) {
       setRoleConfirm(null);
       setRoleFeeToken(null);
+      setRoleTxHash(null);
     }
   };
 
@@ -113,7 +117,7 @@ export function YourAccessCard({ tokenAddress }: YourAccessCardProps): ReactElem
 
   return (
     <>
-      <div className="mb-6">
+      <div>
         <h2 className="text-[13px] font-semibold text-foreground mb-3">Your Access</h2>
         <div className="bg-white rounded-xl p-4 shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_1px_2px_-1px_rgba(0,0,0,0.03)]">
           <div className="flex items-center justify-between mb-4">
@@ -217,69 +221,111 @@ export function YourAccessCard({ tokenAddress }: YourAccessCardProps): ReactElem
         <DialogContent className="sm:max-w-sm p-0 overflow-hidden">
           <div className="p-5">
             <DialogTitle className="text-[15px] font-semibold mb-2">
-              {roleConfirm?.action === 'grant'
-                ? 'Grant Role to Yourself'
-                : 'Remove Role from Yourself'}
+              {roleTxHash
+                ? `Role ${roleConfirm?.action === 'grant' ? 'Granted' : 'Removed'}!`
+                : roleConfirm?.action === 'grant'
+                  ? 'Grant Role to Yourself'
+                  : 'Remove Role from Yourself'}
             </DialogTitle>
-            <DialogDescription className="text-[13px] text-muted-foreground">
-              {roleConfirm?.action === 'grant' ? (
-                <>
-                  You are about to grant the{' '}
-                  <span className="font-semibold text-foreground">
-                    {roleConfirm ? getRoleLabel(roleConfirm.role) : ''}
-                  </span>{' '}
-                  role to yourself.
-                  <br />
-                  <br />
-                  <span className="text-amber-600">Note: This requires the Admin role.</span>
-                </>
-              ) : (
-                <>
-                  You are about to remove the{' '}
-                  <span className="font-semibold text-foreground">
-                    {roleConfirm ? getRoleLabel(roleConfirm.role) : ''}
-                  </span>{' '}
-                  role from yourself.
-                  <br />
-                  <br />
-                  You will lose the permissions associated with this role. You can add it back later
-                  if you have Admin access.
-                </>
-              )}
+            <DialogDescription className="sr-only">
+              {roleConfirm?.action === 'grant' ? 'Grant role' : 'Remove role'}
             </DialogDescription>
 
-            {roleConfirm?.action === 'grant' && (
-              <FeeTokenSelector
-                value={roleFeeToken}
-                onChange={setRoleFeeToken}
-                className="pt-4 mt-4 border-t border-border"
-              />
-            )}
+            {roleTxHash ? (
+              <div className="text-center pt-4">
+                <div className="w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center mx-auto mb-6">
+                  <Check className="h-7 w-7 text-white" />
+                </div>
+                <p className="text-foreground text-sm font-semibold mb-1">
+                  Role {roleConfirm?.action === 'grant' ? 'Granted' : 'Removed'}
+                </p>
+                <p className="text-muted-foreground text-sm mb-6">
+                  {roleConfirm ? getRoleLabel(roleConfirm.role) : ''} role
+                </p>
+                <div className="bg-muted/50 rounded-xl p-4 space-y-3 text-left mb-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Transaction</span>
+                    <button
+                      onClick={() => window.open(getExplorerTxUrl(roleTxHash), '_blank')}
+                      className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+                    >
+                      <span className="font-mono">
+                        {roleTxHash.slice(0, 8)}...{roleTxHash.slice(-4)}
+                      </span>
+                      <ExternalLink className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+                <Button className="w-full h-10" onClick={handleDialogClose}>
+                  Done
+                </Button>
+              </div>
+            ) : (
+              <>
+                <p className="text-[13px] text-muted-foreground">
+                  {roleConfirm?.action === 'grant' ? (
+                    <>
+                      You are about to grant the{' '}
+                      <span className="font-semibold text-foreground">
+                        {roleConfirm ? getRoleLabel(roleConfirm.role) : ''}
+                      </span>{' '}
+                      role to yourself.
+                      <br />
+                      <br />
+                      <span className="text-amber-600">Note: This requires the Admin role.</span>
+                    </>
+                  ) : (
+                    <>
+                      You are about to remove the{' '}
+                      <span className="font-semibold text-foreground">
+                        {roleConfirm ? getRoleLabel(roleConfirm.role) : ''}
+                      </span>{' '}
+                      role from yourself.
+                      <br />
+                      <br />
+                      You will lose the permissions associated with this role. You can add it back
+                      later if you have Admin access.
+                    </>
+                  )}
+                </p>
 
-            <div className="flex gap-2 mt-4">
-              <Button
-                variant="outline"
-                className="flex-1 h-10"
-                onClick={handleDialogClose}
-                disabled={isConfirming}
-              >
-                Cancel
-              </Button>
-              <Button
-                className="flex-1 h-10"
-                variant={roleConfirm?.action === 'revoke' ? 'destructive' : 'default'}
-                onClick={confirmRoleAction}
-                disabled={isConfirming}
-              >
-                {isConfirming ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : roleConfirm?.action === 'grant' ? (
-                  'Grant Role'
-                ) : (
-                  'Remove Role'
+                {roleConfirm?.action === 'grant' && (
+                  <FeeTokenSelector
+                    value={roleFeeToken}
+                    onChange={setRoleFeeToken}
+                    className="pt-4 mt-4 border-t border-border"
+                  />
                 )}
-              </Button>
-            </div>
+
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    className="flex-1 h-10"
+                    onClick={handleDialogClose}
+                    disabled={isConfirming}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    className="flex-1 h-10"
+                    variant={roleConfirm?.action === 'revoke' ? 'destructive' : 'default'}
+                    onClick={confirmRoleAction}
+                    disabled={isConfirming}
+                  >
+                    {isConfirming ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        {roleConfirm?.action === 'grant' ? 'Granting' : 'Removing'}
+                      </>
+                    ) : roleConfirm?.action === 'grant' ? (
+                      'Grant Role'
+                    ) : (
+                      'Remove Role'
+                    )}
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         </DialogContent>
       </Dialog>

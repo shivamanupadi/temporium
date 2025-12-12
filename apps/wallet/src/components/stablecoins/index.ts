@@ -1,6 +1,7 @@
 export { StablecoinCard } from './StablecoinCard';
 export { StablecoinEmptyState } from './StablecoinEmptyState';
 export { CreateStablecoinModal } from './CreateStablecoinModal';
+export { ImportStablecoinModal } from './ImportStablecoinModal';
 export { ManageStablecoinModal } from './ManageStablecoinModal';
 export { MintTokensModal } from './MintTokensModal';
 export { BurnTokensModal } from './BurnTokensModal';

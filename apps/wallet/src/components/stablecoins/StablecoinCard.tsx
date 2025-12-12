@@ -12,7 +12,7 @@ export function StablecoinCard({ coin }: StablecoinCardProps): ReactElement {
   const navigate = useNavigate();
 
   const handleClick = (): void => {
-    navigate({ to: '/portal/stablecoins/$address', params: { address: coin.address } });
+    navigate({ to: '/portal/tip20-studio/$address', params: { address: coin.address } });
   };
 
   return (

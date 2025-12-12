@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, type ReactElement } from 'react';
-import { Loader2, Lock, Check, ExternalLink } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef, type ReactElement } from 'react';
+import { Loader2, Lock, Coins } from 'lucide-react';
 import { toast } from 'sonner';
+import confetti from 'canvas-confetti';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FeeTokenSelector } from '@/components/FeeTokenSelector';
@@ -12,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { getExplorerTxUrl } from '@/lib/tempo-client';
 import { CURRENCIES } from '@/lib/constants';
 import { useStablecoins } from '@/hooks/useStablecoins';
 import type { Token } from '@/lib/tokenlist';
@@ -22,6 +22,8 @@ interface CreateStablecoinModalProps {
   onSuccess: () => void;
   onClose: () => void;
 }
+
+type ModalState = 'form' | 'confirm';
 
 export function CreateStablecoinModal({
   isOpen,
@@ -34,91 +36,89 @@ export function CreateStablecoinModal({
   const [symbol, setSymbol] = useState('');
   const [currency, setCurrency] = useState('USD');
   const [feeToken, setFeeToken] = useState<Token | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [txHash, setTxHash] = useState<string | null>(null);
+  const [modalState, setModalState] = useState<ModalState>('form');
+  const [isCreating, setIsCreating] = useState(false);
+  const isCreatingRef = useRef(false);
 
   useEffect(() => {
     if (isOpen) {
       setName('');
       setSymbol('');
       setCurrency('USD');
-      setTxHash(null);
-      setIsSubmitting(false);
+      setModalState('form');
+      setIsCreating(false);
     }
   }, [isOpen]);
 
-  const handleSubmit = useCallback(async (): Promise<void> => {
+  const handleReview = useCallback((): void => {
     if (!name || !symbol) {
       toast.error('Please fill in all fields');
       return;
     }
+    setModalState('confirm');
+  }, [name, symbol]);
 
-    setIsSubmitting(true);
+  const handleSubmit = useCallback(async (): Promise<void> => {
+    setIsCreating(true);
+    isCreatingRef.current = true;
     try {
-      const result = await createStablecoin({
+      await createStablecoin({
         name,
         symbol,
         currency,
         feeToken: feeToken?.address,
       });
 
-      setTxHash(result.receipt.transactionHash);
-      toast.success('Stablecoin created!');
+      // Fire confetti - gone in 3 seconds
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        ticks: 50,
+        gravity: 3,
+        decay: 0.9,
+        scalar: 0.8,
+      });
+
+      toast.success(`${name} (${symbol}) created!`);
       onSuccess();
+      onClose();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Failed to create stablecoin';
+      const message = error instanceof Error ? error.message : 'Failed to create token';
       toast.error(message);
     } finally {
-      setIsSubmitting(false);
+      setIsCreating(false);
+      isCreatingRef.current = false;
     }
-  }, [name, symbol, currency, feeToken, createStablecoin, onSuccess]);
+  }, [name, symbol, currency, feeToken, createStablecoin, onSuccess, onClose]);
 
   const handleClose = useCallback((): void => {
-    if (!isSubmitting) {
+    if (!isCreating && !isCreatingRef.current) {
       onClose();
     }
-  }, [isSubmitting, onClose]);
+  }, [isCreating, onClose]);
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-sm p-0 overflow-hidden">
-        <div className="p-5">
-          <DialogTitle className="text-[15px] font-semibold mb-4">
-            {txHash ? 'Stablecoin Created!' : 'Create Stablecoin'}
-          </DialogTitle>
-          <DialogDescription className="sr-only">Create a new stablecoin</DialogDescription>
-
-          {txHash ? (
-            <div className="text-center">
-              <div className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
-                <Check className="h-6 w-6 text-success" />
-              </div>
-              <p className="text-[13px] text-muted-foreground mb-4">
-                Your stablecoin has been created successfully
-              </p>
-              <div className="flex gap-2">
-                <a
-                  href={getExplorerTxUrl(txHash)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-lg border border-border text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                >
-                  Explorer <ExternalLink className="h-3 w-3" />
-                </a>
-                <Button className="flex-1 h-10" onClick={handleClose}>
-                  Done
-                </Button>
-              </div>
+      <DialogContent className="sm:max-w-sm p-0 gap-0 overflow-hidden rounded-2xl">
+        {/* FORM STATE */}
+        {modalState === 'form' && (
+          <>
+            <div className="px-6 pt-6 pb-4">
+              <DialogTitle className="text-lg font-semibold">Create TIP20 Token</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Configure your new TIP20 token
+              </DialogDescription>
             </div>
-          ) : (
-            <>
+
+            <div className="px-6 pb-6">
               <div className="space-y-4">
                 <div>
                   <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5 block">
                     Name
                   </label>
                   <Input
-                    placeholder="My Stablecoin"
+                    placeholder="My Token"
                     value={name}
                     onChange={e => setName(e.target.value)}
                     className="h-10"
@@ -162,34 +162,93 @@ export function CreateStablecoinModal({
                     <Input value="6" disabled className="h-10 bg-muted text-muted-foreground" />
                   </div>
                 </div>
+
+                <FeeTokenSelector
+                  value={feeToken}
+                  onChange={setFeeToken}
+                  className="pt-4 border-t border-border"
+                />
               </div>
 
-              <FeeTokenSelector
-                value={feeToken}
-                onChange={setFeeToken}
-                className="pt-4 mt-4 border-t border-border"
-              />
-
-              <div className="flex gap-2 mt-4">
-                <Button
-                  variant="outline"
-                  className="flex-1 h-10"
-                  onClick={handleClose}
-                  disabled={isSubmitting}
-                >
+              <div className="flex gap-2 mt-6">
+                <Button variant="outline" className="flex-1" onClick={onClose}>
                   Cancel
                 </Button>
-                <Button
-                  className="flex-1 h-10"
-                  onClick={handleSubmit}
-                  disabled={isSubmitting || !name || !symbol}
-                >
-                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Create'}
+                <Button className="flex-1" onClick={handleReview} disabled={!name || !symbol}>
+                  Review
                 </Button>
               </div>
-            </>
-          )}
-        </div>
+            </div>
+          </>
+        )}
+
+        {/* CONFIRM STATE */}
+        {modalState === 'confirm' && (
+          <>
+            <div className="px-6 pt-6 pb-4">
+              <DialogTitle className="text-lg font-semibold">Confirm Creation</DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                Review the details before creating
+              </DialogDescription>
+            </div>
+
+            <div className="px-6 pb-6">
+              {/* Token Info Card */}
+              <div className="bg-muted/50 rounded-xl p-4 mb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Coins className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Token</p>
+                    <p className="text-lg font-semibold text-foreground">
+                      {name} ({symbol})
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Details Card */}
+              <div className="bg-muted/50 rounded-xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Currency</span>
+                  <span className="text-xs font-medium text-foreground">{currency}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Decimals</span>
+                  <span className="text-xs font-medium text-foreground">6</span>
+                </div>
+                {feeToken && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">Fee Token</span>
+                    <span className="text-xs font-medium text-foreground">{feeToken.symbol}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="px-6 pb-6 flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setModalState('form')}
+                disabled={isCreating}
+              >
+                Back
+              </Button>
+              <Button className="flex-1" onClick={handleSubmit} disabled={isCreating}>
+                {isCreating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Creating
+                  </>
+                ) : (
+                  'Create'
+                )}
+              </Button>
+            </div>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

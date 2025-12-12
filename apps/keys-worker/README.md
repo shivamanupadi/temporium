@@ -22,9 +22,11 @@ Uses `tempo.ts/server` `Handler.keyManager` for full WebAuthn attestation valida
 ## API Endpoints
 
 ### GET /keys/challenge
+
 Returns a WebAuthn registration challenge.
 
 **Response:**
+
 ```json
 {
   "challenge": "0x..."
@@ -32,9 +34,11 @@ Returns a WebAuthn registration challenge.
 ```
 
 ### GET /keys/:credentialId
+
 Retrieves the public key for a credential.
 
 **Response:**
+
 ```json
 {
   "publicKey": "0x..."
@@ -42,6 +46,7 @@ Retrieves the public key for a credential.
 ```
 
 ### POST /keys/:credentialId
+
 Registers a new credential with full WebAuthn attestation validation.
 
 **Request Body:** Full WebAuthn registration response from browser
@@ -108,5 +113,6 @@ CREATE TABLE passkeys (
 ```
 
 Keys follow patterns:
+
 - `challenge:{hex}` - Temporary challenge storage (5 min expiry)
 - `credential:{id}` - Public key storage

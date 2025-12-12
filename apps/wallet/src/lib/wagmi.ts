@@ -1,13 +1,7 @@
 import { createConfig, http } from 'wagmi';
 import { webAuthn, KeyManager } from 'tempo.ts/wagmi';
 import { tempoChain } from './tempo-client';
-
-/**
- * Keys API URL - Cloudflare Worker endpoint
- * Set VITE_KEYS_API_URL in your environment or .env file
- * Example: https://tollr-keys.your-subdomain.workers.dev/keys
- */
-const KEYS_API_URL = import.meta.env.VITE_KEYS_API_URL || 'http://localhost:8787/keys';
+import { KEYS_API_URL } from './api';
 
 /**
  * Extract root domain from hostname for passkey rpId
@@ -46,18 +40,29 @@ function bufferToBase64(buffer: ArrayBuffer): string {
   return btoa(String.fromCharCode(...new Uint8Array(buffer)));
 }
 
+interface SerializedCredential {
+  id: string;
+  type: string;
+  rawId: string;
+  response: {
+    clientDataJSON: string;
+    attestationObject: string;
+    authenticatorData?: string;
+    transports?: string[];
+  };
+  authenticatorAttachment?: string;
+}
+
 /**
  * Serialize WebAuthn credential for tempo.ts Handler.keyManager
  * Converts ArrayBuffers to base64 strings as expected by the server
  */
-function serializeCredential(raw: PublicKeyCredential) {
+function serializeCredential(raw: PublicKeyCredential): SerializedCredential {
   const response = raw.response as AuthenticatorAttestationResponse;
 
   // Handler.keyManager expects authenticatorData directly on response
   // For AuthenticatorAttestationResponse, we need to call getAuthenticatorData()
-  const authenticatorData = response.getAuthenticatorData
-    ? response.getAuthenticatorData()
-    : null;
+  const authenticatorData = response.getAuthenticatorData ? response.getAuthenticatorData() : null;
 
   return {
     id: raw.id,

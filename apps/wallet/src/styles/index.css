@@ -69,14 +69,11 @@
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-y: scroll;
 }
 
-/* Prevent layout shift when Radix components open */
-body[data-scroll-locked] {
-  margin-right: 0 !important;
-  overflow: visible !important;
-  padding-right: 0 !important;
+/* Prevent layout shift when Radix Dialog opens */
+html, body {
+  scrollbar-gutter: stable;
 }
 
 /* Prevent scroll jump when select opens */

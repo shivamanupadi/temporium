@@ -1,5 +1,4 @@
-import { useState, useEffect, useCallback, type ReactElement } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect, useCallback, useRef, type ReactElement } from 'react';
 import { Loader2, Check, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -32,6 +31,7 @@ export function BurnBlockedModal({
   const [feeToken, setFeeToken] = useState<Token | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
+  const isSubmittingRef = useRef(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -55,6 +55,7 @@ export function BurnBlockedModal({
     }
 
     setIsSubmitting(true);
+    isSubmittingRef.current = true;
     try {
       const result = await burnBlocked({
         token: selectedCoin.address,
@@ -63,18 +64,18 @@ export function BurnBlockedModal({
         feeToken: feeToken?.address,
       });
       setTxHash(result.receipt.transactionHash);
-      toast.success('Tokens burned from blocked address!');
       onSuccess();
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to burn blocked tokens';
       toast.error(message);
     } finally {
       setIsSubmitting(false);
+      isSubmittingRef.current = false;
     }
   }, [selectedCoin, burnFrom, amount, feeToken, burnBlocked, onSuccess]);
 
   const handleClose = useCallback((): void => {
-    if (!isSubmitting) {
+    if (!isSubmitting && !isSubmittingRef.current) {
       onClose();
     }
   }, [isSubmitting, onClose]);
@@ -91,30 +92,38 @@ export function BurnBlockedModal({
           </DialogDescription>
 
           {txHash ? (
-            <div className="text-center">
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="w-12 h-12 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4"
-              >
-                <Check className="h-6 w-6 text-success" />
-              </motion.div>
-              <p className="text-[13px] text-muted-foreground mb-4">
-                Successfully burned {amount} {selectedCoin?.symbol} from blocked address
-              </p>
-              <div className="flex gap-2">
-                <a
-                  href={getExplorerTxUrl(txHash)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-lg border border-border text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                >
-                  Explorer <ExternalLink className="h-3 w-3" />
-                </a>
-                <Button className="flex-1 h-10" onClick={handleClose}>
-                  Done
-                </Button>
+            <div className="text-center pt-4">
+              <div className="w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center mx-auto mb-6">
+                <Check className="h-7 w-7 text-white" />
               </div>
+              <p className="text-foreground text-sm font-semibold mb-1">Tokens Burned</p>
+              <div className="mb-6">
+                <span className="text-3xl font-semibold text-foreground">{amount}</span>
+                <span className="text-lg text-muted-foreground ml-1.5">{selectedCoin?.symbol}</span>
+              </div>
+              <div className="bg-muted/50 rounded-xl p-4 space-y-3 text-left mb-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Blocked Address</span>
+                  <span className="font-mono text-xs text-foreground">
+                    {burnFrom.slice(0, 10)}...{burnFrom.slice(-6)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">Transaction</span>
+                  <button
+                    onClick={() => window.open(getExplorerTxUrl(txHash), '_blank')}
+                    className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+                  >
+                    <span className="font-mono">
+                      {txHash.slice(0, 8)}...{txHash.slice(-4)}
+                    </span>
+                    <ExternalLink className="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+              <Button className="w-full h-10" onClick={handleClose}>
+                Done
+              </Button>
             </div>
           ) : (
             <>
@@ -156,7 +165,14 @@ export function BurnBlockedModal({
                   onClick={handleSubmit}
                   disabled={isSubmitting || !burnFrom || !amount}
                 >
-                  {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Burn'}
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Burning
+                    </>
+                  ) : (
+                    'Burn'
+                  )}
                 </Button>
               </div>
             </>
