@@ -110,32 +110,10 @@ function HomePage(): ReactElement {
   return (
     <>
       <main className="min-h-screen flex flex-col items-center justify-center px-6 py-12">
-        {/* Animated background */}
+        {/* Static background gradient - no animations for performance */}
         <div className="fixed inset-0 -z-10 overflow-hidden">
-          <motion.div
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.3, 0.5, 0.3],
-            }}
-            transition={{
-              duration: 8,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-            className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl"
-          />
-          <motion.div
-            animate={{
-              scale: [1.2, 1, 1.2],
-              opacity: [0.2, 0.4, 0.2],
-            }}
-            transition={{
-              duration: 10,
-              repeat: Infinity,
-              ease: 'easeInOut',
-            }}
-            className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[#0073e6]/20 rounded-full blur-3xl"
-          />
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/15 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[#0073e6]/15 rounded-full blur-3xl" />
         </div>
 
         {/* Content */}
