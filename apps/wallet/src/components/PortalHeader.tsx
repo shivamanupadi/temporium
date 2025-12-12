@@ -15,6 +15,7 @@ import {
   Clock,
   Users,
   Coins,
+  Shield,
 } from 'lucide-react';
 import { useTempo } from '@/hooks/useTempo';
 import { formatAddress, copyToClipboard, cn } from '@/lib/utils';
@@ -28,6 +29,7 @@ const navItems = [
   { to: '/portal/swap', label: 'Swap', icon: ArrowUpDown },
   { to: '/portal/liquidity', label: 'Liquidity', icon: Droplets },
   { to: '/portal/tip20-studio', label: 'TIP20 Studio', icon: Coins },
+  { to: '/portal/tip403-factory', label: 'TIP403 Factory', icon: Shield },
   { to: '/portal/contacts', label: 'Contacts', icon: Users },
   { to: '/portal/scheduled', label: 'Scheduled', icon: Clock },
 ];

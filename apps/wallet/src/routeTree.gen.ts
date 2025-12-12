@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PortalRouteImport } from './routes/portal'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PortalTip403FactoryRouteImport } from './routes/portal/tip403-factory'
 import { Route as PortalTip20StudioRouteImport } from './routes/portal/tip20-studio'
 import { Route as PortalSwapRouteImport } from './routes/portal/swap'
 import { Route as PortalSendRouteImport } from './routes/portal/send'
@@ -19,7 +20,9 @@ import { Route as PortalReceiveRouteImport } from './routes/portal/receive'
 import { Route as PortalLiquidityRouteImport } from './routes/portal/liquidity'
 import { Route as PortalDashboardRouteImport } from './routes/portal/dashboard'
 import { Route as PortalContactsRouteImport } from './routes/portal/contacts'
+import { Route as PortalTip403FactoryIndexRouteImport } from './routes/portal/tip403-factory.index'
 import { Route as PortalTip20StudioIndexRouteImport } from './routes/portal/tip20-studio.index'
+import { Route as PortalTip403FactoryPolicyIdRouteImport } from './routes/portal/tip403-factory.$policyId'
 import { Route as PortalTip20StudioAddressRouteImport } from './routes/portal/tip20-studio.$address'
 
 const PortalRoute = PortalRouteImport.update({
@@ -31,6 +34,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const PortalTip403FactoryRoute = PortalTip403FactoryRouteImport.update({
+  id: '/tip403-factory',
+  path: '/tip403-factory',
+  getParentRoute: () => PortalRoute,
 } as any)
 const PortalTip20StudioRoute = PortalTip20StudioRouteImport.update({
   id: '/tip20-studio',
@@ -72,11 +80,23 @@ const PortalContactsRoute = PortalContactsRouteImport.update({
   path: '/contacts',
   getParentRoute: () => PortalRoute,
 } as any)
+const PortalTip403FactoryIndexRoute =
+  PortalTip403FactoryIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PortalTip403FactoryRoute,
+  } as any)
 const PortalTip20StudioIndexRoute = PortalTip20StudioIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => PortalTip20StudioRoute,
 } as any)
+const PortalTip403FactoryPolicyIdRoute =
+  PortalTip403FactoryPolicyIdRouteImport.update({
+    id: '/$policyId',
+    path: '/$policyId',
+    getParentRoute: () => PortalTip403FactoryRoute,
+  } as any)
 const PortalTip20StudioAddressRoute =
   PortalTip20StudioAddressRouteImport.update({
     id: '/$address',
@@ -95,8 +115,11 @@ export interface FileRoutesByFullPath {
   '/portal/send': typeof PortalSendRoute
   '/portal/swap': typeof PortalSwapRoute
   '/portal/tip20-studio': typeof PortalTip20StudioRouteWithChildren
+  '/portal/tip403-factory': typeof PortalTip403FactoryRouteWithChildren
   '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRoute
+  '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRoute
   '/portal/tip20-studio/': typeof PortalTip20StudioIndexRoute
+  '/portal/tip403-factory/': typeof PortalTip403FactoryIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -109,7 +132,9 @@ export interface FileRoutesByTo {
   '/portal/send': typeof PortalSendRoute
   '/portal/swap': typeof PortalSwapRoute
   '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRoute
+  '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRoute
   '/portal/tip20-studio': typeof PortalTip20StudioIndexRoute
+  '/portal/tip403-factory': typeof PortalTip403FactoryIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -123,8 +148,11 @@ export interface FileRoutesById {
   '/portal/send': typeof PortalSendRoute
   '/portal/swap': typeof PortalSwapRoute
   '/portal/tip20-studio': typeof PortalTip20StudioRouteWithChildren
+  '/portal/tip403-factory': typeof PortalTip403FactoryRouteWithChildren
   '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRoute
+  '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRoute
   '/portal/tip20-studio/': typeof PortalTip20StudioIndexRoute
+  '/portal/tip403-factory/': typeof PortalTip403FactoryIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -139,8 +167,11 @@ export interface FileRouteTypes {
     | '/portal/send'
     | '/portal/swap'
     | '/portal/tip20-studio'
+    | '/portal/tip403-factory'
     | '/portal/tip20-studio/$address'
+    | '/portal/tip403-factory/$policyId'
     | '/portal/tip20-studio/'
+    | '/portal/tip403-factory/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -153,7 +184,9 @@ export interface FileRouteTypes {
     | '/portal/send'
     | '/portal/swap'
     | '/portal/tip20-studio/$address'
+    | '/portal/tip403-factory/$policyId'
     | '/portal/tip20-studio'
+    | '/portal/tip403-factory'
   id:
     | '__root__'
     | '/'
@@ -166,8 +199,11 @@ export interface FileRouteTypes {
     | '/portal/send'
     | '/portal/swap'
     | '/portal/tip20-studio'
+    | '/portal/tip403-factory'
     | '/portal/tip20-studio/$address'
+    | '/portal/tip403-factory/$policyId'
     | '/portal/tip20-studio/'
+    | '/portal/tip403-factory/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -190,6 +226,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/portal/tip403-factory': {
+      id: '/portal/tip403-factory'
+      path: '/tip403-factory'
+      fullPath: '/portal/tip403-factory'
+      preLoaderRoute: typeof PortalTip403FactoryRouteImport
+      parentRoute: typeof PortalRoute
     }
     '/portal/tip20-studio': {
       id: '/portal/tip20-studio'
@@ -247,12 +290,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalContactsRouteImport
       parentRoute: typeof PortalRoute
     }
+    '/portal/tip403-factory/': {
+      id: '/portal/tip403-factory/'
+      path: '/'
+      fullPath: '/portal/tip403-factory/'
+      preLoaderRoute: typeof PortalTip403FactoryIndexRouteImport
+      parentRoute: typeof PortalTip403FactoryRoute
+    }
     '/portal/tip20-studio/': {
       id: '/portal/tip20-studio/'
       path: '/'
       fullPath: '/portal/tip20-studio/'
       preLoaderRoute: typeof PortalTip20StudioIndexRouteImport
       parentRoute: typeof PortalTip20StudioRoute
+    }
+    '/portal/tip403-factory/$policyId': {
+      id: '/portal/tip403-factory/$policyId'
+      path: '/$policyId'
+      fullPath: '/portal/tip403-factory/$policyId'
+      preLoaderRoute: typeof PortalTip403FactoryPolicyIdRouteImport
+      parentRoute: typeof PortalTip403FactoryRoute
     }
     '/portal/tip20-studio/$address': {
       id: '/portal/tip20-studio/$address'
@@ -277,6 +334,19 @@ const PortalTip20StudioRouteChildren: PortalTip20StudioRouteChildren = {
 const PortalTip20StudioRouteWithChildren =
   PortalTip20StudioRoute._addFileChildren(PortalTip20StudioRouteChildren)
 
+interface PortalTip403FactoryRouteChildren {
+  PortalTip403FactoryPolicyIdRoute: typeof PortalTip403FactoryPolicyIdRoute
+  PortalTip403FactoryIndexRoute: typeof PortalTip403FactoryIndexRoute
+}
+
+const PortalTip403FactoryRouteChildren: PortalTip403FactoryRouteChildren = {
+  PortalTip403FactoryPolicyIdRoute: PortalTip403FactoryPolicyIdRoute,
+  PortalTip403FactoryIndexRoute: PortalTip403FactoryIndexRoute,
+}
+
+const PortalTip403FactoryRouteWithChildren =
+  PortalTip403FactoryRoute._addFileChildren(PortalTip403FactoryRouteChildren)
+
 interface PortalRouteChildren {
   PortalContactsRoute: typeof PortalContactsRoute
   PortalDashboardRoute: typeof PortalDashboardRoute
@@ -286,6 +356,7 @@ interface PortalRouteChildren {
   PortalSendRoute: typeof PortalSendRoute
   PortalSwapRoute: typeof PortalSwapRoute
   PortalTip20StudioRoute: typeof PortalTip20StudioRouteWithChildren
+  PortalTip403FactoryRoute: typeof PortalTip403FactoryRouteWithChildren
 }
 
 const PortalRouteChildren: PortalRouteChildren = {
@@ -297,6 +368,7 @@ const PortalRouteChildren: PortalRouteChildren = {
   PortalSendRoute: PortalSendRoute,
   PortalSwapRoute: PortalSwapRoute,
   PortalTip20StudioRoute: PortalTip20StudioRouteWithChildren,
+  PortalTip403FactoryRoute: PortalTip403FactoryRouteWithChildren,
 }
 
 const PortalRouteWithChildren =

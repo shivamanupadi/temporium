@@ -30,3 +30,6 @@ export interface Contact {
 
 // Scheduled transaction status
 export type ScheduledTransactionStatus = 'pending' | 'executed' | 'failed';
+
+// TIP-403 Policy types
+export type PolicyType = 'whitelist' | 'blacklist';

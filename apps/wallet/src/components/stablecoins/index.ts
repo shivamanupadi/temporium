@@ -11,5 +11,8 @@ export { RoleModal } from './RoleModal';
 export { BurnBlockedModal } from './BurnBlockedModal';
 export { PauseTokenModal } from './PauseTokenModal';
 export { RemoveConfirmModal } from './RemoveConfirmModal';
+export { LinkPolicyModal } from './LinkPolicyModal';
+export { UnlinkPolicyModal } from './UnlinkPolicyModal';
+export { CreateAndLinkPolicyModal } from './CreateAndLinkPolicyModal';
 export { YourAccessCard } from './YourAccessCard';
 export * from './types';

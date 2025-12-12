@@ -13,7 +13,7 @@ import { BurnTokensModal } from './BurnTokensModal';
 import { SendTokensModal } from './SendTokensModal';
 import { FeeTokenSelector } from '@/components/FeeTokenSelector';
 import type { Token } from '@/lib/tokenlist';
-import { useStablecoin } from '@/hooks/useStablecoin';
+import { useTip20Studio } from '@/hooks/useTip20Studio';
 import { useTempo } from '@/hooks/useTempo';
 import { formatAmount } from '@/lib/utils';
 import { getExplorerTxUrl } from '@/lib/tempo-client';
@@ -50,7 +50,7 @@ interface YourAccessCardProps {
 
 export function YourAccessCard({ tokenAddress }: YourAccessCardProps): ReactElement {
   const { address: userAddress } = useTempo();
-  const { stablecoin, grantRoles, revokeRoles, refresh } = useStablecoin(tokenAddress);
+  const { stablecoin, grantRoles, revokeRoles, refresh } = useTip20Studio(tokenAddress);
 
   const [roleLoading, setRoleLoading] = useState<TokenRole | null>(null);
   const [roleConfirm, setRoleConfirm] = useState<{
