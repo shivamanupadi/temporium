@@ -5,9 +5,3 @@ export class RefreshTokenDto {
   @IsNotEmpty()
   refreshToken: string;
 }
-
-export class TokenResponseDto {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
-}

@@ -8,7 +8,6 @@ import { StablecoinsModule } from './stablecoins/stablecoins.module';
 import { PoliciesModule } from './policies/policies.module';
 import { ScheduledTransactionsModule } from './scheduled-transactions/scheduled-transactions.module';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -25,6 +24,5 @@ import { AppService } from './app.service';
     ScheduledTransactionsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
