@@ -19,11 +19,6 @@ interface ApiResponse<T> {
   status: number;
 }
 
-interface ApiError {
-  message: string;
-  status: number;
-}
-
 /**
  * Refresh the access token using the refresh token
  */

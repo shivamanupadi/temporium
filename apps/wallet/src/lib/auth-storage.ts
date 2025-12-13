@@ -76,10 +76,3 @@ export function isAccessTokenExpired(): boolean {
 export function clearAuthTokens(): void {
   localStorage.removeItem(AUTH_STORAGE_KEY);
 }
-
-/**
- * Check if user has auth tokens (may be expired)
- */
-export function hasAuthTokens(): boolean {
-  return getAuthTokens() !== null;
-}
