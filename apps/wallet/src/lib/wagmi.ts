@@ -2,6 +2,7 @@ import { createConfig, http } from 'wagmi';
 import { webAuthn, KeyManager } from 'tempo.ts/wagmi';
 import { tempoChain } from './tempo-client';
 import { KEYS_API_URL } from './api';
+import { saveAuthTokens } from './auth-storage';
 
 /**
  * Extract root domain from hostname for passkey rpId
@@ -82,8 +83,19 @@ function serializeCredential(raw: PublicKeyCredential): SerializedCredential {
 }
 
 /**
+ * Response from the keys API that includes JWT tokens
+ */
+interface KeysApiResponse {
+  publicKey: `0x${string}`;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresIn?: number;
+}
+
+/**
  * Custom KeyManager for HTTP-based storage with tempo.ts/server Handler.keyManager
  * Properly serializes WebAuthn credentials (converts ArrayBuffers to base64)
+ * Also extracts and stores JWT tokens from the response
  */
 const keyManager = KeyManager.from({
   async getChallenge() {
@@ -97,7 +109,17 @@ const keyManager = KeyManager.from({
     if (!response.ok) {
       throw new Error('publicKey not found.');
     }
-    const data = await response.json();
+    const data: KeysApiResponse = await response.json();
+
+    // Extract and store JWT tokens if present
+    if (data.accessToken && data.refreshToken && data.expiresIn) {
+      saveAuthTokens({
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+        expiresIn: data.expiresIn,
+      });
+    }
+
     return data.publicKey;
   },
 
@@ -117,13 +139,23 @@ const keyManager = KeyManager.from({
       const error = await response.text();
       throw new Error(`Failed to save public key: ${error}`);
     }
+
+    // Extract and store JWT tokens from response
+    const data: KeysApiResponse = await response.json();
+    if (data.accessToken && data.refreshToken && data.expiresIn) {
+      saveAuthTokens({
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
+        expiresIn: data.expiresIn,
+      });
+    }
   },
 });
 
 /**
  * Tempo passkey connector configuration
  * - rpId: Set to root domain to allow passkeys across subdomains
- * - keyManager: HTTP-backed storage in Cloudflare D1
+ * - keyManager: HTTP-backed storage in PostgreSQL (via NestJS API)
  */
 export const tempoPasskeyConnector = webAuthn({
   keyManager,

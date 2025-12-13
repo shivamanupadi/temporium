@@ -1,9 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAccount, useConnect, useDisconnect, useWalletClient } from 'wagmi';
+import { useQueryClient } from '@tanstack/react-query';
 import { type Address } from 'viem';
 import { tempoPasskeyConnector } from '@/lib/wagmi';
 import { getTokenBalance, stringToBytes32, Actions } from '@/lib/tempo-client';
 import { DEFAULT_FEE_TOKEN_ADDRESS, MAX_SCHEDULE_SECONDS, TIMING } from '@/lib/constants';
+import { clearAuthTokens } from '@/lib/auth-storage';
 
 /**
  * Encode a memo string to bytes
@@ -113,6 +115,7 @@ export function useTempo(): UseTempoReturn {
   const { connectAsync } = useConnect();
   const { disconnectAsync } = useDisconnect();
   const { data: walletClient } = useWalletClient();
+  const queryClient = useQueryClient();
 
   /**
    * Sign up with a new passkey (creates wallet)
@@ -162,11 +165,16 @@ export function useTempo(): UseTempoReturn {
   }, [connectAsync]);
 
   /**
-   * Disconnect wallet
+   * Disconnect wallet and clear auth tokens
    */
   const disconnect = useCallback(async () => {
+    // Clear JWT tokens
+    clearAuthTokens();
+    // Clear all cached queries
+    queryClient.clear();
+    // Disconnect wallet
     await disconnectAsync();
-  }, [disconnectAsync]);
+  }, [disconnectAsync, queryClient]);
 
   /**
    * Send an immediate payment using tempo.ts SDK

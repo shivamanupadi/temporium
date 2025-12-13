@@ -3,7 +3,7 @@
  * All API URLs are derived from a single base URL
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8787';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 /**
  * Keys API URL - for passkey storage

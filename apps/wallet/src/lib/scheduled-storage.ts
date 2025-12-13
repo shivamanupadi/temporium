@@ -1,7 +1,62 @@
 import type { Address } from 'viem';
+import { apiGet, apiPost, apiPatch, apiDelete } from './api-client';
+import { hasAuthTokens } from './auth-storage';
 import { db, type ScheduledTransaction } from './db';
 
 export type { ScheduledTransaction };
+
+/**
+ * API response types
+ */
+interface ScheduledTransactionApiResponse {
+  id: string;
+  owner: string;
+  txHash: string;
+  from: string;
+  to: string;
+  amount: string;
+  token: string;
+  tokenSymbol: string;
+  tokenDecimals: number;
+  feeToken: string;
+  memo?: string;
+  scheduledFor: string;
+  createdAt: string;
+  status: 'pending' | 'executed' | 'failed';
+  executedAt?: string;
+}
+
+/**
+ * Convert API response to ScheduledTransaction type
+ */
+function apiToScheduledTransaction(data: ScheduledTransactionApiResponse): ScheduledTransaction {
+  return {
+    id: data.id,
+    owner: data.owner as Address,
+    txHash: data.txHash,
+    from: data.from as Address,
+    to: data.to as Address,
+    amount: data.amount,
+    token: data.token as Address,
+    tokenSymbol: data.tokenSymbol,
+    tokenDecimals: data.tokenDecimals,
+    feeToken: data.feeToken as Address,
+    memo: data.memo,
+    scheduledFor: Math.floor(new Date(data.scheduledFor).getTime() / 1000),
+    createdAt: Math.floor(new Date(data.createdAt).getTime() / 1000),
+    status: data.status,
+    executedAt: data.executedAt
+      ? Math.floor(new Date(data.executedAt).getTime() / 1000)
+      : undefined,
+  };
+}
+
+/**
+ * Check if API is available (user is authenticated)
+ */
+function useApi(): boolean {
+  return hasAuthTokens();
+}
 
 /**
  * Save a new scheduled transaction
@@ -11,6 +66,27 @@ export async function saveScheduledTransaction(
 ): Promise<ScheduledTransaction> {
   const normalizedOwner = tx.owner.toLowerCase() as Address;
 
+  // Use API if authenticated
+  if (useApi()) {
+    const response = await apiPost<ScheduledTransactionApiResponse>(
+      '/api/scheduled-transactions',
+      {
+        txHash: tx.txHash,
+        from: tx.from.toLowerCase(),
+        to: tx.to.toLowerCase(),
+        amount: tx.amount,
+        token: tx.token.toLowerCase(),
+        tokenSymbol: tx.tokenSymbol,
+        tokenDecimals: tx.tokenDecimals,
+        feeToken: tx.feeToken.toLowerCase(),
+        memo: tx.memo,
+        scheduledFor: new Date(tx.scheduledFor * 1000).toISOString(),
+      }
+    );
+    return apiToScheduledTransaction(response);
+  }
+
+  // Fallback to IndexedDB
   const scheduledTx: ScheduledTransaction = {
     ...tx,
     owner: normalizedOwner,
@@ -31,13 +107,21 @@ export async function saveScheduledTransaction(
 export async function getScheduledTransactionsByOwner(
   owner: Address
 ): Promise<ScheduledTransaction[]> {
+  // Use API if authenticated
+  if (useApi()) {
+    const response = await apiGet<ScheduledTransactionApiResponse[]>(
+      '/api/scheduled-transactions'
+    );
+    return response.map(apiToScheduledTransaction).sort((a, b) => b.scheduledFor - a.scheduledFor);
+  }
+
+  // Fallback to IndexedDB
   const normalizedOwner = owner.toLowerCase();
   const transactions = await db.scheduledTransactions
     .where('owner')
     .equals(normalizedOwner)
     .toArray();
 
-  // Sort by scheduledFor descending (newest first)
   return transactions.sort((a, b) => b.scheduledFor - a.scheduledFor);
 }
 
@@ -45,6 +129,19 @@ export async function getScheduledTransactionsByOwner(
  * Get a single scheduled transaction by ID
  */
 export async function getScheduledTransaction(id: string): Promise<ScheduledTransaction | null> {
+  // Use API if authenticated
+  if (useApi()) {
+    try {
+      const response = await apiGet<ScheduledTransactionApiResponse>(
+        `/api/scheduled-transactions/${id}`
+      );
+      return apiToScheduledTransaction(response);
+    } catch {
+      return null;
+    }
+  }
+
+  // Fallback to IndexedDB
   const tx = await db.scheduledTransactions.get(id);
   return tx ?? null;
 }
@@ -58,12 +155,21 @@ export async function updateTransactionStatus(
   status: 'pending' | 'executed' | 'failed',
   executedAt?: number
 ): Promise<void> {
+  // Use API if authenticated
+  if (useApi()) {
+    await apiPatch(`/api/scheduled-transactions/${id}`, {
+      status,
+      executedAt: executedAt ? new Date(executedAt * 1000).toISOString() : undefined,
+    });
+    return;
+  }
+
+  // Fallback to IndexedDB
   const tx = await db.scheduledTransactions.get(id);
   if (!tx) {
     throw new Error('Transaction not found');
   }
 
-  // Verify ownership
   if (tx.owner?.toLowerCase() !== owner.toLowerCase()) {
     throw new Error('Not authorized to update this transaction');
   }
@@ -78,6 +184,13 @@ export async function updateTransactionStatus(
  * Delete a scheduled transaction
  */
 export async function deleteScheduledTransaction(id: string, owner: Address): Promise<void> {
+  // Use API if authenticated
+  if (useApi()) {
+    await apiDelete(`/api/scheduled-transactions/${id}`);
+    return;
+  }
+
+  // Fallback to IndexedDB
   const tx = await db.scheduledTransactions.get(id);
   if (tx && tx.owner?.toLowerCase() !== owner.toLowerCase()) {
     throw new Error('Not authorized to delete this transaction');
@@ -101,6 +214,9 @@ export async function getPendingTransactionsPastSchedule(
  * Clear all scheduled transactions for an owner (for testing/debugging)
  */
 export async function clearAllScheduledTransactions(owner: Address): Promise<void> {
-  const normalizedOwner = owner.toLowerCase();
-  await db.scheduledTransactions.where('owner').equals(normalizedOwner).delete();
+  // Only for IndexedDB - not available via API
+  if (!useApi()) {
+    const normalizedOwner = owner.toLowerCase();
+    await db.scheduledTransactions.where('owner').equals(normalizedOwner).delete();
+  }
 }
