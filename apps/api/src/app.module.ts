@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { KeysModule } from './keys/keys.module';
+import { TokenlistModule } from './tokenlist/tokenlist.module';
 import { ContactsModule } from './contacts/contacts.module';
 import { StablecoinsModule } from './stablecoins/stablecoins.module';
 import { PoliciesModule } from './policies/policies.module';
@@ -18,6 +19,7 @@ import { AppController } from './app.controller';
     PrismaModule,
     AuthModule,
     KeysModule,
+    TokenlistModule,
     ContactsModule,
     StablecoinsModule,
     PoliciesModule,
