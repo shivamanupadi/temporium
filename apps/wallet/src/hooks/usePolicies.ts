@@ -60,6 +60,10 @@ interface UsePoliciesReturn {
     policyId: bigint;
     feeToken?: Address;
   }) => Promise<{ receipt: { transactionHash: string } }>;
+  unlinkFromToken: (params: {
+    token: Address;
+    feeToken?: Address;
+  }) => Promise<{ receipt: { transactionHash: string } }>;
 
   refresh: () => Promise<void>;
 }
@@ -184,7 +188,30 @@ export function usePolicies(): UsePoliciesReturn {
       allowed: boolean;
       feeToken?: Address;
     }) => {
-      if (!walletClient) throw new Error('Wallet not connected');
+      if (!walletClient || !address) throw new Error('Wallet not connected');
+
+      // Check if user is admin before attempting modification
+      const policyData = await Actions.policy.getData(tempoPublicClient, {
+        policyId: params.policyId,
+      });
+
+      if (policyData.admin.toLowerCase() !== address.toLowerCase()) {
+        throw new Error('You do not have admin access to this policy');
+      }
+
+      // Check current authorization status
+      const isCurrentlyWhitelisted = await Actions.policy.isAuthorized(tempoPublicClient, {
+        policyId: params.policyId,
+        user: params.address,
+      });
+
+      if (params.allowed && isCurrentlyWhitelisted) {
+        throw new Error('This address is already whitelisted');
+      }
+
+      if (!params.allowed && !isCurrentlyWhitelisted) {
+        throw new Error('This address is not in the whitelist');
+      }
 
       const result = await Actions.policy.modifyWhitelistSync(walletClient, {
         policyId: params.policyId,
@@ -196,7 +223,7 @@ export function usePolicies(): UsePoliciesReturn {
       await refresh();
       return result;
     },
-    [walletClient, refresh]
+    [walletClient, address, refresh]
   );
 
   const modifyBlacklist = useCallback(
@@ -206,7 +233,32 @@ export function usePolicies(): UsePoliciesReturn {
       restricted: boolean;
       feeToken?: Address;
     }) => {
-      if (!walletClient) throw new Error('Wallet not connected');
+      if (!walletClient || !address) throw new Error('Wallet not connected');
+
+      // Check if user is admin before attempting modification
+      const policyData = await Actions.policy.getData(tempoPublicClient, {
+        policyId: params.policyId,
+      });
+
+      if (policyData.admin.toLowerCase() !== address.toLowerCase()) {
+        throw new Error('You do not have admin access to this policy');
+      }
+
+      // Check current authorization status (blacklisted = not authorized)
+      const isAuthorized = await Actions.policy.isAuthorized(tempoPublicClient, {
+        policyId: params.policyId,
+        user: params.address,
+      });
+
+      // If restricted=true (adding to blacklist) and already not authorized, address is already blacklisted
+      if (params.restricted && !isAuthorized) {
+        throw new Error('This address is already blacklisted');
+      }
+
+      // If restricted=false (removing from blacklist) and authorized, address is not blacklisted
+      if (!params.restricted && isAuthorized) {
+        throw new Error('This address is not in the blacklist');
+      }
 
       const result = await Actions.policy.modifyBlacklistSync(walletClient, {
         policyId: params.policyId,
@@ -218,12 +270,21 @@ export function usePolicies(): UsePoliciesReturn {
       await refresh();
       return result;
     },
-    [walletClient, refresh]
+    [walletClient, address, refresh]
   );
 
   const transferAdmin = useCallback(
     async (params: { policyId: bigint; admin: Address; feeToken?: Address }) => {
       if (!walletClient || !address) throw new Error('Wallet not connected');
+
+      // Check if user is admin before attempting transfer
+      const policyData = await Actions.policy.getData(tempoPublicClient, {
+        policyId: params.policyId,
+      });
+
+      if (policyData.admin.toLowerCase() !== address.toLowerCase()) {
+        throw new Error('You do not have admin access to this policy');
+      }
 
       const result = await Actions.policy.setAdminSync(walletClient, {
         policyId: params.policyId,
@@ -254,7 +315,18 @@ export function usePolicies(): UsePoliciesReturn {
 
   const linkToToken = useCallback(
     async (params: { token: Address; policyId: bigint; feeToken?: Address }) => {
-      if (!walletClient) throw new Error('Wallet not connected');
+      if (!walletClient || !address) throw new Error('Wallet not connected');
+
+      // Check if user has admin role for the token before attempting to link
+      const hasAdminRole = await Actions.token.hasRole(tempoPublicClient, {
+        token: params.token,
+        account: address,
+        role: 'defaultAdmin',
+      });
+
+      if (!hasAdminRole) {
+        throw new Error('You do not have the Admin role required to change transfer policy');
+      }
 
       const result = await Actions.token.changeTransferPolicySync(walletClient, {
         token: params.token,
@@ -264,7 +336,34 @@ export function usePolicies(): UsePoliciesReturn {
 
       return result;
     },
-    [walletClient]
+    [walletClient, address]
+  );
+
+  const unlinkFromToken = useCallback(
+    async (params: { token: Address; feeToken?: Address }) => {
+      if (!walletClient || !address) throw new Error('Wallet not connected');
+
+      // Check if user has admin role for the token before attempting to unlink
+      const hasAdminRole = await Actions.token.hasRole(tempoPublicClient, {
+        token: params.token,
+        account: address,
+        role: 'defaultAdmin',
+      });
+
+      if (!hasAdminRole) {
+        throw new Error('You do not have the Admin role required to change transfer policy');
+      }
+
+      // Set policy ID to 1 (always-allow) to remove restrictions
+      const result = await Actions.token.changeTransferPolicySync(walletClient, {
+        token: params.token,
+        policyId: 1n,
+        feeToken: params.feeToken ?? DEFAULT_FEE_TOKEN_ADDRESS,
+      });
+
+      return result;
+    },
+    [walletClient, address]
   );
 
   return {
@@ -278,6 +377,7 @@ export function usePolicies(): UsePoliciesReturn {
     transferAdmin,
     checkAuthorization,
     linkToToken,
+    unlinkFromToken,
     refresh,
   };
 }

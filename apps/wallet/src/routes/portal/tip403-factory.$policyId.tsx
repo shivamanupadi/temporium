@@ -9,6 +9,7 @@ import {
   UserCog,
   Search,
   Link2,
+  Unlink,
   Trash2,
   ChevronRight,
   Loader2,
@@ -23,6 +24,7 @@ import {
   TransferAdminModal,
   CheckAuthorizationModal,
   LinkTokenModal,
+  UnlinkTokenModal,
   RemovePolicyModal,
 } from '@/components/policies';
 import { usePolicy } from '@/hooks/usePolicies';
@@ -38,6 +40,7 @@ type DashboardModal =
   | 'transfer-admin'
   | 'check-auth'
   | 'link-token'
+  | 'unlink-token'
   | 'remove'
   | null;
 
@@ -315,6 +318,12 @@ function Tip403FactoryDashboard(): ReactElement {
               onClick={() => setActiveModal('link-token')}
             />
             <SettingsRow
+              icon={<Unlink className="h-4 w-4 text-orange-500" />}
+              title="Unlink from Token"
+              description="Remove this policy from a TIP20 token"
+              onClick={() => setActiveModal('unlink-token')}
+            />
+            <SettingsRow
               icon={<Trash2 className="h-4 w-4 text-red-500" />}
               title="Remove from List"
               description="Remove from your local storage only"
@@ -363,6 +372,16 @@ function Tip403FactoryDashboard(): ReactElement {
       <LinkTokenModal
         isOpen={activeModal === 'link-token'}
         policyId={policyBigInt}
+        policyType={policy.type}
+        policyAdmin={policy.admin}
+        onSuccess={handleSuccess}
+        onClose={closeModal}
+      />
+
+      <UnlinkTokenModal
+        isOpen={activeModal === 'unlink-token'}
+        policyId={policyBigInt}
+        policyType={policy.type}
         onSuccess={handleSuccess}
         onClose={closeModal}
       />

@@ -7,3 +7,4 @@ export { ModifyListModal } from './ModifyListModal';
 export { TransferAdminModal } from './TransferAdminModal';
 export { CheckAuthorizationModal } from './CheckAuthorizationModal';
 export { LinkTokenModal } from './LinkTokenModal';
+export { UnlinkTokenModal } from './UnlinkTokenModal';
