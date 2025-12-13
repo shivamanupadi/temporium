@@ -1,0 +1,115 @@
+// Tollr API - Prisma Schema
+// PostgreSQL database for user data and authentication
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Passkey storage (migrated from Cloudflare D1)
+model Passkey {
+  id        String   @id @default(cuid())
+  key       String   @unique // credentialId
+  value     String   // JSON serialized public key data
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("passkeys")
+}
+
+// User sessions for JWT refresh tokens
+model Session {
+  id            String   @id @default(cuid())
+  walletAddress String   @map("wallet_address")
+  refreshToken  String   @unique @map("refresh_token")
+  expiresAt     DateTime @map("expires_at")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([walletAddress])
+  @@map("sessions")
+}
+
+// Stablecoins (TIP-20 tokens)
+model Stablecoin {
+  id        String   @id @default(cuid())
+  owner     String   // Wallet address that owns this record
+  address   String   // Token contract address
+  name      String
+  symbol    String
+  currency  String
+  creator   String   // Token creator address
+  txHash    String   @map("tx_hash")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([owner, address])
+  @@index([owner])
+  @@map("stablecoins")
+}
+
+// Contacts (saved addresses)
+model Contact {
+  id        String   @id @default(cuid())
+  owner     String   // Wallet address that owns this contact
+  name      String
+  address   String   // Contact's wallet address
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([owner, address])
+  @@index([owner])
+  @@map("contacts")
+}
+
+// Scheduled Transactions
+model ScheduledTransaction {
+  id            String    @id @default(cuid())
+  owner         String    // Wallet address that owns this record
+  txHash        String    @map("tx_hash")
+  from          String
+  to            String
+  amount        String
+  token         String    // Token contract address
+  tokenSymbol   String    @map("token_symbol")
+  tokenDecimals Int       @map("token_decimals")
+  feeToken      String    @map("fee_token")
+  memo          String?
+  scheduledFor  DateTime  @map("scheduled_for")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  status        TransactionStatus @default(pending)
+  executedAt    DateTime? @map("executed_at")
+
+  @@index([owner])
+  @@index([owner, status])
+  @@map("scheduled_transactions")
+}
+
+enum TransactionStatus {
+  pending
+  executed
+  failed
+}
+
+// TIP-403 Policies
+model Policy {
+  id        String     @id @default(cuid())
+  owner     String     // Wallet address that owns this record
+  policyId  String     @map("policy_id") // On-chain policy ID
+  type      PolicyType
+  admin     String     // Policy admin address
+  txHash    String?    @map("tx_hash")
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  @@unique([owner, policyId])
+  @@index([owner])
+  @@map("policies")
+}
+
+enum PolicyType {
+  whitelist
+  blacklist
+}
