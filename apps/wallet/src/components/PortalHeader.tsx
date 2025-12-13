@@ -79,7 +79,7 @@ export function PortalHeader(): ReactElement {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-xl shadow-[0_1px_0_0_rgba(0,0,0,0.03),0_1px_2px_-1px_rgba(0,0,0,0.03)]">
+    <header className="sticky top-0 z-[100] bg-white/95 backdrop-blur-xl shadow-[0_1px_0_0_rgba(0,0,0,0.03),0_1px_2px_-1px_rgba(0,0,0,0.03)]">
       <div className="mx-auto max-w-6xl">
         <div className="flex h-14 items-center justify-between px-6">
           {/* Left: Logo */}
@@ -108,7 +108,7 @@ export function PortalHeader(): ReactElement {
                 >
                   {item.label}
                   {isActive && (
-                    <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-gray-900 rounded-full" />
+                    <span className="absolute -bottom-[13px] left-3 right-3 h-[2px] bg-gray-900 rounded-full" />
                   )}
                 </Link>
               );

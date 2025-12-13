@@ -134,9 +134,9 @@ function Tip403FactoryDashboard(): ReactElement {
   const policyBigInt = BigInt(policy.policyId);
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-5xl mx-auto -mt-4">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-2 mb-3">
         <button
           onClick={() => navigate({ to: '/portal/tip403-factory' })}
           className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors"

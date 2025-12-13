@@ -22,7 +22,7 @@ function PortalLayout(): ReactElement | null {
   return (
     <div className="min-h-screen bg-background">
       <PortalHeader />
-      <main className="pt-14 pb-6">
+      <main className="relative z-0 pt-[52px] pb-6">
         <div className="mx-auto max-w-6xl px-6">
           <Outlet />
         </div>

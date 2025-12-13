@@ -16,7 +16,7 @@ export function PageHeader({
   const navigate = useNavigate();
 
   return (
-    <div className="flex items-center justify-between mb-6">
+    <div className="flex items-center justify-between mb-3 -mt-4">
       <div className="flex items-center gap-2">
         <button
           onClick={() => navigate({ to: backTo })}

@@ -24,6 +24,8 @@ import { Route as PortalTip403FactoryIndexRouteImport } from './routes/portal/ti
 import { Route as PortalTip20StudioIndexRouteImport } from './routes/portal/tip20-studio.index'
 import { Route as PortalTip403FactoryPolicyIdRouteImport } from './routes/portal/tip403-factory.$policyId'
 import { Route as PortalTip20StudioAddressRouteImport } from './routes/portal/tip20-studio.$address'
+import { Route as PortalTip20StudioAddressRewardsRouteImport } from './routes/portal/tip20-studio.$address.rewards'
+import { Route as PortalTip20StudioAddressOverviewRouteImport } from './routes/portal/tip20-studio.$address.overview'
 
 const PortalRoute = PortalRouteImport.update({
   id: '/portal',
@@ -103,6 +105,18 @@ const PortalTip20StudioAddressRoute =
     path: '/$address',
     getParentRoute: () => PortalTip20StudioRoute,
   } as any)
+const PortalTip20StudioAddressRewardsRoute =
+  PortalTip20StudioAddressRewardsRouteImport.update({
+    id: '/rewards',
+    path: '/rewards',
+    getParentRoute: () => PortalTip20StudioAddressRoute,
+  } as any)
+const PortalTip20StudioAddressOverviewRoute =
+  PortalTip20StudioAddressOverviewRouteImport.update({
+    id: '/overview',
+    path: '/overview',
+    getParentRoute: () => PortalTip20StudioAddressRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -116,10 +130,12 @@ export interface FileRoutesByFullPath {
   '/portal/swap': typeof PortalSwapRoute
   '/portal/tip20-studio': typeof PortalTip20StudioRouteWithChildren
   '/portal/tip403-factory': typeof PortalTip403FactoryRouteWithChildren
-  '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRoute
+  '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRouteWithChildren
   '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRoute
   '/portal/tip20-studio/': typeof PortalTip20StudioIndexRoute
   '/portal/tip403-factory/': typeof PortalTip403FactoryIndexRoute
+  '/portal/tip20-studio/$address/overview': typeof PortalTip20StudioAddressOverviewRoute
+  '/portal/tip20-studio/$address/rewards': typeof PortalTip20StudioAddressRewardsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -131,10 +147,12 @@ export interface FileRoutesByTo {
   '/portal/scheduled': typeof PortalScheduledRoute
   '/portal/send': typeof PortalSendRoute
   '/portal/swap': typeof PortalSwapRoute
-  '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRoute
+  '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRouteWithChildren
   '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRoute
   '/portal/tip20-studio': typeof PortalTip20StudioIndexRoute
   '/portal/tip403-factory': typeof PortalTip403FactoryIndexRoute
+  '/portal/tip20-studio/$address/overview': typeof PortalTip20StudioAddressOverviewRoute
+  '/portal/tip20-studio/$address/rewards': typeof PortalTip20StudioAddressRewardsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -149,10 +167,12 @@ export interface FileRoutesById {
   '/portal/swap': typeof PortalSwapRoute
   '/portal/tip20-studio': typeof PortalTip20StudioRouteWithChildren
   '/portal/tip403-factory': typeof PortalTip403FactoryRouteWithChildren
-  '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRoute
+  '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRouteWithChildren
   '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRoute
   '/portal/tip20-studio/': typeof PortalTip20StudioIndexRoute
   '/portal/tip403-factory/': typeof PortalTip403FactoryIndexRoute
+  '/portal/tip20-studio/$address/overview': typeof PortalTip20StudioAddressOverviewRoute
+  '/portal/tip20-studio/$address/rewards': typeof PortalTip20StudioAddressRewardsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -172,6 +192,8 @@ export interface FileRouteTypes {
     | '/portal/tip403-factory/$policyId'
     | '/portal/tip20-studio/'
     | '/portal/tip403-factory/'
+    | '/portal/tip20-studio/$address/overview'
+    | '/portal/tip20-studio/$address/rewards'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -187,6 +209,8 @@ export interface FileRouteTypes {
     | '/portal/tip403-factory/$policyId'
     | '/portal/tip20-studio'
     | '/portal/tip403-factory'
+    | '/portal/tip20-studio/$address/overview'
+    | '/portal/tip20-studio/$address/rewards'
   id:
     | '__root__'
     | '/'
@@ -204,6 +228,8 @@ export interface FileRouteTypes {
     | '/portal/tip403-factory/$policyId'
     | '/portal/tip20-studio/'
     | '/portal/tip403-factory/'
+    | '/portal/tip20-studio/$address/overview'
+    | '/portal/tip20-studio/$address/rewards'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -318,16 +344,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalTip20StudioAddressRouteImport
       parentRoute: typeof PortalTip20StudioRoute
     }
+    '/portal/tip20-studio/$address/rewards': {
+      id: '/portal/tip20-studio/$address/rewards'
+      path: '/rewards'
+      fullPath: '/portal/tip20-studio/$address/rewards'
+      preLoaderRoute: typeof PortalTip20StudioAddressRewardsRouteImport
+      parentRoute: typeof PortalTip20StudioAddressRoute
+    }
+    '/portal/tip20-studio/$address/overview': {
+      id: '/portal/tip20-studio/$address/overview'
+      path: '/overview'
+      fullPath: '/portal/tip20-studio/$address/overview'
+      preLoaderRoute: typeof PortalTip20StudioAddressOverviewRouteImport
+      parentRoute: typeof PortalTip20StudioAddressRoute
+    }
   }
 }
 
+interface PortalTip20StudioAddressRouteChildren {
+  PortalTip20StudioAddressOverviewRoute: typeof PortalTip20StudioAddressOverviewRoute
+  PortalTip20StudioAddressRewardsRoute: typeof PortalTip20StudioAddressRewardsRoute
+}
+
+const PortalTip20StudioAddressRouteChildren: PortalTip20StudioAddressRouteChildren =
+  {
+    PortalTip20StudioAddressOverviewRoute:
+      PortalTip20StudioAddressOverviewRoute,
+    PortalTip20StudioAddressRewardsRoute: PortalTip20StudioAddressRewardsRoute,
+  }
+
+const PortalTip20StudioAddressRouteWithChildren =
+  PortalTip20StudioAddressRoute._addFileChildren(
+    PortalTip20StudioAddressRouteChildren,
+  )
+
 interface PortalTip20StudioRouteChildren {
-  PortalTip20StudioAddressRoute: typeof PortalTip20StudioAddressRoute
+  PortalTip20StudioAddressRoute: typeof PortalTip20StudioAddressRouteWithChildren
   PortalTip20StudioIndexRoute: typeof PortalTip20StudioIndexRoute
 }
 
 const PortalTip20StudioRouteChildren: PortalTip20StudioRouteChildren = {
-  PortalTip20StudioAddressRoute: PortalTip20StudioAddressRoute,
+  PortalTip20StudioAddressRoute: PortalTip20StudioAddressRouteWithChildren,
   PortalTip20StudioIndexRoute: PortalTip20StudioIndexRoute,
 }
 

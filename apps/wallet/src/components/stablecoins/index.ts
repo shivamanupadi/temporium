@@ -15,4 +15,8 @@ export { LinkPolicyModal } from './LinkPolicyModal';
 export { UnlinkPolicyModal } from './UnlinkPolicyModal';
 export { CreateAndLinkPolicyModal } from './CreateAndLinkPolicyModal';
 export { YourAccessCard } from './YourAccessCard';
+export { RewardsTab } from './RewardsTab';
+export { StartRewardModal } from './StartRewardModal';
+export { SetRecipientModal } from './SetRecipientModal';
+export { ClaimRewardsModal } from './ClaimRewardsModal';
 export * from './types';
