@@ -1,4 +1,5 @@
-import { IsString, IsNotEmpty, Matches } from 'class-validator';
+import { IsString, IsNotEmpty, Matches, ValidateIf } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
 const TX_HASH_REGEX = /^0x[a-fA-F0-9]{64}$/;
@@ -24,9 +25,11 @@ export class CreateStablecoinDto {
   @Matches(ADDRESS_REGEX, { message: 'Invalid creator address format' })
   creator: string;
 
+  @Transform(({ value }) => (value === '' ? undefined : value))
+  @ValidateIf((_, value) => value !== undefined && value !== null && value !== '')
   @IsString()
   @Matches(TX_HASH_REGEX, { message: 'Invalid transaction hash format' })
-  txHash: string;
+  txHash?: string;
 }
 
 export class StablecoinResponseDto {

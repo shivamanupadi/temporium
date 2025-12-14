@@ -13,7 +13,7 @@ import { CreatePolicyDto, PolicyType } from './dto/policy.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
-@Controller('policies')
+@Controller({ path: 'policies', version: '1' })
 @UseGuards(JwtAuthGuard)
 export class PoliciesController {
   constructor(private policiesService: PoliciesService) {}

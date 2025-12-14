@@ -47,7 +47,7 @@ export class StablecoinsService {
           symbol: dto.symbol,
           currency: dto.currency,
           creator: dto.creator.toLowerCase(),
-          txHash: dto.txHash.toLowerCase(),
+          txHash: dto.txHash?.toLowerCase(),
         },
       });
     } catch (error: any) {

@@ -18,7 +18,7 @@ import {
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
-@Controller('scheduled-transactions')
+@Controller({ path: 'scheduled-transactions', version: '1' })
 @UseGuards(JwtAuthGuard)
 export class ScheduledTransactionsController {
   constructor(private scheduledTransactionsService: ScheduledTransactionsService) {}

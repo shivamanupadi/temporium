@@ -12,7 +12,7 @@ import { CreateStablecoinDto } from './dto/stablecoin.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 
-@Controller('stablecoins')
+@Controller({ path: 'stablecoins', version: '1' })
 @UseGuards(JwtAuthGuard)
 export class StablecoinsController {
   constructor(private stablecoinsService: StablecoinsService) {}

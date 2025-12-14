@@ -105,19 +105,27 @@ const keyManager = KeyManager.from({
   },
 
   async getPublicKey(parameters) {
+    console.log('[getPublicKey] Fetching:', `${KEYS_API_URL}/${parameters.credential.id}`);
+
     const response = await fetch(`${KEYS_API_URL}/${parameters.credential.id}`);
+    console.log('[getPublicKey] Response status:', response.status);
+
     if (!response.ok) {
       throw new Error('publicKey not found.');
     }
     const data: KeysApiResponse = await response.json();
+    console.log('[getPublicKey] Response data:', data);
 
     // Extract and store JWT tokens if present
     if (data.accessToken && data.refreshToken && data.expiresIn) {
+      console.log('[getPublicKey] Saving auth tokens');
       saveAuthTokens({
         accessToken: data.accessToken,
         refreshToken: data.refreshToken,
         expiresIn: data.expiresIn,
       });
+    } else {
+      console.warn('[getPublicKey] Response missing tokens');
     }
 
     return data.publicKey;
@@ -127,6 +135,8 @@ const keyManager = KeyManager.from({
     // Serialize credential with ArrayBuffers converted to base64
     const serialized = serializeCredential(parameters.credential as unknown as PublicKeyCredential);
 
+    console.log('[setPublicKey] Posting to:', `${KEYS_API_URL}/${parameters.credential.id}`);
+
     const response = await fetch(`${KEYS_API_URL}/${parameters.credential.id}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -135,19 +145,38 @@ const keyManager = KeyManager.from({
         publicKey: parameters.publicKey,
       }),
     });
+
+    console.log('[setPublicKey] Response status:', response.status);
+
     if (!response.ok) {
       const error = await response.text();
       throw new Error(`Failed to save public key: ${error}`);
     }
 
     // Extract and store JWT tokens from response
-    const data: KeysApiResponse = await response.json();
-    if (data.accessToken && data.refreshToken && data.expiresIn) {
-      saveAuthTokens({
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
-        expiresIn: data.expiresIn,
-      });
+    const text = await response.text();
+    console.log('[setPublicKey] Response body:', text);
+
+    if (text) {
+      const data: KeysApiResponse = JSON.parse(text);
+      console.log('[setPublicKey] Parsed data:', data);
+
+      if (data.accessToken && data.refreshToken && data.expiresIn) {
+        console.log('[setPublicKey] Saving auth tokens');
+        saveAuthTokens({
+          accessToken: data.accessToken,
+          refreshToken: data.refreshToken,
+          expiresIn: data.expiresIn,
+        });
+      } else {
+        console.warn('[setPublicKey] Response missing tokens:', {
+          hasAccessToken: !!data.accessToken,
+          hasRefreshToken: !!data.refreshToken,
+          hasExpiresIn: !!data.expiresIn
+        });
+      }
+    } else {
+      console.warn('[setPublicKey] Empty response body');
     }
   },
 });

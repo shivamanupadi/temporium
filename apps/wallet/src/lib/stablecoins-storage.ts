@@ -45,7 +45,7 @@ export async function saveStablecoin(
   const normalizedAddress = stablecoin.address.toLowerCase() as Address;
   const normalizedCreator = stablecoin.creator.toLowerCase() as Address;
 
-  const response = await apiPost<StablecoinApiResponse>('/api/stablecoins', {
+  const response = await apiPost<StablecoinApiResponse>('/v1/stablecoins', {
     address: normalizedAddress,
     name: stablecoin.name,
     symbol: stablecoin.symbol,
@@ -57,7 +57,7 @@ export async function saveStablecoin(
 }
 
 export async function getStablecoinsByOwner(_owner: Address): Promise<Stablecoin[]> {
-  const response = await apiGet<StablecoinApiResponse[]>('/api/stablecoins');
+  const response = await apiGet<StablecoinApiResponse[]>('/v1/stablecoins');
   return response.map(apiToStablecoin).sort((a, b) => b.createdAt - a.createdAt);
 }
 
@@ -65,7 +65,7 @@ export async function getStablecoinByAddress(address: Address): Promise<Stableco
   const normalizedAddress = address.toLowerCase() as Address;
 
   try {
-    const stablecoins = await apiGet<StablecoinApiResponse[]>('/api/stablecoins');
+    const stablecoins = await apiGet<StablecoinApiResponse[]>('/v1/stablecoins');
     const found = stablecoins.find(s => s.address.toLowerCase() === normalizedAddress);
     return found ? apiToStablecoin(found) : null;
   } catch {
@@ -74,5 +74,5 @@ export async function getStablecoinByAddress(address: Address): Promise<Stableco
 }
 
 export async function deleteStablecoin(id: string, _owner: Address): Promise<void> {
-  await apiDelete(`/api/stablecoins/${id}`);
+  await apiDelete(`/v1/stablecoins/${id}`);
 }

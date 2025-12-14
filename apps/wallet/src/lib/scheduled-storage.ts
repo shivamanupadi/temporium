@@ -63,7 +63,7 @@ export async function saveScheduledTransaction(
   tx: Omit<ScheduledTransaction, 'id' | 'createdAt' | 'status'>
 ): Promise<ScheduledTransaction> {
   const response = await apiPost<ScheduledTransactionApiResponse>(
-    '/api/scheduled-transactions',
+    '/v1/scheduled-transactions',
     {
       txHash: tx.txHash,
       from: tx.from.toLowerCase(),
@@ -84,7 +84,7 @@ export async function getScheduledTransactionsByOwner(
   _owner: Address
 ): Promise<ScheduledTransaction[]> {
   const response = await apiGet<ScheduledTransactionApiResponse[]>(
-    '/api/scheduled-transactions'
+    '/v1/scheduled-transactions'
   );
   return response.map(apiToScheduledTransaction).sort((a, b) => b.scheduledFor - a.scheduledFor);
 }
@@ -92,7 +92,7 @@ export async function getScheduledTransactionsByOwner(
 export async function getScheduledTransaction(id: string): Promise<ScheduledTransaction | null> {
   try {
     const response = await apiGet<ScheduledTransactionApiResponse>(
-      `/api/scheduled-transactions/${id}`
+      `/v1/scheduled-transactions/${id}`
     );
     return apiToScheduledTransaction(response);
   } catch {
@@ -106,14 +106,14 @@ export async function updateTransactionStatus(
   status: 'pending' | 'executed' | 'failed',
   executedAt?: number
 ): Promise<void> {
-  await apiPatch(`/api/scheduled-transactions/${id}`, {
+  await apiPatch(`/v1/scheduled-transactions/${id}`, {
     status,
     executedAt: executedAt ? new Date(executedAt * 1000).toISOString() : undefined,
   });
 }
 
 export async function deleteScheduledTransaction(id: string, _owner: Address): Promise<void> {
-  await apiDelete(`/api/scheduled-transactions/${id}`);
+  await apiDelete(`/v1/scheduled-transactions/${id}`);
 }
 
 export async function getPendingTransactionsPastSchedule(

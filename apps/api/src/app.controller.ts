@@ -1,6 +1,6 @@
 import { Controller, Get } from '@nestjs/common';
 
-@Controller()
+@Controller({ version: '' })
 export class AppController {
   @Get('health')
   health() {

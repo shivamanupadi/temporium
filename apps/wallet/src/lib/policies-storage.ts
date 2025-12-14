@@ -36,7 +36,7 @@ function apiToPolicy(data: PolicyApiResponse): Policy {
 export async function savePolicy(policy: Omit<Policy, 'id' | 'createdAt'>): Promise<Policy> {
   const normalizedAdmin = policy.admin.toLowerCase() as Address;
 
-  const response = await apiPost<PolicyApiResponse>('/api/policies', {
+  const response = await apiPost<PolicyApiResponse>('/v1/policies', {
     policyId: policy.policyId,
     type: policy.type,
     admin: normalizedAdmin,
@@ -46,7 +46,7 @@ export async function savePolicy(policy: Omit<Policy, 'id' | 'createdAt'>): Prom
 }
 
 export async function getPoliciesByOwner(_owner: Address): Promise<Policy[]> {
-  const response = await apiGet<PolicyApiResponse[]>('/api/policies');
+  const response = await apiGet<PolicyApiResponse[]>('/v1/policies');
   return response.map(apiToPolicy).sort((a, b) => b.createdAt - a.createdAt);
 }
 
@@ -59,7 +59,7 @@ export async function getPolicyByPolicyId(
 }
 
 export async function deletePolicy(id: string, _owner: Address): Promise<void> {
-  await apiDelete(`/api/policies/${id}`);
+  await apiDelete(`/v1/policies/${id}`);
 }
 
 export async function updatePolicyAdmin(

@@ -3,7 +3,7 @@ import type { Request, Response } from 'express';
 
 const TOKENLIST_BASE_URL = 'https://tokenlist.tempo.xyz';
 
-@Controller('tokenlist')
+@Controller({ path: 'tokenlist', version: '' })
 export class TokenlistController {
   @Get('*')
   async proxy(@Req() req: Request, @Res() res: Response) {
