@@ -12,6 +12,7 @@ import {
   Trash2,
   ExternalLink,
   Loader2,
+  RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -30,7 +31,7 @@ type ModalState = 'add' | 'edit' | 'delete' | null;
 
 function ContactsPage(): ReactElement {
   const navigate = useNavigate();
-  const { contacts, isLoading, addContact, editContact, removeContact } = useContacts();
+  const { contacts, isLoading, addContact, editContact, removeContact, refresh } = useContacts();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [modalState, setModalState] = useState<ModalState>(null);
@@ -39,6 +40,16 @@ function ContactsPage(): ReactElement {
   const [address, setAddress] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async (): Promise<void> => {
+    setIsRefreshing(true);
+    try {
+      await refresh();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const handleCopy = (contact: Contact): void => {
     navigator.clipboard.writeText(contact.address);
@@ -178,10 +189,22 @@ function ContactsPage(): ReactElement {
           </button>
           <h1 className="text-[15px] font-medium text-foreground">Contacts</h1>
         </div>
-        <Button size="sm" onClick={handleOpenAdd} className="h-8 px-3">
-          <Plus className="h-4 w-4" />
-          Add
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefresh}
+            disabled={isLoading || isRefreshing}
+            className="h-8 px-3"
+          >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </Button>
+          <Button size="sm" onClick={handleOpenAdd} className="h-8 px-3">
+            <Plus className="h-4 w-4" />
+            Add
+          </Button>
+        </div>
       </div>
 
       {/* Search */}
@@ -198,8 +221,23 @@ function ContactsPage(): ReactElement {
       {/* Contacts List */}
       <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_1px_2px_-1px_rgba(0,0,0,0.03)] overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center">
-            <div className="h-8 w-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <div className="divide-y divide-[rgba(0,0,0,0.03)]">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="flex items-center justify-between px-4 py-3 animate-pulse">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-muted" />
+                  <div>
+                    <div className="h-4 w-24 bg-muted rounded mb-1.5" />
+                    <div className="h-3 w-32 bg-muted rounded" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-8 h-8 bg-muted rounded-md" />
+                  <div className="w-8 h-8 bg-muted rounded-md" />
+                  <div className="w-8 h-8 bg-muted rounded-md" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : filteredContacts.length === 0 ? (
           <div className="p-8 text-center">

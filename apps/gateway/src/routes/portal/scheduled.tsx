@@ -34,61 +34,64 @@ function ScheduledPage(): ReactElement {
           <h1 className="text-[15px] font-medium text-foreground">Scheduled</h1>
         </div>
         <Button
-          variant="ghost"
+          variant="outline"
           size="sm"
           onClick={refresh}
           disabled={isLoading || isChecking}
-          className="h-8 px-2"
+          className="h-8 px-3"
         >
           <RefreshCw className={cn('h-4 w-4', (isLoading || isChecking) && 'animate-spin')} />
+          {isLoading || isChecking ? 'Refreshing...' : 'Refresh'}
         </Button>
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={v => setActiveTab(v as 'pending' | 'completed')}>
-        <TabsList className="w-full mb-4">
-          <TabsTrigger value="pending" className="flex-1">
-            Pending
-            <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-medium">
-              {pendingTransactions.length}
-            </span>
-          </TabsTrigger>
-          <TabsTrigger value="completed" className="flex-1">
-            Completed
-            <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground text-[10px] font-medium">
-              {completedTransactions.length}
-            </span>
-          </TabsTrigger>
-        </TabsList>
+      <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_1px_2px_-1px_rgba(0,0,0,0.03)] overflow-hidden p-4">
+        <Tabs value={activeTab} onValueChange={v => setActiveTab(v as 'pending' | 'completed')}>
+          <TabsList className="w-full mb-4">
+            <TabsTrigger value="pending" className="flex-1">
+              Pending
+              <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-medium">
+                {pendingTransactions.length}
+              </span>
+            </TabsTrigger>
+            <TabsTrigger value="completed" className="flex-1">
+              Completed
+              <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-medium">
+                {completedTransactions.length}
+              </span>
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="pending" className="mt-0">
-          {isLoading ? (
-            <LoadingState />
-          ) : pendingTransactions.length === 0 ? (
-            <EmptyState type="pending" />
-          ) : (
-            <div className="space-y-3">
-              {pendingTransactions.map(tx => (
-                <TransactionCard key={tx.id} transaction={tx} />
-              ))}
-            </div>
-          )}
-        </TabsContent>
+          <TabsContent value="pending" className="mt-0">
+            {isLoading ? (
+              <LoadingState />
+            ) : pendingTransactions.length === 0 ? (
+              <EmptyState type="pending" />
+            ) : (
+              <div className="space-y-3">
+                {pendingTransactions.map(tx => (
+                  <TransactionCard key={tx.id} transaction={tx} />
+                ))}
+              </div>
+            )}
+          </TabsContent>
 
-        <TabsContent value="completed" className="mt-0">
-          {isLoading ? (
-            <LoadingState />
-          ) : completedTransactions.length === 0 ? (
-            <EmptyState type="completed" />
-          ) : (
-            <div className="space-y-3">
-              {completedTransactions.map(tx => (
-                <TransactionCard key={tx.id} transaction={tx} />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="completed" className="mt-0">
+            {isLoading ? (
+              <LoadingState />
+            ) : completedTransactions.length === 0 ? (
+              <EmptyState type="completed" />
+            ) : (
+              <div className="space-y-3">
+                {completedTransactions.map(tx => (
+                  <TransactionCard key={tx.id} transaction={tx} />
+                ))}
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </div>
     </div>
   );
 }

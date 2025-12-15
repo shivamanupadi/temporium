@@ -12,7 +12,6 @@ import {
   Unlink,
   Trash2,
   ChevronRight,
-  Loader2,
   Copy,
   Check,
   ShieldCheck,
@@ -86,18 +85,75 @@ function Tip403FactoryDashboard(): ReactElement {
   // Loading state
   if (isLoading) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className="flex items-center gap-2 mb-6">
+      <div className="max-w-5xl mx-auto -mt-4 animate-pulse">
+        {/* Header Skeleton */}
+        <div className="flex items-center gap-2 mb-3">
           <button
             onClick={() => navigate({ to: '/portal/tip403-factory' })}
             className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors"
           >
             <ArrowLeft className="h-4 w-4 text-muted-foreground" />
           </button>
-          <h1 className="text-[15px] font-medium text-foreground">Loading...</h1>
+          <div className="flex items-center gap-1.5">
+            <div className="h-4 w-24 bg-muted rounded" />
+            <span className="text-muted-foreground">/</span>
+            <div className="h-3 w-20 bg-muted rounded" />
+          </div>
         </div>
-        <div className="flex items-center justify-center py-16">
-          <Loader2 className="h-8 w-8 text-primary animate-spin" />
+
+        <div className="lg:flex lg:gap-6 lg:items-stretch">
+          {/* Left Column Skeleton */}
+          <div className="lg:flex-[3]">
+            {/* Hero Section Skeleton */}
+            <div className="rounded-2xl p-6 mb-6 bg-muted/30">
+              <div className="flex items-start justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-muted" />
+                  <div>
+                    <div className="h-7 w-32 bg-muted rounded mb-2" />
+                    <div className="h-4 w-48 bg-muted rounded mb-2" />
+                    <div className="h-3 w-28 bg-muted rounded" />
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1 h-11 bg-muted rounded-lg" />
+                <div className="flex-1 h-11 bg-muted rounded-lg" />
+              </div>
+            </div>
+            {/* Info Card Skeleton */}
+            <div className="bg-white rounded-xl p-4 shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_1px_2px_-1px_rgba(0,0,0,0.03)] mb-6">
+              <div className="h-4 w-24 bg-muted rounded mb-3" />
+              <div className="space-y-3">
+                {[1, 2, 3, 4].map(i => (
+                  <div key={i} className="flex justify-between items-center">
+                    <div className="h-3 w-16 bg-muted rounded" />
+                    <div className="h-3 w-24 bg-muted rounded" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column Skeleton */}
+          <div className="lg:flex-[2] mt-6 lg:mt-0">
+            <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_1px_2px_-1px_rgba(0,0,0,0.03)] overflow-hidden h-full">
+              <div className="px-4 py-3 border-b border-[rgba(0,0,0,0.05)]">
+                <div className="h-4 w-28 bg-muted rounded" />
+              </div>
+              {[1, 2, 3, 4, 5, 6, 7].map(i => (
+                <div key={i} className="p-4 border-b border-[rgba(0,0,0,0.03)] last:border-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-muted" />
+                    <div>
+                      <div className="h-4 w-28 bg-muted rounded mb-1" />
+                      <div className="h-3 w-36 bg-muted rounded" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );

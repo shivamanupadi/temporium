@@ -5,7 +5,6 @@ import {
   UserCheck,
   UserX,
   HandCoins,
-  Loader2,
   ChevronRight,
   Copy,
   Check,
@@ -67,8 +66,77 @@ function Tip20StudioRewards(): ReactElement {
 
   if (isLoadingToken || isLoadingRewards) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-8 w-8 text-primary animate-spin" />
+      <div className="animate-pulse">
+        <div className="lg:flex lg:gap-6 lg:items-stretch">
+          {/* Left Column Skeleton */}
+          <div className="lg:flex-[3]">
+            {/* Hero Section Skeleton */}
+            <div className="bg-muted/30 rounded-2xl p-6 mb-6">
+              <div className="flex items-start justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-muted" />
+                  <div>
+                    <div className="h-3 w-28 bg-muted rounded mb-2" />
+                    <div className="h-8 w-24 bg-muted rounded mb-2" />
+                    <div className="h-5 w-20 bg-muted rounded-full" />
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <div className="flex-1 h-11 bg-muted rounded-lg" />
+                <div className="flex-1 h-11 bg-muted rounded-lg" />
+              </div>
+            </div>
+            {/* Stats Grid Skeleton */}
+            <div className="grid grid-cols-2 gap-4 mb-6">
+              {[1, 2].map(i => (
+                <div
+                  key={i}
+                  className="bg-white rounded-xl p-4 shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_1px_2px_-1px_rgba(0,0,0,0.03)]"
+                >
+                  <div className="h-3 w-20 bg-muted rounded mb-2" />
+                  <div className="h-6 w-16 bg-muted rounded mb-1" />
+                  <div className="h-3 w-12 bg-muted rounded" />
+                </div>
+              ))}
+            </div>
+            {/* How It Works Skeleton */}
+            <div className="bg-white rounded-xl p-4 shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_1px_2px_-1px_rgba(0,0,0,0.03)]">
+              <div className="h-4 w-40 bg-muted rounded mb-3" />
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="flex items-start gap-3">
+                    <div className="w-6 h-6 rounded-full bg-muted" />
+                    <div>
+                      <div className="h-3 w-28 bg-muted rounded mb-1" />
+                      <div className="h-3 w-44 bg-muted rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column Skeleton */}
+          <div className="lg:flex-[2] mt-6 lg:mt-0">
+            <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_1px_2px_-1px_rgba(0,0,0,0.03)] overflow-hidden h-full">
+              <div className="px-4 py-3 border-b border-[rgba(0,0,0,0.05)]">
+                <div className="h-4 w-28 bg-muted rounded" />
+              </div>
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="p-4 border-b border-[rgba(0,0,0,0.03)] last:border-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-lg bg-muted" />
+                    <div>
+                      <div className="h-4 w-24 bg-muted rounded mb-1" />
+                      <div className="h-3 w-36 bg-muted rounded" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
