@@ -215,7 +215,7 @@ function LiquidityPage(): ReactElement | null {
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="flex items-center gap-1.5 w-full h-10 px-3 bg-white shadow-sm border border-gray-200 rounded-lg hover:bg-muted/50 transition-colors"
+                    className="flex items-center gap-1.5 w-full h-10 px-3 bg-white border border-gray-200 rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     {userToken && (
                       <>
@@ -276,7 +276,7 @@ function LiquidityPage(): ReactElement | null {
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="flex items-center gap-1.5 w-full h-10 px-3 bg-white shadow-sm border border-gray-200 rounded-lg hover:bg-muted/50 transition-colors"
+                    className="flex items-center gap-1.5 w-full h-10 px-3 bg-white border border-gray-200 rounded-lg hover:bg-muted/50 transition-colors"
                   >
                     {validatorToken && (
                       <>

@@ -21,6 +21,7 @@ import {
   Zap,
   ChevronsUpDown,
   Key,
+  FlaskConical,
 } from 'lucide-react';
 import { useTempo } from '@/hooks/useTempo';
 import { formatAddress, copyToClipboard, cn } from '@/lib/utils';
@@ -44,18 +45,23 @@ function NavItem({ to, icon, label, isCollapsed }: NavItemProps): ReactElement {
     <Link
       to={to}
       className={cn(
-        'group flex items-center gap-2.5 h-9 rounded-md text-[13px] font-medium transition-all',
+        'group flex items-center gap-2.5 h-8 rounded-md text-[14px] font-medium transition-all',
         isCollapsed ? 'justify-center w-8 mx-auto' : 'px-2.5',
         isActive
-          ? 'text-primary font-semibold bg-primary/15'
+          ? 'font-semibold bg-[#f2f2f2]'
           : 'text-slate-800 hover:text-slate-900 hover:bg-slate-100'
       )}
       title={isCollapsed ? label : undefined}
     >
-      <span className="flex-shrink-0 transition-transform duration-500 ease-in-out group-hover:rotate-[360deg]">
+      <span
+        className={cn(
+          'flex-shrink-0 transition-transform duration-500 ease-in-out group-hover:rotate-[360deg]',
+          isActive ? 'text-[#4f46e5]' : ''
+        )}
+      >
         {icon}
       </span>
-      {!isCollapsed && <span>{label}</span>}
+      {!isCollapsed && <span className={isActive ? 'text-black' : ''}>{label}</span>}
     </Link>
   );
 }
@@ -116,23 +122,12 @@ export function Sidebar({
           collapsed ? 'justify-center px-2' : 'justify-between px-4'
         )}
       >
-        <div className="flex flex-col gap-2">
-          <Link to="/portal/dashboard" className="flex items-center gap-2.5">
-            <Zap className="w-6 h-6 text-slate-900" strokeWidth={2} />
-            {!collapsed && (
-              <span className="text-lg font-bold text-slate-900 tracking-tight">Temporium</span>
-            )}
-          </Link>
+        <Link to="/portal/dashboard" className="flex items-center gap-2.5">
+          <Zap className="w-6 h-6 text-slate-900" strokeWidth={2} />
           {!collapsed && (
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-50 border border-emerald-200 w-fit ml-[34px]">
-              <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
-              </span>
-              <span className="text-[10px] font-medium text-emerald-700">Testnet</span>
-            </div>
+            <span className="text-lg font-bold text-slate-900 tracking-tight">Temporium</span>
           )}
-        </div>
+        </Link>
         {!collapsed && (
           <button
             onClick={onToggleCollapse}
@@ -272,6 +267,16 @@ export function Sidebar({
           />
         </div>
       </nav>
+
+      {/* Testnet Indicator */}
+      {!collapsed && (
+        <div className="px-3 pb-3">
+          <div className="flex items-center gap-2.5 px-2.5">
+            <FlaskConical className="w-4 h-4 text-emerald-400" />
+            <span className="text-[12px] text-slate-400">Testnet</span>
+          </div>
+        </div>
+      )}
 
       {/* Wallet Profile */}
       <div

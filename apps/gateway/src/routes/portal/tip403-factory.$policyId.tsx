@@ -256,14 +256,14 @@ function Tip403FactoryDashboard(): ReactElement {
             <div className="flex gap-3">
               <Button
                 onClick={() => setActiveModal('add-address')}
-                className={`flex-1 h-11 ${isWhitelist ? 'bg-emerald-600 hover:bg-emerald-700 shadow-[0_1px_2px_0_rgba(0,0,0,0.05),0_0_0_1px_rgba(5,150,105,1)] hover:shadow-[0_3px_8px_0_rgba(5,150,105,0.25),0_0_0_1px_rgba(5,150,105,1)]' : 'bg-rose-600 hover:bg-rose-700 shadow-[0_1px_2px_0_rgba(0,0,0,0.05),0_0_0_1px_rgba(225,29,72,1)] hover:shadow-[0_3px_8px_0_rgba(225,29,72,0.25),0_0_0_1px_rgba(225,29,72,1)]'}`}
+                className={`flex-1 h-11 ${isWhitelist ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'}`}
               >
                 <UserPlus className="h-4 w-4 mr-2" /> Add Address
               </Button>
               <Button
                 onClick={() => setActiveModal('check-auth')}
                 variant="outline"
-                className={`flex-1 h-11 bg-white ${isWhitelist ? 'border-emerald-300 hover:border-emerald-400 shadow-[0_1px_2px_0_rgba(0,0,0,0.04),0_0_0_1px_rgba(167,243,208,0.5)] hover:shadow-[0_3px_8px_0_rgba(5,150,105,0.1),0_0_0_1px_rgba(110,231,183,0.6)]' : 'border-rose-300 hover:border-rose-400 shadow-[0_1px_2px_0_rgba(0,0,0,0.04),0_0_0_1px_rgba(254,205,211,0.5)] hover:shadow-[0_3px_8px_0_rgba(225,29,72,0.1),0_0_0_1px_rgba(253,164,175,0.6)]'}`}
+                className={`flex-1 h-11 bg-white ${isWhitelist ? 'border-emerald-300 hover:border-emerald-400' : 'border-rose-300 hover:border-rose-400'}`}
               >
                 <Search className="h-4 w-4 mr-2" /> Check Address
               </Button>

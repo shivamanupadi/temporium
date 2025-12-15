@@ -181,7 +181,7 @@ function Tip20StudioRewards(): ReactElement {
             <div className="flex gap-3">
               <Button
                 onClick={() => setActiveModal('claim')}
-                className={`flex-1 h-11 ${hasClaimableRewards ? 'bg-emerald-600 hover:bg-emerald-700 shadow-[0_1px_2px_0_rgba(0,0,0,0.05),0_0_0_1px_rgba(5,150,105,1)] hover:shadow-[0_3px_8px_0_rgba(5,150,105,0.25),0_0_0_1px_rgba(5,150,105,1)]' : 'bg-muted text-muted-foreground shadow-[0_1px_2px_0_rgba(0,0,0,0.05),0_0_0_1px_rgba(0,0,0,0.1)]'}`}
+                className={`flex-1 h-11 ${hasClaimableRewards ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-muted text-muted-foreground'}`}
                 disabled={!hasClaimableRewards}
               >
                 <HandCoins className="h-4 w-4 mr-2" />
@@ -190,7 +190,7 @@ function Tip20StudioRewards(): ReactElement {
               <Button
                 onClick={() => setActiveModal(isOptedIn ? 'opt-out' : 'opt-in')}
                 variant="outline"
-                className={`flex-1 h-11 bg-white ${isOptedIn ? 'border-amber-300 text-amber-700 hover:bg-amber-50 hover:border-amber-400 shadow-[0_1px_2px_0_rgba(0,0,0,0.04),0_0_0_1px_rgba(252,211,77,0.5)] hover:shadow-[0_3px_8px_0_rgba(0,0,0,0.06),0_0_0_1px_rgba(252,211,77,0.8)]' : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-400 shadow-[0_1px_2px_0_rgba(0,0,0,0.04),0_0_0_1px_rgba(110,231,183,0.5)] hover:shadow-[0_3px_8px_0_rgba(0,0,0,0.06),0_0_0_1px_rgba(110,231,183,0.8)]'}`}
+                className={`flex-1 h-11 bg-white ${isOptedIn ? 'border-amber-300 text-amber-700 hover:bg-amber-50 hover:border-amber-400' : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-400'}`}
               >
                 {isOptedIn ? (
                   <>

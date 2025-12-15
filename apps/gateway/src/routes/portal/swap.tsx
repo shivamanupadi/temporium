@@ -228,7 +228,7 @@ function SwapPage(): ReactElement | null {
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="flex items-center gap-1.5 h-9 px-3 min-w-[110px] bg-white shadow-sm border border-gray-200 rounded-lg hover:bg-muted/50 transition-colors"
+                  className="flex items-center gap-1.5 h-9 px-3 min-w-[110px] bg-white border border-gray-200 rounded-lg hover:bg-muted/50 transition-colors"
                 >
                   {tokenIn && (
                     <>
@@ -292,7 +292,7 @@ function SwapPage(): ReactElement | null {
         <div className="flex justify-center -my-2 relative z-10">
           <button
             onClick={handleSwapTokens}
-            className="w-10 h-10 rounded-xl bg-white border border-border shadow-sm flex items-center justify-center hover:bg-muted transition-colors"
+            className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center hover:bg-muted transition-colors"
           >
             <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
           </button>
@@ -333,7 +333,7 @@ function SwapPage(): ReactElement | null {
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="flex items-center gap-1.5 h-9 px-3 min-w-[110px] bg-white shadow-sm border border-gray-200 rounded-lg hover:bg-muted/50 transition-colors"
+                  className="flex items-center gap-1.5 h-9 px-3 min-w-[110px] bg-white border border-gray-200 rounded-lg hover:bg-muted/50 transition-colors"
                 >
                   {tokenOut && (
                     <>

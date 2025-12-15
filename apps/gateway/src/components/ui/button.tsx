@@ -10,12 +10,10 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          'bg-primary text-primary-foreground shadow-[0_1px_2px_0_rgba(0,0,0,0.05),0_0_0_1px_rgba(99,91,255,1)] hover:bg-primary-hover hover:shadow-[0_3px_8px_0_rgba(99,91,255,0.25),0_0_0_1px_rgba(99,91,255,1)]',
-        destructive:
-          'bg-destructive text-white shadow-[0_1px_2px_0_rgba(0,0,0,0.05),0_0_0_1px_rgba(223,27,65,1)] hover:bg-destructive/90 hover:shadow-[0_3px_8px_0_rgba(223,27,65,0.25),0_0_0_1px_rgba(223,27,65,1)]',
+        default: 'bg-primary text-primary-foreground hover:bg-primary-hover',
+        destructive: 'bg-destructive text-white hover:bg-destructive/90',
         outline:
-          'border border-border/50 bg-white text-foreground shadow-[0_1px_2px_0_rgba(0,0,0,0.04)] hover:bg-muted hover:border-border hover:shadow-[0_3px_8px_0_rgba(0,0,0,0.06)]',
+          'border border-border/50 bg-white text-foreground hover:bg-muted hover:border-border',
         secondary: 'bg-muted text-foreground hover:bg-muted/80',
         ghost: 'hover:bg-muted hover:text-foreground',
         link: 'text-primary underline-offset-4 hover:underline',
@@ -57,7 +55,6 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || isLoading}
         whileTap={{ scale: 0.98 }}
-        whileHover={{ y: -1 }}
         transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
         {...(props as HTMLMotionProps<'button'>)}
       >

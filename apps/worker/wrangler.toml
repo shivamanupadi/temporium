@@ -1,0 +1,11 @@
+name = "temporium-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-15"
+
+routes = [
+  { pattern = "api.temporium.xyz", custom_domain = true }
+]
+
+[vars]
+API_ORIGIN = "https://api-temporium.up.railway.app"
+ALLOWED_ORIGINS = "http://localhost:5173,https://temporium.xyz,https://app.temporium.xyz"

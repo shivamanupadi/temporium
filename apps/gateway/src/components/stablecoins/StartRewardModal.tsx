@@ -173,7 +173,7 @@ export function StartRewardModal({
                   Cancel
                 </Button>
                 <Button
-                  className="flex-1 h-10 bg-emerald-600 hover:bg-emerald-700 shadow-[0_1px_2px_0_rgba(0,0,0,0.05),0_0_0_1px_rgba(5,150,105,1)] hover:shadow-[0_3px_8px_0_rgba(5,150,105,0.25),0_0_0_1px_rgba(5,150,105,1)]"
+                  className="flex-1 h-10 bg-emerald-600 hover:bg-emerald-700"
                   onClick={handleSubmit}
                   disabled={isSubmitting || !amount}
                 >

@@ -49,7 +49,7 @@ export function AddressInput({
             {showContacts && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowContacts(false)} />
-                <div className="absolute right-0 top-full mt-1 w-56 rounded-lg border border-border bg-white shadow-lg z-20 overflow-hidden">
+                <div className="absolute right-0 top-full mt-1 w-56 rounded-lg border border-border bg-white z-20 overflow-hidden">
                   <div className="max-h-48 overflow-y-auto">
                     {contacts.map(contact => (
                       <button

@@ -46,7 +46,7 @@ export function PolicyIdInput({
             {showPolicies && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setShowPolicies(false)} />
-                <div className="absolute right-0 top-full mt-1 w-56 rounded-lg border border-border bg-white shadow-lg z-20 overflow-hidden">
+                <div className="absolute right-0 top-full mt-1 w-56 rounded-lg border border-border bg-white z-20 overflow-hidden">
                   <div className="max-h-48 overflow-y-auto">
                     {policies.map(policy => (
                       <button
