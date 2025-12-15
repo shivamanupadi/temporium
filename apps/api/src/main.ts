@@ -46,10 +46,11 @@ async function bootstrap(): Promise<void> {
     adapter,
   );
 
-  // Enable CORS
+  // Enable CORS - allow all origins
   app.enableCors({
-    origin: true,
-    credentials: true,
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
   });
 
   // Enable validation

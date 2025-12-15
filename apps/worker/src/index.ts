@@ -39,12 +39,14 @@ function handleCors(origin: string, allowedOrigins: string[]): Response {
 }
 
 function setCorsHeaders(headers: Headers, origin: string, allowedOrigins: string[]): void {
-  if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+  if (allowedOrigins.includes('*')) {
+    headers.set('Access-Control-Allow-Origin', '*');
+  } else if (allowedOrigins.includes(origin)) {
     headers.set('Access-Control-Allow-Origin', origin);
+    headers.set('Access-Control-Allow-Credentials', 'true');
   }
   headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  headers.set('Access-Control-Allow-Credentials', 'true');
 }
 
 function forwardHeaders(headers: Headers): Headers {

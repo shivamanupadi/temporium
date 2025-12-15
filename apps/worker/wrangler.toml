@@ -8,4 +8,4 @@ routes = [
 
 [vars]
 API_ORIGIN = "https://api-temporium.up.railway.app"
-ALLOWED_ORIGINS = "http://localhost:5173,https://temporium.xyz,https://app.temporium.xyz"
+ALLOWED_ORIGINS = "*"
