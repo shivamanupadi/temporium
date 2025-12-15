@@ -1,4 +1,5 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { Request } from 'express';
 
 export interface JwtPayload {
   walletAddress: string;
@@ -9,11 +10,13 @@ export interface JwtPayload {
 
 export const CurrentUser = createParamDecorator(
   (data: keyof JwtPayload | undefined, ctx: ExecutionContext) => {
-    const request = ctx.switchToHttp().getRequest();
-    const user = request.user as JwtPayload;
+    const request = ctx
+      .switchToHttp()
+      .getRequest<Request & { user: JwtPayload }>();
+    const user: JwtPayload = request.user;
 
     if (data) {
-      return user[data] as string | number;
+      return user[data];
     }
 
     return user;

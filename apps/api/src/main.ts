@@ -1,7 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
 import type { NestExpressApplication } from '@nestjs/platform-express';
-import type { Request, Response, NextFunction } from 'express';
+import type { Request, Response } from 'express';
 import { Handler } from 'tempo.ts/server';
 import { AppModule } from './app.module';
 import { KeysService } from './keys/keys.service';
@@ -29,12 +29,12 @@ async function bootstrap() {
   });
 
   // Custom middleware that wraps tempo.ts and adds JWT tokens to successful responses
-  app.use('/keys', async (req: Request, res: Response, _next: NextFunction) => {
+  app.use('/keys', async (req: Request, res: Response) => {
     try {
       // Collect request body for POST requests
       const chunks: Buffer[] = [];
       for await (const chunk of req) {
-        chunks.push(chunk);
+        chunks.push(chunk as Buffer);
       }
       const bodyBuffer = Buffer.concat(chunks);
 
@@ -63,7 +63,9 @@ async function bootstrap() {
 
       // Add JWT tokens to successful responses for credential endpoints (not /challenge)
       const credentialId = req.path.replace('/', '');
-      console.log(`[Keys] ${req.method} ${req.path} -> status ${response.status}, credentialId: ${credentialId}`);
+      console.log(
+        `[Keys] ${req.method} ${req.path} -> status ${response.status}, credentialId: ${credentialId}`,
+      );
 
       // Handle both GET (sign-in) and POST (wallet creation) for credential endpoints
       if (
@@ -78,22 +80,30 @@ async function bootstrap() {
           let publicKey: string | undefined;
 
           if (req.method === 'POST') {
-            publicKey = await keysService.get<string>(`credential:${credentialId}`);
+            publicKey = await keysService.get<string>(
+              `credential:${credentialId}`,
+            );
           } else if (req.method === 'GET' && responseBody) {
             try {
-              const data = JSON.parse(responseBody);
+              const data = JSON.parse(responseBody) as { publicKey?: string };
               publicKey = data.publicKey;
             } catch {
               // Not JSON, skip
             }
           }
 
-          console.log(`[Keys] Retrieved publicKey for ${credentialId}:`, publicKey ? 'found' : 'not found');
+          console.log(
+            `[Keys] Retrieved publicKey for ${credentialId}:`,
+            publicKey ? 'found' : 'not found',
+          );
 
           if (publicKey) {
-            const tokens = await authService.generateTokens(credentialId);
-            const responseData = { publicKey, ...tokens };
-            console.log(`[Keys] Returning response with tokens:`, JSON.stringify(responseData, null, 2));
+            const token = authService.generateToken(credentialId);
+            const responseData = { publicKey, ...token };
+            console.log(
+              `[Keys] Returning response with token:`,
+              JSON.stringify(responseData, null, 2),
+            );
             res.status(200).json(responseData);
             return;
           }
@@ -106,7 +116,9 @@ async function bootstrap() {
       res.status(response.status).send(responseBody);
     } catch (error) {
       console.error('Keys middleware error:', error);
-      res.status(500).json({ error: 'Internal server error', details: String(error) });
+      res
+        .status(500)
+        .json({ error: 'Internal server error', details: String(error) });
     }
   });
 
@@ -142,4 +154,4 @@ async function bootstrap() {
   console.log(`🔐 API endpoints: http://localhost:${port}/v1/*`);
 }
 
-bootstrap();
+void bootstrap();

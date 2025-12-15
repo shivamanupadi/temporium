@@ -1,10 +1,17 @@
-import { IsString, IsNotEmpty, Matches, ValidateIf } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  Matches,
+  ValidateIf,
+  IsOptional,
+} from 'class-validator';
 import { Transform } from 'class-transformer';
 
 const ADDRESS_REGEX = /^0x[a-fA-F0-9]{40}$/;
-const TX_HASH_REGEX = /^0x[a-fA-F0-9]{64}$/;
+// Accept valid tx hash (0x + 64 hex chars) OR 'imported' for imported tokens
+const TX_HASH_REGEX = /^(0x[a-fA-F0-9]{64}|imported)$/;
 
-export class CreateStablecoinDto {
+export class CreateTip20ContractDto {
   @IsString()
   @Matches(ADDRESS_REGEX, { message: 'Invalid token address format' })
   address: string;
@@ -25,14 +32,19 @@ export class CreateStablecoinDto {
   @Matches(ADDRESS_REGEX, { message: 'Invalid creator address format' })
   creator: string;
 
-  @Transform(({ value }) => (value === '' ? undefined : value))
-  @ValidateIf((_, value) => value !== undefined && value !== null && value !== '')
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) =>
+    value === '' ? undefined : value,
+  )
+  @ValidateIf(
+    (_, value) => value !== undefined && value !== null && value !== '',
+  )
   @IsString()
   @Matches(TX_HASH_REGEX, { message: 'Invalid transaction hash format' })
   txHash?: string;
 }
 
-export class StablecoinResponseDto {
+export class Tip20ContractResponseDto {
   id: string;
   owner: string;
   address: string;

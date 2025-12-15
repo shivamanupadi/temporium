@@ -62,30 +62,25 @@ function apiToScheduledTransaction(data: ScheduledTransactionApiResponse): Sched
 export async function saveScheduledTransaction(
   tx: Omit<ScheduledTransaction, 'id' | 'createdAt' | 'status'>
 ): Promise<ScheduledTransaction> {
-  const response = await apiPost<ScheduledTransactionApiResponse>(
-    '/v1/scheduled-transactions',
-    {
-      txHash: tx.txHash,
-      from: tx.from.toLowerCase(),
-      to: tx.to.toLowerCase(),
-      amount: tx.amount,
-      token: tx.token.toLowerCase(),
-      tokenSymbol: tx.tokenSymbol,
-      tokenDecimals: tx.tokenDecimals,
-      feeToken: tx.feeToken.toLowerCase(),
-      memo: tx.memo,
-      scheduledFor: new Date(tx.scheduledFor * 1000).toISOString(),
-    }
-  );
+  const response = await apiPost<ScheduledTransactionApiResponse>('/v1/scheduled-transactions', {
+    txHash: tx.txHash,
+    from: tx.from.toLowerCase(),
+    to: tx.to.toLowerCase(),
+    amount: tx.amount,
+    token: tx.token.toLowerCase(),
+    tokenSymbol: tx.tokenSymbol,
+    tokenDecimals: tx.tokenDecimals,
+    feeToken: tx.feeToken.toLowerCase(),
+    memo: tx.memo,
+    scheduledFor: new Date(tx.scheduledFor * 1000).toISOString(),
+  });
   return apiToScheduledTransaction(response);
 }
 
 export async function getScheduledTransactionsByOwner(
   _owner: Address
 ): Promise<ScheduledTransaction[]> {
-  const response = await apiGet<ScheduledTransactionApiResponse[]>(
-    '/v1/scheduled-transactions'
-  );
+  const response = await apiGet<ScheduledTransactionApiResponse[]>('/v1/scheduled-transactions');
   return response.map(apiToScheduledTransaction).sort((a, b) => b.scheduledFor - a.scheduledFor);
 }
 

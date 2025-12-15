@@ -55,8 +55,8 @@ export class PoliciesService {
           txHash: dto.txHash?.toLowerCase(),
         },
       });
-    } catch (error: any) {
-      if (error.code === 'P2002') {
+    } catch (error: unknown) {
+      if (error instanceof Error && 'code' in error && error.code === 'P2002') {
         throw new ConflictException(
           'Policy with this ID already exists for this owner',
         );

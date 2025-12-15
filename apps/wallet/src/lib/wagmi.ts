@@ -2,7 +2,7 @@ import { createConfig, http } from 'wagmi';
 import { webAuthn, KeyManager } from 'tempo.ts/wagmi';
 import { tempoChain } from './tempo-client';
 import { KEYS_API_URL } from './api';
-import { saveAuthTokens } from './auth-storage';
+import { saveAuthToken } from './auth-storage';
 
 /**
  * Extract root domain from hostname for passkey rpId
@@ -83,19 +83,18 @@ function serializeCredential(raw: PublicKeyCredential): SerializedCredential {
 }
 
 /**
- * Response from the keys API that includes JWT tokens
+ * Response from the keys API that includes JWT token
  */
 interface KeysApiResponse {
   publicKey: `0x${string}`;
   accessToken?: string;
-  refreshToken?: string;
   expiresIn?: number;
 }
 
 /**
  * Custom KeyManager for HTTP-based storage with tempo.ts/server Handler.keyManager
  * Properly serializes WebAuthn credentials (converts ArrayBuffers to base64)
- * Also extracts and stores JWT tokens from the response
+ * Also extracts and stores JWT token from the response
  */
 const keyManager = KeyManager.from({
   async getChallenge() {
@@ -116,16 +115,15 @@ const keyManager = KeyManager.from({
     const data: KeysApiResponse = await response.json();
     console.log('[getPublicKey] Response data:', data);
 
-    // Extract and store JWT tokens if present
-    if (data.accessToken && data.refreshToken && data.expiresIn) {
-      console.log('[getPublicKey] Saving auth tokens');
-      saveAuthTokens({
+    // Extract and store JWT token if present
+    if (data.accessToken && data.expiresIn) {
+      console.log('[getPublicKey] Saving auth token');
+      saveAuthToken({
         accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
         expiresIn: data.expiresIn,
       });
     } else {
-      console.warn('[getPublicKey] Response missing tokens');
+      console.warn('[getPublicKey] Response missing token');
     }
 
     return data.publicKey;
@@ -153,7 +151,7 @@ const keyManager = KeyManager.from({
       throw new Error(`Failed to save public key: ${error}`);
     }
 
-    // Extract and store JWT tokens from response
+    // Extract and store JWT token from response
     const text = await response.text();
     console.log('[setPublicKey] Response body:', text);
 
@@ -161,18 +159,16 @@ const keyManager = KeyManager.from({
       const data: KeysApiResponse = JSON.parse(text);
       console.log('[setPublicKey] Parsed data:', data);
 
-      if (data.accessToken && data.refreshToken && data.expiresIn) {
-        console.log('[setPublicKey] Saving auth tokens');
-        saveAuthTokens({
+      if (data.accessToken && data.expiresIn) {
+        console.log('[setPublicKey] Saving auth token');
+        saveAuthToken({
           accessToken: data.accessToken,
-          refreshToken: data.refreshToken,
           expiresIn: data.expiresIn,
         });
       } else {
-        console.warn('[setPublicKey] Response missing tokens:', {
+        console.warn('[setPublicKey] Response missing token:', {
           hasAccessToken: !!data.accessToken,
-          hasRefreshToken: !!data.refreshToken,
-          hasExpiresIn: !!data.expiresIn
+          hasExpiresIn: !!data.expiresIn,
         });
       }
     } else {

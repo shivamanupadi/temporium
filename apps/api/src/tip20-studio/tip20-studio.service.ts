@@ -4,42 +4,42 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateStablecoinDto } from './dto/stablecoin.dto';
+import { CreateTip20ContractDto } from './dto/tip20-contract.dto';
 
 @Injectable()
-export class StablecoinsService {
+export class Tip20StudioService {
   constructor(private prisma: PrismaService) {}
 
   async findAll(owner: string) {
-    return this.prisma.stablecoin.findMany({
+    return this.prisma.tip20Contract.findMany({
       where: { owner },
       orderBy: { createdAt: 'desc' },
     });
   }
 
   async findOne(owner: string, id: string) {
-    const stablecoin = await this.prisma.stablecoin.findFirst({
+    const contract = await this.prisma.tip20Contract.findFirst({
       where: { id, owner },
     });
 
-    if (!stablecoin) {
-      throw new NotFoundException('Stablecoin not found');
+    if (!contract) {
+      throw new NotFoundException('TIP-20 contract not found');
     }
 
-    return stablecoin;
+    return contract;
   }
 
   async findByAddress(owner: string, address: string) {
-    return this.prisma.stablecoin.findUnique({
+    return this.prisma.tip20Contract.findUnique({
       where: {
         owner_address: { owner, address },
       },
     });
   }
 
-  async create(owner: string, dto: CreateStablecoinDto) {
+  async create(owner: string, dto: CreateTip20ContractDto) {
     try {
-      return await this.prisma.stablecoin.create({
+      return await this.prisma.tip20Contract.create({
         data: {
           owner,
           address: dto.address.toLowerCase(),
@@ -50,10 +50,10 @@ export class StablecoinsService {
           txHash: dto.txHash?.toLowerCase(),
         },
       });
-    } catch (error: any) {
-      if (error.code === 'P2002') {
+    } catch (error: unknown) {
+      if (error instanceof Error && 'code' in error && error.code === 'P2002') {
         throw new ConflictException(
-          'Stablecoin with this address already exists for this owner',
+          'TIP-20 contract with this address already exists for this owner',
         );
       }
       throw error;
@@ -61,10 +61,10 @@ export class StablecoinsService {
   }
 
   async remove(owner: string, id: string) {
-    const stablecoin = await this.findOne(owner, id);
+    const contract = await this.findOne(owner, id);
 
-    await this.prisma.stablecoin.delete({
-      where: { id: stablecoin.id },
+    await this.prisma.tip20Contract.delete({
+      where: { id: contract.id },
     });
 
     return { success: true };

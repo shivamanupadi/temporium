@@ -21,7 +21,9 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 @Controller({ path: 'scheduled-transactions', version: '1' })
 @UseGuards(JwtAuthGuard)
 export class ScheduledTransactionsController {
-  constructor(private scheduledTransactionsService: ScheduledTransactionsService) {}
+  constructor(
+    private scheduledTransactionsService: ScheduledTransactionsService,
+  ) {}
 
   @Get()
   async findAll(

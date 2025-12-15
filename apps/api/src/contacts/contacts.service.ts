@@ -46,8 +46,8 @@ export class ContactsService {
           address: dto.address.toLowerCase(),
         },
       });
-    } catch (error: any) {
-      if (error.code === 'P2002') {
+    } catch (error: unknown) {
+      if (error instanceof Error && 'code' in error && error.code === 'P2002') {
         throw new ConflictException('Contact with this address already exists');
       }
       throw error;

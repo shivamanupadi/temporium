@@ -21,21 +21,8 @@ model Passkey {
   @@map("passkeys")
 }
 
-// User sessions for JWT refresh tokens
-model Session {
-  id            String   @id @default(cuid())
-  walletAddress String   @map("wallet_address")
-  refreshToken  String   @unique @map("refresh_token")
-  expiresAt     DateTime @map("expires_at")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  @@index([walletAddress])
-  @@map("sessions")
-}
-
-// Stablecoins (TIP-20 tokens)
-model Stablecoin {
+// TIP-20 Contracts (TIP20 Studio)
+model Tip20Contract {
   id        String   @id @default(cuid())
   owner     String   // Wallet address that owns this record
   address   String   // Token contract address
@@ -48,7 +35,7 @@ model Stablecoin {
 
   @@unique([owner, address])
   @@index([owner])
-  @@map("stablecoins")
+  @@map("tip20_contracts")
 }
 
 // Contacts (saved addresses)

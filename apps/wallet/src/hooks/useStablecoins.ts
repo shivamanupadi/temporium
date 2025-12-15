@@ -6,7 +6,7 @@ import {
   saveStablecoin,
   deleteStablecoin,
   type Stablecoin,
-} from '@/lib/stablecoins-storage';
+} from '@/lib/tip20-contracts-storage';
 import { Actions, tempoPublicClient } from '@/lib/tempo-client';
 import { DEFAULT_FEE_TOKEN_ADDRESS } from '@/lib/constants';
 import type { Address } from 'viem';

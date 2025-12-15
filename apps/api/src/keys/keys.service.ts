@@ -31,7 +31,8 @@ export class KeysService implements Kv.Kv {
    * Set a value by key (store public key)
    */
   async set(key: string, value: unknown): Promise<void> {
-    const serialized = typeof value === 'string' ? value : JSON.stringify(value);
+    const serialized =
+      typeof value === 'string' ? value : JSON.stringify(value);
 
     await this.prisma.passkey.upsert({
       where: { key },
