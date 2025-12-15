@@ -20,6 +20,7 @@ import {
   X,
   Zap,
   ChevronsUpDown,
+  Key,
 } from 'lucide-react';
 import { useTempo } from '@/hooks/useTempo';
 import { formatAddress, copyToClipboard, cn } from '@/lib/utils';
@@ -261,6 +262,12 @@ export function Sidebar({
             to="/portal/contacts"
             icon={<Users className={iconSize} strokeWidth={iconStroke} />}
             label="Contacts"
+            isCollapsed={collapsed}
+          />
+          <NavItem
+            to="/portal/access-keys"
+            icon={<Key className={iconSize} strokeWidth={iconStroke} />}
+            label="Access Keys"
             isCollapsed={collapsed}
           />
         </div>

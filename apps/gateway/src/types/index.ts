@@ -33,3 +33,24 @@ export type ScheduledTransactionStatus = 'pending' | 'executed' | 'failed';
 
 // TIP-403 Policy types
 export type PolicyType = 'whitelist' | 'blacklist';
+
+// Access Key types for AccountKeychain
+export type AccessKeyType = 'secp256k1' | 'p256' | 'webAuthn';
+
+export interface TokenSpendingLimit {
+  token: Address;
+  limit: bigint;
+  remaining?: bigint;
+}
+
+export interface AccessKey {
+  keyId: Address;
+  signatureType: AccessKeyType;
+  expiry: number; // Unix timestamp (0 = never expires)
+  enforceLimits: boolean;
+  isRevoked: boolean;
+}
+
+export interface AccessKeyWithLimits extends AccessKey {
+  limits: TokenSpendingLimit[];
+}

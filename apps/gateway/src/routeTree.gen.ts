@@ -20,10 +20,13 @@ import { Route as PortalReceiveRouteImport } from './routes/portal/receive'
 import { Route as PortalLiquidityRouteImport } from './routes/portal/liquidity'
 import { Route as PortalDashboardRouteImport } from './routes/portal/dashboard'
 import { Route as PortalContactsRouteImport } from './routes/portal/contacts'
+import { Route as PortalAccessKeysRouteImport } from './routes/portal/access-keys'
 import { Route as PortalTip403FactoryIndexRouteImport } from './routes/portal/tip403-factory.index'
 import { Route as PortalTip20StudioIndexRouteImport } from './routes/portal/tip20-studio.index'
+import { Route as PortalAccessKeysIndexRouteImport } from './routes/portal/access-keys.index'
 import { Route as PortalTip403FactoryPolicyIdRouteImport } from './routes/portal/tip403-factory.$policyId'
 import { Route as PortalTip20StudioAddressRouteImport } from './routes/portal/tip20-studio.$address'
+import { Route as PortalAccessKeysKeyIdRouteImport } from './routes/portal/access-keys.$keyId'
 import { Route as PortalTip20StudioAddressRewardsRouteImport } from './routes/portal/tip20-studio.$address.rewards'
 import { Route as PortalTip20StudioAddressOverviewRouteImport } from './routes/portal/tip20-studio.$address.overview'
 
@@ -82,6 +85,11 @@ const PortalContactsRoute = PortalContactsRouteImport.update({
   path: '/contacts',
   getParentRoute: () => PortalRoute,
 } as any)
+const PortalAccessKeysRoute = PortalAccessKeysRouteImport.update({
+  id: '/access-keys',
+  path: '/access-keys',
+  getParentRoute: () => PortalRoute,
+} as any)
 const PortalTip403FactoryIndexRoute =
   PortalTip403FactoryIndexRouteImport.update({
     id: '/',
@@ -92,6 +100,11 @@ const PortalTip20StudioIndexRoute = PortalTip20StudioIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => PortalTip20StudioRoute,
+} as any)
+const PortalAccessKeysIndexRoute = PortalAccessKeysIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PortalAccessKeysRoute,
 } as any)
 const PortalTip403FactoryPolicyIdRoute =
   PortalTip403FactoryPolicyIdRouteImport.update({
@@ -105,6 +118,11 @@ const PortalTip20StudioAddressRoute =
     path: '/$address',
     getParentRoute: () => PortalTip20StudioRoute,
   } as any)
+const PortalAccessKeysKeyIdRoute = PortalAccessKeysKeyIdRouteImport.update({
+  id: '/$keyId',
+  path: '/$keyId',
+  getParentRoute: () => PortalAccessKeysRoute,
+} as any)
 const PortalTip20StudioAddressRewardsRoute =
   PortalTip20StudioAddressRewardsRouteImport.update({
     id: '/rewards',
@@ -121,6 +139,7 @@ const PortalTip20StudioAddressOverviewRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/portal': typeof PortalRouteWithChildren
+  '/portal/access-keys': typeof PortalAccessKeysRouteWithChildren
   '/portal/contacts': typeof PortalContactsRoute
   '/portal/dashboard': typeof PortalDashboardRoute
   '/portal/liquidity': typeof PortalLiquidityRoute
@@ -130,8 +149,10 @@ export interface FileRoutesByFullPath {
   '/portal/swap': typeof PortalSwapRoute
   '/portal/tip20-studio': typeof PortalTip20StudioRouteWithChildren
   '/portal/tip403-factory': typeof PortalTip403FactoryRouteWithChildren
+  '/portal/access-keys/$keyId': typeof PortalAccessKeysKeyIdRoute
   '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRouteWithChildren
   '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRoute
+  '/portal/access-keys/': typeof PortalAccessKeysIndexRoute
   '/portal/tip20-studio/': typeof PortalTip20StudioIndexRoute
   '/portal/tip403-factory/': typeof PortalTip403FactoryIndexRoute
   '/portal/tip20-studio/$address/overview': typeof PortalTip20StudioAddressOverviewRoute
@@ -147,8 +168,10 @@ export interface FileRoutesByTo {
   '/portal/scheduled': typeof PortalScheduledRoute
   '/portal/send': typeof PortalSendRoute
   '/portal/swap': typeof PortalSwapRoute
+  '/portal/access-keys/$keyId': typeof PortalAccessKeysKeyIdRoute
   '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRouteWithChildren
   '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRoute
+  '/portal/access-keys': typeof PortalAccessKeysIndexRoute
   '/portal/tip20-studio': typeof PortalTip20StudioIndexRoute
   '/portal/tip403-factory': typeof PortalTip403FactoryIndexRoute
   '/portal/tip20-studio/$address/overview': typeof PortalTip20StudioAddressOverviewRoute
@@ -158,6 +181,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/portal': typeof PortalRouteWithChildren
+  '/portal/access-keys': typeof PortalAccessKeysRouteWithChildren
   '/portal/contacts': typeof PortalContactsRoute
   '/portal/dashboard': typeof PortalDashboardRoute
   '/portal/liquidity': typeof PortalLiquidityRoute
@@ -167,8 +191,10 @@ export interface FileRoutesById {
   '/portal/swap': typeof PortalSwapRoute
   '/portal/tip20-studio': typeof PortalTip20StudioRouteWithChildren
   '/portal/tip403-factory': typeof PortalTip403FactoryRouteWithChildren
+  '/portal/access-keys/$keyId': typeof PortalAccessKeysKeyIdRoute
   '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRouteWithChildren
   '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRoute
+  '/portal/access-keys/': typeof PortalAccessKeysIndexRoute
   '/portal/tip20-studio/': typeof PortalTip20StudioIndexRoute
   '/portal/tip403-factory/': typeof PortalTip403FactoryIndexRoute
   '/portal/tip20-studio/$address/overview': typeof PortalTip20StudioAddressOverviewRoute
@@ -179,6 +205,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/portal'
+    | '/portal/access-keys'
     | '/portal/contacts'
     | '/portal/dashboard'
     | '/portal/liquidity'
@@ -188,8 +215,10 @@ export interface FileRouteTypes {
     | '/portal/swap'
     | '/portal/tip20-studio'
     | '/portal/tip403-factory'
+    | '/portal/access-keys/$keyId'
     | '/portal/tip20-studio/$address'
     | '/portal/tip403-factory/$policyId'
+    | '/portal/access-keys/'
     | '/portal/tip20-studio/'
     | '/portal/tip403-factory/'
     | '/portal/tip20-studio/$address/overview'
@@ -205,8 +234,10 @@ export interface FileRouteTypes {
     | '/portal/scheduled'
     | '/portal/send'
     | '/portal/swap'
+    | '/portal/access-keys/$keyId'
     | '/portal/tip20-studio/$address'
     | '/portal/tip403-factory/$policyId'
+    | '/portal/access-keys'
     | '/portal/tip20-studio'
     | '/portal/tip403-factory'
     | '/portal/tip20-studio/$address/overview'
@@ -215,6 +246,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/portal'
+    | '/portal/access-keys'
     | '/portal/contacts'
     | '/portal/dashboard'
     | '/portal/liquidity'
@@ -224,8 +256,10 @@ export interface FileRouteTypes {
     | '/portal/swap'
     | '/portal/tip20-studio'
     | '/portal/tip403-factory'
+    | '/portal/access-keys/$keyId'
     | '/portal/tip20-studio/$address'
     | '/portal/tip403-factory/$policyId'
+    | '/portal/access-keys/'
     | '/portal/tip20-studio/'
     | '/portal/tip403-factory/'
     | '/portal/tip20-studio/$address/overview'
@@ -316,6 +350,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalContactsRouteImport
       parentRoute: typeof PortalRoute
     }
+    '/portal/access-keys': {
+      id: '/portal/access-keys'
+      path: '/access-keys'
+      fullPath: '/portal/access-keys'
+      preLoaderRoute: typeof PortalAccessKeysRouteImport
+      parentRoute: typeof PortalRoute
+    }
     '/portal/tip403-factory/': {
       id: '/portal/tip403-factory/'
       path: '/'
@@ -330,6 +371,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalTip20StudioIndexRouteImport
       parentRoute: typeof PortalTip20StudioRoute
     }
+    '/portal/access-keys/': {
+      id: '/portal/access-keys/'
+      path: '/'
+      fullPath: '/portal/access-keys/'
+      preLoaderRoute: typeof PortalAccessKeysIndexRouteImport
+      parentRoute: typeof PortalAccessKeysRoute
+    }
     '/portal/tip403-factory/$policyId': {
       id: '/portal/tip403-factory/$policyId'
       path: '/$policyId'
@@ -343,6 +391,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal/tip20-studio/$address'
       preLoaderRoute: typeof PortalTip20StudioAddressRouteImport
       parentRoute: typeof PortalTip20StudioRoute
+    }
+    '/portal/access-keys/$keyId': {
+      id: '/portal/access-keys/$keyId'
+      path: '/$keyId'
+      fullPath: '/portal/access-keys/$keyId'
+      preLoaderRoute: typeof PortalAccessKeysKeyIdRouteImport
+      parentRoute: typeof PortalAccessKeysRoute
     }
     '/portal/tip20-studio/$address/rewards': {
       id: '/portal/tip20-studio/$address/rewards'
@@ -360,6 +415,19 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface PortalAccessKeysRouteChildren {
+  PortalAccessKeysKeyIdRoute: typeof PortalAccessKeysKeyIdRoute
+  PortalAccessKeysIndexRoute: typeof PortalAccessKeysIndexRoute
+}
+
+const PortalAccessKeysRouteChildren: PortalAccessKeysRouteChildren = {
+  PortalAccessKeysKeyIdRoute: PortalAccessKeysKeyIdRoute,
+  PortalAccessKeysIndexRoute: PortalAccessKeysIndexRoute,
+}
+
+const PortalAccessKeysRouteWithChildren =
+  PortalAccessKeysRoute._addFileChildren(PortalAccessKeysRouteChildren)
 
 interface PortalTip20StudioAddressRouteChildren {
   PortalTip20StudioAddressOverviewRoute: typeof PortalTip20StudioAddressOverviewRoute
@@ -405,6 +473,7 @@ const PortalTip403FactoryRouteWithChildren =
   PortalTip403FactoryRoute._addFileChildren(PortalTip403FactoryRouteChildren)
 
 interface PortalRouteChildren {
+  PortalAccessKeysRoute: typeof PortalAccessKeysRouteWithChildren
   PortalContactsRoute: typeof PortalContactsRoute
   PortalDashboardRoute: typeof PortalDashboardRoute
   PortalLiquidityRoute: typeof PortalLiquidityRoute
@@ -417,6 +486,7 @@ interface PortalRouteChildren {
 }
 
 const PortalRouteChildren: PortalRouteChildren = {
+  PortalAccessKeysRoute: PortalAccessKeysRouteWithChildren,
   PortalContactsRoute: PortalContactsRoute,
   PortalDashboardRoute: PortalDashboardRoute,
   PortalLiquidityRoute: PortalLiquidityRoute,

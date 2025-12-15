@@ -1,0 +1,39 @@
+Temporium
+Testnet
+
+Main
+
+Dashboard
+Payments
+
+Send
+Receive
+DeFi
+
+Swap
+Liquidity
+Tools
+
+TIP20 Studio
+TIP403 Factory
+Manage
+
+Scheduled
+Contacts
+Access Keys
+
+0x4eae19...2007B6
+
+Access Keys
+Refresh
+Create Key
+Access keys are secondary signing keys that can perform transactions without prompting for passkey authentication. They can have spending limits and expiry times.
+
+No access keys yet
+
+Create an access key to enable transactions without passkey prompts
+
+Create Access Key
+
+Address "0xAAAAAAAA00000000000000000000000000000000" is invalid. - Address must be a hex value of 20 bytes (40 hex characters). - Address must match its checksum counterpart. Request Arguments: from: 0x4eae19917767D955D167236fB2B1814F592007B6 to: 0xAAAAAAAA00000000000000000000000000000000 data: 0x54063a55000000000000000000000000e3219e04afcf4a99db5705ef583f9b159a24609c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000696732ff000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000 Contract Call: address: 0xAAAAAAAA00000000000000000000000000000000 function: authorizeKey(address keyId, uint8 signatureType, uint64 expiry, bool enforceLimits, (address token, uint256 amount)[]) args: (0xe3219e04AFcF4A99db5705Ef583f9b159a24609C, 0, 1768370943, false, []) sender: 0x4eae19917767D955D167236fB2B1814F592007B6 Docs: https://viem.sh/docs/contract/writeContract Version: viem@2.41.2
+
