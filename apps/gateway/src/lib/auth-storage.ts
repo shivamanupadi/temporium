@@ -4,7 +4,7 @@
  * Simple JWT with 24hr expiry - when expired, user re-authenticates with passkey
  */
 
-const AUTH_STORAGE_KEY = 'tollr_auth';
+const AUTH_STORAGE_KEY = 'temporium_auth';
 
 export interface AuthToken {
   accessToken: string;

@@ -1,5 +1,5 @@
 {
-  "name": "@tollr/wallet",
+  "name": "@temporium/gateway",
   "private": true,
   "version": "0.0.1",
   "type": "module",
@@ -45,7 +45,7 @@
   },
   "devDependencies": {
     "@tanstack/router-vite-plugin": "^1.140.1",
-    "@tollr/eslint-config": "*",
+    "@temporium/eslint-config": "*",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^24.10.2",
     "@types/react": "^19.2.5",

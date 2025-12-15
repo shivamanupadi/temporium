@@ -1,6 +1,6 @@
 module.exports = {
   root: true,
-  extends: ['@tollr/eslint-config'],
+  extends: ['@temporium/eslint-config'],
   parserOptions: {
     project: './tsconfig.json',
     tsconfigRootDir: __dirname,

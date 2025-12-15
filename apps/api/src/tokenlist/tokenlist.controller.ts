@@ -1,14 +1,21 @@
-import { Controller, Get, Req, Res } from '@nestjs/common';
-import type { Request, Response } from 'express';
+import { Controller, Get, Req, Res, Logger } from '@nestjs/common';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 
 const TOKENLIST_BASE_URL = 'https://tokenlist.tempo.xyz';
 
 @Controller({ path: 'tokenlist', version: '' })
 export class TokenlistController {
+  private readonly logger = new Logger(TokenlistController.name);
+
   @Get('*')
-  async proxy(@Req() req: Request, @Res() res: Response) {
+  async proxy(
+    @Req() req: FastifyRequest,
+    @Res() res: FastifyReply,
+  ): Promise<void> {
     // Build target URL from request path
-    const path = req.path.replace('/tokenlist', '') || '/';
+    // Fastify uses req.url which includes the full path
+    const fullPath = req.url.split('?')[0];
+    const path = fullPath.replace('/tokenlist', '') || '/';
     const queryString = req.url.includes('?') ? req.url.split('?')[1] : '';
     const targetUrl = `${TOKENLIST_BASE_URL}${path}${queryString ? '?' + queryString : ''}`;
 
@@ -20,15 +27,15 @@ export class TokenlistController {
 
       const data = await response.text();
 
-      res.set({
+      res.headers({
         'Content-Type': 'application/json',
         'Cache-Control': 'public, max-age=300', // Cache for 5 minutes
       });
 
-      res.status(response.status).send(data);
+      await res.status(response.status).send(data);
     } catch (error) {
-      console.error('Tokenlist proxy error:', error);
-      res.status(502).json({ error: 'Failed to fetch tokenlist' });
+      this.logger.error('Tokenlist proxy error:', error);
+      await res.status(502).send({ error: 'Failed to fetch tokenlist' });
     }
   }
 }

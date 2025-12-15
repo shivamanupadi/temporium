@@ -6,7 +6,7 @@ import { saveAuthToken } from './auth-storage';
 
 /**
  * Extract root domain from hostname for passkey rpId
- * This allows passkeys to work across subdomains (e.g., app.tollr.xyz, test.tollr.xyz)
+ * This allows passkeys to work across subdomains (e.g., app.temporium.xyz, test.temporium.xyz)
  */
 function getRpId(): string {
   if (typeof window === 'undefined') return 'localhost';
@@ -24,13 +24,13 @@ function getRpId(): string {
   const specialSuffixes = ['pages.dev', 'workers.dev', 'co.uk', 'com.au', 'co.nz'];
   for (const suffix of specialSuffixes) {
     if (hostname.endsWith(`.${suffix}`)) {
-      // Return subdomain + suffix (e.g., tollr.pages.dev)
+      // Return subdomain + suffix (e.g., temporium.pages.dev)
       const suffixParts = suffix.split('.').length;
       return parts.slice(-(suffixParts + 1)).join('.');
     }
   }
 
-  // Standard domain - return last 2 parts (e.g., tollr.xyz from app.tollr.xyz)
+  // Standard domain - return last 2 parts (e.g., temporium.xyz from app.temporium.xyz)
   return parts.slice(-2).join('.');
 }
 

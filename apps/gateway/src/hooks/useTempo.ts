@@ -119,15 +119,15 @@ export function useTempo(): UseTempoReturn {
 
   /**
    * Sign up with a new passkey (creates wallet)
-   * @param label - Optional label for the passkey (will be prefixed with "Tollr: ")
+   * @param label - Optional label for the passkey (will be prefixed with "Temporium: ")
    */
   const signUp = useCallback(
     async (label?: string) => {
       setIsConnecting(true);
       setError(null);
       try {
-        // Generate passkey label with Tollr prefix
-        const passkeyLabel = label ? `Tollr: ${label}` : 'Tollr Wallet';
+        // Generate passkey label with Temporium prefix
+        const passkeyLabel = label ? `Temporium: ${label}` : 'Temporium Wallet';
 
         // Pass capabilities through wagmi connect - tempo.ts connector handles this
         await connectAsync({

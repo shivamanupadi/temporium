@@ -1,7 +1,7 @@
 {
   "name": "api",
   "version": "0.0.1",
-  "description": "Tollr API - NestJS backend with PostgreSQL",
+  "description": "Temporium API - NestJS backend with PostgreSQL",
   "author": "",
   "private": true,
   "license": "UNLICENSED",
@@ -30,13 +30,15 @@
     "setup": "yarn db:up && sleep 3 && yarn db:push && yarn db:generate"
   },
   "dependencies": {
+    "@fastify/cors": "^10.0.2",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.2",
     "@nestjs/passport": "^11.0.5",
-    "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/platform-fastify": "^11.0.1",
     "@prisma/client": "5.22.0",
+    "fastify": "^5.2.1",
     "@remix-run/headers": "^0.18.0",
     "@remix-run/route-pattern": "^0.15.3",
     "@remix-run/session": "^0.4.1",
@@ -54,7 +56,6 @@
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
-    "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^22.10.7",
     "@types/passport-jwt": "^4.0.1",

@@ -4,11 +4,11 @@ import { Controller, Get } from '@nestjs/common';
 export class AppController {
   @Get('health')
   health() {
-    return { status: 'ok', service: 'tollr-api' };
+    return { status: 'ok', service: 'temporium-api' };
   }
 
   @Get()
   root() {
-    return { status: 'ok', service: 'tollr-api', version: '1.0.0' };
+    return { status: 'ok', service: 'temporium-api', version: '1.0.0' };
   }
 }

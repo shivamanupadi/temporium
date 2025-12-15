@@ -1,13 +1,8 @@
-import { Injectable, NestMiddleware, Logger, HttpStatus } from '@nestjs/common';
-import type { Request as ExpressRequest, Response } from 'express';
+import { Controller, All, Req, Res, Logger, HttpStatus } from '@nestjs/common';
+import type { FastifyRequest, FastifyReply } from 'fastify';
 import { Handler } from 'tempo.ts/server';
 import { KeysService } from './keys.service';
 import { AuthService } from '../auth/auth.service';
-import {
-  TempoPublicKeyResponse,
-  AuthenticatedCredentialResponseDto,
-  KeysErrorResponseDto,
-} from './dto/keys.dto';
 
 /** Endpoints that should not receive JWT tokens */
 const EXCLUDED_ENDPOINTS = ['challenge'] as const;
@@ -15,12 +10,27 @@ const EXCLUDED_ENDPOINTS = ['challenge'] as const;
 /** HTTP methods that don't have request bodies */
 const BODYLESS_METHODS = ['GET', 'HEAD', 'OPTIONS'] as const;
 
-/** Type alias for Fetch API Request to avoid confusion with Express Request */
-type FetchRequest = globalThis.Request;
+interface TempoPublicKeyResponse {
+  publicKey?: string;
+}
 
-@Injectable()
-export class KeysMiddleware implements NestMiddleware {
-  private readonly logger = new Logger(KeysMiddleware.name);
+interface AuthenticatedCredentialResponse {
+  publicKey: string;
+  accessToken: string;
+  expiresIn: number;
+}
+
+interface KeysErrorResponse {
+  statusCode: number;
+  message: string;
+  error: string;
+  path: string;
+  timestamp: string;
+}
+
+@Controller({ path: 'keys', version: '' })
+export class KeysController {
+  private readonly logger = new Logger(KeysController.name);
   private readonly keysHandler: ReturnType<typeof Handler.keyManager>;
 
   constructor(
@@ -37,40 +47,60 @@ export class KeysMiddleware implements NestMiddleware {
       },
     });
 
-    this.logger.log('Keys middleware initialized');
+    this.logger.log('Keys controller initialized');
   }
 
-  async use(req: ExpressRequest, res: Response): Promise<void> {
+  @All()
+  async handleRoot(
+    @Req() req: FastifyRequest,
+    @Res() res: FastifyReply,
+  ): Promise<void> {
+    await this.handleKeysRequest(req, res, '');
+  }
+
+  @All('*')
+  async handleAll(
+    @Req() req: FastifyRequest,
+    @Res() res: FastifyReply,
+  ): Promise<void> {
+    // Extract path after /keys/
+    const path = req.url.replace(/^\/keys\/?/, '').split('?')[0];
+    await this.handleKeysRequest(req, res, path);
+  }
+
+  private async handleKeysRequest(
+    req: FastifyRequest,
+    res: FastifyReply,
+    path: string,
+  ): Promise<void> {
     const startTime = Date.now();
     const requestId = this.generateRequestId();
 
     try {
-      const result = await this.handleRequest(req, requestId);
-      this.sendResponse(res, result, req, requestId, startTime);
+      const result = await this.processRequest(req, path, requestId);
+      await this.sendResponse(res, result, req, requestId, startTime);
     } catch (error) {
-      this.handleError(error, res, req, requestId, startTime);
+      await this.handleError(error, res, req, requestId, startTime);
     }
   }
 
-  /**
-   * Main request handling logic
-   */
-  private async handleRequest(
-    req: ExpressRequest,
+  private async processRequest(
+    req: FastifyRequest,
+    path: string,
     requestId: string,
   ): Promise<{
     status: number;
-    body: string | AuthenticatedCredentialResponseDto;
+    body: string | AuthenticatedCredentialResponse;
     headers: Headers;
   }> {
-    // Collect raw request body
-    const bodyBuffer = await this.collectRequestBody(req);
+    // Get raw body from request (stored by preParsing hook in main.ts)
+    const bodyBuffer = this.getRequestBody(req);
 
     // Build URL for tempo.ts handler
-    const url = this.buildRequestUrl(req);
+    const url = this.buildRequestUrl(req, path);
 
     this.logger.debug(
-      `[${requestId}] Processing ${req.method} ${req.path} -> ${url}`,
+      `[${requestId}] Processing ${req.method} /${path} -> ${url}`,
     );
 
     // Create fetch request for tempo.ts
@@ -81,7 +111,7 @@ export class KeysMiddleware implements NestMiddleware {
     const responseBody = await response.text();
 
     // Check if we should inject JWT token
-    const credentialId = this.extractCredentialId(req.path);
+    const credentialId = path.split('/')[0];
 
     if (this.shouldInjectToken(response.status, credentialId)) {
       const authenticatedResponse = await this.createAuthenticatedResponse(
@@ -107,53 +137,54 @@ export class KeysMiddleware implements NestMiddleware {
     };
   }
 
-  /**
-   * Collect raw request body from stream
-   */
-  private async collectRequestBody(req: ExpressRequest): Promise<Buffer> {
-    const chunks: Buffer[] = [];
-
-    for await (const chunk of req) {
-      if (Buffer.isBuffer(chunk)) {
-        chunks.push(chunk);
-      } else if (typeof chunk === 'string') {
-        chunks.push(Buffer.from(chunk));
-      }
+  private getRequestBody(req: FastifyRequest): Buffer {
+    // First try to get the raw body stored by our preParsing hook
+    const rawBody = (req as unknown as { rawBody?: Buffer }).rawBody;
+    if (rawBody) {
+      return rawBody;
     }
 
-    return Buffer.concat(chunks);
+    // Fallback: use the parsed body
+    const body = req.body;
+
+    if (Buffer.isBuffer(body)) {
+      return body;
+    }
+
+    if (typeof body === 'string') {
+      return Buffer.from(body);
+    }
+
+    if (body && typeof body === 'object') {
+      return Buffer.from(JSON.stringify(body));
+    }
+
+    return Buffer.alloc(0);
   }
 
-  /**
-   * Build the URL for tempo.ts handler
-   * Uses the original request protocol and host to work with any domain
-   */
-  private buildRequestUrl(req: ExpressRequest): string {
-    // Get protocol (handle proxy scenarios with x-forwarded-proto)
+  private buildRequestUrl(req: FastifyRequest, path: string): string {
+    const forwardedProto = req.headers['x-forwarded-proto'];
     const protocol =
-      (req.headers['x-forwarded-proto'] as string) ||
-      (req.secure ? 'https' : 'http');
+      (typeof forwardedProto === 'string' ? forwardedProto : undefined) ||
+      req.protocol ||
+      'http';
 
-    // Get host (handle proxy scenarios with x-forwarded-host)
+    const forwardedHost = req.headers['x-forwarded-host'];
     const host =
-      (req.headers['x-forwarded-host'] as string) ||
+      (typeof forwardedHost === 'string' ? forwardedHost : undefined) ||
       req.headers.host ||
       `localhost:${process.env.PORT || 3001}`;
 
-    return `${protocol}://${host}${req.path}`;
+    return `${protocol}://${host}/${path}`;
   }
 
-  /**
-   * Create a Fetch API Request object for tempo.ts
-   */
   private createFetchRequest(
-    req: ExpressRequest,
+    req: FastifyRequest,
     url: string,
     bodyBuffer: Buffer,
-  ): FetchRequest {
+  ): globalThis.Request {
     const headers = new Headers();
 
-    // Copy relevant headers
     for (const [key, value] of Object.entries(req.headers)) {
       if (typeof value === 'string') {
         headers.set(key, value);
@@ -173,17 +204,6 @@ export class KeysMiddleware implements NestMiddleware {
     });
   }
 
-  /**
-   * Extract credential ID from request path
-   */
-  private extractCredentialId(path: string): string {
-    // Remove leading slash and any additional path segments
-    return path.replace(/^\//, '').split('/')[0];
-  }
-
-  /**
-   * Check if JWT token should be injected into response
-   */
   private shouldInjectToken(status: number, credentialId: string): boolean {
     const isSuccessful = status >= 200 && status < 300;
     const hasCredentialId = Boolean(credentialId);
@@ -194,25 +214,20 @@ export class KeysMiddleware implements NestMiddleware {
     return isSuccessful && hasCredentialId && !isExcluded;
   }
 
-  /**
-   * Create authenticated response with JWT token
-   */
   private async createAuthenticatedResponse(
     method: string,
     credentialId: string,
     responseBody: string,
     requestId: string,
-  ): Promise<AuthenticatedCredentialResponseDto | null> {
+  ): Promise<AuthenticatedCredentialResponse | null> {
     let publicKey: string | undefined;
 
     try {
       if (method === 'POST') {
-        // For POST (credential creation), retrieve from storage
         publicKey = await this.keysService.get<string>(
           `credential:${credentialId}`,
         );
       } else if (method === 'GET' && responseBody) {
-        // For GET (authentication), parse from response
         publicKey = this.parsePublicKeyFromResponse(responseBody);
       }
 
@@ -241,9 +256,6 @@ export class KeysMiddleware implements NestMiddleware {
     }
   }
 
-  /**
-   * Parse public key from tempo.ts response body
-   */
   private parsePublicKeyFromResponse(responseBody: string): string | undefined {
     try {
       const data = JSON.parse(responseBody) as TempoPublicKeyResponse;
@@ -253,77 +265,67 @@ export class KeysMiddleware implements NestMiddleware {
     }
   }
 
-  /**
-   * Send successful response
-   */
-  private sendResponse(
-    res: Response,
+  private async sendResponse(
+    res: FastifyReply,
     result: {
       status: number;
-      body: string | AuthenticatedCredentialResponseDto;
+      body: string | AuthenticatedCredentialResponse;
       headers: Headers;
     },
-    req: ExpressRequest,
+    req: FastifyRequest,
     requestId: string,
     startTime: number,
-  ): void {
+  ): Promise<void> {
     // Copy response headers
     result.headers.forEach((value, key) => {
-      res.setHeader(key, value);
+      res.header(key, value);
     });
 
     const duration = Date.now() - startTime;
 
     this.logger.log(
-      `[${requestId}] ${req.method} ${req.path} -> ${result.status} (${duration}ms)`,
+      `[${requestId}] ${req.method} ${req.url} -> ${result.status} (${duration}ms)`,
     );
 
     if (typeof result.body === 'string') {
-      res.status(result.status).send(result.body);
+      await res.status(result.status).send(result.body);
     } else {
-      res.status(result.status).json(result.body);
+      await res.status(result.status).send(result.body);
     }
   }
 
-  /**
-   * Handle errors and send error response
-   */
-  private handleError(
+  private async handleError(
     error: unknown,
-    res: Response,
-    req: ExpressRequest,
+    res: FastifyReply,
+    req: FastifyRequest,
     requestId: string,
     startTime: number,
-  ): void {
+  ): Promise<void> {
     const duration = Date.now() - startTime;
     const errorMessage =
       error instanceof Error ? error.message : 'Unknown error';
     const errorStack = error instanceof Error ? error.stack : undefined;
 
     this.logger.error(
-      `[${requestId}] ${req.method} ${req.path} failed after ${duration}ms: ${errorMessage}`,
+      `[${requestId}] ${req.method} ${req.url} failed after ${duration}ms: ${errorMessage}`,
       errorStack,
     );
 
-    // Don't expose internal error details in production
     const isProduction = process.env.NODE_ENV === 'production';
 
-    const errorResponse: KeysErrorResponseDto = {
+    const errorResponse: KeysErrorResponse = {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
       message: isProduction
         ? 'An error occurred processing your request'
         : errorMessage,
       error: 'Internal Server Error',
-      path: req.path,
+      path: req.url,
       timestamp: new Date().toISOString(),
     };
 
-    res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(errorResponse);
+    await res.status(HttpStatus.INTERNAL_SERVER_ERROR).send(errorResponse);
   }
 
-  /**
-   * Generate unique request ID for tracing
-   */
   private generateRequestId(): string {
     return `keys-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   }

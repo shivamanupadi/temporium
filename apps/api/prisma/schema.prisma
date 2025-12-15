@@ -1,4 +1,4 @@
-// Tollr API - Prisma Schema
+// Temporium API - Prisma Schema
 // PostgreSQL database for user data and authentication
 
 generator client {

@@ -315,7 +315,7 @@ function HomePage(): ReactElement {
                     <p className="text-[10px] text-gray-400 mt-1">
                       Saved as:{' '}
                       <span className="font-medium text-gray-600">
-                        Tollr: {walletName || 'Wallet'}
+                        Temporium: {walletName || 'Wallet'}
                       </span>
                     </p>
                   </div>

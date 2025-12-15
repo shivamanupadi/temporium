@@ -1,19 +1,50 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
-import type { NestExpressApplication } from '@nestjs/platform-express';
+import { ValidationPipe, VersioningType, Logger } from '@nestjs/common';
+import {
+  FastifyAdapter,
+  NestFastifyApplication,
+} from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
+import { HttpExceptionFilter } from './common/filters';
 
-async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    // Disable body parsing for raw access - KeysMiddleware needs raw body
-    // Body parsing is added after middleware registration in KeysModule
-    bodyParser: false,
+async function bootstrap(): Promise<void> {
+  const logger = new Logger('Bootstrap');
+
+  // Create Fastify adapter with rawBody enabled for /keys routes
+  const adapter = new FastifyAdapter({
+    logger: false,
+    bodyLimit: 10 * 1024 * 1024, // 10MB
   });
 
-  // Add body parsing for all routes (KeysMiddleware handles its own raw body parsing)
-  const express = await import('express');
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  // Get the raw Fastify instance before NestJS registers parsers
+  const fastifyInstance = adapter.getInstance();
+
+  // Use preParsing hook to preserve raw body for /keys routes
+  fastifyInstance.addHook('preParsing', async (request, _reply, payload) => {
+    if (request.url.startsWith('/keys')) {
+      const chunks: Buffer[] = [];
+      for await (const chunk of payload) {
+        chunks.push(chunk as Buffer);
+      }
+      const rawBody = Buffer.concat(chunks);
+      // Store raw body on request for middleware to access
+      (request as unknown as { rawBody: Buffer }).rawBody = rawBody;
+      // Return the raw body as a stream for Fastify to parse
+      const { Readable } = await import('stream');
+      return Readable.from([rawBody]);
+    }
+    return payload;
+  });
+
+  // Add custom header to identify Fastify
+  fastifyInstance.addHook('onSend', async (_request, reply) => {
+    reply.header('X-Powered-By', 'Fastify');
+  });
+
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    adapter,
+  );
 
   // Enable CORS
   app.enableCors({
@@ -28,6 +59,9 @@ async function bootstrap() {
     }),
   );
 
+  // Enable global exception filter for consistent error responses
+  app.useGlobalFilters(new HttpExceptionFilter());
+
   // Enable URI versioning (e.g., /v1/contacts, /v1/policies)
   app.enableVersioning({
     type: VersioningType.URI,
@@ -35,11 +69,14 @@ async function bootstrap() {
   });
 
   const port = process.env.PORT || 3001;
-  await app.listen(port);
+  await app.listen(port, '0.0.0.0');
 
-  console.log(`🚀 Tollr API running on http://localhost:${port}`);
-  console.log(`📡 Keys endpoint: http://localhost:${port}/keys`);
-  console.log(`🔐 API endpoints: http://localhost:${port}/v1/*`);
+  logger.log(`Temporium API running on http://localhost:${port} (Fastify)`);
+  logger.log(`Keys endpoint: http://localhost:${port}/keys`);
+  logger.log(`API endpoints: http://localhost:${port}/v1/*`);
 }
 
-void bootstrap();
+bootstrap().catch((error) => {
+  console.error('Failed to start application:', error);
+  process.exit(1);
+});

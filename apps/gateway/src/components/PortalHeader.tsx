@@ -87,7 +87,7 @@ export function PortalHeader(): ReactElement {
             to="/portal/dashboard"
             className="text-[16px] font-semibold text-gray-900 tracking-tight hover:text-primary transition-colors"
           >
-            Tollr
+            Temporium
           </Link>
 
           {/* Navigation */}
