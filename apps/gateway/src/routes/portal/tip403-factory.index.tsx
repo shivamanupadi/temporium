@@ -31,7 +31,7 @@ function Tip403FactoryIndexPage(): ReactElement {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl">
       <PageHeader
         title="TIP403 Factory"
         action={

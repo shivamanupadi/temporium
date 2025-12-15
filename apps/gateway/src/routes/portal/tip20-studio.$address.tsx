@@ -7,7 +7,7 @@ import {
   redirect,
 } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
-import { ArrowLeft, CircleDollarSign, Gift } from 'lucide-react';
+import { CircleDollarSign, Gift } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTip20Studio } from '@/hooks/useTip20Studio';
 
@@ -38,20 +38,12 @@ function Tip20StudioLayout(): ReactElement {
   // Loading state
   if (isLoading) {
     return (
-      <div className="max-w-5xl mx-auto -mt-4 animate-pulse">
+      <div className="max-w-5xl animate-pulse">
         {/* Header Skeleton */}
-        <div className="flex items-center gap-2 mb-3">
-          <button
-            onClick={() => navigate({ to: '/portal/tip20-studio' })}
-            className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-          </button>
-          <div className="flex items-center gap-1.5">
-            <div className="h-4 w-24 bg-muted rounded" />
-            <span className="text-muted-foreground">/</span>
-            <div className="h-4 w-20 bg-muted rounded" />
-          </div>
+        <div className="flex items-center gap-2 mb-6">
+          <div className="h-8 w-32 bg-muted rounded" />
+          <span className="text-muted-foreground">/</span>
+          <div className="h-8 w-24 bg-muted rounded" />
         </div>
 
         {/* Tab Navigation Skeleton */}
@@ -127,15 +119,9 @@ function Tip20StudioLayout(): ReactElement {
   // Not found state
   if (isNotFound) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className="flex items-center gap-2 mb-6">
-          <button
-            onClick={() => navigate({ to: '/portal/tip20-studio' })}
-            className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-          </button>
-          <h1 className="text-[15px] font-medium text-foreground">TIP20 Studio</h1>
+      <div className="max-w-2xl">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-slate-900">TIP20 Studio</h1>
         </div>
         <div className="text-center py-16">
           <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
@@ -152,26 +138,23 @@ function Tip20StudioLayout(): ReactElement {
   }
 
   return (
-    <div className="max-w-5xl mx-auto -mt-4">
+    <div className="max-w-5xl">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-3">
-        <button
-          onClick={() => navigate({ to: '/portal/tip20-studio' })}
-          className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors"
+      <div className="flex items-center gap-2 mb-6">
+        <Link
+          to="/portal/tip20-studio"
+          className="text-2xl font-bold text-slate-400 hover:text-slate-600 transition-colors"
         >
-          <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-        </button>
-        <div className="flex items-center gap-1.5">
-          <span className="text-[15px] font-medium text-foreground">TIP20 Studio</span>
-          <span className="text-muted-foreground">/</span>
-          <span className="text-[15px] font-medium text-foreground">
-            {stablecoin?.name ?? tokenAddress}
-          </span>
-        </div>
+          TIP20 Studio
+        </Link>
+        <span className="text-slate-300 text-2xl">/</span>
+        <span className="text-2xl font-bold text-slate-900">
+          {stablecoin?.name ?? tokenAddress}
+        </span>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-1 p-1 bg-muted rounded-lg mb-3">
+      <div className="flex gap-1 p-1 bg-muted rounded-lg mb-4">
         <Link
           to="/portal/tip20-studio/$address/overview"
           params={{ address: tokenAddress }}

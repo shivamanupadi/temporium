@@ -1,8 +1,7 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useState, type ReactElement } from 'react';
 import { toast } from 'sonner';
 import {
-  ArrowLeft,
   Shield,
   UserPlus,
   UserMinus,
@@ -85,20 +84,12 @@ function Tip403FactoryDashboard(): ReactElement {
   // Loading state
   if (isLoading) {
     return (
-      <div className="max-w-5xl mx-auto -mt-4 animate-pulse">
+      <div className="max-w-5xl animate-pulse">
         {/* Header Skeleton */}
-        <div className="flex items-center gap-2 mb-3">
-          <button
-            onClick={() => navigate({ to: '/portal/tip403-factory' })}
-            className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-          </button>
-          <div className="flex items-center gap-1.5">
-            <div className="h-4 w-24 bg-muted rounded" />
-            <span className="text-muted-foreground">/</span>
-            <div className="h-3 w-20 bg-muted rounded" />
-          </div>
+        <div className="flex items-center gap-2 mb-6">
+          <div className="h-8 w-32 bg-muted rounded" />
+          <span className="text-muted-foreground">/</span>
+          <div className="h-8 w-24 bg-muted rounded" />
         </div>
 
         <div className="lg:flex lg:gap-6 lg:items-stretch">
@@ -162,15 +153,9 @@ function Tip403FactoryDashboard(): ReactElement {
   // Not found state
   if (!policy) {
     return (
-      <div className="max-w-2xl mx-auto">
-        <div className="flex items-center gap-2 mb-6">
-          <button
-            onClick={() => navigate({ to: '/portal/tip403-factory' })}
-            className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-          </button>
-          <h1 className="text-[15px] font-medium text-foreground">TIP403 Factory</h1>
+      <div className="max-w-2xl">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-slate-900">TIP403 Factory</h1>
         </div>
         <div className="text-center py-16">
           <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
@@ -190,20 +175,17 @@ function Tip403FactoryDashboard(): ReactElement {
   const policyBigInt = BigInt(policy.policyId);
 
   return (
-    <div className="max-w-5xl mx-auto -mt-4">
+    <div className="max-w-5xl">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-3">
-        <button
-          onClick={() => navigate({ to: '/portal/tip403-factory' })}
-          className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors"
+      <div className="flex items-center gap-2 mb-6">
+        <Link
+          to="/portal/tip403-factory"
+          className="text-2xl font-bold text-slate-400 hover:text-slate-600 transition-colors"
         >
-          <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-        </button>
-        <div className="flex items-center gap-1.5">
-          <span className="text-[15px] font-medium text-foreground">TIP403 Factory</span>
-          <span className="text-muted-foreground">/</span>
-          <span className="text-[12px] text-muted-foreground font-mono">Policy #{policyId}</span>
-        </div>
+          TIP403 Factory
+        </Link>
+        <span className="text-slate-300 text-2xl">/</span>
+        <span className="text-2xl font-bold text-slate-900">Policy #{policyId}</span>
       </div>
 
       {/* Two Column Layout */}

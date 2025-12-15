@@ -1,8 +1,7 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect, type ReactElement } from 'react';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft,
   Plus,
   Minus,
   Check,
@@ -46,7 +45,6 @@ type ActionType = 'add' | 'remove';
 
 function LiquidityPage(): ReactElement | null {
   const { address, addLiquidity, removeLiquidity } = useTempo();
-  const navigate = useNavigate();
   const { tokens } = useTokenList();
 
   const [userToken, setUserToken] = useState<Token | null>(null);
@@ -177,16 +175,10 @@ function LiquidityPage(): ReactElement | null {
   };
 
   return (
-    <div className="max-w-md mx-auto">
+    <div className="max-w-md">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-6">
-        <button
-          onClick={() => navigate({ to: '/portal/dashboard' })}
-          className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-        </button>
-        <h1 className="text-[15px] font-medium text-foreground">Liquidity</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-900">Liquidity</h1>
       </div>
 
       {/* Form Card */}

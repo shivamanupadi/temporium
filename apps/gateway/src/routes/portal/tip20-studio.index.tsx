@@ -31,7 +31,7 @@ function Tip20StudioIndexPage(): ReactElement {
   };
 
   return (
-    <div className="max-w-2xl mx-auto">
+    <div className="max-w-2xl">
       <PageHeader
         title="TIP20 Studio"
         action={

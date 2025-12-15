@@ -1,15 +1,28 @@
 import { createFileRoute, Outlet, useNavigate } from '@tanstack/react-router';
-import { useEffect, type ReactElement } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { useTempo } from '@/hooks/useTempo';
-import { PortalHeader } from '@/components/PortalHeader';
+import { Sidebar } from '@/components/Sidebar';
+import { MobileHeader } from '@/components/MobileHeader';
+import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/portal')({
   component: PortalLayout,
 });
 
+// Persist collapsed state in localStorage
+const SIDEBAR_COLLAPSED_KEY = 'temporium-sidebar-collapsed';
+
+function getInitialCollapsed(): boolean {
+  if (typeof window === 'undefined') return false;
+  const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+  return stored === 'true';
+}
+
 function PortalLayout(): ReactElement | null {
   const { isConnected } = useTempo();
   const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(getInitialCollapsed);
 
   useEffect(() => {
     if (!isConnected) {
@@ -17,14 +30,38 @@ function PortalLayout(): ReactElement | null {
     }
   }, [isConnected, navigate]);
 
+  // Persist collapsed state
+  useEffect(() => {
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(collapsed));
+  }, [collapsed]);
+
   if (!isConnected) return null;
 
   return (
     <div className="min-h-screen bg-background">
-      <PortalHeader />
-      <main className="relative z-0 pt-[52px] pb-6">
-        <div className="mx-auto max-w-6xl px-6">
-          <Outlet />
+      {/* Sidebar */}
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        collapsed={collapsed}
+        onToggleCollapse={() => setCollapsed(!collapsed)}
+      />
+
+      {/* Main Content */}
+      <main
+        className={cn(
+          'min-h-screen transition-[margin] duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)]',
+          collapsed ? 'md:ml-[68px]' : 'md:ml-56'
+        )}
+      >
+        {/* Mobile Header */}
+        <MobileHeader onMenuClick={() => setSidebarOpen(true)} />
+
+        {/* Page Content */}
+        <div className="p-6">
+          <div className="mx-auto max-w-5xl">
+            <Outlet />
+          </div>
         </div>
       </main>
     </div>

@@ -1,8 +1,7 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { useState, type ReactElement } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft,
   Plus,
   Search,
   User,
@@ -30,7 +29,6 @@ export const Route = createFileRoute('/portal/contacts')({
 type ModalState = 'add' | 'edit' | 'delete' | null;
 
 function ContactsPage(): ReactElement {
-  const navigate = useNavigate();
   const { contacts, isLoading, addContact, editContact, removeContact, refresh } = useContacts();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -177,18 +175,10 @@ function ContactsPage(): ReactElement {
   };
 
   return (
-    <div className="max-w-md mx-auto">
+    <div className="max-w-md">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate({ to: '/portal/dashboard' })}
-            className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-          </button>
-          <h1 className="text-[15px] font-medium text-foreground">Contacts</h1>
-        </div>
+        <h1 className="text-2xl font-bold text-slate-900">Contacts</h1>
         <div className="flex gap-2">
           <Button
             variant="outline"

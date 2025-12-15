@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, useEffect, type ReactElement } from 'react';
-import { ArrowLeft, Clock, Check, X, ExternalLink, RefreshCw, Calendar } from 'lucide-react';
+import { Clock, Check, X, ExternalLink, RefreshCw, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useScheduledTransactions } from '@/hooks/useScheduledTransactions';
@@ -14,25 +14,16 @@ export const Route = createFileRoute('/portal/scheduled')({
 });
 
 function ScheduledPage(): ReactElement {
-  const navigate = useNavigate();
   const { pendingTransactions, completedTransactions, isLoading, isChecking, refresh } =
     useScheduledTransactions();
 
   const [activeTab, setActiveTab] = useState<'pending' | 'completed'>('pending');
 
   return (
-    <div className="max-w-md mx-auto">
+    <div className="max-w-md">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate({ to: '/portal/dashboard' })}
-            className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-          </button>
-          <h1 className="text-[15px] font-medium text-foreground">Scheduled</h1>
-        </div>
+        <h1 className="text-2xl font-bold text-slate-900">Scheduled</h1>
         <Button
           variant="outline"
           size="sm"

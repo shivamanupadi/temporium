@@ -1,8 +1,7 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { useState, useEffect, useCallback, type ReactElement } from 'react';
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft,
   ArrowUpDown,
   Check,
   ExternalLink,
@@ -37,7 +36,6 @@ type ModalState = 'confirm' | 'pending' | 'success' | null;
 
 function SwapPage(): ReactElement | null {
   const { address, swapTokens } = useTempo();
-  const navigate = useNavigate();
   const { tokens } = useTokenList();
 
   const [tokenIn, setTokenIn] = useState<Token | null>(null);
@@ -181,16 +179,10 @@ function SwapPage(): ReactElement | null {
   };
 
   return (
-    <div className="max-w-md mx-auto">
+    <div className="max-w-md">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-6">
-        <button
-          onClick={() => navigate({ to: '/portal/dashboard' })}
-          className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-        </button>
-        <h1 className="text-[15px] font-medium text-foreground">Swap</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-900">Swap</h1>
       </div>
 
       {/* Form Card */}

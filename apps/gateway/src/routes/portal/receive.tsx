@@ -1,8 +1,8 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { useState, useRef, useEffect, type ReactElement } from 'react';
 import { motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
-import { ArrowLeft, Copy, Check, ExternalLink } from 'lucide-react';
+import { Copy, Check, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useTempo } from '@/hooks/useTempo';
@@ -16,7 +16,6 @@ export const Route = createFileRoute('/portal/receive')({
 
 function ReceivePage(): ReactElement | null {
   const { address } = useTempo();
-  const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -41,16 +40,10 @@ function ReceivePage(): ReactElement | null {
   };
 
   return (
-    <div className="max-w-md mx-auto">
+    <div className="max-w-md">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-6">
-        <button
-          onClick={() => navigate({ to: '/portal/dashboard' })}
-          className="p-1.5 -ml-1.5 rounded-md hover:bg-muted transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-        </button>
-        <h1 className="text-[15px] font-medium text-foreground">Receive</h1>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-slate-900">Receive</h1>
       </div>
 
       {/* QR Card */}
