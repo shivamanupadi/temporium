@@ -160,7 +160,7 @@ function Tip20StudioOverview(): ReactElement {
         {/* Left Column - Main Content */}
         <div className="lg:flex-[3]">
           {/* Hero Section */}
-          <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 rounded-2xl p-6 mb-6">
+          <div className="bg-primary/5 rounded-2xl p-6 mb-6">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center">

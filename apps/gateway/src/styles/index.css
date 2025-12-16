@@ -6,11 +6,11 @@
  */
 
 @theme {
-  /* Primary: Stripe Indigo */
-  --color-primary: #635bff;
+  /* Primary: Vibrant Violet */
+  --color-primary: #7c5cff;
   --color-primary-foreground: #ffffff;
-  --color-primary-hover: #5851ea;
-  --color-primary-muted: #635bff15;
+  --color-primary-hover: #6b4dee;
+  --color-primary-muted: #7c5cff15;
 
   /* Accent colors */
   --color-accent-blue: #0073e6;
@@ -37,7 +37,7 @@
   --color-muted-foreground: #526070;
   --color-border: #eef0f3;
   --color-input: #e6e9ed;
-  --color-ring: #635bff;
+  --color-ring: #7c5cff;
 
   /* Radius - slightly sharper */
   --radius-sm: 4px;
@@ -137,7 +137,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Selection */
 ::selection {
-  background: rgba(99, 91, 255, 0.15);
+  background: rgba(124, 92, 255, 0.15);
 }
 
 /* Gradient text */
@@ -267,4 +267,19 @@ button:disabled,
 /* Toast container */
 [data-sonner-toaster] {
   font-family: var(--font-sans) !important;
+}
+
+/* =============================================
+   RADIX DIALOG SCROLL LOCK FIX
+   Prevents layout shift when dialogs open
+   ============================================= */
+html {
+  overflow-y: scroll !important;
+}
+
+body[data-scroll-locked] {
+  overflow: unset !important;
+  padding-right: 0 !important;
+  margin-right: 0 !important;
+  position: static !important;
 }

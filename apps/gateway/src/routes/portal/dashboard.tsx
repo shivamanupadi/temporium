@@ -36,7 +36,7 @@ const quickActions = [
     label: 'Send',
     href: '/portal/send',
     bgColor: '#E0E7FF',
-    iconColor: '#635bff',
+    iconColor: '#7c5cff',
   },
   {
     icon: ArrowDownLeft,

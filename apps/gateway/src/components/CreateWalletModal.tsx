@@ -35,8 +35,11 @@ export function CreateWalletModal({
   };
 
   const handleCreate = async (): Promise<void> => {
-    await onCreateWallet(walletName.trim() || undefined);
+    if (!walletName.trim()) return;
+    await onCreateWallet(walletName.trim());
   };
+
+  const isValidName = walletName.trim().length > 0;
 
   return (
     <AnimatePresence>
@@ -132,7 +135,7 @@ export function CreateWalletModal({
                           {
                             icon: Fingerprint,
                             text: 'Protected by Face ID or Touch ID',
-                            color: '#635bff',
+                            color: '#7c5cff',
                           },
                           {
                             icon: Lock,
@@ -181,7 +184,7 @@ export function CreateWalletModal({
                       {/* Wallet Name Input */}
                       <div>
                         <label className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mb-2 block">
-                          Wallet Name
+                          Wallet Name <span className="text-red-400">*</span>
                         </label>
                         <Input
                           placeholder="e.g., Personal, Business, Savings..."
@@ -193,16 +196,18 @@ export function CreateWalletModal({
                         />
                         <p className="text-[11px] text-gray-400 mt-2">
                           Saved as:{' '}
-                          <span className="font-medium text-gray-600">
-                            Temporium: {walletName || 'Wallet'}
+                          <span
+                            className={`font-medium ${walletName.trim() ? 'text-gray-600' : 'text-gray-400'}`}
+                          >
+                            Temporium: {walletName.trim() || 'Enter a name'}
                           </span>
                         </p>
                       </div>
 
                       {/* Info Box */}
-                      <div className="flex items-start gap-3 p-3 rounded-xl bg-blue-50 border border-blue-100">
-                        <Smartphone className="h-4 w-4 text-blue-500 mt-0.5 flex-shrink-0" />
-                        <p className="text-[12px] text-blue-700 leading-relaxed">
+                      <div className="flex items-start gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100">
+                        <Smartphone className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                        <p className="text-[12px] text-gray-500 leading-relaxed">
                           You&apos;ll be prompted to authenticate using Face ID, Touch ID, or your
                           device PIN.
                         </p>
@@ -239,7 +244,12 @@ export function CreateWalletModal({
                     >
                       Back
                     </Button>
-                    <Button onClick={handleCreate} isLoading={isLoading} className="flex-1 h-11">
+                    <Button
+                      onClick={handleCreate}
+                      isLoading={isLoading}
+                      disabled={!isValidName}
+                      className="flex-1 h-11"
+                    >
                       <Fingerprint className="h-4 w-4" />
                       Create Wallet
                     </Button>

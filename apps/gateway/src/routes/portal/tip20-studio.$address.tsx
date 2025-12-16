@@ -7,7 +7,7 @@ import {
   redirect,
 } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
-import { CircleDollarSign, Gift } from 'lucide-react';
+import { CircleDollarSign, Gift, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTip20Studio } from '@/hooks/useTip20Studio';
 
@@ -143,11 +143,12 @@ function Tip20StudioLayout(): ReactElement {
       <div className="flex items-center gap-2 mb-6">
         <Link
           to="/portal/tip20-studio"
-          className="text-2xl font-bold text-slate-400 hover:text-slate-600 transition-colors"
+          className="flex items-center gap-2 text-slate-400 hover:text-slate-600 transition-colors"
         >
-          TIP20 Studio
+          <ArrowLeft className="h-5 w-5" />
+          <span className="text-2xl font-bold">TIP20 Studio</span>
         </Link>
-        <span className="text-slate-300 text-2xl">/</span>
+        <span className="text-2xl text-slate-300">/</span>
         <span className="text-2xl font-bold text-slate-900">
           {stablecoin?.name ?? tokenAddress}
         </span>

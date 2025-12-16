@@ -15,9 +15,16 @@ import {
   Download,
   Key,
   LayoutDashboard,
+  ChevronDown,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { CreateWalletModal } from '@/components/CreateWalletModal';
 import { useTempo } from '@/hooks/useTempo';
 
@@ -41,7 +48,7 @@ function HomePage(): ReactElement {
       icon: LayoutDashboard,
       title: 'Dashboard',
       description: 'Overview of your wallet',
-      color: '#635bff',
+      color: '#7c5cff',
     },
     {
       icon: Send,
@@ -189,16 +196,36 @@ function HomePage(): ReactElement {
               <ArrowRight className="h-4 w-4 ml-1 opacity-60 group-hover:translate-x-0.5 transition-transform" />
             </Button>
 
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={handleSignIn}
-              disabled={isConnecting}
-              className="px-6 bg-white backdrop-blur"
-            >
-              <Fingerprint className="h-4 w-4" />
-              Sign In
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  disabled={isConnecting}
+                  className="px-6 bg-white backdrop-blur"
+                >
+                  <Fingerprint className="h-4 w-4" />
+                  Sign In
+                  <ChevronDown className="h-3.5 w-3.5 ml-1 opacity-60" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem onClick={handleSignIn} className="cursor-pointer">
+                  <Fingerprint className="h-4 w-4 mr-2 text-primary" />
+                  <div>
+                    <p className="font-medium">Passkey</p>
+                    <p className="text-[11px] text-muted-foreground">Sign in with biometrics</p>
+                  </div>
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled className="opacity-50">
+                  <Wallet className="h-4 w-4 mr-2" />
+                  <div>
+                    <p className="font-medium">More wallets</p>
+                    <p className="text-[11px] text-muted-foreground">Coming soon...</p>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </motion.div>
 
           {/* Features Grid */}

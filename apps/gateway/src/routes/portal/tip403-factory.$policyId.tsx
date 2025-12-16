@@ -15,6 +15,7 @@ import {
   Check,
   ShieldCheck,
   ShieldX,
+  ArrowLeft,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -180,11 +181,12 @@ function Tip403FactoryDashboard(): ReactElement {
       <div className="flex items-center gap-2 mb-6">
         <Link
           to="/portal/tip403-factory"
-          className="text-2xl font-bold text-slate-400 hover:text-slate-600 transition-colors"
+          className="flex items-center gap-2 text-slate-400 hover:text-slate-600 transition-colors"
         >
-          TIP403 Factory
+          <ArrowLeft className="h-5 w-5" />
+          <span className="text-2xl font-bold">TIP403 Factory</span>
         </Link>
-        <span className="text-slate-300 text-2xl">/</span>
+        <span className="text-2xl text-slate-300">/</span>
         <span className="text-2xl font-bold text-slate-900">Policy #{policyId}</span>
       </div>
 
@@ -195,9 +197,7 @@ function Tip403FactoryDashboard(): ReactElement {
           {/* Hero Section */}
           <div
             className={`rounded-2xl p-6 mb-6 ${
-              isWhitelist
-                ? 'bg-gradient-to-br from-emerald-500/5 via-emerald-500/10 to-emerald-500/5'
-                : 'bg-gradient-to-br from-rose-500/5 via-rose-500/10 to-rose-500/5'
+              isWhitelist ? 'bg-emerald-500/10' : 'bg-rose-500/10'
             }`}
           >
             <div className="flex items-start justify-between mb-6">
@@ -256,7 +256,7 @@ function Tip403FactoryDashboard(): ReactElement {
             <div className="flex gap-3">
               <Button
                 onClick={() => setActiveModal('add-address')}
-                className={`flex-1 h-11 ${isWhitelist ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'}`}
+                className={`flex-1 h-11 ${isWhitelist ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-rose-500 hover:bg-rose-600'}`}
               >
                 <UserPlus className="h-4 w-4 mr-2" /> Add Address
               </Button>

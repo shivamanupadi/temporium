@@ -56,7 +56,7 @@ function NavItem({ to, icon, label, isCollapsed }: NavItemProps): ReactElement {
       <span
         className={cn(
           'flex-shrink-0 transition-transform duration-500 ease-in-out group-hover:rotate-[360deg]',
-          isActive ? 'text-[#4f46e5]' : ''
+          isActive ? 'text-[#6b4dee]' : ''
         )}
       >
         {icon}

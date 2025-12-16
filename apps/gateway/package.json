@@ -10,6 +10,7 @@
     "format": "prettier --write .",
     "preview": "vite preview",
     "type-check": "tsc --noEmit",
+    "check:push": "tsc --noEmit && eslint . --ext .ts,.tsx",
     "clean": "rimraf node_modules .turbo dist",
     "reset": "npm run clean && npm install"
   },

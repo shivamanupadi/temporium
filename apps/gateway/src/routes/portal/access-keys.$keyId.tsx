@@ -243,11 +243,12 @@ function AccessKeyDashboard(): ReactElement {
         <div className="flex items-center gap-2 mb-6">
           <Link
             to="/portal/access-keys"
-            className="text-2xl font-bold text-slate-400 hover:text-slate-600 transition-colors"
+            className="flex items-center gap-2 text-slate-400 hover:text-slate-600 transition-colors"
           >
-            Access Keys
+            <ArrowLeft className="h-5 w-5" />
+            <span className="text-2xl font-bold">Access Keys</span>
           </Link>
-          <span className="text-slate-300 text-2xl">/</span>
+          <span className="text-2xl text-slate-300">/</span>
           <span className="text-2xl font-bold text-slate-900 font-mono">
             {formatAddress(keyId, 6)}
           </span>
@@ -258,7 +259,7 @@ function AccessKeyDashboard(): ReactElement {
           {/* Left Column - Main Content */}
           <div className="lg:flex-[3]">
             {/* Hero Section */}
-            <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 rounded-2xl p-6 mb-6">
+            <div className="bg-primary/5 rounded-2xl p-6 mb-6">
               <div className="flex items-start justify-between mb-6">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center">

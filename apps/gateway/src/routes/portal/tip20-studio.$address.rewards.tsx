@@ -148,11 +148,11 @@ function Tip20StudioRewards(): ReactElement {
         {/* Left Column - Main Content */}
         <div className="lg:flex-[3]">
           {/* Hero Section - Claimable Rewards */}
-          <div className="bg-gradient-to-br from-emerald-50 via-emerald-100/50 to-emerald-50 rounded-2xl p-6 mb-6">
+          <div className="bg-emerald-500/10 rounded-2xl p-6 mb-6">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center">
-                  <HandCoins className="h-8 w-8 text-emerald-600" />
+                  <HandCoins className="h-8 w-8 text-emerald-500" />
                 </div>
                 <div>
                   <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
@@ -181,16 +181,15 @@ function Tip20StudioRewards(): ReactElement {
             <div className="flex gap-3">
               <Button
                 onClick={() => setActiveModal('claim')}
-                className={`flex-1 h-11 ${hasClaimableRewards ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-muted text-muted-foreground'}`}
-                disabled={!hasClaimableRewards}
+                className="flex-1 h-11 bg-emerald-500 hover:bg-emerald-600"
               >
                 <HandCoins className="h-4 w-4 mr-2" />
-                {hasClaimableRewards ? 'Claim Rewards' : 'No Rewards'}
+                Claim Rewards
               </Button>
               <Button
                 onClick={() => setActiveModal(isOptedIn ? 'opt-out' : 'opt-in')}
                 variant="outline"
-                className={`flex-1 h-11 bg-white ${isOptedIn ? 'border-amber-300 text-amber-700 hover:bg-amber-50 hover:border-amber-400' : 'border-emerald-300 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-400'}`}
+                className="flex-1 h-11 bg-white"
               >
                 {isOptedIn ? (
                   <>
@@ -329,19 +328,18 @@ function Tip20StudioRewards(): ReactElement {
             </div>
             <button
               onClick={() => setActiveModal('claim')}
-              className={`w-full flex items-center justify-between p-4 transition-colors hover:bg-emerald-50 border-b border-[rgba(0,0,0,0.03)] ${!hasClaimableRewards ? 'opacity-50' : ''}`}
-              disabled={!hasClaimableRewards}
+              className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted/50 border-b border-[rgba(0,0,0,0.03)]"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <HandCoins className="h-4 w-4 text-emerald-600" />
+                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <HandCoins className="h-4 w-4 text-emerald-500" />
                 </div>
                 <div className="text-left">
                   <p className="text-[13px] font-medium text-foreground">Claim Rewards</p>
                   <p className="text-[11px] text-muted-foreground">
                     {hasClaimableRewards
                       ? `${formattedBalance} ${stablecoin?.symbol} available`
-                      : 'No rewards to claim'}
+                      : 'Check claimable rewards'}
                   </p>
                 </div>
               </div>
@@ -349,11 +347,11 @@ function Tip20StudioRewards(): ReactElement {
             </button>
             <button
               onClick={() => setActiveModal('opt-in')}
-              className="w-full flex items-center justify-between p-4 transition-colors hover:bg-emerald-50 border-b border-[rgba(0,0,0,0.03)]"
+              className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted/50 border-b border-[rgba(0,0,0,0.03)]"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <UserCheck className="h-4 w-4 text-emerald-600" />
+                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <UserCheck className="h-4 w-4 text-green-500" />
                 </div>
                 <div className="text-left">
                   <p className="text-[13px] font-medium text-foreground">
@@ -369,14 +367,14 @@ function Tip20StudioRewards(): ReactElement {
             {isOptedIn && (
               <button
                 onClick={() => setActiveModal('opt-out')}
-                className="w-full flex items-center justify-between p-4 transition-colors hover:bg-amber-50 border-b border-[rgba(0,0,0,0.03)]"
+                className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted/50 border-b border-[rgba(0,0,0,0.03)]"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center">
-                    <UserX className="h-4 w-4 text-amber-600" />
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <UserX className="h-4 w-4 text-amber-500" />
                   </div>
                   <div className="text-left">
-                    <p className="text-[13px] font-medium text-amber-600">Opt Out</p>
+                    <p className="text-[13px] font-medium text-foreground">Opt Out</p>
                     <p className="text-[11px] text-muted-foreground">Stop receiving rewards</p>
                   </div>
                 </div>
@@ -385,11 +383,11 @@ function Tip20StudioRewards(): ReactElement {
             )}
             <button
               onClick={() => setActiveModal('start-reward')}
-              className="w-full flex items-center justify-between p-4 transition-colors hover:bg-emerald-50"
+              className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted/50"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center">
-                  <Gift className="h-4 w-4 text-emerald-600" />
+                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Gift className="h-4 w-4 text-green-500" />
                 </div>
                 <div className="text-left">
                   <p className="text-[13px] font-medium text-foreground">Distribute Rewards</p>
