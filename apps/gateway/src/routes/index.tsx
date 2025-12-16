@@ -16,6 +16,7 @@ import {
   Key,
   LayoutDashboard,
   ChevronDown,
+  Zap,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -131,6 +132,20 @@ function HomePage(): ReactElement {
 
   return (
     <>
+      {/* Top Left Logo */}
+      <div className="fixed top-0 left-0 right-0 z-50 px-6 py-6">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ x: -20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            className="flex items-center gap-2.5"
+          >
+            <Zap className="w-6 h-6 text-slate-900" strokeWidth={2} />
+            <span className="text-lg font-bold text-slate-900 tracking-tight">Temporium</span>
+          </motion.div>
+        </div>
+      </div>
+
       <main className="min-h-screen flex flex-col items-center justify-center px-6 py-12">
         {/* Static background gradient - no animations for performance */}
         <div className="fixed inset-0 -z-10 overflow-hidden">
@@ -144,6 +159,7 @@ function HomePage(): ReactElement {
           <motion.div
             initial={{ y: -16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.05 }}
             className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white backdrop-blur border border-border shadow-sm mb-6"
           >
             <span className="relative flex h-2 w-2">
@@ -159,7 +175,7 @@ function HomePage(): ReactElement {
           <motion.h1
             initial={{ y: 16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.05 }}
+            transition={{ delay: 0.1 }}
             className="text-4xl sm:text-5xl font-bold tracking-tight mb-4"
           >
             Your <span className="text-primary">Gateway</span> to
@@ -171,7 +187,7 @@ function HomePage(): ReactElement {
           <motion.p
             initial={{ y: 16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.1 }}
+            transition={{ delay: 0.15 }}
             className="text-[16px] text-muted-foreground mb-8 max-w-lg mx-auto"
           >
             Send, receive, swap, provide liquidity, create tokens, schedule payments, and manage
@@ -182,7 +198,7 @@ function HomePage(): ReactElement {
           <motion.div
             initial={{ y: 16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.15 }}
+            transition={{ delay: 0.2 }}
             className="flex flex-wrap justify-center gap-3 mb-12"
           >
             <Button
@@ -232,7 +248,7 @@ function HomePage(): ReactElement {
           <motion.div
             initial={{ y: 24, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
+            transition={{ delay: 0.25 }}
             className="grid grid-cols-2 sm:grid-cols-5 gap-2.5"
           >
             {features.map((feature, index) => (
