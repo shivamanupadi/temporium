@@ -1,18 +1,93 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
 
 /*
  * Temporium Design System
  * Stripe-inspired - Clean, sleek, refined
  */
 
-@theme {
+/* shadcn color variables */
+:root {
+  --radius: 0.5rem;
+  /* Temporium custom colors - Stripe-inspired */
+  --background: #fafafa;
+  --foreground: #0a2540;
+  --card: #ffffff;
+  --card-foreground: #0a2540;
+  --popover: #ffffff;
+  --popover-foreground: #0a2540;
   /* Primary: Vibrant Violet */
-  --color-primary: #7c5cff;
-  --color-primary-foreground: #ffffff;
-  --color-primary-hover: #6b4dee;
-  --color-primary-muted: #7c5cff15;
+  --primary: #7c5cff;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f5f7;
+  --secondary-foreground: #0a2540;
+  --muted: #f4f5f7;
+  --muted-foreground: #526070;
+  --accent: #f4f5f7;
+  --accent-foreground: #0a2540;
+  --destructive: #df1b41;
+  --border: #eef0f3;
+  --input: #e6e9ed;
+  --ring: #7c5cff;
+  /* Chart colors */
+  --chart-1: #7c5cff;
+  --chart-2: #0073e6;
+  --chart-3: #00a67e;
+  --chart-4: #ff9500;
+  --chart-5: #df1b41;
+  /* Sidebar */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0a2540;
+  --sidebar-primary: #7c5cff;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f4f5f7;
+  --sidebar-accent-foreground: #0a2540;
+  --sidebar-border: #eef0f3;
+  --sidebar-ring: #7c5cff;
+}
 
-  /* Accent colors */
+/* shadcn theme mapping */
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* Custom theme extensions */
+@theme {
+  /* Additional accent colors */
   --color-accent-blue: #0073e6;
   --color-accent-green: #00a67e;
   --color-accent-orange: #ff9500;
@@ -25,28 +100,9 @@
   /* Semantic */
   --color-success: #00a67e;
   --color-warning: #ff9500;
-  --color-destructive: #df1b41;
   --color-info: #0073e6;
 
-  /* Light theme - crisp whites */
-  --color-background: #fafafa;
-  --color-foreground: #0a2540;
-  --color-card: #ffffff;
-  --color-card-foreground: #0a2540;
-  --color-muted: #f4f5f7;
-  --color-muted-foreground: #526070;
-  --color-border: #eef0f3;
-  --color-input: #e6e9ed;
-  --color-ring: #7c5cff;
-
-  /* Radius - slightly sharper */
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --radius-lg: 8px;
-  --radius-xl: 10px;
-  --radius-full: 9999px;
-
-  /* Shadows - subtle */
+  /* Shadows */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06);
@@ -55,69 +111,73 @@
   /* Font */
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
   --font-mono: 'SF Mono', ui-monospace, monospace;
-
-  /* Animation */
-  --animate-duration: 150ms;
-  --animate-timing: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Base */
-* {
-  border-color: var(--color-border);
-}
+@layer base {
+  * {
+    @apply border-border;
+  }
 
-html {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 
-/* Prevent layout shift when Radix Dialog opens */
-html, body {
-  scrollbar-gutter: stable;
-}
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+    font-size: 14px;
+  }
 
-/* Prevent scroll jump when select opens */
-[data-radix-popper-content-wrapper] {
-  position: fixed !important;
-}
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.02em;
+    font-weight: 600;
+    line-height: 1.25;
+  }
 
-[data-radix-select-viewport] {
-  scroll-behavior: auto !important;
-}
+  /* Remove focus outlines from form fields */
+  input,
+  textarea,
+  select,
+  button,
+  [role="combobox"],
+  [role="listbox"],
+  [role="option"],
+  [data-radix-collection-item] {
+    outline: none !important;
+    box-shadow: none !important;
+  }
 
-body {
-  font-family: var(--font-sans);
-  background-color: var(--color-background);
-  color: var(--color-foreground);
-  line-height: 1.5;
-  letter-spacing: -0.01em;
-  font-size: 14px;
-}
+  input:focus,
+  textarea:focus,
+  select:focus,
+  button:focus,
+  [role="combobox"]:focus,
+  [data-radix-collection-item]:focus {
+    outline: none !important;
+    box-shadow: none !important;
+  }
 
-/* Typography */
-h1, h2, h3, h4, h5, h6 {
-  letter-spacing: -0.02em;
-  font-weight: 600;
-  line-height: 1.25;
-}
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  button:focus-visible,
+  [role="combobox"]:focus-visible,
+  [data-radix-collection-item]:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+  }
 
-/* Animations */
-@keyframes fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slide-up {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fade-in {
-  animation: fade-in var(--animate-duration) var(--animate-timing);
-}
-
-.animate-slide-up {
-  animation: slide-up var(--animate-duration) var(--animate-timing);
+  /* Radix UI component focus overrides */
+  [data-radix-select-trigger]:focus,
+  [data-radix-select-trigger]:focus-visible,
+  [data-state]:focus,
+  [data-state]:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+  }
 }
 
 /* Scrollbar */
@@ -131,8 +191,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: var(--radius-full);
+  background: var(--border);
+  border-radius: 9999px;
 }
 
 /* Selection */
@@ -142,26 +202,10 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-accent-blue));
+  background: linear-gradient(135deg, var(--primary), var(--color-accent-blue));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-}
-
-/* Interactive elements - pointer cursor */
-button,
-a,
-[role="button"],
-[type="button"],
-[type="submit"],
-[type="reset"],
-.cursor-pointer {
-  cursor: pointer;
-}
-
-button:disabled,
-[disabled] {
-  cursor: not-allowed;
 }
 
 /* Toast Styling (Sonner) */
@@ -170,91 +214,78 @@ button:disabled,
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
 }
 
-/* Success Toast - Green theme */
 [data-sonner-toast][data-type="success"] {
   background-color: #f0fdf4 !important;
   border: 1px solid #bbf7d0 !important;
 }
 
-[data-sonner-toast][data-type="success"] [data-title] {
-  color: #15803d !important;
-  font-weight: 600 !important;
-  font-size: 14px !important;
-}
-
+[data-sonner-toast][data-type="success"] [data-title],
 [data-sonner-toast][data-type="success"] [data-description] {
   color: #15803d !important;
-  font-size: 14px !important;
+}
+
+[data-sonner-toast][data-type="success"] [data-title] {
+  font-weight: 600 !important;
 }
 
 [data-sonner-toast][data-type="success"] [data-icon] svg {
   color: #16a34a !important;
 }
 
-/* Error Toast - Red theme */
 [data-sonner-toast][data-type="error"] {
   background-color: #fef2f2 !important;
   border: 1px solid #fecaca !important;
 }
 
-[data-sonner-toast][data-type="error"] [data-title] {
-  color: #b91c1c !important;
-  font-weight: 600 !important;
-  font-size: 14px !important;
-}
-
+[data-sonner-toast][data-type="error"] [data-title],
 [data-sonner-toast][data-type="error"] [data-description] {
   color: #b91c1c !important;
-  font-size: 14px !important;
+}
+
+[data-sonner-toast][data-type="error"] [data-title] {
+  font-weight: 600 !important;
 }
 
 [data-sonner-toast][data-type="error"] [data-icon] svg {
   color: #dc2626 !important;
 }
 
-/* Info Toast - Blue theme */
 [data-sonner-toast][data-type="info"] {
   background-color: #eff6ff !important;
   border: 1px solid #bfdbfe !important;
 }
 
-[data-sonner-toast][data-type="info"] [data-title] {
-  color: #1d4ed8 !important;
-  font-weight: 600 !important;
-  font-size: 14px !important;
-}
-
+[data-sonner-toast][data-type="info"] [data-title],
 [data-sonner-toast][data-type="info"] [data-description] {
   color: #1d4ed8 !important;
-  font-size: 14px !important;
+}
+
+[data-sonner-toast][data-type="info"] [data-title] {
+  font-weight: 600 !important;
 }
 
 [data-sonner-toast][data-type="info"] [data-icon] svg {
   color: #2563eb !important;
 }
 
-/* Warning Toast - Yellow theme */
 [data-sonner-toast][data-type="warning"] {
   background-color: #fefce8 !important;
   border: 1px solid #fef08a !important;
 }
 
-[data-sonner-toast][data-type="warning"] [data-title] {
-  color: #a16207 !important;
-  font-weight: 600 !important;
-  font-size: 14px !important;
-}
-
+[data-sonner-toast][data-type="warning"] [data-title],
 [data-sonner-toast][data-type="warning"] [data-description] {
   color: #a16207 !important;
-  font-size: 14px !important;
+}
+
+[data-sonner-toast][data-type="warning"] [data-title] {
+  font-weight: 600 !important;
 }
 
 [data-sonner-toast][data-type="warning"] [data-icon] svg {
   color: #ca8a04 !important;
 }
 
-/* Close button styling */
 [data-sonner-toast] [data-close-button] {
   color: #9ca3af !important;
   transition: color 0.15s ease !important;
@@ -264,22 +295,6 @@ button:disabled,
   color: #4b5563 !important;
 }
 
-/* Toast container */
 [data-sonner-toaster] {
   font-family: var(--font-sans) !important;
-}
-
-/* =============================================
-   RADIX DIALOG SCROLL LOCK FIX
-   Prevents layout shift when dialogs open
-   ============================================= */
-html {
-  overflow-y: scroll !important;
-}
-
-body[data-scroll-locked] {
-  overflow: unset !important;
-  padding-right: 0 !important;
-  margin-right: 0 !important;
-  position: static !important;
 }

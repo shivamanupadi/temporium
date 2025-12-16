@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, type ReactElement } from 'react';
-import { Plus, RefreshCw } from 'lucide-react';
+import { Plus, RefreshCw, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/PageHeader';
 import { AccessKeyCard, AccessKeyEmptyState, CreateKeyModal } from '@/components/access-keys';
@@ -49,10 +49,26 @@ function AccessKeysIndexPage(): ReactElement {
       />
 
       {/* Description */}
-      <p className="text-sm text-muted-foreground mb-6">
+      <p className="text-sm text-muted-foreground mb-4">
         Access keys are secondary signing keys that can perform transactions without prompting for
         passkey authentication. They can have spending limits and expiry times.
       </p>
+
+      {/* Important Notes */}
+      <div className="bg-muted/50 border border-border rounded-xl p-4 mb-6">
+        <div className="flex gap-3">
+          <AlertTriangle className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+          <div className="space-y-2 text-sm text-foreground">
+            <p className="font-medium">Important Notes:</p>
+            <ul className="list-disc list-inside space-y-1 text-xs text-muted-foreground">
+              <li>Only keys created in the last 100K blocks are displayed</li>
+              <li>This feature is only available for Passkey wallets, not for normal wallets</li>
+              <li>This is a sensitive feature meant to showcase Tempo capabilities only</li>
+              <li>This feature will never be enabled for mainnet</li>
+            </ul>
+          </div>
+        </div>
+      </div>
 
       {/* Keys List */}
       <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_1px_2px_-1px_rgba(0,0,0,0.03)] overflow-hidden">

@@ -3,7 +3,6 @@ import {
   Loader2,
   Key,
   Lock,
-  Fingerprint,
   AlertTriangle,
   Copy,
   Check,
@@ -25,17 +24,20 @@ import { useTokenList } from '@/hooks/useTokenList';
 import {
   generateSecp256k1Key,
   generateP256Key,
-  generateWebAuthnKey,
   getSignatureTypeNumber,
-  type GeneratedKey,
+  type Secp256k1KeyPair,
+  type P256KeyPair,
 } from '@/lib/access-keys-utils';
 import { copyToClipboard, formatAddress } from '@/lib/utils';
 import { getExplorerTxUrl } from '@/lib/tempo-client';
 import { TIMING } from '@/lib/constants';
 import type { Token } from '@/lib/tokenlist';
-import type { AccessKeyType } from '@/types';
+
 import type { Address } from 'viem';
 import { parseUnits } from 'viem';
+
+type GeneratedKey = Secp256k1KeyPair | P256KeyPair;
+type KeyType = 'secp256k1' | 'p256';
 
 interface CreateKeyModalProps {
   isOpen: boolean;
@@ -66,7 +68,7 @@ export function CreateKeyModal({ isOpen, onSuccess, onClose }: CreateKeyModalPro
   const { tokens } = useTokenList();
 
   const [currentStep, setCurrentStep] = useState<Step>('type');
-  const [keyType, setKeyType] = useState<AccessKeyType>('secp256k1');
+  const [keyType, setKeyType] = useState<KeyType>('secp256k1');
   const [enforceLimits, setEnforceLimits] = useState(false);
   const [expiryDays, setExpiryDays] = useState('30');
   const [neverExpires, setNeverExpires] = useState(false);
@@ -77,7 +79,6 @@ export function CreateKeyModal({ isOpen, onSuccess, onClose }: CreateKeyModalPro
   const [isSuccess, setIsSuccess] = useState(false);
   const [copied, setCopied] = useState(false);
   const [copiedTxHash, setCopiedTxHash] = useState(false);
-  const [webAuthnLabel, setWebAuthnLabel] = useState('');
   const [txHash, setTxHash] = useState<string | null>(null);
   const isCreatingRef = useRef(false);
   const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -97,7 +98,6 @@ export function CreateKeyModal({ isOpen, onSuccess, onClose }: CreateKeyModalPro
       setIsSuccess(false);
       setCopied(false);
       setCopiedTxHash(false);
-      setWebAuthnLabel('');
       setTxHash(null);
     }
     return () => {
@@ -154,27 +154,16 @@ export function CreateKeyModal({ isOpen, onSuccess, onClose }: CreateKeyModalPro
     [tokens]
   );
 
-  const handleGenerateKey = useCallback(async () => {
+  const handleGenerateKey = useCallback(() => {
     try {
-      let key: GeneratedKey;
-      if (keyType === 'secp256k1') {
-        key = generateSecp256k1Key();
-      } else if (keyType === 'p256') {
-        key = generateP256Key();
-      } else {
-        if (!webAuthnLabel.trim()) {
-          toast.error('Please enter a label for the WebAuthn credential');
-          return;
-        }
-        key = await generateWebAuthnKey(webAuthnLabel);
-      }
+      const key = keyType === 'secp256k1' ? generateSecp256k1Key() : generateP256Key();
       setGeneratedKey(key);
       setCurrentStep('save');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to generate key';
       toast.error(message);
     }
-  }, [keyType, webAuthnLabel]);
+  }, [keyType]);
 
   const calculateExpiry = useCallback((): number => {
     if (neverExpires) return 0;
@@ -244,14 +233,6 @@ export function CreateKeyModal({ isOpen, onSuccess, onClose }: CreateKeyModalPro
     }
   }, [isCreating, isSuccess, onSuccess, onClose]);
 
-  const validateTypeStep = (): boolean => {
-    if (keyType === 'webAuthn' && !webAuthnLabel.trim()) {
-      toast.error('Please enter a label for the WebAuthn credential');
-      return false;
-    }
-    return true;
-  };
-
   const goToStep = (step: Step): void => {
     const currentIndex = STEPS.indexOf(currentStep);
     const targetIndex = STEPS.indexOf(step);
@@ -264,13 +245,11 @@ export function CreateKeyModal({ isOpen, onSuccess, onClose }: CreateKeyModalPro
     }
   };
 
-  const handleNext = async (): Promise<void> => {
+  const handleNext = (): void => {
     if (currentStep === 'type') {
-      if (validateTypeStep()) {
-        setCurrentStep('config');
-      }
+      setCurrentStep('config');
     } else if (currentStep === 'config') {
-      await handleGenerateKey();
+      handleGenerateKey();
     } else if (currentStep === 'save') {
       setCurrentStep('confirm');
     }
@@ -283,15 +262,8 @@ export function CreateKeyModal({ isOpen, onSuccess, onClose }: CreateKeyModalPro
     }
   };
 
-  const getKeyTypeIcon = (type: AccessKeyType): ReactElement => {
-    switch (type) {
-      case 'secp256k1':
-        return <Key className="h-5 w-5" />;
-      case 'p256':
-        return <Lock className="h-5 w-5" />;
-      case 'webAuthn':
-        return <Fingerprint className="h-5 w-5" />;
-    }
+  const getKeyTypeIcon = (type: 'secp256k1' | 'p256'): ReactElement => {
+    return type === 'secp256k1' ? <Key className="h-5 w-5" /> : <Lock className="h-5 w-5" />;
   };
 
   const currentStepIndex = STEPS.indexOf(currentStep);
@@ -369,12 +341,17 @@ export function CreateKeyModal({ isOpen, onSuccess, onClose }: CreateKeyModalPro
           <DialogDescription className="text-sm text-muted-foreground">
             {currentStep === 'type' && 'Choose the type of key to create'}
             {currentStep === 'config' && 'Set expiry and spending limits'}
-            {currentStep === 'save' &&
-              (generatedKey?.type === 'webAuthn'
-                ? 'Credential created'
-                : 'Save your private key securely')}
+            {currentStep === 'save' && 'Save your private key securely'}
             {currentStep === 'confirm' && 'Review and authorize the key'}
           </DialogDescription>
+          {currentStep === 'type' && (
+            <div className="mt-3 bg-muted/50 border border-border rounded-lg p-2.5">
+              <p className="text-[11px] text-muted-foreground">
+                <span className="font-medium text-foreground">Note:</span> This feature is only
+                available for Passkey wallets.
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Step Pills */}
@@ -411,14 +388,14 @@ export function CreateKeyModal({ isOpen, onSuccess, onClose }: CreateKeyModalPro
             {/* Step 1: Type Selection */}
             <div className="w-1/4 flex-shrink-0 px-6 pb-4">
               <div className="space-y-3">
-                {(['secp256k1', 'p256', 'webAuthn'] as const).map(type => (
+                {(['secp256k1', 'p256'] as const).map(type => (
                   <button
                     key={type}
                     onClick={() => setKeyType(type)}
-                    className={`w-full p-4 rounded-xl border-2 transition-colors text-left ${
+                    className={`w-full p-4 rounded-xl transition-colors text-left ${
                       keyType === type
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-muted-foreground/30'
+                        ? 'bg-primary/5'
+                        : 'border border-border hover:border-muted-foreground/30'
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -435,31 +412,15 @@ export function CreateKeyModal({ isOpen, onSuccess, onClose }: CreateKeyModalPro
                         <p className="font-medium text-foreground">
                           {type === 'secp256k1' && 'Secp256k1'}
                           {type === 'p256' && 'P256'}
-                          {type === 'webAuthn' && 'WebAuthn (Passkey)'}
                         </p>
                         <p className="text-xs text-muted-foreground">
                           {type === 'secp256k1' && 'Standard Ethereum key'}
                           {type === 'p256' && 'Modern elliptic curve'}
-                          {type === 'webAuthn' && 'Device biometrics'}
                         </p>
                       </div>
                     </div>
                   </button>
                 ))}
-
-                {keyType === 'webAuthn' && (
-                  <div className="pt-2">
-                    <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5 block">
-                      Key Label
-                    </label>
-                    <Input
-                      placeholder="e.g., Mobile App, Trading Bot"
-                      value={webAuthnLabel}
-                      onChange={e => setWebAuthnLabel(e.target.value)}
-                      className="h-10"
-                    />
-                  </div>
-                )}
               </div>
             </div>
 
@@ -554,46 +515,42 @@ export function CreateKeyModal({ isOpen, onSuccess, onClose }: CreateKeyModalPro
             <div className="w-1/4 flex-shrink-0 px-6 pb-4">
               {generatedKey && (
                 <div className="space-y-4">
-                  {generatedKey.type !== 'webAuthn' && 'privateKey' in generatedKey && (
-                    <>
-                      <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
-                        <div className="flex items-start gap-2">
-                          <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                          <div>
-                            <p className="text-xs font-medium text-amber-800">
-                              Save this key securely!
-                            </p>
-                            <p className="text-[10px] text-amber-700 mt-0.5">
-                              You will not see it again.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3">
+                    <div className="flex items-start gap-2">
+                      <AlertTriangle className="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
                       <div>
-                        <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5 block">
-                          Private Key
-                        </label>
-                        <div className="relative">
-                          <div className="p-3 bg-muted rounded-lg font-mono text-[10px] break-all pr-10 leading-relaxed">
-                            {generatedKey.privateKey}
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={handleCopyPrivateKey}
-                            className="absolute right-1 top-1 h-7 w-7"
-                          >
-                            {copied ? (
-                              <Check className="h-3.5 w-3.5 text-emerald-500" />
-                            ) : (
-                              <Copy className="h-3.5 w-3.5" />
-                            )}
-                          </Button>
-                        </div>
+                        <p className="text-xs font-medium text-amber-800">
+                          Save this key securely!
+                        </p>
+                        <p className="text-[10px] text-amber-700 mt-0.5">
+                          You will not see it again.
+                        </p>
                       </div>
-                    </>
-                  )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                      Private Key
+                    </label>
+                    <div className="relative">
+                      <div className="p-3 bg-muted rounded-lg font-mono text-[10px] break-all pr-10 leading-relaxed">
+                        {generatedKey.privateKey}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleCopyPrivateKey}
+                        className="absolute right-1 top-1 h-7 w-7"
+                      >
+                        {copied ? (
+                          <Check className="h-3.5 w-3.5 text-emerald-500" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
 
                   <div>
                     <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5 block">
@@ -603,14 +560,6 @@ export function CreateKeyModal({ isOpen, onSuccess, onClose }: CreateKeyModalPro
                       {generatedKey.keyId}
                     </div>
                   </div>
-
-                  {generatedKey.type === 'webAuthn' && (
-                    <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3">
-                      <p className="text-xs text-emerald-800">
-                        Your passkey is securely stored on your device.
-                      </p>
-                    </div>
-                  )}
                 </div>
               )}
             </div>
