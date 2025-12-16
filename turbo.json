@@ -1,14 +1,55 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
+  "globalEnv": [
+    "NODE_ENV",
+    "CI",
+    "DATABASE_URL",
+    "JWT_SECRET",
+    "JWT_EXPIRATION",
+    "PORT",
+    "VITE_API_URL"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**"],
+      "env": [
+        "DATABASE_URL",
+        "JWT_SECRET",
+        "JWT_EXPIRATION",
+        "PORT",
+        "VITE_API_URL"
+      ]
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "env": [
+        "DATABASE_URL",
+        "JWT_SECRET",
+        "JWT_EXPIRATION",
+        "PORT",
+        "VITE_API_URL"
+      ]
+    },
+    "start": {
+      "cache": false,
+      "env": [
+        "DATABASE_URL",
+        "JWT_SECRET",
+        "JWT_EXPIRATION",
+        "PORT"
+      ]
+    },
+    "start:prod": {
+      "cache": false,
+      "env": [
+        "DATABASE_URL",
+        "JWT_SECRET",
+        "JWT_EXPIRATION",
+        "PORT"
+      ]
     },
     "lint": {
       "dependsOn": ["^lint"]
