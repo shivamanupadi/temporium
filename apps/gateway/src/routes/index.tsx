@@ -17,6 +17,7 @@ import {
   LayoutDashboard,
   Zap,
   Mail,
+  Twitter,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -163,15 +164,27 @@ function HomePage(): ReactElement {
             <Zap className="w-6 h-6 text-slate-900" strokeWidth={2} />
             <span className="text-lg font-bold text-slate-900 tracking-tight">Temporium</span>
           </motion.div>
-          <motion.a
+          <motion.div
             initial={{ x: 20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            href="mailto:hello@temporium.xyz"
-            className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-primary transition-colors"
+            className="flex items-center gap-4"
           >
-            <Mail className="h-4 w-4" />
-            <span className="hidden sm:inline">hello@temporium.xyz</span>
-          </motion.a>
+            <a
+              href="https://x.com/HelloTemporium"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-primary transition-colors"
+            >
+              <Twitter className="h-4 w-4" />
+            </a>
+            <a
+              href="mailto:hello@temporium.xyz"
+              className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-primary transition-colors"
+            >
+              <Mail className="h-4 w-4" />
+              <span className="hidden sm:inline">hello@temporium.xyz</span>
+            </a>
+          </motion.div>
         </div>
       </div>
 
