@@ -15,18 +15,13 @@ import {
   Download,
   Key,
   LayoutDashboard,
-  ChevronDown,
   Zap,
+  Mail,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { CreateWalletModal } from '@/components/CreateWalletModal';
+import { WalletSelectModal } from '@/components/WalletSelectModal';
 import { useTempo } from '@/hooks/useTempo';
 
 export const Route = createFileRoute('/')({
@@ -34,15 +29,18 @@ export const Route = createFileRoute('/')({
 });
 
 function HomePage(): ReactElement {
-  const { isConnected, isConnecting, signUp, signIn } = useTempo();
+  const { isConnected, isConnecting, signUp, signIn, connectInjected, hasInjectedWallet } =
+    useTempo();
   const navigate = useNavigate();
   const [showCreateWalletModal, setShowCreateWalletModal] = useState(false);
+  const [showWalletSelectModal, setShowWalletSelectModal] = useState(false);
 
   useEffect(() => {
-    if (isConnected) {
+    // Wait for full auth flow to complete (including SIWE for external wallets)
+    if (isConnected && !isConnecting) {
       navigate({ to: '/portal/dashboard' });
     }
-  }, [isConnected, navigate]);
+  }, [isConnected, isConnecting, navigate]);
 
   const features = [
     {
@@ -116,7 +114,8 @@ function HomePage(): ReactElement {
     }
   };
 
-  const handleSignIn = async (): Promise<void> => {
+  const handlePasskeySignIn = async (): Promise<void> => {
+    setShowWalletSelectModal(false);
     try {
       await signIn();
     } catch (err) {
@@ -130,11 +129,32 @@ function HomePage(): ReactElement {
     }
   };
 
+  const handleInjectedConnect = async (): Promise<void> => {
+    setShowWalletSelectModal(false);
+    try {
+      await connectInjected();
+    } catch (err) {
+      console.error('Wallet connection error:', err);
+      const message = err instanceof Error ? err.message : 'Connection failed';
+
+      // Handle specific errors
+      if (message.includes('User rejected') || message.includes('rejected')) {
+        toast.error('Connection cancelled');
+      } else if (message.includes('Chain not configured')) {
+        toast.error('Please add Tempo network to your wallet');
+      } else if (message.includes('Failed to verify signature')) {
+        toast.error('Sign-in cancelled');
+      } else {
+        toast.error(message);
+      }
+    }
+  };
+
   return (
     <>
-      {/* Top Left Logo */}
+      {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-50 px-6 py-6">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
@@ -143,10 +163,19 @@ function HomePage(): ReactElement {
             <Zap className="w-6 h-6 text-slate-900" strokeWidth={2} />
             <span className="text-lg font-bold text-slate-900 tracking-tight">Temporium</span>
           </motion.div>
+          <motion.a
+            initial={{ x: 20, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            href="mailto:hello@temporium.xyz"
+            className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-primary transition-colors"
+          >
+            <Mail className="h-4 w-4" />
+            <span className="hidden sm:inline">hello@temporium.xyz</span>
+          </motion.a>
         </div>
       </div>
 
-      <main className="min-h-screen flex flex-col items-center justify-center px-6 py-12">
+      <main className="min-h-screen flex flex-col items-center justify-center px-6 pt-28 pb-12">
         {/* Static background gradient - no animations for performance */}
         <div className="fixed inset-0 -z-10 overflow-hidden">
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/15 rounded-full blur-3xl" />
@@ -212,36 +241,16 @@ function HomePage(): ReactElement {
               <ArrowRight className="h-4 w-4 ml-1 opacity-60 group-hover:translate-x-0.5 transition-transform" />
             </Button>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  disabled={isConnecting}
-                  className="px-6 bg-white backdrop-blur"
-                >
-                  <Fingerprint className="h-4 w-4" />
-                  Sign In
-                  <ChevronDown className="h-3.5 w-3.5 ml-1 opacity-60" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem onClick={handleSignIn} className="cursor-pointer">
-                  <Fingerprint className="h-4 w-4 mr-2 text-primary" />
-                  <div>
-                    <p className="font-medium">Passkey</p>
-                    <p className="text-[11px] text-muted-foreground">Sign in with biometrics</p>
-                  </div>
-                </DropdownMenuItem>
-                <DropdownMenuItem disabled className="opacity-50">
-                  <Wallet className="h-4 w-4 mr-2" />
-                  <div>
-                    <p className="font-medium">More wallets</p>
-                    <p className="text-[11px] text-muted-foreground">Coming soon...</p>
-                  </div>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => setShowWalletSelectModal(true)}
+              disabled={isConnecting}
+              className="px-6 bg-white backdrop-blur"
+            >
+              <Fingerprint className="h-4 w-4" />
+              Sign In
+            </Button>
           </motion.div>
 
           {/* Features Grid */}
@@ -284,21 +293,30 @@ function HomePage(): ReactElement {
             ))}
           </motion.div>
 
-          {/* Tempo branding */}
+          {/* Tempo branding & Contact */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mt-10 flex items-center justify-center gap-2 text-muted-foreground"
+            className="mt-10 flex flex-col items-center gap-3"
           >
-            <span className="text-[12px]">Powered by</span>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span className="text-[12px]">Powered by</span>
+              <a
+                href="https://tempo.xyz/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[13px] font-semibold text-foreground hover:text-primary transition-colors"
+              >
+                Tempo
+              </a>
+            </div>
             <a
-              href="https://tempo.xyz/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[13px] font-semibold text-foreground hover:text-primary transition-colors"
+              href="mailto:hello@temporium.xyz"
+              className="flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-primary transition-colors"
             >
-              Tempo
+              <Mail className="h-3.5 w-3.5" />
+              hello@temporium.xyz
             </a>
           </motion.div>
         </div>
@@ -310,6 +328,16 @@ function HomePage(): ReactElement {
         isLoading={isConnecting}
         onClose={() => setShowCreateWalletModal(false)}
         onCreateWallet={handleCreateWallet}
+      />
+
+      {/* Wallet Select Modal (Sign In) */}
+      <WalletSelectModal
+        isOpen={showWalletSelectModal}
+        isLoading={isConnecting}
+        hasInjectedWallet={hasInjectedWallet}
+        onClose={() => setShowWalletSelectModal(false)}
+        onSelectPasskey={handlePasskeySignIn}
+        onSelectInjected={handleInjectedConnect}
       />
     </>
   );

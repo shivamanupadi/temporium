@@ -3,6 +3,7 @@ import { useEffect, useState, type ReactElement } from 'react';
 import { useTempo } from '@/hooks/useTempo';
 import { Sidebar } from '@/components/Sidebar';
 import { MobileHeader } from '@/components/MobileHeader';
+import { WrongNetworkBanner } from '@/components/WrongNetworkBanner';
 import { cn } from '@/lib/utils';
 
 export const Route = createFileRoute('/portal')({
@@ -38,32 +39,37 @@ function PortalLayout(): ReactElement | null {
   if (!isConnected) return null;
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Sidebar */}
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        collapsed={collapsed}
-        onToggleCollapse={() => setCollapsed(!collapsed)}
-      />
+    <>
+      {/* Wrong Network Banner - shown when external wallet is on wrong chain */}
+      <WrongNetworkBanner />
 
-      {/* Main Content */}
-      <main
-        className={cn(
-          'min-h-screen transition-[margin] duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)]',
-          collapsed ? 'md:ml-[68px]' : 'md:ml-56'
-        )}
-      >
-        {/* Mobile Header */}
-        <MobileHeader onMenuClick={() => setSidebarOpen(true)} />
+      <div className="min-h-screen bg-background">
+        {/* Sidebar */}
+        <Sidebar
+          isOpen={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+          collapsed={collapsed}
+          onToggleCollapse={() => setCollapsed(!collapsed)}
+        />
 
-        {/* Page Content */}
-        <div className="p-6">
-          <div className="mx-auto max-w-5xl">
-            <Outlet />
+        {/* Main Content */}
+        <main
+          className={cn(
+            'min-h-screen transition-[margin] duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)]',
+            collapsed ? 'md:ml-[68px]' : 'md:ml-56'
+          )}
+        >
+          {/* Mobile Header */}
+          <MobileHeader onMenuClick={() => setSidebarOpen(true)} />
+
+          {/* Page Content */}
+          <div className="p-6">
+            <div className="mx-auto max-w-5xl">
+              <Outlet />
+            </div>
           </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </>
   );
 }

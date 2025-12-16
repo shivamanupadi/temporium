@@ -1,11 +1,17 @@
 import { useState, useCallback, useEffect } from 'react';
-import { useAccount, useConnect, useDisconnect, useWalletClient } from 'wagmi';
+import { useAccount, useConnect, useDisconnect, useWalletClient, useConnectors } from 'wagmi';
+import { getWalletClient } from '@wagmi/core';
 import { useQueryClient } from '@tanstack/react-query';
 import { type Address } from 'viem';
-import { tempoPasskeyConnector } from '@/lib/wagmi';
+import { tempoPasskeyConnector, injectedConnector, wagmiConfig } from '@/lib/wagmi';
+import { tempoChain } from '@/lib/tempo-client';
 import { getTokenBalance, stringToBytes32, Actions } from '@/lib/tempo-client';
 import { DEFAULT_FEE_TOKEN_ADDRESS, MAX_SCHEDULE_SECONDS, TIMING } from '@/lib/constants';
 import { clearAuthTokens } from '@/lib/auth-storage';
+import { signInWithEthereum } from '@/lib/siwe-auth';
+
+/** Type of wallet connection */
+export type WalletType = 'passkey' | 'injected' | null;
 
 /**
  * Encode a memo string to bytes
@@ -80,8 +86,14 @@ interface UseTempoReturn {
   isConnecting: boolean;
   address: Address | undefined;
   error: Error | null;
+  /** Type of current wallet connection */
+  walletType: WalletType;
+  /** True if an injected wallet (MetaMask, etc.) is available */
+  hasInjectedWallet: boolean;
   signUp: (label?: string) => Promise<void>;
   signIn: () => Promise<void>;
+  /** Connect with an injected wallet (MetaMask, etc.) */
+  connectInjected: () => Promise<void>;
   disconnect: () => Promise<void>;
   sendPayment: (params: SendPaymentParams) => Promise<string>;
   sendScheduledPayment: (params: SendScheduledPaymentParams) => Promise<string>;
@@ -111,11 +123,22 @@ export function useTempo(): UseTempoReturn {
   const [error, setError] = useState<Error | null>(null);
 
   // Wagmi hooks
-  const { address, isConnected } = useAccount();
+  const { address, isConnected, connector } = useAccount();
   const { connectAsync } = useConnect();
   const { disconnectAsync } = useDisconnect();
   const { data: walletClient } = useWalletClient();
+  const connectors = useConnectors();
   const queryClient = useQueryClient();
+
+  // Detect if user has an injected wallet available
+  const hasInjectedWallet = connectors.some(c => c.type === 'injected');
+
+  // Determine wallet type based on current connector
+  const walletType: WalletType = isConnected
+    ? connector?.type === 'injected'
+      ? 'injected'
+      : 'passkey'
+    : null;
 
   /**
    * Sign up with a new passkey (creates wallet)
@@ -163,6 +186,46 @@ export function useTempo(): UseTempoReturn {
       setIsConnecting(false);
     }
   }, [connectAsync]);
+
+  /**
+   * Connect with an injected wallet (MetaMask, Brave, etc.)
+   * Includes SIWE authentication to get JWT token
+   */
+  const connectInjected = useCallback(async () => {
+    setIsConnecting(true);
+    setError(null);
+    try {
+      // 1. Connect wallet (switches/adds network automatically)
+      const result = await connectAsync({
+        connector: injectedConnector,
+        chainId: tempoChain.id,
+      });
+
+      // 2. Get wallet client for signing using wagmi action
+      const client = await getWalletClient(wagmiConfig, {
+        account: result.accounts[0],
+        chainId: tempoChain.id,
+      });
+
+      if (!client) {
+        throw new Error('Failed to get wallet client after connection');
+      }
+
+      // 3. SIWE authentication to get JWT
+      await signInWithEthereum(client);
+    } catch (err) {
+      setError(err as Error);
+      // If SIWE fails, disconnect the wallet
+      try {
+        await disconnectAsync();
+      } catch {
+        // Ignore disconnect errors
+      }
+      throw err;
+    } finally {
+      setIsConnecting(false);
+    }
+  }, [connectAsync, disconnectAsync]);
 
   /**
    * Disconnect wallet and clear auth tokens
@@ -346,10 +409,13 @@ export function useTempo(): UseTempoReturn {
     isConnecting,
     address,
     error,
+    walletType,
+    hasInjectedWallet,
 
     // Auth actions
     signUp,
     signIn,
+    connectInjected,
     disconnect,
 
     // Payment actions

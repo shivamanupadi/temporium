@@ -1,4 +1,5 @@
 import { createConfig, http } from 'wagmi';
+import { injected } from 'wagmi/connectors';
 import { webAuthn, KeyManager } from 'tempo.ts/wagmi';
 import { tempoChain } from './tempo-client';
 import { KEYS_API_URL } from './api';
@@ -188,11 +189,19 @@ export const tempoPasskeyConnector = webAuthn({
 });
 
 /**
+ * Injected wallet connector (MetaMask, Brave, etc.)
+ * Uses default injected provider detection
+ */
+export const injectedConnector = injected({
+  shimDisconnect: true, // Required for proper disconnect behavior
+});
+
+/**
  * Wagmi configuration for Tempo
  */
 export const wagmiConfig = createConfig({
   chains: [tempoChain],
-  connectors: [tempoPasskeyConnector],
+  connectors: [tempoPasskeyConnector, injectedConnector],
   transports: {
     [tempoChain.id]: http(tempoChain.rpcUrls.default.http[0]),
   },

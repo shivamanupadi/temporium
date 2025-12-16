@@ -33,17 +33,18 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-fastify": "^11.0.1",
     "@prisma/client": "5.22.0",
-    "fastify": "^5.2.1",
     "@remix-run/headers": "^0.18.0",
     "@remix-run/route-pattern": "^0.15.3",
     "@remix-run/session": "^0.4.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
+    "fastify": "^5.2.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "tempo.ts": "^0.10.5"
+    "tempo.ts": "^0.10.5",
+    "viem": "^2.42.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
