@@ -26,7 +26,7 @@ function SettingsPage(): JSX.Element {
       setNewPassword('');
       setConfirmPassword('');
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error instanceof Error ? error.message : 'Failed to change password');
     },
   });
@@ -51,9 +51,7 @@ function SettingsPage(): JSX.Element {
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">
-          Manage your node manager settings
-        </p>
+        <p className="text-muted-foreground">Manage your node manager settings</p>
       </div>
 
       {/* Change Password */}
@@ -63,9 +61,7 @@ function SettingsPage(): JSX.Element {
             <Lock className="w-5 h-5" />
             Change Password
           </CardTitle>
-          <CardDescription>
-            Update your admin password
-          </CardDescription>
+          <CardDescription>Update your admin password</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
@@ -75,7 +71,7 @@ function SettingsPage(): JSX.Element {
                 id="currentPassword"
                 type="password"
                 value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
+                onChange={e => setCurrentPassword(e.target.value)}
                 required
                 disabled={changePasswordMutation.isPending}
               />
@@ -86,7 +82,7 @@ function SettingsPage(): JSX.Element {
                 id="newPassword"
                 type="password"
                 value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
+                onChange={e => setNewPassword(e.target.value)}
                 placeholder="Min 8 characters"
                 required
                 disabled={changePasswordMutation.isPending}
@@ -98,7 +94,7 @@ function SettingsPage(): JSX.Element {
                 id="confirmPassword"
                 type="password"
                 value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                onChange={e => setConfirmPassword(e.target.value)}
                 required
                 disabled={changePasswordMutation.isPending}
               />

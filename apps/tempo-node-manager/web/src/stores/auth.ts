@@ -10,7 +10,7 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    set => ({
       token: null,
       isAuthenticated: false,
 
@@ -24,7 +24,7 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: 'tempo-node-auth',
-      partialize: (state) => ({ token: state.token, isAuthenticated: state.isAuthenticated }),
-    },
-  ),
+      partialize: state => ({ token: state.token, isAuthenticated: state.isAuthenticated }),
+    }
+  )
 );

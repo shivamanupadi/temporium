@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  UseGuards,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Get, Post, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { NodeService } from './node.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { NodeInfo, NodeActionResponse, SyncStatus } from '@temporium/tempo-node-types';

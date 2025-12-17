@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  UseGuards,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Get, Post, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { SnapshotsService } from './snapshots.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { SnapshotDownloadProgress } from '@temporium/tempo-node-types';
@@ -33,9 +26,10 @@ export class SnapshotsController {
     lastLog: string;
   }> {
     const progress = await this.snapshotsService.getDownloadProgress();
-    const percent = progress && progress.totalBytes > 0
-      ? Math.round((progress.downloadedBytes / progress.totalBytes) * 100)
-      : 0;
+    const percent =
+      progress && progress.totalBytes > 0
+        ? Math.round((progress.downloadedBytes / progress.totalBytes) * 100)
+        : 0;
 
     return {
       isDownloading: this.snapshotsService.isDownloadInProgress(),

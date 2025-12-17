@@ -13,12 +13,7 @@ export interface Snapshot {
 /**
  * Snapshot download status
  */
-export type DownloadStatus =
-  | 'idle'
-  | 'downloading'
-  | 'extracting'
-  | 'completed'
-  | 'error';
+export type DownloadStatus = 'idle' | 'downloading' | 'extracting' | 'completed' | 'error';
 
 /**
  * Snapshot download progress

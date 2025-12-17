@@ -1,19 +1,10 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  Logger,
-  OnModuleInit,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger, OnModuleInit } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import * as fs from 'fs';
 import * as path from 'path';
-import {
-  LoginResponse,
-  SetupStatus,
-  JwtPayload,
-} from '@temporium/tempo-node-types';
+import { LoginResponse, SetupStatus, JwtPayload } from '@temporium/tempo-node-types';
 
 interface AdminConfig {
   passwordHash: string;
@@ -28,12 +19,13 @@ export class AuthService implements OnModuleInit {
 
   constructor(
     private jwtService: JwtService,
-    private configService: ConfigService,
+    private configService: ConfigService
   ) {
     // Use local path for development, /etc for production
-    const defaultPath = process.env.NODE_ENV === 'production'
-      ? '/etc/tempo-node-manager/config.json'
-      : path.join(process.cwd(), '.data', 'config.json');
+    const defaultPath =
+      process.env.NODE_ENV === 'production'
+        ? '/etc/tempo-node-manager/config.json'
+        : path.join(process.cwd(), '.data', 'config.json');
 
     this.configPath = this.configService.get<string>('CONFIG_PATH', defaultPath);
   }
@@ -83,9 +75,7 @@ export class AuthService implements OnModuleInit {
     }
 
     if (!password || password.length < 8) {
-      throw new UnauthorizedException(
-        'Password must be at least 8 characters',
-      );
+      throw new UnauthorizedException('Password must be at least 8 characters');
     }
 
     const saltRounds = 10;
@@ -115,27 +105,19 @@ export class AuthService implements OnModuleInit {
     return this.generateToken();
   }
 
-  async changePassword(
-    currentPassword: string,
-    newPassword: string,
-  ): Promise<void> {
+  async changePassword(currentPassword: string, newPassword: string): Promise<void> {
     if (this.adminConfig === null) {
       throw new UnauthorizedException('Setup required');
     }
 
-    const isValid = await bcrypt.compare(
-      currentPassword,
-      this.adminConfig.passwordHash,
-    );
+    const isValid = await bcrypt.compare(currentPassword, this.adminConfig.passwordHash);
 
     if (!isValid) {
       throw new UnauthorizedException('Invalid current password');
     }
 
     if (!newPassword || newPassword.length < 8) {
-      throw new UnauthorizedException(
-        'New password must be at least 8 characters',
-      );
+      throw new UnauthorizedException('New password must be at least 8 characters');
     }
 
     const saltRounds = 10;

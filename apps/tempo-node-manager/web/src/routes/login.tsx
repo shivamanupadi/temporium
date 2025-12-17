@@ -38,12 +38,12 @@ function LoginPage(): JSX.Element {
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: authApi.login,
-    onSuccess: (data) => {
+    onSuccess: data => {
       setToken(data.accessToken);
       toast.success('Login successful');
       navigate({ to: '/dashboard' });
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error instanceof Error ? error.message : 'Login failed');
     },
   });
@@ -51,12 +51,12 @@ function LoginPage(): JSX.Element {
   // Setup mutation
   const setupMutation = useMutation({
     mutationFn: authApi.setup,
-    onSuccess: (data) => {
+    onSuccess: data => {
       setToken(data.accessToken);
       toast.success('Setup complete! Welcome to Tempo Node Manager');
       navigate({ to: '/dashboard' });
     },
-    onError: (error) => {
+    onError: error => {
       toast.error(error instanceof Error ? error.message : 'Setup failed');
     },
   });
@@ -115,7 +115,7 @@ function LoginPage(): JSX.Element {
                 id="password"
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={e => setPassword(e.target.value)}
                 placeholder={isSetup ? 'Enter password' : 'Create password (min 8 characters)'}
                 required
                 disabled={isSubmitting}
@@ -129,7 +129,7 @@ function LoginPage(): JSX.Element {
                   id="confirmPassword"
                   type="password"
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={e => setConfirmPassword(e.target.value)}
                   placeholder="Confirm password"
                   required
                   disabled={isSubmitting}

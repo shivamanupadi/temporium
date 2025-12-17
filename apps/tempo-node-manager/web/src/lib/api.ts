@@ -16,21 +16,18 @@ const API_BASE = '/api';
 class ApiError extends Error {
   constructor(
     public status: number,
-    message: string,
+    message: string
   ) {
     super(message);
     this.name = 'ApiError';
   }
 }
 
-async function request<T>(
-  endpoint: string,
-  options: RequestInit = {},
-): Promise<T> {
+async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = useAuthStore.getState().token;
 
   const headers: Record<string, string> = {
-    ...options.headers as Record<string, string>,
+    ...(options.headers as Record<string, string>),
   };
 
   // Only set Content-Type for requests with body
@@ -104,8 +101,7 @@ export const nodeApi = {
 
 // Logs API
 export const logsApi = {
-  getLogs: (limit = 100): Promise<LogEntry[]> =>
-    request<LogEntry[]>(`/logs?limit=${limit}`),
+  getLogs: (limit = 100): Promise<LogEntry[]> => request<LogEntry[]>(`/logs?limit=${limit}`),
 };
 
 // Snapshots API

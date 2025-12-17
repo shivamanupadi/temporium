@@ -7,10 +7,7 @@ import { JwtPayload } from '@temporium/tempo-node-types';
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(configService: ConfigService) {
-    const secret = configService.get<string>(
-      'JWT_SECRET',
-      'tempo-node-manager-secret',
-    );
+    const secret = configService.get<string>('JWT_SECRET', 'tempo-node-manager-secret');
 
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),

@@ -1,9 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
-import {
-  FastifyAdapter,
-  NestFastifyApplication,
-} from '@nestjs/platform-fastify';
+import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { AppModule } from './app.module';
 
 async function bootstrap(): Promise<void> {
@@ -14,10 +11,7 @@ async function bootstrap(): Promise<void> {
     logger: false,
   });
 
-  const app = await NestFactory.create<NestFastifyApplication>(
-    AppModule,
-    adapter,
-  );
+  const app = await NestFactory.create<NestFastifyApplication>(AppModule, adapter);
 
   // Enable CORS
   app.enableCors({
@@ -32,7 +26,7 @@ async function bootstrap(): Promise<void> {
       transform: true,
       whitelist: true,
       forbidNonWhitelisted: true,
-    }),
+    })
   );
 
   // Set global prefix for API routes
@@ -48,7 +42,7 @@ async function bootstrap(): Promise<void> {
   logger.log(`Web UI: http://localhost:${port}`);
 }
 
-bootstrap().catch((error) => {
+bootstrap().catch(error => {
   console.error('Failed to start application:', error);
   process.exit(1);
 });

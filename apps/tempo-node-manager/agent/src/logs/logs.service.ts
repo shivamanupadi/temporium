@@ -21,8 +21,8 @@ export class LogsService {
   }
 
   private parseLogs(rawLogs: string): LogEntry[] {
-    const lines = rawLogs.split('\n').filter((line) => line.trim());
-    return lines.map((line) => this.parseLogLine(line));
+    const lines = rawLogs.split('\n').filter(line => line.trim());
+    return lines.map(line => this.parseLogLine(line));
   }
 
   private parseLogLine(line: string): LogEntry {
@@ -30,9 +30,7 @@ export class LogsService {
     // Example: 2024-01-15T10:30:00.123456789Z INFO [module] message
 
     // Try to extract timestamp at the beginning
-    const timestampMatch = line.match(
-      /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[.\d]*Z?)\s*/,
-    );
+    const timestampMatch = line.match(/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[.\d]*Z?)\s*/);
     let timestamp = new Date().toISOString();
     let message = line;
 
@@ -81,14 +79,11 @@ export class LogsService {
 
   async streamLogs(
     onLog: (entry: LogEntry) => void,
-    onError: (error: Error) => void,
+    onError: (error: Error) => void
   ): Promise<() => void> {
-    return this.dockerService.streamLogs(
-      (rawLog: string) => {
-        const entry = this.parseLogLine(rawLog);
-        onLog(entry);
-      },
-      onError,
-    );
+    return this.dockerService.streamLogs((rawLog: string) => {
+      const entry = this.parseLogLine(rawLog);
+      onLog(entry);
+    }, onError);
   }
 }

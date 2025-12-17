@@ -66,7 +66,7 @@ function DashboardLayout(): JSX.Element {
   // Install update mutation
   const installMutation = useMutation({
     mutationFn: updateApi.installUpdate,
-    onSuccess: (data) => {
+    onSuccess: data => {
       if (data.success) {
         toast.success(data.message);
         setShowUpdateDialog(false);
@@ -81,7 +81,7 @@ function DashboardLayout(): JSX.Element {
   // Restart service mutation
   const restartMutation = useMutation({
     mutationFn: updateApi.restart,
-    onSuccess: (data) => {
+    onSuccess: data => {
       if (data.success) {
         toast.success('Restarting service... Page will reload shortly.');
         setTimeout(() => window.location.reload(), 5000);
@@ -116,7 +116,7 @@ function DashboardLayout(): JSX.Element {
 
           {/* Navigation */}
           <nav className="flex-1 p-4 space-y-1">
-            {navItems.map((item) => {
+            {navItems.map(item => {
               const isActive = item.exact
                 ? location.pathname === item.to
                 : location.pathname.startsWith(item.to);
@@ -129,7 +129,7 @@ function DashboardLayout(): JSX.Element {
                     'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
                     isActive
                       ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground',
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
                   )}
                 >
                   <item.icon className="w-4 h-4" />
@@ -193,9 +193,7 @@ function DashboardLayout(): JSX.Element {
               <ArrowUpCircle className="w-5 h-5 text-green-500" />
               Update Available
             </DialogTitle>
-            <DialogDescription>
-              A new version of Tempo Node Manager is available.
-            </DialogDescription>
+            <DialogDescription>A new version of Tempo Node Manager is available.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
@@ -214,15 +212,13 @@ function DashboardLayout(): JSX.Element {
             </div>
 
             <p className="text-sm text-muted-foreground">
-              The update will be downloaded and installed. The service will need to be restarted after the update.
+              The update will be downloaded and installed. The service will need to be restarted
+              after the update.
             </p>
           </div>
 
           <DialogFooter className="gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setShowUpdateDialog(false)}
-            >
+            <Button variant="outline" onClick={() => setShowUpdateDialog(false)}>
               Later
             </Button>
             <Button

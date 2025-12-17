@@ -1,10 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DockerService } from '../docker/docker.service';
-import {
-  NodeInfo,
-  NodeActionResponse,
-  SyncStatus,
-} from '@temporium/tempo-node-types';
+import { NodeInfo, NodeActionResponse, SyncStatus } from '@temporium/tempo-node-types';
 
 @Injectable()
 export class NodeService {
@@ -95,10 +91,7 @@ export class NodeService {
       if (syncData.result && typeof syncData.result === 'object') {
         highestBlock = parseInt(syncData.result.highestBlock, 16);
         isSynced = false;
-        syncProgress =
-          highestBlock > 0
-            ? Math.floor((currentBlock / highestBlock) * 100)
-            : 0;
+        syncProgress = highestBlock > 0 ? Math.floor((currentBlock / highestBlock) * 100) : 0;
       }
 
       return {
@@ -165,8 +158,7 @@ export class NodeService {
       this.logger.error('Failed to restart node:', error);
       return {
         success: false,
-        message:
-          error instanceof Error ? error.message : 'Failed to restart node',
+        message: error instanceof Error ? error.message : 'Failed to restart node',
       };
     }
   }

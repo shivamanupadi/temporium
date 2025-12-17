@@ -1,10 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  Snapshot,
-  SnapshotDownloadProgress,
-  DownloadStatus,
-} from '@temporium/tempo-node-types';
+import { Snapshot, SnapshotDownloadProgress, DownloadStatus } from '@temporium/tempo-node-types';
 import { DockerService } from '../docker/docker.service';
 
 @Injectable()
@@ -16,7 +12,7 @@ export class SnapshotsService {
 
   constructor(
     private configService: ConfigService,
-    private dockerService: DockerService,
+    private dockerService: DockerService
   ) {}
 
   async listAvailableSnapshots(): Promise<Snapshot[]> {
@@ -100,7 +96,7 @@ export class SnapshotsService {
     try {
       this.logger.log('Starting Tempo snapshot download...');
 
-      const result = await this.dockerService.runDownloadCommand((logLine) => {
+      const result = await this.dockerService.runDownloadCommand(logLine => {
         this.updateProgress(logLine);
       });
 
@@ -119,7 +115,7 @@ export class SnapshotsService {
 
       return {
         success: false,
-        message: error instanceof Error ? error.message : 'Download failed'
+        message: error instanceof Error ? error.message : 'Download failed',
       };
     }
   }

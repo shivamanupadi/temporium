@@ -52,7 +52,7 @@ function LogsPage(): JSX.Element {
 
     socket.on('log', (message: LogMessage) => {
       if (message.type === 'log' && message.data) {
-        setLogs((prev) => [...prev.slice(-499), message.data!]);
+        setLogs(prev => [...prev.slice(-499), message.data!]);
       }
     });
 
@@ -71,9 +71,9 @@ function LogsPage(): JSX.Element {
 
   const filteredLogs = search
     ? logs.filter(
-        (log) =>
+        log =>
           log.message.toLowerCase().includes(search.toLowerCase()) ||
-          log.source?.toLowerCase().includes(search.toLowerCase()),
+          log.source?.toLowerCase().includes(search.toLowerCase())
       )
     : logs;
 
@@ -84,9 +84,7 @@ function LogsPage(): JSX.Element {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Logs</h1>
-          <p className="text-muted-foreground">
-            Real-time container logs
-          </p>
+          <p className="text-muted-foreground">Real-time container logs</p>
         </div>
       </div>
 
@@ -108,15 +106,11 @@ function LogsPage(): JSX.Element {
               <Input
                 placeholder="Search logs..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={e => setSearch(e.target.value)}
                 className="pl-8 w-64"
               />
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsLive(!isLive)}
-            >
+            <Button variant="outline" size="sm" onClick={() => setIsLive(!isLive)}>
               {isLive ? (
                 <>
                   <Pause className="w-4 h-4 mr-1" /> Pause
@@ -142,9 +136,7 @@ function LogsPage(): JSX.Element {
                 No logs available
               </div>
             ) : (
-              filteredLogs.map((log, index) => (
-                <LogLine key={index} log={log} />
-              ))
+              filteredLogs.map((log, index) => <LogLine key={index} log={log} />)
             )}
           </div>
         </CardContent>
@@ -166,17 +158,10 @@ function LogLine({ log }: { log: LogEntry }): JSX.Element {
       <span className="text-slate-500 flex-shrink-0">
         {new Date(log.timestamp).toLocaleTimeString()}
       </span>
-      <span
-        className={cn(
-          'uppercase w-12 flex-shrink-0',
-          levelColors[log.level],
-        )}
-      >
+      <span className={cn('uppercase w-12 flex-shrink-0', levelColors[log.level])}>
         {log.level}
       </span>
-      {log.source && (
-        <span className="text-purple-400 flex-shrink-0">[{log.source}]</span>
-      )}
+      {log.source && <span className="text-purple-400 flex-shrink-0">[{log.source}]</span>}
       <span className="text-slate-200 break-all">{log.message}</span>
     </div>
   );

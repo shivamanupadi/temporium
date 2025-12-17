@@ -91,21 +91,25 @@ export class DockerService implements OnModuleInit {
 
     return new Promise((resolve, reject) => {
       // Use linux/amd64 platform for compatibility (Tempo doesn't have ARM64 builds)
-      this.docker.pull(imageName, { platform: 'linux/amd64' }, (err: Error | null, stream: NodeJS.ReadableStream) => {
-        if (err) {
-          reject(err);
-          return;
-        }
-
-        this.docker.modem.followProgress(stream, (err: Error | null) => {
+      this.docker.pull(
+        imageName,
+        { platform: 'linux/amd64' },
+        (err: Error | null, stream: NodeJS.ReadableStream) => {
           if (err) {
             reject(err);
-          } else {
-            this.logger.log(`Image pulled: ${imageName}`);
-            resolve();
+            return;
           }
-        });
-      });
+
+          this.docker.modem.followProgress(stream, (err: Error | null) => {
+            if (err) {
+              reject(err);
+            } else {
+              this.logger.log(`Image pulled: ${imageName}`);
+              resolve();
+            }
+          });
+        }
+      );
     });
   }
 
@@ -197,7 +201,7 @@ export class DockerService implements OnModuleInit {
 
   async streamLogs(
     onData: (log: string) => void,
-    onError: (error: Error) => void,
+    onError: (error: Error) => void
   ): Promise<() => void> {
     const container = this.docker.getContainer(CONTAINER_NAME);
     const stream = await container.logs({
@@ -290,7 +294,7 @@ export class DockerService implements OnModuleInit {
           }
         });
 
-        container.start((startErr) => {
+        container.start(startErr => {
           if (startErr) {
             reject(startErr);
             return;

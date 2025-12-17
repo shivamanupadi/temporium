@@ -28,7 +28,7 @@ export class LogsGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   constructor(
     private logsService: LogsService,
-    private authService: AuthService,
+    private authService: AuthService
   ) {}
 
   async handleConnection(client: Socket): Promise<void> {
@@ -74,7 +74,7 @@ export class LogsGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('subscribe')
   async handleSubscribe(
     @ConnectedSocket() client: Socket,
-    @MessageBody() _data: unknown,
+    @MessageBody() _data: unknown
   ): Promise<void> {
     this.logger.log(`Client ${client.id} subscribing to logs`);
 
@@ -94,7 +94,7 @@ export class LogsGateway implements OnGatewayConnection, OnGatewayDisconnect {
           this.logger.error(`Log stream error for ${client.id}:`, error);
           const message: LogMessage = { type: 'error', error: error.message };
           client.emit('log', message);
-        },
+        }
       );
 
       this.activeStreams.set(client.id, stopStream);

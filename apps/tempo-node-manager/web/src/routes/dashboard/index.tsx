@@ -47,7 +47,7 @@ function DashboardOverview(): JSX.Element {
   // Start mutation
   const startMutation = useMutation({
     mutationFn: nodeApi.start,
-    onSuccess: (data) => {
+    onSuccess: data => {
       if (data.success) {
         toast.success('Node started successfully');
         queryClient.invalidateQueries({ queryKey: ['node-status'] });
@@ -61,7 +61,7 @@ function DashboardOverview(): JSX.Element {
   // Stop mutation
   const stopMutation = useMutation({
     mutationFn: nodeApi.stop,
-    onSuccess: (data) => {
+    onSuccess: data => {
       if (data.success) {
         toast.success('Node stopped successfully');
         queryClient.invalidateQueries({ queryKey: ['node-status'] });
@@ -75,7 +75,7 @@ function DashboardOverview(): JSX.Element {
   // Restart mutation
   const restartMutation = useMutation({
     mutationFn: nodeApi.restart,
-    onSuccess: (data) => {
+    onSuccess: data => {
       if (data.success) {
         toast.success('Node restarted successfully');
         queryClient.invalidateQueries({ queryKey: ['node-status'] });
@@ -89,7 +89,7 @@ function DashboardOverview(): JSX.Element {
   // Snapshot download mutation
   const downloadSnapshotMutation = useMutation({
     mutationFn: snapshotsApi.download,
-    onSuccess: (data) => {
+    onSuccess: data => {
       if (data.success) {
         toast.success('Snapshot downloaded! You can now start the node.');
         queryClient.invalidateQueries({ queryKey: ['node-status'] });
@@ -103,10 +103,7 @@ function DashboardOverview(): JSX.Element {
   const isDownloading = snapshotStatus?.isDownloading || downloadSnapshotMutation.isPending;
 
   const isActionPending =
-    startMutation.isPending ||
-    stopMutation.isPending ||
-    restartMutation.isPending ||
-    isDownloading;
+    startMutation.isPending || stopMutation.isPending || restartMutation.isPending || isDownloading;
 
   const status = nodeInfo?.status ?? 'unknown';
   const isRunning = status === 'running';
@@ -118,9 +115,7 @@ function DashboardOverview(): JSX.Element {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Node Overview</h1>
-          <p className="text-muted-foreground">
-            Manage your Tempo blockchain node
-          </p>
+          <p className="text-muted-foreground">Manage your Tempo blockchain node</p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -203,9 +198,7 @@ function DashboardOverview(): JSX.Element {
               {/* Container ID */}
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">Container</p>
-                <p className="font-mono text-sm">
-                  {nodeInfo?.containerId?.slice(0, 12) ?? '-'}
-                </p>
+                <p className="font-mono text-sm">{nodeInfo?.containerId?.slice(0, 12) ?? '-'}</p>
               </div>
             </div>
           )}
@@ -213,16 +206,23 @@ function DashboardOverview(): JSX.Element {
       </Card>
 
       {/* Snapshot Download Card - Show when downloading, node is stopped, or syncing slowly */}
-      {(isDownloading || isStopped || (nodeInfo?.syncStatus && nodeInfo.syncStatus.syncProgress < 50)) && (
-        <Card className={cn(
-          "border-blue-200 bg-blue-50/50 dark:border-blue-900 dark:bg-blue-950/20",
-          isDownloading && "border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-950/20"
-        )}>
+      {(isDownloading ||
+        isStopped ||
+        (nodeInfo?.syncStatus && nodeInfo.syncStatus.syncProgress < 50)) && (
+        <Card
+          className={cn(
+            'border-blue-200 bg-blue-50/50 dark:border-blue-900 dark:bg-blue-950/20',
+            isDownloading &&
+              'border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-950/20'
+          )}
+        >
           <CardHeader>
-            <CardTitle className={cn(
-              "flex items-center gap-2 text-blue-700 dark:text-blue-400",
-              isDownloading && "text-green-700 dark:text-green-400"
-            )}>
+            <CardTitle
+              className={cn(
+                'flex items-center gap-2 text-blue-700 dark:text-blue-400',
+                isDownloading && 'text-green-700 dark:text-green-400'
+              )}
+            >
               {isDownloading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
@@ -230,14 +230,12 @@ function DashboardOverview(): JSX.Element {
               )}
               {isDownloading
                 ? `Downloading Snapshot${snapshotStatus?.progress ? ` (${snapshotStatus.progress}%)` : '...'}`
-                : 'Speed Up Sync with Snapshot'
-              }
+                : 'Speed Up Sync with Snapshot'}
             </CardTitle>
             <CardDescription>
               {isDownloading
                 ? 'Please wait while the snapshot is being downloaded. This may take 30-60 minutes.'
-                : 'Download a pre-synced snapshot to get your node running in ~30-60 minutes instead of hours.'
-              }
+                : 'Download a pre-synced snapshot to get your node running in ~30-60 minutes instead of hours.'}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -308,18 +306,9 @@ function DashboardOverview(): JSX.Element {
                 label="HTTP RPC Endpoint"
                 value={`http://localhost:${nodeInfo.config.httpPort}`}
               />
-              <ConnectionDetail
-                label="P2P Port"
-                value={nodeInfo.config.p2pPort.toString()}
-              />
-              <ConnectionDetail
-                label="Data Directory"
-                value={nodeInfo.config.dataDir}
-              />
-              <ConnectionDetail
-                label="Enabled APIs"
-                value={nodeInfo.config.httpApis.join(', ')}
-              />
+              <ConnectionDetail label="P2P Port" value={nodeInfo.config.p2pPort.toString()} />
+              <ConnectionDetail label="Data Directory" value={nodeInfo.config.dataDir} />
+              <ConnectionDetail label="Enabled APIs" value={nodeInfo.config.httpApis.join(', ')} />
             </div>
             <div className="mt-4 p-3 bg-muted rounded-lg">
               <p className="text-xs text-muted-foreground mb-2">Quick Connect</p>
@@ -344,23 +333,17 @@ function DashboardOverview(): JSX.Element {
             <div className="space-y-4">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Progress</span>
-                <span className="font-medium">
-                  {nodeInfo.syncStatus.syncProgress}%
-                </span>
+                <span className="font-medium">{nodeInfo.syncStatus.syncProgress}%</span>
               </div>
               <Progress value={nodeInfo.syncStatus.syncProgress} />
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Current Block</p>
-                  <p className="font-mono">
-                    {nodeInfo.syncStatus.currentBlock.toLocaleString()}
-                  </p>
+                  <p className="font-mono">{nodeInfo.syncStatus.currentBlock.toLocaleString()}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Highest Block</p>
-                  <p className="font-mono">
-                    {nodeInfo.syncStatus.highestBlock.toLocaleString()}
-                  </p>
+                  <p className="font-mono">{nodeInfo.syncStatus.highestBlock.toLocaleString()}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground flex items-center gap-1">
@@ -373,7 +356,6 @@ function DashboardOverview(): JSX.Element {
           </CardContent>
         </Card>
       )}
-
     </div>
   );
 }
@@ -390,7 +372,7 @@ function StatusIndicator({ status }: { status: NodeStatus | 'unknown' }): JSX.El
         status === 'stopping' && 'bg-orange-500 animate-pulse',
         status === 'error' && 'bg-red-500',
         status === 'not_installed' && 'bg-gray-300',
-        status === 'unknown' && 'bg-gray-300',
+        status === 'unknown' && 'bg-gray-300'
       )}
     />
   );
@@ -417,11 +399,7 @@ function ConnectionDetail({ label, value }: { label: string; value: string }): J
         className="h-8 w-8 shrink-0 ml-2"
         onClick={copyToClipboard}
       >
-        {copied ? (
-          <Check className="h-4 w-4 text-green-500" />
-        ) : (
-          <Copy className="h-4 w-4" />
-        )}
+        {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
       </Button>
     </div>
   );

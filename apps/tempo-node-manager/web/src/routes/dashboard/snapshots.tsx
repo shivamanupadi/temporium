@@ -41,7 +41,7 @@ function SnapshotsPage(): JSX.Element {
   // Download mutation
   const downloadMutation = useMutation({
     mutationFn: snapshotsApi.download,
-    onSuccess: (data) => {
+    onSuccess: data => {
       if (data.success) {
         toast.success('Snapshot downloaded successfully!');
         queryClient.invalidateQueries({ queryKey: ['snapshot-status'] });
@@ -70,9 +70,7 @@ function SnapshotsPage(): JSX.Element {
     <div className="p-6 space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Snapshots</h1>
-        <p className="text-muted-foreground">
-          Download blockchain snapshots for faster sync
-        </p>
+        <p className="text-muted-foreground">Download blockchain snapshots for faster sync</p>
       </div>
 
       {/* Download Progress Card */}
@@ -91,9 +89,7 @@ function SnapshotsPage(): JSX.Element {
             <div className="space-y-2">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Progress</span>
-                <span className="font-medium text-green-700 dark:text-green-400">
-                  {progress}%
-                </span>
+                <span className="font-medium text-green-700 dark:text-green-400">{progress}%</span>
               </div>
               <Progress value={progress} className="h-3" />
             </div>
@@ -203,8 +199,9 @@ function SnapshotsPage(): JSX.Element {
           {/* Info Box */}
           <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900">
             <p className="text-sm text-blue-800 dark:text-blue-300">
-              <strong>Tip:</strong> Downloading a snapshot speeds up initial sync from hours to ~30-60 minutes.
-              After download completes, start the node and it will continue syncing from the snapshot.
+              <strong>Tip:</strong> Downloading a snapshot speeds up initial sync from hours to
+              ~30-60 minutes. After download completes, start the node and it will continue syncing
+              from the snapshot.
             </p>
           </div>
         </CardContent>
@@ -223,20 +220,24 @@ function RequirementItem({
   description: string;
 }): JSX.Element {
   return (
-    <div className={cn(
-      "flex items-center gap-3 p-3 rounded-lg",
-      met ? "bg-green-50 dark:bg-green-950/20" : "bg-amber-50 dark:bg-amber-950/20"
-    )}>
+    <div
+      className={cn(
+        'flex items-center gap-3 p-3 rounded-lg',
+        met ? 'bg-green-50 dark:bg-green-950/20' : 'bg-amber-50 dark:bg-amber-950/20'
+      )}
+    >
       {met ? (
         <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400 shrink-0" />
       ) : (
         <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
       )}
       <div>
-        <p className={cn(
-          "text-sm font-medium",
-          met ? "text-green-700 dark:text-green-400" : "text-amber-700 dark:text-amber-400"
-        )}>
+        <p
+          className={cn(
+            'text-sm font-medium',
+            met ? 'text-green-700 dark:text-green-400' : 'text-amber-700 dark:text-amber-400'
+          )}
+        >
           {label}
         </p>
         <p className="text-xs text-muted-foreground">{description}</p>

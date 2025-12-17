@@ -46,7 +46,7 @@ export class UpdateService {
   constructor(private configService: ConfigService) {
     this.releasesUrl = this.configService.get(
       'RELEASES_URL',
-      'https://cdn.temporium.xyz/node-manager/releases',
+      'https://cdn.temporium.xyz/node-manager/releases'
     );
 
     // Read current version from package.json
@@ -175,13 +175,11 @@ export class UpdateService {
       // Download new release
       this.logger.log('Downloading new release...');
       await execAsync(
-        `curl -sSL "${versionInfo.releaseUrl}" -o ${tempDir}/tempo-node-manager.tar.gz`,
+        `curl -sSL "${versionInfo.releaseUrl}" -o ${tempDir}/tempo-node-manager.tar.gz`
       );
 
       // Extract to temp
-      await execAsync(
-        `tar -xzf ${tempDir}/tempo-node-manager.tar.gz -C ${tempDir}`,
-      );
+      await execAsync(`tar -xzf ${tempDir}/tempo-node-manager.tar.gz -C ${tempDir}`);
 
       // Backup current installation
       this.logger.log('Creating backup...');
@@ -189,15 +187,11 @@ export class UpdateService {
 
       // Copy new files (preserve .env and data)
       this.logger.log('Installing new version...');
+      await execAsync(`cp -r ${tempDir}/tempo-node-manager/dist ${installDir}/`);
       await execAsync(
-        `cp -r ${tempDir}/tempo-node-manager/dist ${installDir}/`,
+        `cp -r ${tempDir}/tempo-node-manager/node_modules ${installDir}/ 2>/dev/null || true`
       );
-      await execAsync(
-        `cp -r ${tempDir}/tempo-node-manager/node_modules ${installDir}/ 2>/dev/null || true`,
-      );
-      await execAsync(
-        `cp -r ${tempDir}/tempo-node-manager/web ${installDir}/ 2>/dev/null || true`,
-      );
+      await execAsync(`cp -r ${tempDir}/tempo-node-manager/web ${installDir}/ 2>/dev/null || true`);
 
       // Update package.json version
       const pkgPath = path.join(installDir, 'package.json');
@@ -235,7 +229,7 @@ export class UpdateService {
       try {
         // Try launchctl (macOS)
         await execAsync(
-          'launchctl unload ~/Library/LaunchAgents/com.tempo.node-manager.plist && launchctl load ~/Library/LaunchAgents/com.tempo.node-manager.plist',
+          'launchctl unload ~/Library/LaunchAgents/com.tempo.node-manager.plist && launchctl load ~/Library/LaunchAgents/com.tempo.node-manager.plist'
         );
         return { success: true, message: 'Service restart initiated' };
       } catch {
