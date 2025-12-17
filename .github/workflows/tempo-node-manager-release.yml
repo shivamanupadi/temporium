@@ -74,18 +74,7 @@ jobs:
           cp -r web/dist release/tempo-node-manager/web/dist
 
           # Create minimal package.json for production
-          cat > release/tempo-node-manager/package.json << 'PKGJSON'
-{
-  "name": "tempo-node-manager",
-  "version": "VERSION_PLACEHOLDER",
-  "private": true,
-  "main": "dist/main.js",
-  "scripts": {
-    "start": "node dist/main.js"
-  }
-}
-PKGJSON
-          sed -i "s/VERSION_PLACEHOLDER/${VERSION#v}/" release/tempo-node-manager/package.json
+          echo '{"name":"tempo-node-manager","version":"'"${VERSION#v}"'","private":true,"main":"dist/main.js","scripts":{"start":"node dist/main.js"}}' | jq . > release/tempo-node-manager/package.json
 
           # Copy node_modules (production only)
           cd agent
@@ -104,17 +93,15 @@ PKGJSON
 
           # Create release.json with metadata
           RELEASE_DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          cat > release.json << RELEASEJSON
-{
-  "version": "${VERSION#v}",
-  "tag": "${VERSION}",
-  "checksum": "${CHECKSUM}",
-  "filename": "tempo-node-manager.tar.gz",
-  "releaseDate": "${RELEASE_DATE}",
-  "downloadUrl": "${{ env.R2_PUBLIC_URL }}/${{ env.R2_PATH }}/${VERSION}/tempo-node-manager.tar.gz",
-  "releaseNotes": "https://github.com/${{ github.repository }}/releases/tag/node-manager-${VERSION}"
-}
-RELEASEJSON
+          jq -n \
+            --arg version "${VERSION#v}" \
+            --arg tag "${VERSION}" \
+            --arg checksum "${CHECKSUM}" \
+            --arg releaseDate "${RELEASE_DATE}" \
+            --arg downloadUrl "${{ env.R2_PUBLIC_URL }}/${{ env.R2_PATH }}/${VERSION}/tempo-node-manager.tar.gz" \
+            --arg releaseNotes "https://github.com/${{ github.repository }}/releases/tag/node-manager-${VERSION}" \
+            '{version:$version,tag:$tag,checksum:$checksum,filename:"tempo-node-manager.tar.gz",releaseDate:$releaseDate,downloadUrl:$downloadUrl,releaseNotes:$releaseNotes}' \
+            > release.json
 
           echo "Release package created:"
           ls -lh tempo-node-manager.tar.gz
