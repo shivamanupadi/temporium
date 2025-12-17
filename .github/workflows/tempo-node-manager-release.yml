@@ -37,7 +37,8 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install dependencies
+      - name: Install dependencies (monorepo root)
+        working-directory: .
         run: yarn install --frozen-lockfile
 
       - name: Build web UI
