@@ -23,10 +23,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useState } from 'react';
+import { useState, type JSX } from 'react';
 
 export const Route = createFileRoute('/dashboard')({
-  beforeLoad: () => {
+  beforeLoad: (): void => {
     const { isAuthenticated } = useAuthStore.getState();
     if (!isAuthenticated) {
       throw redirect({ to: '/login' });
@@ -42,7 +42,7 @@ const navItems = [
   { to: '/dashboard/settings', label: 'Settings', icon: Settings },
 ];
 
-function DashboardLayout() {
+function DashboardLayout(): JSX.Element {
   const location = useLocation();
   const { logout } = useAuthStore();
   const queryClient = useQueryClient();

@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState } from 'react';
+import { useState, type JSX } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { authApi } from '@/lib/api';
@@ -13,7 +13,7 @@ export const Route = createFileRoute('/dashboard/settings')({
   component: SettingsPage,
 });
 
-function SettingsPage() {
+function SettingsPage(): JSX.Element {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -31,7 +31,7 @@ function SettingsPage() {
     },
   });
 
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleChangePassword = (e: React.FormEvent): void => {
     e.preventDefault();
 
     if (newPassword !== confirmPassword) {

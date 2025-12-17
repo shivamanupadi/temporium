@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, type JSX } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { logsApi } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
@@ -15,7 +15,7 @@ export const Route = createFileRoute('/dashboard/logs')({
   component: LogsPage,
 });
 
-function LogsPage() {
+function LogsPage(): JSX.Element {
   const { token } = useAuthStore();
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [isLive, setIsLive] = useState(true);
@@ -77,7 +77,7 @@ function LogsPage() {
       )
     : logs;
 
-  const clearLogs = () => setLogs([]);
+  const clearLogs = (): void => setLogs([]);
 
   return (
     <div className="p-6 space-y-6">
@@ -153,7 +153,7 @@ function LogsPage() {
   );
 }
 
-function LogLine({ log }: { log: LogEntry }) {
+function LogLine({ log }: { log: LogEntry }): JSX.Element {
   const levelColors = {
     debug: 'text-slate-400',
     info: 'text-blue-400',

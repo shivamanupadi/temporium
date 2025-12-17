@@ -20,14 +20,14 @@ import {
   Download,
   AlertCircle,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, type JSX } from 'react';
 import type { NodeStatus } from '@temporium/tempo-node-types';
 
 export const Route = createFileRoute('/dashboard/')({
   component: DashboardOverview,
 });
 
-function DashboardOverview() {
+function DashboardOverview(): JSX.Element {
   const queryClient = useQueryClient();
 
   // Fetch node status
@@ -272,7 +272,7 @@ function DashboardOverview() {
                     </div>
                   ) : (
                     <p className="text-sm text-muted-foreground">
-                      This will download the latest blockchain snapshot from Tempo's servers.
+                      This will download the latest blockchain snapshot from Tempo&apos;s servers.
                     </p>
                   )}
                 </div>
@@ -378,7 +378,7 @@ function DashboardOverview() {
   );
 }
 
-function StatusIndicator({ status }: { status: NodeStatus | 'unknown' }) {
+function StatusIndicator({ status }: { status: NodeStatus | 'unknown' }): JSX.Element {
   return (
     <div
       className={cn(
@@ -396,10 +396,10 @@ function StatusIndicator({ status }: { status: NodeStatus | 'unknown' }) {
   );
 }
 
-function ConnectionDetail({ label, value }: { label: string; value: string }) {
+function ConnectionDetail({ label, value }: { label: string; value: string }): JSX.Element {
   const [copied, setCopied] = useState(false);
 
-  const copyToClipboard = () => {
+  const copyToClipboard = (): void => {
     navigator.clipboard.writeText(value);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);

@@ -60,23 +60,23 @@ async function request<T>(
 
 // Auth API
 export const authApi = {
-  getStatus: () => request<SetupStatus>('/auth/status'),
+  getStatus: (): Promise<SetupStatus> => request<SetupStatus>('/auth/status'),
 
-  setup: (password: string) =>
+  setup: (password: string): Promise<LoginResponse> =>
     request<LoginResponse>('/auth/setup', {
       method: 'POST',
       body: JSON.stringify({ password } as LoginRequest),
     }),
 
-  login: (password: string) =>
+  login: (password: string): Promise<LoginResponse> =>
     request<LoginResponse>('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ password } as LoginRequest),
     }),
 
-  verify: () => request<{ valid: boolean }>('/auth/verify'),
+  verify: (): Promise<{ valid: boolean }> => request<{ valid: boolean }>('/auth/verify'),
 
-  changePassword: (currentPassword: string, newPassword: string) =>
+  changePassword: (currentPassword: string, newPassword: string): Promise<{ success: boolean }> =>
     request<{ success: boolean }>('/auth/change-password', {
       method: 'POST',
       body: JSON.stringify({ currentPassword, newPassword } as ChangePasswordRequest),
@@ -85,42 +85,43 @@ export const authApi = {
 
 // Node API
 export const nodeApi = {
-  getStatus: () => request<NodeInfo>('/node/status'),
+  getStatus: (): Promise<NodeInfo> => request<NodeInfo>('/node/status'),
 
-  getSyncStatus: () => request<SyncStatus>('/node/sync'),
+  getSyncStatus: (): Promise<SyncStatus> => request<SyncStatus>('/node/sync'),
 
-  start: () =>
+  start: (): Promise<NodeActionResponse> =>
     request<NodeActionResponse>('/node/start', { method: 'POST' }),
 
-  stop: () =>
+  stop: (): Promise<NodeActionResponse> =>
     request<NodeActionResponse>('/node/stop', { method: 'POST' }),
 
-  restart: () =>
+  restart: (): Promise<NodeActionResponse> =>
     request<NodeActionResponse>('/node/restart', { method: 'POST' }),
 
-  pullImage: () =>
+  pullImage: (): Promise<NodeActionResponse> =>
     request<NodeActionResponse>('/node/pull', { method: 'POST' }),
 };
 
 // Logs API
 export const logsApi = {
-  getLogs: (limit = 100) =>
+  getLogs: (limit = 100): Promise<LogEntry[]> =>
     request<LogEntry[]>(`/logs?limit=${limit}`),
 };
 
 // Snapshots API
 export const snapshotsApi = {
-  getStatus: () => request<{ isDownloading: boolean; progress: number; lastLog: string }>('/snapshots/status'),
+  getStatus: (): Promise<{ isDownloading: boolean; progress: number; lastLog: string }> =>
+    request<{ isDownloading: boolean; progress: number; lastLog: string }>('/snapshots/status'),
 
-  getProgress: () =>
+  getProgress: (): Promise<SnapshotDownloadProgress | null> =>
     request<SnapshotDownloadProgress | null>('/snapshots/progress'),
 
-  download: () =>
+  download: (): Promise<{ success: boolean; message: string }> =>
     request<{ success: boolean; message: string }>('/snapshots/download', {
       method: 'POST',
     }),
 
-  cancel: () =>
+  cancel: (): Promise<{ success: boolean }> =>
     request<{ success: boolean }>('/snapshots/cancel', { method: 'POST' }),
 };
 
@@ -144,17 +145,17 @@ export interface UpdateResult {
 
 export const updateApi = {
   // Get current version (no auth required)
-  getVersion: () => request<{ version: string }>('/update/version'),
+  getVersion: (): Promise<{ version: string }> => request<{ version: string }>('/update/version'),
 
   // Check for updates
-  checkForUpdates: () => request<VersionInfo>('/update/check'),
+  checkForUpdates: (): Promise<VersionInfo> => request<VersionInfo>('/update/check'),
 
   // Install update
-  installUpdate: () =>
+  installUpdate: (): Promise<UpdateResult> =>
     request<UpdateResult>('/update/install', { method: 'POST' }),
 
   // Restart service
-  restart: () =>
+  restart: (): Promise<{ success: boolean; message: string }> =>
     request<{ success: boolean; message: string }>('/update/restart', {
       method: 'POST',
     }),

@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type JSX } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { authApi } from '@/lib/api';
@@ -14,7 +14,7 @@ export const Route = createFileRoute('/login')({
   component: LoginPage,
 });
 
-function LoginPage() {
+function LoginPage(): JSX.Element {
   const navigate = useNavigate();
   const { setToken, isAuthenticated } = useAuthStore();
   const [password, setPassword] = useState('');
@@ -61,7 +61,7 @@ function LoginPage() {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent): void => {
     e.preventDefault();
 
     if (!isSetup) {

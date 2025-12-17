@@ -42,10 +42,12 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.8",
     "@tanstack/router-plugin": "^1.140.1",
+    "@temporium/eslint-config": "*",
     "@types/node": "^20.14.0",
     "@types/react": "^19.1.6",
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.5.2",
+    "eslint": "^8.57.0",
     "postcss": "^8.5.4",
     "tailwindcss": "^4.1.8",
     "typescript": "^5.4.5",

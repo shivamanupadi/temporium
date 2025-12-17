@@ -15,12 +15,13 @@ import {
   AlertCircle,
   ExternalLink,
 } from 'lucide-react';
+import type { JSX } from 'react';
 
 export const Route = createFileRoute('/dashboard/snapshots')({
   component: SnapshotsPage,
 });
 
-function SnapshotsPage() {
+function SnapshotsPage(): JSX.Element {
   const queryClient = useQueryClient();
 
   // Fetch node status
@@ -130,7 +131,7 @@ function SnapshotsPage() {
             Tempo Snapshot
           </CardTitle>
           <CardDescription>
-            Download the latest blockchain snapshot from Tempo's official servers
+            Download the latest blockchain snapshot from Tempo&apos;s official servers
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -220,7 +221,7 @@ function RequirementItem({
   met: boolean;
   label: string;
   description: string;
-}) {
+}): JSX.Element {
   return (
     <div className={cn(
       "flex items-center gap-3 p-3 rounded-lg",
