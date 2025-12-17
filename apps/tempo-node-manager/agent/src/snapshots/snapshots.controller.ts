@@ -1,7 +1,7 @@
 import { Controller, Get, Post, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { SnapshotsService } from './snapshots.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { SnapshotDownloadProgress } from '@temporium/tempo-node-types';
+import { SnapshotDownloadProgress } from '#types/index';
 
 @Controller('snapshots')
 @UseGuards(JwtAuthGuard)

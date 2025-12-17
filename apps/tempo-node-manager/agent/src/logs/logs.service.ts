@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DockerService } from '../docker/docker.service';
-import { LogEntry, LogLevel, LogQuery } from '@temporium/tempo-node-types';
+import { LogEntry, LogLevel, LogQuery } from '#types/index';
 
 @Injectable()
 export class LogsService {

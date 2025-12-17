@@ -11,7 +11,7 @@ import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { LogsService } from './logs.service';
 import { AuthService } from '../auth/auth.service';
-import { LogEntry, LogMessage } from '@temporium/tempo-node-types';
+import { LogEntry, LogMessage } from '#types/index';
 
 @WebSocketGateway({
   namespace: '/logs',

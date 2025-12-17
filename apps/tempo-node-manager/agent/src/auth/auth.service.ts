@@ -4,7 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import * as fs from 'fs';
 import * as path from 'path';
-import { LoginResponse, SetupStatus, JwtPayload } from '@temporium/tempo-node-types';
+import { LoginResponse, SetupStatus, JwtPayload } from '#types/index';
 
 interface AdminConfig {
   passwordHash: string;

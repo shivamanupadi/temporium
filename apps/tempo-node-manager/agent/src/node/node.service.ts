@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DockerService } from '../docker/docker.service';
-import { NodeInfo, NodeActionResponse, SyncStatus } from '@temporium/tempo-node-types';
+import { NodeInfo, NodeActionResponse, SyncStatus } from '#types/index';
 
 @Injectable()
 export class NodeService {

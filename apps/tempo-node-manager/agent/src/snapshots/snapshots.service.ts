@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Snapshot, SnapshotDownloadProgress, DownloadStatus } from '@temporium/tempo-node-types';
+import { Snapshot, SnapshotDownloadProgress, DownloadStatus } from '#types/index';
 import { DockerService } from '../docker/docker.service';
 
 @Injectable()

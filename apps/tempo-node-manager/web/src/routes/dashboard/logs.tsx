@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollText, Search, Pause, Play, Trash2 } from 'lucide-react';
-import type { LogEntry, LogMessage } from '@temporium/tempo-node-types';
+import type { LogEntry, LogMessage } from '#types/index';
 
 export const Route = createFileRoute('/dashboard/logs')({
   component: LogsPage,

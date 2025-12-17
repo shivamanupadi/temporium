@@ -21,7 +21,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useState, type JSX } from 'react';
-import type { NodeStatus } from '@temporium/tempo-node-types';
+import type { NodeStatus } from '#types/index';
 
 export const Route = createFileRoute('/dashboard/')({
   component: DashboardOverview,

@@ -27,14 +27,3 @@ export interface SnapshotDownloadProgress {
   estimatedTimeRemaining: number; // seconds
   error?: string;
 }
-
-/**
- * Backup information
- */
-export interface Backup {
-  id: string;
-  path: string;
-  size: number;
-  createdAt: string;
-  blockNumber?: number;
-}

@@ -7,7 +7,7 @@ import {
   TEMPO_IMAGE,
   CONTAINER_NAME,
   DEFAULT_NODE_CONFIG,
-} from '@temporium/tempo-node-types';
+} from '#types/index';
 
 @Injectable()
 export class DockerService implements OnModuleInit {

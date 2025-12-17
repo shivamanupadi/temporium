@@ -8,7 +8,7 @@ import type {
   SyncStatus,
   LogEntry,
   SnapshotDownloadProgress,
-} from '@temporium/tempo-node-types';
+} from '#types/index';
 import { useAuthStore } from '@/stores/auth';
 
 const API_BASE = '/api';

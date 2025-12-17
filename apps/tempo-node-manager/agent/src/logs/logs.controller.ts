@@ -1,7 +1,7 @@
 import { Controller, Get, Query, UseGuards, ParseIntPipe, DefaultValuePipe } from '@nestjs/common';
 import { LogsService } from './logs.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { LogEntry } from '@temporium/tempo-node-types';
+import { LogEntry } from '#types/index';
 
 @Controller('logs')
 @UseGuards(JwtAuthGuard)

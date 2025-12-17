@@ -2,7 +2,7 @@ import { Controller, Post, Get, Body, UseGuards, HttpCode, HttpStatus } from '@n
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { LoginDto, SetupDto, ChangePasswordDto } from './dto';
-import { LoginResponse, SetupStatus } from '@temporium/tempo-node-types';
+import { LoginResponse, SetupStatus } from '#types/index';
 
 @Controller('auth')
 export class AuthController {
