@@ -41,6 +41,10 @@ jobs:
         working-directory: .
         run: yarn install --frozen-lockfile
 
+      - name: Build shared types
+        working-directory: packages/tempo-node-types
+        run: yarn build
+
       - name: Build web UI
         working-directory: apps/tempo-node-manager/web
         run: yarn build
