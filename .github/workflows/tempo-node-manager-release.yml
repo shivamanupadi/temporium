@@ -26,7 +26,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ${{ env.APP_DIR }}
+        working-directory: apps/tempo-node-manager
 
     steps:
       - name: Checkout
@@ -43,11 +43,11 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Build web UI
-        working-directory: ${{ env.APP_DIR }}/web
+        working-directory: apps/tempo-node-manager/web
         run: yarn build
 
       - name: Build agent
-        working-directory: ${{ env.APP_DIR }}/agent
+        working-directory: apps/tempo-node-manager/agent
         run: yarn build
 
       - name: Get version
@@ -128,8 +128,8 @@ RELEASEJSON
           draft: false
           prerelease: ${{ contains(steps.version.outputs.version, 'alpha') || contains(steps.version.outputs.version, 'beta') }}
           files: |
-            ${{ env.APP_DIR }}/release/tempo-node-manager.tar.gz
-            ${{ env.APP_DIR }}/release/sha256sum.txt
+            apps/tempo-node-manager/release/tempo-node-manager.tar.gz
+            apps/tempo-node-manager/release/sha256sum.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
