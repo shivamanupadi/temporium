@@ -6,10 +6,8 @@ import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { NodeModule } from './node/node.module';
 import { LogsModule } from './logs/logs.module';
-import { MetricsModule } from './metrics/metrics.module';
 import { SnapshotsModule } from './snapshots/snapshots.module';
 import { DockerModule } from './docker/docker.module';
-import { MonitoringModule } from './monitoring/monitoring.module';
 import { UpdateModule } from './update/update.module';
 import { HealthController } from './health/health.controller';
 
@@ -40,9 +38,7 @@ import { HealthController } from './health/health.controller';
     DockerModule,
     NodeModule,
     LogsModule,
-    MetricsModule,
     SnapshotsModule,
-    MonitoringModule,
     UpdateModule,
   ],
   controllers: [HealthController],

@@ -6,8 +6,6 @@ import type {
   NodeInfo,
   NodeActionResponse,
   SyncStatus,
-  SystemMetrics,
-  MetricsDataPoint,
   LogEntry,
   SnapshotDownloadProgress,
 } from '@temporium/tempo-node-types';
@@ -110,14 +108,6 @@ export const logsApi = {
     request<LogEntry[]>(`/logs?limit=${limit}`),
 };
 
-// Metrics API
-export const metricsApi = {
-  getCurrent: () => request<SystemMetrics>('/metrics'),
-
-  getHistory: (limit = 100) =>
-    request<MetricsDataPoint[]>(`/metrics/history?limit=${limit}`),
-};
-
 // Snapshots API
 export const snapshotsApi = {
   getStatus: () => request<{ isDownloading: boolean; progress: number; lastLog: string }>('/snapshots/status'),
@@ -132,28 +122,6 @@ export const snapshotsApi = {
 
   cancel: () =>
     request<{ success: boolean }>('/snapshots/cancel', { method: 'POST' }),
-};
-
-// Monitoring API (Prometheus + Grafana)
-export interface MonitoringStatus {
-  prometheusRunning: boolean;
-  grafanaRunning: boolean;
-  prometheusUrl: string;
-  grafanaUrl: string;
-}
-
-export const monitoringApi = {
-  getStatus: () => request<MonitoringStatus>('/monitoring/status'),
-
-  start: () =>
-    request<{ success: boolean; message: string }>('/monitoring/start', {
-      method: 'POST',
-    }),
-
-  stop: () =>
-    request<{ success: boolean; message: string }>('/monitoring/stop', {
-      method: 'POST',
-    }),
 };
 
 // Update API

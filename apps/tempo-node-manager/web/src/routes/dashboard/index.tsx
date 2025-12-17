@@ -1,8 +1,8 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { nodeApi, metricsApi, snapshotsApi } from '@/lib/api';
-import { formatBytes, formatDuration, cn } from '@/lib/utils';
+import { nodeApi, snapshotsApi } from '@/lib/api';
+import { formatDuration, cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -12,11 +12,8 @@ import {
   RotateCcw,
   Loader2,
   Server,
-  Cpu,
-  HardDrive,
   Activity,
   Users,
-  Box,
   Network,
   Copy,
   Check,
@@ -38,13 +35,6 @@ function DashboardOverview() {
     queryKey: ['node-status'],
     queryFn: nodeApi.getStatus,
     refetchInterval: 5000,
-  });
-
-  // Fetch metrics
-  const { data: metrics } = useQuery({
-    queryKey: ['metrics'],
-    queryFn: metricsApi.getCurrent,
-    refetchInterval: 10000,
   });
 
   // Fetch snapshot download status
@@ -384,49 +374,6 @@ function DashboardOverview() {
         </Card>
       )}
 
-      {/* Metrics Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <MetricCard
-          title="CPU Usage"
-          icon={Cpu}
-          value={`${metrics?.cpu.usagePercent.toFixed(1) ?? '-'}%`}
-          subtitle={metrics?.cpu.model ?? '-'}
-        />
-        <MetricCard
-          title="Memory"
-          icon={Box}
-          value={`${metrics?.memory.usagePercent.toFixed(1) ?? '-'}%`}
-          subtitle={
-            metrics
-              ? `${formatBytes(metrics.memory.used)} / ${formatBytes(metrics.memory.total)}`
-              : '-'
-          }
-        />
-        <MetricCard
-          title="Disk"
-          icon={HardDrive}
-          value={`${metrics?.disk.usagePercent.toFixed(1) ?? '-'}%`}
-          subtitle={
-            metrics
-              ? `${formatBytes(metrics.disk.used)} / ${formatBytes(metrics.disk.total)}`
-              : '-'
-          }
-        />
-        <MetricCard
-          title="Network"
-          icon={Activity}
-          value={
-            metrics
-              ? `${formatBytes(metrics.network.rxBytesPerSec)}/s`
-              : '-'
-          }
-          subtitle={
-            metrics
-              ? `TX: ${formatBytes(metrics.network.txBytesPerSec)}/s`
-              : '-'
-          }
-        />
-      </div>
     </div>
   );
 }
@@ -446,37 +393,6 @@ function StatusIndicator({ status }: { status: NodeStatus | 'unknown' }) {
         status === 'unknown' && 'bg-gray-300',
       )}
     />
-  );
-}
-
-function MetricCard({
-  title,
-  icon: Icon,
-  value,
-  subtitle,
-}: {
-  title: string;
-  icon: React.ComponentType<{ className?: string }>;
-  value: string;
-  subtitle: string;
-}) {
-  return (
-    <Card>
-      <CardContent className="pt-6">
-        <div className="flex items-center gap-4">
-          <div className="p-2 rounded-lg bg-primary/10">
-            <Icon className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <p className="text-sm text-muted-foreground">{title}</p>
-            <p className="text-2xl font-bold">{value}</p>
-            <p className="text-xs text-muted-foreground truncate max-w-[150px]">
-              {subtitle}
-            </p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 

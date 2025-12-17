@@ -6,12 +6,10 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import {
   Server,
-  Activity,
   ScrollText,
   Download,
   Settings,
   LogOut,
-  BarChart3,
   ArrowUpCircle,
   Loader2,
   RefreshCw,
@@ -39,10 +37,8 @@ export const Route = createFileRoute('/dashboard')({
 
 const navItems = [
   { to: '/dashboard', label: 'Overview', icon: Server, exact: true },
-  { to: '/dashboard/metrics', label: 'Metrics', icon: Activity },
   { to: '/dashboard/logs', label: 'Logs', icon: ScrollText },
   { to: '/dashboard/snapshots', label: 'Snapshots', icon: Download },
-  { to: '/dashboard/monitoring', label: 'Monitoring', icon: BarChart3 },
   { to: '/dashboard/settings', label: 'Settings', icon: Settings },
 ];
 

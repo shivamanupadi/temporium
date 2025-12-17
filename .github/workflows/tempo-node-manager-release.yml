@@ -85,9 +85,6 @@ jobs:
           cp -r node_modules ../release/tempo-node-manager/
           cd ..
 
-          # Copy monitoring configs
-          cp -r monitoring release/tempo-node-manager/
-
           # Create tarball
           cd release
           tar -czvf tempo-node-manager.tar.gz tempo-node-manager

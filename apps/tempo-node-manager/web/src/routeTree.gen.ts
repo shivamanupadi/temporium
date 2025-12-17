@@ -15,8 +15,6 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
 import { Route as DashboardSnapshotsRouteImport } from './routes/dashboard/snapshots'
 import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
-import { Route as DashboardMonitoringRouteImport } from './routes/dashboard/monitoring'
-import { Route as DashboardMetricsRouteImport } from './routes/dashboard/metrics'
 import { Route as DashboardLogsRouteImport } from './routes/dashboard/logs'
 
 const LoginRoute = LoginRouteImport.update({
@@ -49,16 +47,6 @@ const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => DashboardRoute,
 } as any)
-const DashboardMonitoringRoute = DashboardMonitoringRouteImport.update({
-  id: '/monitoring',
-  path: '/monitoring',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardMetricsRoute = DashboardMetricsRouteImport.update({
-  id: '/metrics',
-  path: '/metrics',
-  getParentRoute: () => DashboardRoute,
-} as any)
 const DashboardLogsRoute = DashboardLogsRouteImport.update({
   id: '/logs',
   path: '/logs',
@@ -70,8 +58,6 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRouteWithChildren
   '/login': typeof LoginRoute
   '/dashboard/logs': typeof DashboardLogsRoute
-  '/dashboard/metrics': typeof DashboardMetricsRoute
-  '/dashboard/monitoring': typeof DashboardMonitoringRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/snapshots': typeof DashboardSnapshotsRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -80,8 +66,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/dashboard/logs': typeof DashboardLogsRoute
-  '/dashboard/metrics': typeof DashboardMetricsRoute
-  '/dashboard/monitoring': typeof DashboardMonitoringRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/snapshots': typeof DashboardSnapshotsRoute
   '/dashboard': typeof DashboardIndexRoute
@@ -92,8 +76,6 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRouteWithChildren
   '/login': typeof LoginRoute
   '/dashboard/logs': typeof DashboardLogsRoute
-  '/dashboard/metrics': typeof DashboardMetricsRoute
-  '/dashboard/monitoring': typeof DashboardMonitoringRoute
   '/dashboard/settings': typeof DashboardSettingsRoute
   '/dashboard/snapshots': typeof DashboardSnapshotsRoute
   '/dashboard/': typeof DashboardIndexRoute
@@ -105,8 +87,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/dashboard/logs'
-    | '/dashboard/metrics'
-    | '/dashboard/monitoring'
     | '/dashboard/settings'
     | '/dashboard/snapshots'
     | '/dashboard/'
@@ -115,8 +95,6 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/dashboard/logs'
-    | '/dashboard/metrics'
-    | '/dashboard/monitoring'
     | '/dashboard/settings'
     | '/dashboard/snapshots'
     | '/dashboard'
@@ -126,8 +104,6 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/login'
     | '/dashboard/logs'
-    | '/dashboard/metrics'
-    | '/dashboard/monitoring'
     | '/dashboard/settings'
     | '/dashboard/snapshots'
     | '/dashboard/'
@@ -183,20 +159,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsRouteImport
       parentRoute: typeof DashboardRoute
     }
-    '/dashboard/monitoring': {
-      id: '/dashboard/monitoring'
-      path: '/monitoring'
-      fullPath: '/dashboard/monitoring'
-      preLoaderRoute: typeof DashboardMonitoringRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/metrics': {
-      id: '/dashboard/metrics'
-      path: '/metrics'
-      fullPath: '/dashboard/metrics'
-      preLoaderRoute: typeof DashboardMetricsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
     '/dashboard/logs': {
       id: '/dashboard/logs'
       path: '/logs'
@@ -209,8 +171,6 @@ declare module '@tanstack/react-router' {
 
 interface DashboardRouteChildren {
   DashboardLogsRoute: typeof DashboardLogsRoute
-  DashboardMetricsRoute: typeof DashboardMetricsRoute
-  DashboardMonitoringRoute: typeof DashboardMonitoringRoute
   DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardSnapshotsRoute: typeof DashboardSnapshotsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
@@ -218,8 +178,6 @@ interface DashboardRouteChildren {
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardLogsRoute: DashboardLogsRoute,
-  DashboardMetricsRoute: DashboardMetricsRoute,
-  DashboardMonitoringRoute: DashboardMonitoringRoute,
   DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardSnapshotsRoute: DashboardSnapshotsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
