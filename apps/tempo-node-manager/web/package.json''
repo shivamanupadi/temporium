@@ -1,6 +1,6 @@
 {
   "name": "@tempo-node-manager/web",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "private": true,
   "type": "module",
   "scripts": {
@@ -49,6 +49,6 @@
     "postcss": "^8.5.4",
     "tailwindcss": "^4.1.8",
     "typescript": "^5.4.5",
-    "vite": "^7.0.0"
+    "vite": "^7.2.4"
   }
 }
