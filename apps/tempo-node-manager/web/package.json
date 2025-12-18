@@ -1,6 +1,6 @@
 {
   "name": "@tempo-node-manager/web",
-  "version": "0.1.17",
+  "version": "0.1.10",
   "private": true,
   "type": "module",
   "scripts": {
