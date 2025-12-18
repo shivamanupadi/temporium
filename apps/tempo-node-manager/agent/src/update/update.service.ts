@@ -185,8 +185,9 @@ export class UpdateService {
       this.logger.log('Creating backup...');
       await execAsync(`cp -r ${installDir} ${backupDir}`);
 
-      // Copy new files (preserve .env and data)
+      // Install new files (remove old dist to avoid mixing old/new hashed files)
       this.logger.log('Installing new version...');
+      await execAsync(`rm -rf ${installDir}/dist`);
       await execAsync(`cp -r ${tempDir}/tempo-node-manager/dist ${installDir}/`);
       await execAsync(
         `cp -r ${tempDir}/tempo-node-manager/node_modules ${installDir}/ 2>/dev/null || true`
@@ -201,10 +202,13 @@ export class UpdateService {
         fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
       }
 
-      // Run database migrations
+      // Run database migrations (source env file for DATABASE_URL)
       this.logger.log('Applying database migrations...');
       try {
-        await execAsync(`cd ${installDir} && ./node_modules/.bin/prisma db push --skip-generate`);
+        const envFile = '/etc/tempo-node-manager/.env';
+        await execAsync(
+          `bash -c 'cd ${installDir} && source ${envFile} 2>/dev/null && ./node_modules/.bin/prisma db push --skip-generate --accept-data-loss'`
+        );
         this.logger.log('Database migrations applied successfully');
       } catch (migrationError) {
         this.logger.warn('Database migration warning:', migrationError);
