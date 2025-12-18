@@ -147,10 +147,13 @@ jobs:
           aws s3 cp release/sha256sum.txt "s3://${{ env.R2_BUCKET }}/${{ env.R2_PATH }}/${VERSION}/sha256sum.txt"
           aws s3 cp release/release.json "s3://${{ env.R2_BUCKET }}/${{ env.R2_PATH }}/${VERSION}/release.json"
 
-          # Upload to latest/
-          aws s3 cp release/tempo-node-manager.tar.gz "s3://${{ env.R2_BUCKET }}/${{ env.R2_PATH }}/latest/tempo-node-manager.tar.gz"
-          aws s3 cp release/sha256sum.txt "s3://${{ env.R2_BUCKET }}/${{ env.R2_PATH }}/latest/sha256sum.txt"
-          aws s3 cp release/release.json "s3://${{ env.R2_BUCKET }}/${{ env.R2_PATH }}/latest/release.json"
+          # Upload to latest/ with no-cache headers to prevent CDN caching
+          aws s3 cp release/tempo-node-manager.tar.gz "s3://${{ env.R2_BUCKET }}/${{ env.R2_PATH }}/latest/tempo-node-manager.tar.gz" \
+            --cache-control "no-cache, no-store, must-revalidate"
+          aws s3 cp release/sha256sum.txt "s3://${{ env.R2_BUCKET }}/${{ env.R2_PATH }}/latest/sha256sum.txt" \
+            --cache-control "no-cache, no-store, must-revalidate"
+          aws s3 cp release/release.json "s3://${{ env.R2_BUCKET }}/${{ env.R2_PATH }}/latest/release.json" \
+            --cache-control "no-cache, no-store, must-revalidate"
 
           # Upload install script
           aws s3 cp scripts/install.sh "s3://${{ env.R2_BUCKET }}/${{ env.R2_PATH }}/install.sh"
