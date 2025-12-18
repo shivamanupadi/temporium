@@ -187,8 +187,10 @@ export class UpdateService {
 
       // Install new files (remove old dist to avoid mixing old/new hashed files)
       this.logger.log('Installing new version...');
-      await execAsync(`rm -rf ${installDir}/dist`);
-      await execAsync(`cp -r ${tempDir}/tempo-node-manager/dist ${installDir}/`);
+      // Use single command with sync to ensure deletion completes before copy
+      await execAsync(
+        `rm -rf ${installDir}/dist && sync && cp -r ${tempDir}/tempo-node-manager/dist ${installDir}/`
+      );
       await execAsync(
         `cp -r ${tempDir}/tempo-node-manager/node_modules ${installDir}/ 2>/dev/null || true`
       );
