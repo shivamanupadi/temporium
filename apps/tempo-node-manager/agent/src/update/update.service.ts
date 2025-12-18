@@ -222,11 +222,23 @@ export class UpdateService {
 
       this.logger.log(`Update to ${versionInfo.latest} completed successfully`);
 
-      return {
-        success: true,
-        message: `Updated to version ${versionInfo.latest}. Please restart the service.`,
-        newVersion: versionInfo.latest || undefined,
-      };
+      // Automatically restart the service after successful update
+      this.logger.log('Restarting service...');
+      const restartResult = await this.restartService();
+
+      if (restartResult.success) {
+        return {
+          success: true,
+          message: `Updated to version ${versionInfo.latest}. Service is restarting...`,
+          newVersion: versionInfo.latest || undefined,
+        };
+      } else {
+        return {
+          success: true,
+          message: `Updated to version ${versionInfo.latest}. ${restartResult.message}`,
+          newVersion: versionInfo.latest || undefined,
+        };
+      }
     } catch (error) {
       this.logger.error('Update failed:', error);
       return {
