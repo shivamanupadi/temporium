@@ -68,9 +68,9 @@ jobs:
           # Copy agent dist
           cp -r agent/dist release/tempo-node-manager/
 
-          # Copy web dist
-          mkdir -p release/tempo-node-manager/web
-          cp -r web/dist release/tempo-node-manager/web/dist
+          # Copy web dist inside agent dist (agent expects it at dist/web/dist/)
+          mkdir -p release/tempo-node-manager/dist/web
+          cp -r web/dist release/tempo-node-manager/dist/web/
 
           # Copy Prisma schema for migrations
           mkdir -p release/tempo-node-manager/prisma
