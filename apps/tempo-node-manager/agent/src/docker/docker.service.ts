@@ -263,7 +263,7 @@ export class DockerService implements OnModuleInit {
       Image: imageName,
       name: 'tempo-snapshot-download',
       platform: 'linux/amd64',
-      Cmd: ['download'],
+      Cmd: ['download', '--datadir', '/root/.tempo'],
       HostConfig: {
         Binds: [`${this.config.dataDir}:/root/.tempo`],
         AutoRemove: true,
