@@ -71,4 +71,50 @@ export class DatabaseService extends PrismaClient implements OnModuleInit, OnMod
       where: { key },
     });
   }
+
+  // Snapshot download history methods
+  async createSnapshotDownload(): Promise<number> {
+    const download = await this.snapshotDownload.create({
+      data: {
+        status: 'downloading',
+        startedAt: new Date(),
+      },
+    });
+    return download.id;
+  }
+
+  async completeSnapshotDownload(id: number): Promise<void> {
+    await this.snapshotDownload.update({
+      where: { id },
+      data: {
+        status: 'completed',
+        completedAt: new Date(),
+      },
+    });
+  }
+
+  async failSnapshotDownload(id: number, error: string): Promise<void> {
+    await this.snapshotDownload.update({
+      where: { id },
+      data: {
+        status: 'failed',
+        completedAt: new Date(),
+        error,
+      },
+    });
+  }
+
+  async getSnapshotDownloadHistory(limit = 10) {
+    return this.snapshotDownload.findMany({
+      orderBy: { startedAt: 'desc' },
+      take: limit,
+    });
+  }
+
+  async getLastSuccessfulDownload() {
+    return this.snapshotDownload.findFirst({
+      where: { status: 'completed' },
+      orderBy: { completedAt: 'desc' },
+    });
+  }
 }

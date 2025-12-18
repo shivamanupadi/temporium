@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Snapshot, SnapshotDownloadProgress, DownloadStatus } from '#types/index';
+import { Snapshot, SnapshotDownloadProgress, DownloadStatus, SnapshotDownloadHistory } from '#types/index';
 import { DockerService } from '../docker/docker.service';
+import { DatabaseService } from '../database/database.service';
 
 @Injectable()
 export class SnapshotsService {
@@ -9,10 +10,12 @@ export class SnapshotsService {
   private downloadProgress: SnapshotDownloadProgress | null = null;
   private isDownloading = false;
   private lastLogLine = '';
+  private currentDownloadId: number | null = null;
 
   constructor(
     private configService: ConfigService,
-    private dockerService: DockerService
+    private dockerService: DockerService,
+    private databaseService: DatabaseService
   ) {}
 
   async listAvailableSnapshots(): Promise<Snapshot[]> {
@@ -93,6 +96,9 @@ export class SnapshotsService {
       estimatedTimeRemaining: 0,
     };
 
+    // Create download record in database
+    this.currentDownloadId = await this.databaseService.createSnapshotDownload();
+
     try {
       this.logger.log('Starting Tempo snapshot download...');
 
@@ -105,19 +111,55 @@ export class SnapshotsService {
       this.lastLogLine = 'Download completed!';
       this.isDownloading = false;
 
+      // Mark download as completed in database
+      if (this.currentDownloadId) {
+        await this.databaseService.completeSnapshotDownload(this.currentDownloadId);
+      }
+      this.currentDownloadId = null;
+
       return { success: true, message: result };
     } catch (error) {
       this.logger.error('Snapshot download failed:', error);
       this.downloadProgress.status = 'error';
-      this.downloadProgress.error = error instanceof Error ? error.message : 'Download failed';
-      this.lastLogLine = `Error: ${error instanceof Error ? error.message : 'Download failed'}`;
+      const errorMsg = error instanceof Error ? error.message : 'Download failed';
+      this.downloadProgress.error = errorMsg;
+      this.lastLogLine = `Error: ${errorMsg}`;
       this.isDownloading = false;
+
+      // Mark download as failed in database
+      if (this.currentDownloadId) {
+        await this.databaseService.failSnapshotDownload(this.currentDownloadId, errorMsg);
+      }
+      this.currentDownloadId = null;
 
       return {
         success: false,
-        message: error instanceof Error ? error.message : 'Download failed',
+        message: errorMsg,
       };
     }
+  }
+
+  async getDownloadHistory(): Promise<SnapshotDownloadHistory[]> {
+    const history = await this.databaseService.getSnapshotDownloadHistory();
+    return history.map(h => ({
+      id: h.id,
+      status: h.status as 'completed' | 'failed',
+      startedAt: h.startedAt.toISOString(),
+      completedAt: h.completedAt?.toISOString() ?? null,
+      error: h.error,
+    }));
+  }
+
+  async getLastSuccessfulDownload(): Promise<SnapshotDownloadHistory | null> {
+    const download = await this.databaseService.getLastSuccessfulDownload();
+    if (!download) return null;
+    return {
+      id: download.id,
+      status: download.status as 'completed' | 'failed',
+      startedAt: download.startedAt.toISOString(),
+      completedAt: download.completedAt?.toISOString() ?? null,
+      error: download.error,
+    };
   }
 
   async cancelDownload(): Promise<void> {

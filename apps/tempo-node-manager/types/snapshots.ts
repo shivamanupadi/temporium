@@ -27,3 +27,14 @@ export interface SnapshotDownloadProgress {
   estimatedTimeRemaining: number; // seconds
   error?: string;
 }
+
+/**
+ * Snapshot download history record
+ */
+export interface SnapshotDownloadHistory {
+  id: number;
+  status: 'completed' | 'failed';
+  startedAt: string;
+  completedAt: string | null;
+  error: string | null;
+}

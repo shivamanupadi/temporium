@@ -1,7 +1,7 @@
 import { Controller, Get, Post, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
 import { SnapshotsService } from './snapshots.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { SnapshotDownloadProgress } from '#types/index';
+import { SnapshotDownloadProgress, SnapshotDownloadHistory } from '#types/index';
 
 @Controller('snapshots')
 @UseGuards(JwtAuthGuard)
@@ -55,5 +55,21 @@ export class SnapshotsController {
   async cancelDownload(): Promise<{ success: boolean }> {
     await this.snapshotsService.cancelDownload();
     return { success: true };
+  }
+
+  /**
+   * Get download history
+   */
+  @Get('history')
+  async getHistory(): Promise<SnapshotDownloadHistory[]> {
+    return this.snapshotsService.getDownloadHistory();
+  }
+
+  /**
+   * Get last successful download
+   */
+  @Get('last-download')
+  async getLastDownload(): Promise<SnapshotDownloadHistory | null> {
+    return this.snapshotsService.getLastSuccessfulDownload();
   }
 }

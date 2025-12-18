@@ -23,3 +23,13 @@ model Setting {
 
   @@map("settings")
 }
+
+model SnapshotDownload {
+  id          Int      @id @default(autoincrement())
+  status      String   // completed, failed
+  startedAt   DateTime @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  error       String?
+
+  @@map("snapshot_downloads")
+}

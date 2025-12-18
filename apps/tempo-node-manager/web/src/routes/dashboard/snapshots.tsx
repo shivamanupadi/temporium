@@ -15,8 +15,12 @@ import {
   ExternalLink,
   Globe,
   Server,
+  Play,
+  Clock,
+  History,
 } from 'lucide-react';
 import type { JSX } from 'react';
+import type { SnapshotDownloadHistory } from '#types/index';
 
 export const Route = createFileRoute('/dashboard/snapshots')({
   component: SnapshotsPage,
@@ -39,6 +43,18 @@ function SnapshotsPage(): JSX.Element {
     refetchInterval: 2000,
   });
 
+  // Fetch last successful download
+  const { data: lastDownload } = useQuery({
+    queryKey: ['last-download'],
+    queryFn: snapshotsApi.getLastDownload,
+  });
+
+  // Fetch download history
+  const { data: downloadHistory } = useQuery({
+    queryKey: ['download-history'],
+    queryFn: snapshotsApi.getHistory,
+  });
+
   // Download mutation
   const downloadMutation = useMutation({
     mutationFn: snapshotsApi.download,
@@ -46,6 +62,8 @@ function SnapshotsPage(): JSX.Element {
       if (data.success) {
         toast.success('Snapshot downloaded successfully!');
         queryClient.invalidateQueries({ queryKey: ['snapshot-status'] });
+        queryClient.invalidateQueries({ queryKey: ['last-download'] });
+        queryClient.invalidateQueries({ queryKey: ['download-history'] });
       } else {
         toast.error(data.message);
       }
@@ -62,10 +80,26 @@ function SnapshotsPage(): JSX.Element {
     },
   });
 
+  // Start node mutation
+  const startNodeMutation = useMutation({
+    mutationFn: nodeApi.start,
+    onSuccess: data => {
+      if (data.success) {
+        toast.success('Node started successfully!');
+        queryClient.invalidateQueries({ queryKey: ['node-status'] });
+      } else {
+        toast.error(data.message);
+      }
+    },
+    onError: () => toast.error('Failed to start node'),
+  });
+
   const isDownloading = snapshotStatus?.isDownloading || downloadMutation.isPending;
   const isNodeRunning = nodeInfo?.status === 'running';
+  const isNodeStopped = nodeInfo?.status === 'stopped' || nodeInfo?.status === 'not_installed';
   const progress = snapshotStatus?.progress ?? 0;
   const lastLog = snapshotStatus?.lastLog ?? '';
+  const hasDownloadedSnapshot = !!lastDownload;
 
   return (
     <div className="space-y-6">
@@ -76,6 +110,45 @@ function SnapshotsPage(): JSX.Element {
           Download blockchain snapshots for faster sync
         </p>
       </div>
+
+      {/* Ready to Start Card - Show when snapshot downloaded and node is stopped */}
+      {hasDownloadedSnapshot && isNodeStopped && !isDownloading && (
+        <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_2px_4px_rgba(0,0,0,0.04)] overflow-hidden ring-1 ring-emerald-200">
+          <div className="px-4 py-3 border-b border-emerald-100 flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+            <h2 className="text-[13px] font-semibold text-emerald-700">Snapshot Ready</h2>
+          </div>
+          <div className="p-4 space-y-4">
+            <p className="text-[13px] text-emerald-700">
+              You have a downloaded snapshot from{' '}
+              <span className="font-medium">
+                {lastDownload?.completedAt
+                  ? new Date(lastDownload.completedAt).toLocaleDateString()
+                  : 'recently'}
+              </span>
+              . Start your node to begin syncing from the snapshot.
+            </p>
+            <Button
+              onClick={() => startNodeMutation.mutate()}
+              disabled={startNodeMutation.isPending}
+              size="sm"
+              className="h-9 bg-emerald-600 hover:bg-emerald-700 text-white text-[13px]"
+            >
+              {startNodeMutation.isPending ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                  Starting...
+                </>
+              ) : (
+                <>
+                  <Play className="w-3.5 h-3.5 mr-1.5" />
+                  Start Node
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Download Progress Card */}
       {isDownloading && (
@@ -215,6 +288,21 @@ function SnapshotsPage(): JSX.Element {
           </div>
         </div>
       </div>
+
+      {/* Download History */}
+      {downloadHistory && downloadHistory.length > 0 && (
+        <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_2px_4px_rgba(0,0,0,0.04)] overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+            <History className="w-4 h-4 text-slate-500" />
+            <h2 className="text-[13px] font-semibold text-gray-900">Download History</h2>
+          </div>
+          <div className="divide-y divide-gray-50">
+            {downloadHistory.map(download => (
+              <HistoryItem key={download.id} download={download} />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -245,6 +333,44 @@ function RequirementItem({
           {label}
         </p>
         <p className="text-[11px] text-gray-500">{description}</p>
+      </div>
+    </div>
+  );
+}
+
+function HistoryItem({ download }: { download: SnapshotDownloadHistory }): JSX.Element {
+  const isCompleted = download.status === 'completed';
+  const startDate = new Date(download.startedAt);
+  const endDate = download.completedAt ? new Date(download.completedAt) : null;
+
+  return (
+    <div className="px-4 py-3 flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        {isCompleted ? (
+          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+        ) : (
+          <XCircle className="w-4 h-4 text-red-500" />
+        )}
+        <div>
+          <p className="text-[13px] font-medium text-gray-900">
+            {isCompleted ? 'Download completed' : 'Download failed'}
+          </p>
+          {download.error && (
+            <p className="text-[11px] text-red-500 mt-0.5">{download.error}</p>
+          )}
+        </div>
+      </div>
+      <div className="flex items-center gap-2 text-[12px] text-gray-500">
+        <Clock className="w-3.5 h-3.5" />
+        <span>
+          {startDate.toLocaleDateString()}{' '}
+          {startDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        </span>
+        {endDate && (
+          <span className="text-gray-400">
+            ({Math.round((endDate.getTime() - startDate.getTime()) / 60000)} min)
+          </span>
+        )}
       </div>
     </div>
   );

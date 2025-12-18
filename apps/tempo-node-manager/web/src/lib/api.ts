@@ -8,6 +8,7 @@ import type {
   SyncStatus,
   LogEntry,
   SnapshotDownloadProgress,
+  SnapshotDownloadHistory,
 } from '#types/index';
 import { useAuthStore } from '@/stores/auth';
 
@@ -119,6 +120,12 @@ export const snapshotsApi = {
 
   cancel: (): Promise<{ success: boolean }> =>
     request<{ success: boolean }>('/snapshots/cancel', { method: 'POST' }),
+
+  getHistory: (): Promise<SnapshotDownloadHistory[]> =>
+    request<SnapshotDownloadHistory[]>('/snapshots/history'),
+
+  getLastDownload: (): Promise<SnapshotDownloadHistory | null> =>
+    request<SnapshotDownloadHistory | null>('/snapshots/last-download'),
 };
 
 // Update API

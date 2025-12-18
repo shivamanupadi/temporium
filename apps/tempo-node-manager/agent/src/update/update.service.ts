@@ -191,7 +191,7 @@ export class UpdateService {
       await execAsync(
         `cp -r ${tempDir}/tempo-node-manager/node_modules ${installDir}/ 2>/dev/null || true`
       );
-      await execAsync(`cp -r ${tempDir}/tempo-node-manager/web ${installDir}/ 2>/dev/null || true`);
+      await execAsync(`cp -r ${tempDir}/tempo-node-manager/prisma ${installDir}/ 2>/dev/null || true`);
 
       // Update package.json version
       const pkgPath = path.join(installDir, 'package.json');
@@ -199,6 +199,16 @@ export class UpdateService {
         const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
         pkg.version = versionInfo.latest;
         fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
+      }
+
+      // Run database migrations
+      this.logger.log('Applying database migrations...');
+      try {
+        await execAsync(`cd ${installDir} && ./node_modules/.bin/prisma db push --skip-generate`);
+        this.logger.log('Database migrations applied successfully');
+      } catch (migrationError) {
+        this.logger.warn('Database migration warning:', migrationError);
+        // Continue anyway - prisma db push is generally safe
       }
 
       // Cleanup
