@@ -73,12 +73,17 @@ jobs:
           cp -r web/dist release/tempo-node-manager/web/dist
 
           # Create minimal package.json for production
-          echo '{"name":"tempo-node-manager","version":"'"${VERSION#v}"'","private":true,"main":"dist/main.js","scripts":{"start":"node dist/main.js"}}' | jq . > release/tempo-node-manager/package.json
+          echo '{"name":"tempo-node-manager","version":"'"${VERSION#v}"'","private":true,"main":"dist/agent/src/main.js","scripts":{"start":"node dist/agent/src/main.js"}}' | jq . > release/tempo-node-manager/package.json
 
           # Copy node_modules (production only)
           cd agent
           yarn install --production --frozen-lockfile
+          # Regenerate Prisma client after production install
+          npx prisma generate
           cp -r node_modules ../release/tempo-node-manager/
+          # Copy Prisma schema for migrations
+          mkdir -p ../release/tempo-node-manager/prisma
+          cp prisma/schema.prisma ../release/tempo-node-manager/prisma/
           cd ..
 
           # Create tarball

@@ -211,16 +211,15 @@ function DashboardOverview(): JSX.Element {
         (nodeInfo?.syncStatus && nodeInfo.syncStatus.syncProgress < 50)) && (
         <Card
           className={cn(
-            'border-blue-200 bg-blue-50/50 dark:border-blue-900 dark:bg-blue-950/20',
-            isDownloading &&
-              'border-green-200 bg-green-50/50 dark:border-green-900 dark:bg-green-950/20'
+            'border-primary/20 bg-primary/5',
+            isDownloading && 'border-green-200 bg-green-50/50'
           )}
         >
           <CardHeader>
             <CardTitle
               className={cn(
-                'flex items-center gap-2 text-blue-700 dark:text-blue-400',
-                isDownloading && 'text-green-700 dark:text-green-400'
+                'flex items-center gap-2 text-primary',
+                isDownloading && 'text-green-700'
               )}
             >
               {isDownloading ? (
@@ -244,7 +243,7 @@ function DashboardOverview(): JSX.Element {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">Progress</span>
-                    <span className="font-medium text-green-700 dark:text-green-400">
+                    <span className="font-medium text-green-700">
                       {snapshotStatus?.progress ?? 0}%
                     </span>
                   </div>
@@ -259,12 +258,12 @@ function DashboardOverview(): JSX.Element {
               <div className="flex items-center gap-4">
                 <div className="flex-1">
                   {isDownloading ? (
-                    <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
+                    <div className="flex items-center gap-2 text-sm text-green-700">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       Download in progress... Do not close this page.
                     </div>
                   ) : isRunning ? (
-                    <div className="flex items-center gap-2 text-sm text-amber-600 dark:text-amber-400">
+                    <div className="flex items-center gap-2 text-sm text-amber-600">
                       <AlertCircle className="w-4 h-4" />
                       Stop the node first to download a snapshot
                     </div>
@@ -279,7 +278,6 @@ function DashboardOverview(): JSX.Element {
                     onClick={() => downloadSnapshotMutation.mutate()}
                     disabled={isRunning || isDownloading}
                     variant="default"
-                    className="bg-blue-600 hover:bg-blue-700"
                   >
                     <Download className="w-4 h-4 mr-2" />
                     Download Snapshot
@@ -368,7 +366,7 @@ function StatusIndicator({ status }: { status: NodeStatus | 'unknown' }): JSX.El
         status === 'running' && 'bg-green-500 animate-pulse',
         status === 'stopped' && 'bg-gray-400',
         status === 'syncing' && 'bg-yellow-500 animate-pulse',
-        status === 'starting' && 'bg-blue-500 animate-pulse',
+        status === 'starting' && 'bg-primary animate-pulse',
         status === 'stopping' && 'bg-orange-500 animate-pulse',
         status === 'error' && 'bg-red-500',
         status === 'not_installed' && 'bg-gray-300',

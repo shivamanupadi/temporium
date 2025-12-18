@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { NodeModule } from './node/node.module';
 import { LogsModule } from './logs/logs.module';
@@ -26,6 +27,9 @@ import { HealthController } from './health/health.controller';
         limit: 100,
       },
     ]),
+
+    // Database
+    DatabaseModule,
 
     // Serve static files from web build
     ServeStaticModule.forRoot({

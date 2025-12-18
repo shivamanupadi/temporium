@@ -36,7 +36,16 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
-      <Toaster position="top-right" richColors />
+      <Toaster
+        position="bottom-right"
+        closeButton
+        toastOptions={{
+          style: {
+            padding: '16px',
+            gap: '12px',
+          },
+        }}
+      />
     </QueryClientProvider>
   </StrictMode>
 );

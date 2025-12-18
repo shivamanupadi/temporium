@@ -1,76 +1,37 @@
 import { Injectable, UnauthorizedException, Logger, OnModuleInit } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
-import * as fs from 'fs';
-import * as path from 'path';
 import { LoginResponse, SetupStatus, JwtPayload } from '#types/index';
-
-interface AdminConfig {
-  passwordHash: string;
-  createdAt: string;
-}
+import { DatabaseService } from '../database/database.service';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
   private readonly logger = new Logger(AuthService.name);
-  private configPath: string;
-  private adminConfig: AdminConfig | null = null;
 
   constructor(
     private jwtService: JwtService,
-    private configService: ConfigService
-  ) {
-    // Use local path for development, /etc for production
-    const defaultPath =
-      process.env.NODE_ENV === 'production'
-        ? '/etc/tempo-node-manager/config.json'
-        : path.join(process.cwd(), '.data', 'config.json');
-
-    this.configPath = this.configService.get<string>('CONFIG_PATH', defaultPath);
-  }
+    private databaseService: DatabaseService
+  ) {}
 
   async onModuleInit() {
-    await this.loadConfig();
-  }
-
-  private async loadConfig(): Promise<void> {
-    try {
-      if (fs.existsSync(this.configPath)) {
-        const data = fs.readFileSync(this.configPath, 'utf-8');
-        this.adminConfig = JSON.parse(data);
-        this.logger.log('Admin configuration loaded');
-      } else {
-        this.logger.warn('No admin configuration found - setup required');
-      }
-    } catch (error) {
-      this.logger.error('Error loading config:', error);
-    }
-  }
-
-  private async saveConfig(): Promise<void> {
-    try {
-      const dir = path.dirname(this.configPath);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
-      }
-      fs.writeFileSync(this.configPath, JSON.stringify(this.adminConfig, null, 2));
-      this.logger.log('Admin configuration saved');
-    } catch (error) {
-      this.logger.error('Error saving config:', error);
-      throw new Error('Failed to save configuration');
+    const isConfigured = await this.databaseService.isAdminConfigured();
+    if (isConfigured) {
+      this.logger.log('Admin configuration loaded from database');
+    } else {
+      this.logger.warn('No admin configuration found - setup required');
     }
   }
 
   async getSetupStatus(): Promise<SetupStatus> {
+    const isConfigured = await this.databaseService.isAdminConfigured();
     return {
-      isSetup: this.adminConfig !== null,
-      requiresPassword: this.adminConfig === null,
+      isSetup: isConfigured,
+      requiresPassword: !isConfigured,
     };
   }
 
   async setup(password: string): Promise<LoginResponse> {
-    if (this.adminConfig !== null) {
+    if (await this.databaseService.isAdminConfigured()) {
       throw new UnauthorizedException('Already setup');
     }
 
@@ -81,22 +42,19 @@ export class AuthService implements OnModuleInit {
     const saltRounds = 10;
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
-    this.adminConfig = {
-      passwordHash,
-      createdAt: new Date().toISOString(),
-    };
-
-    await this.saveConfig();
+    await this.databaseService.setAdminConfig(passwordHash);
+    this.logger.log('Admin configuration saved to database');
 
     return this.generateToken();
   }
 
   async login(password: string): Promise<LoginResponse> {
-    if (this.adminConfig === null) {
+    const adminConfig = await this.databaseService.getAdminConfig();
+    if (!adminConfig) {
       throw new UnauthorizedException('Setup required');
     }
 
-    const isValid = await bcrypt.compare(password, this.adminConfig.passwordHash);
+    const isValid = await bcrypt.compare(password, adminConfig.passwordHash);
 
     if (!isValid) {
       throw new UnauthorizedException('Invalid password');
@@ -106,11 +64,12 @@ export class AuthService implements OnModuleInit {
   }
 
   async changePassword(currentPassword: string, newPassword: string): Promise<void> {
-    if (this.adminConfig === null) {
+    const adminConfig = await this.databaseService.getAdminConfig();
+    if (!adminConfig) {
       throw new UnauthorizedException('Setup required');
     }
 
-    const isValid = await bcrypt.compare(currentPassword, this.adminConfig.passwordHash);
+    const isValid = await bcrypt.compare(currentPassword, adminConfig.passwordHash);
 
     if (!isValid) {
       throw new UnauthorizedException('Invalid current password');
@@ -121,8 +80,9 @@ export class AuthService implements OnModuleInit {
     }
 
     const saltRounds = 10;
-    this.adminConfig.passwordHash = await bcrypt.hash(newPassword, saltRounds);
-    await this.saveConfig();
+    const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
+    await this.databaseService.setAdminConfig(newPasswordHash);
+    this.logger.log('Admin password updated in database');
   }
 
   private generateToken(): LoginResponse {

@@ -20,7 +20,7 @@ TEMPO_VERSION="${TEMPO_VERSION:-latest}"
 INSTALL_DIR="${INSTALL_DIR:-/opt/tempo-node-manager}"
 DATA_DIR="${DATA_DIR:-/var/lib/tempo}"
 CONFIG_DIR="${CONFIG_DIR:-/etc/tempo-node-manager}"
-AGENT_PORT="${AGENT_PORT:-9545}"
+AGENT_PORT="${AGENT_PORT:-3003}"
 HTTP_PORT="${HTTP_PORT:-8545}"
 P2P_PORT="${P2P_PORT:-30303}"
 
@@ -369,7 +369,7 @@ setup_application() {
 
 PORT=$AGENT_PORT
 JWT_SECRET=$jwt_secret
-CONFIG_PATH=$CONFIG_DIR/config.json
+DATABASE_URL=file:$CONFIG_DIR/data.db
 TEMPO_DATA_DIR=$DATA_DIR
 TEMPO_VERSION=$TEMPO_VERSION
 TEMPO_HTTP_PORT=$HTTP_PORT
@@ -381,6 +381,12 @@ EOF
 
     # Link .env to install dir
     ln -sf "$CONFIG_DIR/.env" "$INSTALL_DIR/.env"
+
+    # Initialize database schema
+    log_info "Initializing database..."
+    cd "$INSTALL_DIR"
+    DATABASE_URL="file:$CONFIG_DIR/data.db" npx prisma db push --skip-generate 2>/dev/null || true
+    cd - > /dev/null
 
     log_success "Configuration created"
 }
@@ -411,7 +417,7 @@ Type=simple
 User=root
 WorkingDirectory=$INSTALL_DIR
 EnvironmentFile=$CONFIG_DIR/.env
-ExecStart=/usr/bin/node $INSTALL_DIR/dist/main.js
+ExecStart=/usr/bin/node $INSTALL_DIR/dist/agent/src/main.js
 Restart=always
 RestartSec=10
 
@@ -439,7 +445,7 @@ EOF
     <key>ProgramArguments</key>
     <array>
         <string>/usr/local/bin/node</string>
-        <string>$INSTALL_DIR/dist/main.js</string>
+        <string>$INSTALL_DIR/dist/agent/src/main.js</string>
     </array>
     <key>WorkingDirectory</key>
     <string>$INSTALL_DIR</string>
