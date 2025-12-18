@@ -15,6 +15,7 @@ export class DockerService implements OnModuleInit {
   private readonly logger = new Logger(DockerService.name);
   private docker: Docker;
   private config: NodeConfig;
+  private externalIp: string | null = null;
 
   constructor(private configService: ConfigService) {
     this.docker = new Docker();
@@ -27,10 +28,27 @@ export class DockerService implements OnModuleInit {
     };
   }
 
+  private async detectExternalIp(): Promise<string | null> {
+    try {
+      const response = await fetch('https://ifconfig.me/ip');
+      if (response.ok) {
+        const ip = (await response.text()).trim();
+        this.logger.log(`Detected external IP: ${ip}`);
+        return ip;
+      }
+    } catch (error) {
+      this.logger.warn('Failed to detect external IP:', error);
+    }
+    return null;
+  }
+
   async onModuleInit() {
     try {
       const info = await this.docker.info();
       this.logger.log(`Docker connected: ${info.Name}`);
+
+      // Detect external IP for NAT configuration
+      this.externalIp = await this.detectExternalIp();
     } catch (error) {
       this.logger.error('Failed to connect to Docker:', error);
       throw new Error('Docker is not available. Please ensure Docker is running.');
@@ -124,34 +142,43 @@ export class DockerService implements OnModuleInit {
       await this.pullImage();
     }
 
+    // Build command with optional NAT configuration
+    const cmd = [
+      'node',
+      '--datadir',
+      '/root/.tempo',
+      '--follow',
+      // P2P networking
+      '--port',
+      this.config.p2pPort.toString(),
+      '--discovery.addr',
+      '0.0.0.0',
+      '--discovery.port',
+      this.config.p2pPort.toString(),
+      // Bootnodes for peer discovery
+      '--bootnodes',
+      TEMPO_BOOTNODES.join(','),
+      // HTTP RPC
+      '--http',
+      '--http.addr',
+      '0.0.0.0',
+      '--http.port',
+      this.config.httpPort.toString(),
+      '--http.api',
+      this.config.httpApis.join(','),
+    ];
+
+    // Add NAT configuration if external IP is available
+    if (this.externalIp) {
+      cmd.push('--nat', `extip:${this.externalIp}`);
+      this.logger.log(`Using external IP for NAT: ${this.externalIp}`);
+    }
+
     const container = await this.docker.createContainer({
       Image: imageName,
       name: CONTAINER_NAME,
       platform: 'linux/amd64', // Tempo doesn't have ARM64 builds
-      Cmd: [
-        'node',
-        '--datadir',
-        '/root/.tempo',
-        '--follow',
-        // P2P networking
-        '--port',
-        this.config.p2pPort.toString(),
-        '--discovery.addr',
-        '0.0.0.0',
-        '--discovery.port',
-        this.config.p2pPort.toString(),
-        // Bootnodes for peer discovery
-        '--bootnodes',
-        TEMPO_BOOTNODES.join(','),
-        // HTTP RPC
-        '--http',
-        '--http.addr',
-        '0.0.0.0',
-        '--http.port',
-        this.config.httpPort.toString(),
-        '--http.api',
-        this.config.httpApis.join(','),
-      ],
+      Cmd: cmd,
       ExposedPorts: {
         [`${this.config.httpPort}/tcp`]: {},
         [`${this.config.p2pPort}/tcp`]: {},
