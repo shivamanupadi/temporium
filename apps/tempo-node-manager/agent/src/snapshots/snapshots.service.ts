@@ -1,6 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Snapshot, SnapshotDownloadProgress, DownloadStatus, SnapshotDownloadHistory } from '#types/index';
+import {
+  Snapshot,
+  SnapshotDownloadProgress,
+  DownloadStatus,
+  SnapshotDownloadHistory,
+} from '#types/index';
 import { DockerService } from '../docker/docker.service';
 import { DatabaseService } from '../database/database.service';
 

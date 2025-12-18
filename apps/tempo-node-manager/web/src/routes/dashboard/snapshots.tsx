@@ -355,9 +355,7 @@ function HistoryItem({ download }: { download: SnapshotDownloadHistory }): JSX.E
           <p className="text-[13px] font-medium text-gray-900">
             {isCompleted ? 'Download completed' : 'Download failed'}
           </p>
-          {download.error && (
-            <p className="text-[11px] text-red-500 mt-0.5">{download.error}</p>
-          )}
+          {download.error && <p className="text-[11px] text-red-500 mt-0.5">{download.error}</p>}
         </div>
       </div>
       <div className="flex items-center gap-2 text-[12px] text-gray-500">

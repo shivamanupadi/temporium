@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/auth';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollText, Search, Pause, Play, Trash2 } from 'lucide-react';
+import { ScrollText, Search, Pause, Play, Trash2, Download } from 'lucide-react';
 import type { LogEntry, LogMessage } from '#types/index';
 
 export const Route = createFileRoute('/dashboard/logs')({
@@ -78,6 +78,22 @@ function LogsPage(): JSX.Element {
 
   const clearLogs = (): void => setLogs([]);
 
+  const downloadLogs = (): void => {
+    const content = filteredLogs
+      .map(
+        log =>
+          `${new Date(log.timestamp).toISOString()} [${log.level.toUpperCase()}] ${log.source ? `[${log.source}] ` : ''}${log.message}`
+      )
+      .join('\n');
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tempo-logs-${new Date().toISOString().slice(0, 10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -91,12 +107,17 @@ function LogsPage(): JSX.Element {
       {/* Logs Card */}
       <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_2px_4px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col h-[calc(100vh-220px)]">
         {/* Header */}
-        <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <ScrollText className="w-4 h-4 text-slate-500" />
-            <h2 className="text-[13px] font-semibold text-gray-900">Container Logs</h2>
+        <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between flex-shrink-0 bg-slate-50/50">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
+              <ScrollText className="w-4 h-4 text-slate-600" />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-slate-800">Container Logs</h2>
+              <p className="text-[11px] text-slate-500">{filteredLogs.length} entries</p>
+            </div>
             {isLive && (
-              <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+              <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                 Live
               </span>
@@ -104,52 +125,69 @@ function LogsPage(): JSX.Element {
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <Input
-                placeholder="Search logs..."
+                placeholder="Filter logs..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="pl-8 h-8 w-56 text-[13px] bg-gray-50 border-gray-200"
+                className="pl-9 h-9 w-64 text-sm bg-white border-slate-200 rounded-lg focus:ring-2 focus:ring-slate-200 focus:border-slate-300"
               />
             </div>
+            <div className="h-6 w-px bg-slate-200" />
             <Button
-              variant="outline"
+              variant="ghost"
               size="sm"
               onClick={() => setIsLive(!isLive)}
-              className="h-8 text-[12px] border-gray-200"
+              className={cn(
+                'h-9 px-3 text-[13px] rounded-lg',
+                isLive
+                  ? 'text-amber-600 hover:text-amber-700 hover:bg-amber-50'
+                  : 'text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
+              )}
             >
               {isLive ? (
                 <>
-                  <Pause className="w-3.5 h-3.5 mr-1" /> Pause
+                  <Pause className="w-4 h-4 mr-1.5" /> Pause
                 </>
               ) : (
                 <>
-                  <Play className="w-3.5 h-3.5 mr-1" /> Resume
+                  <Play className="w-4 h-4 mr-1.5" /> Resume
                 </>
               )}
             </Button>
             <Button
-              variant="outline"
+              variant="ghost"
+              size="sm"
+              onClick={downloadLogs}
+              className="h-9 px-3 text-[13px] text-slate-600 hover:text-slate-700 hover:bg-slate-100 rounded-lg"
+            >
+              <Download className="w-4 h-4 mr-1.5" /> Export
+            </Button>
+            <Button
+              variant="ghost"
               size="sm"
               onClick={clearLogs}
-              className="h-8 text-[12px] border-gray-200"
+              className="h-9 px-3 text-[13px] text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg"
             >
-              <Trash2 className="w-3.5 h-3.5 mr-1" /> Clear
+              <Trash2 className="w-4 h-4 mr-1.5" /> Clear
             </Button>
           </div>
         </div>
 
-        {/* Log Content */}
-        <div
-          ref={scrollRef}
-          className="flex-1 overflow-auto font-mono text-[12px] bg-slate-950 text-slate-100 p-4"
-        >
+        {/* Log Content - Light Theme */}
+        <div ref={scrollRef} className="flex-1 overflow-auto font-mono text-[12px] bg-white p-4">
           {filteredLogs.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-slate-500">
-              No logs available
+            <div className="flex flex-col items-center justify-center h-full text-slate-400">
+              <ScrollText className="w-10 h-10 mb-3 text-slate-300" />
+              <p className="text-sm font-medium">No logs available</p>
+              <p className="text-xs mt-1">Logs will appear here when the node is running</p>
             </div>
           ) : (
-            filteredLogs.map((log, index) => <LogLine key={index} log={log} />)
+            <div className="space-y-0.5">
+              {filteredLogs.map((log, index) => (
+                <LogLine key={index} log={log} search={search} />
+              ))}
+            </div>
           )}
         </div>
       </div>
@@ -157,24 +195,57 @@ function LogsPage(): JSX.Element {
   );
 }
 
-function LogLine({ log }: { log: LogEntry }): JSX.Element {
-  const levelColors = {
-    debug: 'text-slate-400',
-    info: 'text-blue-400',
-    warn: 'text-amber-400',
-    error: 'text-red-400',
+function LogLine({ log, search }: { log: LogEntry; search: string }): JSX.Element {
+  const levelConfig = {
+    debug: { color: 'text-slate-500', bg: 'bg-slate-100', border: 'border-slate-200' },
+    info: { color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' },
+    warn: { color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
+    error: { color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-100' },
+  };
+
+  const config = levelConfig[log.level] || levelConfig.info;
+
+  // Highlight search matches
+  const highlightText = (text: string): JSX.Element => {
+    if (!search) return <>{text}</>;
+    const parts = text.split(new RegExp(`(${search})`, 'gi'));
+    return (
+      <>
+        {parts.map((part, i) =>
+          part.toLowerCase() === search.toLowerCase() ? (
+            <mark key={i} className="bg-amber-200 text-amber-900 px-0.5 rounded">
+              {part}
+            </mark>
+          ) : (
+            part
+          )
+        )}
+      </>
+    );
   };
 
   return (
-    <div className="flex gap-2 py-0.5 hover:bg-slate-900/50">
-      <span className="text-slate-500 flex-shrink-0">
+    <div className="flex items-start gap-3 py-1.5 px-2 rounded-md hover:bg-slate-50 transition-colors group">
+      <span className="text-[11px] text-slate-400 font-medium flex-shrink-0 tabular-nums pt-0.5">
         {new Date(log.timestamp).toLocaleTimeString()}
       </span>
-      <span className={cn('uppercase w-12 flex-shrink-0', levelColors[log.level])}>
+      <span
+        className={cn(
+          'text-[10px] uppercase font-semibold px-1.5 py-0.5 rounded flex-shrink-0',
+          config.bg,
+          config.color,
+          'border',
+          config.border
+        )}
+      >
         {log.level}
       </span>
-      {log.source && <span className="text-violet-400 flex-shrink-0">[{log.source}]</span>}
-      <span className="text-slate-200 break-all">{log.message}</span>
+      {log.source && (
+        <span className="text-[11px] text-violet-600 font-medium flex-shrink-0 bg-violet-50 px-1.5 py-0.5 rounded border border-violet-100">
+          {log.source}
+        </span>
+      )}
+      <span className="text-slate-700 break-all leading-relaxed">{highlightText(log.message)}</span>
     </div>
   );
 }

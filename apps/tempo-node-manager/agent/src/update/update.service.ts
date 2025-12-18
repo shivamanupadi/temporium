@@ -194,7 +194,9 @@ export class UpdateService {
       await execAsync(
         `cp -r ${tempDir}/tempo-node-manager/node_modules ${installDir}/ 2>/dev/null || true`
       );
-      await execAsync(`cp -r ${tempDir}/tempo-node-manager/prisma ${installDir}/ 2>/dev/null || true`);
+      await execAsync(
+        `cp -r ${tempDir}/tempo-node-manager/prisma ${installDir}/ 2>/dev/null || true`
+      );
 
       // Update package.json version
       const pkgPath = path.join(installDir, 'package.json');

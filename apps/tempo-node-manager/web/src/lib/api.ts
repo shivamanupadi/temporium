@@ -146,6 +146,28 @@ export interface UpdateResult {
   newVersion?: string;
 }
 
+// Public API (no auth required)
+export interface PublicNodeStatus {
+  status: 'running' | 'stopped' | 'starting' | 'stopping' | 'syncing' | 'error' | 'not_installed';
+  currentBlock: number;
+  highestBlock: number;
+  peerCount: number;
+  isSynced: boolean;
+  syncProgress: number;
+  uptime?: number;
+  version: string;
+}
+
+export const publicApi = {
+  getStatus: async (): Promise<PublicNodeStatus> => {
+    const response = await fetch(`${API_BASE}/public/status`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch public status');
+    }
+    return response.json();
+  },
+};
+
 export const updateApi = {
   // Get current version (no auth required)
   getVersion: (): Promise<{ version: string }> => request<{ version: string }>('/update/version'),

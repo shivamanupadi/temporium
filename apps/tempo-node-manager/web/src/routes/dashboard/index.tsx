@@ -305,7 +305,9 @@ function DashboardOverview(): JSX.Element {
                     </p>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                       {nodeInfo.syncStatus.stages
-                        .filter(stage => ['Headers', 'Bodies', 'SenderRecovery', 'Execution'].includes(stage.name))
+                        .filter(stage =>
+                          ['Headers', 'Bodies', 'SenderRecovery', 'Execution'].includes(stage.name)
+                        )
                         .map(stage => (
                           <div
                             key={stage.name}
