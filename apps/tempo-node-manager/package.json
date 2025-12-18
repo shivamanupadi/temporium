@@ -1,6 +1,6 @@
 {
   "name": "tempo-node-manager",
-  "version": "0.1.19",
+  "version": "0.1.20",
   "private": true,
   "description": "Tempo Node Manager - Self-hosted node management system",
   "scripts": {
