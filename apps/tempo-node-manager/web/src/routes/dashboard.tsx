@@ -1,19 +1,10 @@
-import { createFileRoute, redirect, Outlet, Link, useLocation } from '@tanstack/react-router';
+import { createFileRoute, redirect, Outlet } from '@tanstack/react-router';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth';
 import { updateApi } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import {
-  Server,
-  ScrollText,
-  Download,
-  Settings,
-  LogOut,
-  ArrowUpCircle,
-  Loader2,
-  RefreshCw,
-} from 'lucide-react';
+import { ArrowUpCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -23,7 +14,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useState, type JSX } from 'react';
+import { useState, useEffect, type JSX } from 'react';
+import { Sidebar } from '@/components/Sidebar';
+import { MobileHeader } from '@/components/MobileHeader';
 
 export const Route = createFileRoute('/dashboard')({
   beforeLoad: (): void => {
@@ -35,18 +28,25 @@ export const Route = createFileRoute('/dashboard')({
   component: DashboardLayout,
 });
 
-const navItems = [
-  { to: '/dashboard', label: 'Overview', icon: Server, exact: true },
-  { to: '/dashboard/logs', label: 'Logs', icon: ScrollText },
-  { to: '/dashboard/snapshots', label: 'Snapshots', icon: Download },
-  { to: '/dashboard/settings', label: 'Settings', icon: Settings },
-];
+// Persist collapsed state in localStorage
+const SIDEBAR_COLLAPSED_KEY = 'tempo-node-manager-sidebar-collapsed';
+
+function getInitialCollapsed(): boolean {
+  if (typeof window === 'undefined') return false;
+  const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
+  return stored === 'true';
+}
 
 function DashboardLayout(): JSX.Element {
-  const location = useLocation();
-  const { logout } = useAuthStore();
   const queryClient = useQueryClient();
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(getInitialCollapsed);
+
+  // Persist collapsed state
+  useEffect(() => {
+    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(collapsed));
+  }, [collapsed]);
 
   // Fetch current version
   const { data: versionData } = useQuery({
@@ -96,122 +96,68 @@ function DashboardLayout(): JSX.Element {
   const updateAvailable = updateInfo?.updateAvailable || false;
   const latestVersion = updateInfo?.latest;
 
+  const handleCheckUpdate = (): void => {
+    queryClient.invalidateQueries({ queryKey: ['update-check'] });
+  };
+
   return (
-    <div className="flex min-h-screen bg-background">
+    <div className="min-h-screen bg-[#FAFAFA]">
       {/* Sidebar */}
-      <aside className="w-64 border-r bg-card">
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="p-6 border-b">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary">
-                <Server className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="font-semibold">Tempo Node</h1>
-                <p className="text-xs text-muted-foreground">Manager</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1">
-            {navItems.map(item => {
-              const isActive = item.exact
-                ? location.pathname === item.to
-                : location.pathname.startsWith(item.to);
-
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-primary text-primary-foreground'
-                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                  )}
-                >
-                  <item.icon className="w-4 h-4" />
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-
-          {/* Version & Update */}
-          <div className="p-4 border-t space-y-3">
-            {/* Update Available Banner */}
-            {updateAvailable && (
-              <button
-                onClick={() => setShowUpdateDialog(true)}
-                className="w-full flex items-center gap-2 p-3 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-900 text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-950/50 transition-colors"
-              >
-                <ArrowUpCircle className="w-4 h-4" />
-                <div className="flex-1 text-left">
-                  <p className="text-xs font-medium">Update Available</p>
-                  <p className="text-xs opacity-75">v{latestVersion}</p>
-                </div>
-              </button>
-            )}
-
-            {/* Version Display */}
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Version {currentVersion}</span>
-              <button
-                onClick={() => queryClient.invalidateQueries({ queryKey: ['update-check'] })}
-                className="p-1 hover:bg-accent rounded"
-                title="Check for updates"
-              >
-                <RefreshCw className="w-3 h-3" />
-              </button>
-            </div>
-
-            {/* Logout Button */}
-            <Button
-              variant="ghost"
-              className="w-full justify-start gap-3 text-muted-foreground"
-              onClick={() => logout()}
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </aside>
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        collapsed={collapsed}
+        onToggleCollapse={() => setCollapsed(!collapsed)}
+        currentVersion={currentVersion}
+        updateAvailable={updateAvailable}
+        latestVersion={latestVersion ?? undefined}
+        onCheckUpdate={handleCheckUpdate}
+        onShowUpdateDialog={() => setShowUpdateDialog(true)}
+      />
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">
-        <Outlet />
+      <main
+        className={cn(
+          'min-h-screen transition-[margin] duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)]',
+          collapsed ? 'md:ml-[68px]' : 'md:ml-56'
+        )}
+      >
+        {/* Mobile Header */}
+        <MobileHeader onMenuClick={() => setSidebarOpen(true)} />
+
+        {/* Page Content */}
+        <div className="p-6">
+          <div className="mx-auto max-w-5xl">
+            <Outlet />
+          </div>
+        </div>
       </main>
 
       {/* Update Dialog */}
       <Dialog open={showUpdateDialog} onOpenChange={setShowUpdateDialog}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <ArrowUpCircle className="w-5 h-5 text-green-500" />
+              <ArrowUpCircle className="w-5 h-5 text-emerald-500" />
               Update Available
             </DialogTitle>
             <DialogDescription>A new version of Tempo Node Manager is available.</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <div className="flex justify-between items-center p-3 rounded-lg bg-muted">
+            <div className="flex justify-between items-center p-4 rounded-lg bg-slate-50 border border-slate-100">
               <div>
-                <p className="text-sm text-muted-foreground">Current Version</p>
-                <p className="font-mono font-medium">{currentVersion}</p>
+                <p className="text-xs text-slate-500 mb-0.5">Current</p>
+                <p className="font-mono font-medium text-slate-900">{currentVersion}</p>
               </div>
-              <div className="text-2xl text-muted-foreground">→</div>
+              <div className="text-xl text-slate-300">→</div>
               <div>
-                <p className="text-sm text-muted-foreground">New Version</p>
-                <p className="font-mono font-medium text-green-600 dark:text-green-400">
-                  {latestVersion}
-                </p>
+                <p className="text-xs text-slate-500 mb-0.5">Latest</p>
+                <p className="font-mono font-medium text-emerald-600">{latestVersion}</p>
               </div>
             </div>
 
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-slate-500">
               The update will be downloaded and installed. The service will need to be restarted
               after the update.
             </p>
@@ -224,7 +170,7 @@ function DashboardLayout(): JSX.Element {
             <Button
               onClick={() => installMutation.mutate()}
               disabled={installMutation.isPending}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               {installMutation.isPending ? (
                 <>
@@ -241,8 +187,8 @@ function DashboardLayout(): JSX.Element {
           </DialogFooter>
 
           {installMutation.isSuccess && installMutation.data.success && (
-            <div className="mt-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900">
-              <p className="text-sm text-amber-700 dark:text-amber-400 mb-2">
+            <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-200">
+              <p className="text-sm text-amber-700 mb-2">
                 Update installed successfully. Restart the service to apply changes.
               </p>
               <Button
@@ -250,6 +196,7 @@ function DashboardLayout(): JSX.Element {
                 variant="outline"
                 onClick={() => restartMutation.mutate()}
                 disabled={restartMutation.isPending}
+                className="border-amber-300 text-amber-700 hover:bg-amber-100"
               >
                 {restartMutation.isPending ? (
                   <>

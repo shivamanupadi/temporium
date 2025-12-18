@@ -7,7 +7,7 @@ import { useAuthStore } from '@/stores/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Server, Zap } from 'lucide-react';
+import { Loader2, Zap, Server } from 'lucide-react';
 
 export const Route = createFileRoute('/login')({
   component: LoginPage,
@@ -82,113 +82,114 @@ function LoginPage(): JSX.Element {
 
   if (isLoadingStatus) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      <div className="flex items-center justify-center min-h-screen bg-[#FAFAFA]">
+        <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-12">
-      {/* Static background gradient */}
-      <div className="fixed inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/15 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[#0073e6]/15 rounded-full blur-3xl" />
-      </div>
-
-      {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 px-6 py-6">
-        <div className="max-w-md mx-auto flex items-center justify-center">
-          <div className="flex items-center gap-2.5">
-            <Zap className="w-6 h-6 text-slate-900" strokeWidth={2} />
-            <span className="text-lg font-bold text-slate-900 tracking-tight">Temporium</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Content */}
+    <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] px-4">
       <div className="w-full max-w-md">
-        {/* Badge */}
-        <div className="flex justify-center mb-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white backdrop-blur border border-border shadow-sm">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-            </span>
-            <span className="text-[13px] font-medium text-foreground">Node Manager</span>
+        {/* Card Container */}
+        <div className="bg-white rounded-2xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_2px_4px_rgba(0,0,0,0.04),0_12px_24px_rgba(0,0,0,0.04)] p-8">
+          {/* Logo & Brand */}
+          <div className="flex flex-col items-center mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center"
+                style={{ backgroundColor: '#EDE9FE' }}
+              >
+                <Zap className="w-6 h-6" style={{ color: '#7C3AED' }} />
+              </div>
+            </div>
+            <h1 className="text-xl font-bold text-gray-900 mb-1">Temporium</h1>
+            <div className="flex items-center gap-1.5 text-gray-500">
+              <Server className="w-3.5 h-3.5" />
+              <span className="text-[13px] font-medium">Node Manager</span>
+            </div>
           </div>
-        </div>
 
-        {/* Icon */}
-        <div className="flex justify-center mb-6">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-primary/10">
-            <Server className="w-8 h-8 text-primary" />
+          {/* Heading */}
+          <div className="text-center mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">
+              {isSetup ? 'Welcome back' : 'Get started'}
+            </h2>
+            <p className="text-[13px] text-gray-500">
+              {isSetup
+                ? 'Enter your password to access the dashboard'
+                : 'Create an admin password to begin'}
+            </p>
           </div>
-        </div>
 
-        {/* Heading */}
-        <div className="text-center mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">
-            {isSetup ? 'Welcome Back' : 'Initial Setup'}
-          </h1>
-          <p className="text-[15px] text-muted-foreground">
-            {isSetup
-              ? 'Enter your password to access the dashboard'
-              : 'Create an admin password to get started'}
-          </p>
-        </div>
-
-        {/* Form Card */}
-        <div className="bg-white backdrop-blur rounded-xl border border-border p-6 shadow-sm">
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-[13px] font-medium text-gray-700">
+                Password
+              </Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
-                placeholder={isSetup ? 'Enter password' : 'Create password (min 8 characters)'}
+                placeholder={isSetup ? 'Enter your password' : 'Create a password'}
                 required
                 disabled={isSubmitting}
+                className="h-11 bg-gray-50 border-gray-200 focus:border-violet-500 focus:ring-violet-500/20"
               />
+              {!isSetup && <p className="text-[11px] text-gray-400">Minimum 8 characters</p>}
             </div>
 
             {!isSetup && (
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Label htmlFor="confirmPassword" className="text-[13px] font-medium text-gray-700">
+                  Confirm Password
+                </Label>
                 <Input
                   id="confirmPassword"
                   type="password"
                   value={confirmPassword}
                   onChange={e => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm password"
+                  placeholder="Confirm your password"
                   required
                   disabled={isSubmitting}
+                  className="h-11 bg-gray-50 border-gray-200 focus:border-violet-500 focus:ring-violet-500/20"
                 />
               </div>
             )}
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
+            <Button
+              type="submit"
+              className="w-full h-11 bg-gray-900 hover:bg-gray-800 text-white font-medium"
+              disabled={isSubmitting}
+            >
               {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {isSetup ? 'Sign In' : 'Create Admin Account'}
+              {isSetup ? 'Sign in' : 'Create account'}
             </Button>
           </form>
+
+          {/* Help text */}
+          <p className="mt-6 text-center text-[12px] text-gray-400">
+            {isSetup
+              ? 'Forgot your password? Reset the database to start fresh.'
+              : 'This password will be used to access your node dashboard.'}
+          </p>
         </div>
 
         {/* Footer */}
-        <div className="mt-8 text-center">
-          <div className="flex items-center justify-center gap-2 text-muted-foreground">
-            <span className="text-[12px]">Powered by</span>
+        <div className="mt-6 text-center">
+          <p className="text-[12px] text-gray-400">
+            Powered by{' '}
             <a
               href="https://tempo.xyz/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[13px] font-semibold text-foreground hover:text-primary transition-colors"
+              className="text-gray-500 hover:text-gray-700 transition-colors"
             >
               Tempo
             </a>
-          </div>
+          </p>
         </div>
       </div>
     </div>

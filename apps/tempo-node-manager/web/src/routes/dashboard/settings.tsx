@@ -1,13 +1,12 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { useState, type JSX } from 'react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { authApi } from '@/lib/api';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { authApi, updateApi } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Lock, Info } from 'lucide-react';
+import { Loader2, Lock, Info, Server, Globe, Database, Zap } from 'lucide-react';
 
 export const Route = createFileRoute('/dashboard/settings')({
   component: SettingsPage,
@@ -17,6 +16,13 @@ function SettingsPage(): JSX.Element {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
+  // Fetch version
+  const { data: versionData } = useQuery({
+    queryKey: ['version'],
+    queryFn: updateApi.getVersion,
+    staleTime: Infinity,
+  });
 
   const changePasswordMutation = useMutation({
     mutationFn: () => authApi.changePassword(currentPassword, newPassword),
@@ -48,96 +54,130 @@ function SettingsPage(): JSX.Element {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
+      {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-muted-foreground">Manage your node manager settings</p>
+        <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
+        <p className="text-[13px] text-slate-500 mt-0.5">Manage your node manager settings</p>
       </div>
 
-      {/* Change Password */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Lock className="w-5 h-5" />
-            Change Password
-          </CardTitle>
-          <CardDescription>Update your admin password</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleChangePassword} className="space-y-4 max-w-md">
-            <div className="space-y-2">
-              <Label htmlFor="currentPassword">Current Password</Label>
-              <Input
-                id="currentPassword"
-                type="password"
-                value={currentPassword}
-                onChange={e => setCurrentPassword(e.target.value)}
-                required
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Change Password Card */}
+        <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_2px_4px_rgba(0,0,0,0.04)] overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+            <Lock className="w-4 h-4 text-slate-500" />
+            <h2 className="text-[13px] font-semibold text-gray-900">Change Password</h2>
+          </div>
+          <div className="p-4">
+            <form onSubmit={handleChangePassword} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="currentPassword" className="text-[13px] font-medium text-gray-700">
+                  Current Password
+                </Label>
+                <Input
+                  id="currentPassword"
+                  type="password"
+                  value={currentPassword}
+                  onChange={e => setCurrentPassword(e.target.value)}
+                  required
+                  disabled={changePasswordMutation.isPending}
+                  className="h-10 bg-gray-50 border-gray-200 text-[13px]"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="newPassword" className="text-[13px] font-medium text-gray-700">
+                  New Password
+                </Label>
+                <Input
+                  id="newPassword"
+                  type="password"
+                  value={newPassword}
+                  onChange={e => setNewPassword(e.target.value)}
+                  placeholder="Min 8 characters"
+                  required
+                  disabled={changePasswordMutation.isPending}
+                  className="h-10 bg-gray-50 border-gray-200 text-[13px]"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-[13px] font-medium text-gray-700">
+                  Confirm New Password
+                </Label>
+                <Input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={e => setConfirmPassword(e.target.value)}
+                  required
+                  disabled={changePasswordMutation.isPending}
+                  className="h-10 bg-gray-50 border-gray-200 text-[13px]"
+                />
+              </div>
+              <Button
+                type="submit"
                 disabled={changePasswordMutation.isPending}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="newPassword">New Password</Label>
-              <Input
-                id="newPassword"
-                type="password"
-                value={newPassword}
-                onChange={e => setNewPassword(e.target.value)}
-                placeholder="Min 8 characters"
-                required
-                disabled={changePasswordMutation.isPending}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm New Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={e => setConfirmPassword(e.target.value)}
-                required
-                disabled={changePasswordMutation.isPending}
-              />
-            </div>
-            <Button type="submit" disabled={changePasswordMutation.isPending}>
-              {changePasswordMutation.isPending && (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              )}
-              Change Password
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+                size="sm"
+                className="h-9 bg-gray-900 hover:bg-gray-800 text-white text-[13px]"
+              >
+                {changePasswordMutation.isPending && (
+                  <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                )}
+                Update Password
+              </Button>
+            </form>
+          </div>
+        </div>
 
-      {/* About */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Info className="w-5 h-5" />
-            About
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Version</span>
-              <span className="font-mono">0.0.1</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Tempo Image</span>
-              <span className="font-mono">ghcr.io/tempoxyz/tempo</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Agent Port</span>
-              <span className="font-mono">9545</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">RPC Port</span>
-              <span className="font-mono">8545</span>
+        {/* About Card */}
+        <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_2px_4px_rgba(0,0,0,0.04)] overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+            <Info className="w-4 h-4 text-slate-500" />
+            <h2 className="text-[13px] font-semibold text-gray-900">About</h2>
+          </div>
+          <div className="p-4">
+            <div className="space-y-3">
+              <InfoRow
+                icon={<Zap className="w-4 h-4" />}
+                label="Version"
+                value={versionData?.version || '0.0.0'}
+                mono
+              />
+              <InfoRow
+                icon={<Server className="w-4 h-4" />}
+                label="Tempo Image"
+                value="ghcr.io/tempoxyz/tempo"
+                mono
+              />
+              <InfoRow icon={<Globe className="w-4 h-4" />} label="Agent Port" value="3003" mono />
+              <InfoRow icon={<Database className="w-4 h-4" />} label="RPC Port" value="8545" mono />
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InfoRow({
+  icon,
+  label,
+  value,
+  mono = false,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  mono?: boolean;
+}): JSX.Element {
+  return (
+    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+      <div className="flex items-center gap-2 text-gray-500">
+        {icon}
+        <span className="text-[13px]">{label}</span>
+      </div>
+      <span className={`text-[13px] font-medium text-gray-900 ${mono ? 'font-mono' : ''}`}>
+        {value}
+      </span>
     </div>
   );
 }

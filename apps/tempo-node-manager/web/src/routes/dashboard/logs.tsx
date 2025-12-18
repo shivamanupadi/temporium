@@ -5,7 +5,6 @@ import { io, Socket } from 'socket.io-client';
 import { logsApi } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
 import { cn } from '@/lib/utils';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollText, Search, Pause, Play, Trash2 } from 'lucide-react';
@@ -80,67 +79,80 @@ function LogsPage(): JSX.Element {
   const clearLogs = (): void => setLogs([]);
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="space-y-6">
+      {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Logs</h1>
-          <p className="text-muted-foreground">Real-time container logs</p>
+          <h1 className="text-2xl font-bold text-slate-900">Logs</h1>
+          <p className="text-[13px] text-slate-500 mt-0.5">Real-time container logs</p>
         </div>
       </div>
 
-      <Card className="flex flex-col h-[calc(100vh-200px)]">
-        <CardHeader className="flex-shrink-0 flex-row items-center justify-between space-y-0 pb-4">
-          <CardTitle className="flex items-center gap-2">
-            <ScrollText className="w-5 h-5" />
-            Container Logs
+      {/* Logs Card */}
+      <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_2px_4px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col h-[calc(100vh-220px)]">
+        {/* Header */}
+        <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <ScrollText className="w-4 h-4 text-slate-500" />
+            <h2 className="text-[13px] font-semibold text-gray-900">Container Logs</h2>
             {isLive && (
-              <span className="flex items-center gap-1 text-xs text-green-500">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
                 Live
               </span>
             )}
-          </CardTitle>
+          </div>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400" />
               <Input
                 placeholder="Search logs..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="pl-8 w-64"
+                className="pl-8 h-8 w-56 text-[13px] bg-gray-50 border-gray-200"
               />
             </div>
-            <Button variant="outline" size="sm" onClick={() => setIsLive(!isLive)}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsLive(!isLive)}
+              className="h-8 text-[12px] border-gray-200"
+            >
               {isLive ? (
                 <>
-                  <Pause className="w-4 h-4 mr-1" /> Pause
+                  <Pause className="w-3.5 h-3.5 mr-1" /> Pause
                 </>
               ) : (
                 <>
-                  <Play className="w-4 h-4 mr-1" /> Resume
+                  <Play className="w-3.5 h-3.5 mr-1" /> Resume
                 </>
               )}
             </Button>
-            <Button variant="outline" size="sm" onClick={clearLogs}>
-              <Trash2 className="w-4 h-4 mr-1" /> Clear
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={clearLogs}
+              className="h-8 text-[12px] border-gray-200"
+            >
+              <Trash2 className="w-3.5 h-3.5 mr-1" /> Clear
             </Button>
           </div>
-        </CardHeader>
-        <CardContent className="flex-1 overflow-hidden p-0">
-          <div
-            ref={scrollRef}
-            className="h-full overflow-auto font-mono text-xs bg-slate-950 text-slate-100 p-4"
-          >
-            {filteredLogs.length === 0 ? (
-              <div className="flex items-center justify-center h-full text-slate-500">
-                No logs available
-              </div>
-            ) : (
-              filteredLogs.map((log, index) => <LogLine key={index} log={log} />)
-            )}
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Log Content */}
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-auto font-mono text-[12px] bg-slate-950 text-slate-100 p-4"
+        >
+          {filteredLogs.length === 0 ? (
+            <div className="flex items-center justify-center h-full text-slate-500">
+              No logs available
+            </div>
+          ) : (
+            filteredLogs.map((log, index) => <LogLine key={index} log={log} />)
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -149,7 +161,7 @@ function LogLine({ log }: { log: LogEntry }): JSX.Element {
   const levelColors = {
     debug: 'text-slate-400',
     info: 'text-blue-400',
-    warn: 'text-yellow-400',
+    warn: 'text-amber-400',
     error: 'text-red-400',
   };
 
@@ -161,7 +173,7 @@ function LogLine({ log }: { log: LogEntry }): JSX.Element {
       <span className={cn('uppercase w-12 flex-shrink-0', levelColors[log.level])}>
         {log.level}
       </span>
-      {log.source && <span className="text-purple-400 flex-shrink-0">[{log.source}]</span>}
+      {log.source && <span className="text-violet-400 flex-shrink-0">[{log.source}]</span>}
       <span className="text-slate-200 break-all">{log.message}</span>
     </div>
   );
