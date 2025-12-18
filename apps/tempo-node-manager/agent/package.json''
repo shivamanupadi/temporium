@@ -1,6 +1,6 @@
 {
   "name": "@tempo-node-manager/agent",
-  "version": "0.1.15",
+  "version": "0.1.16",
   "private": true,
   "description": "Tempo Node Manager Agent - NestJS + Fastify backend",
   "scripts": {
