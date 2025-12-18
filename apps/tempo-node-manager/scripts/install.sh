@@ -385,7 +385,7 @@ EOF
     # Initialize database schema
     log_info "Initializing database..."
     cd "$INSTALL_DIR"
-    DATABASE_URL="file:$CONFIG_DIR/data.db" npx prisma db push --skip-generate 2>/dev/null || true
+    DATABASE_URL="file:$CONFIG_DIR/data.db" ./node_modules/.bin/prisma db push --skip-generate 2>/dev/null || true
     cd - > /dev/null
 
     log_success "Configuration created"

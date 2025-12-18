@@ -72,19 +72,32 @@ jobs:
           mkdir -p release/tempo-node-manager/web
           cp -r web/dist release/tempo-node-manager/web/dist
 
-          # Create minimal package.json for production
-          echo '{"name":"tempo-node-manager","version":"'"${VERSION#v}"'","private":true,"main":"dist/agent/src/main.js","scripts":{"start":"node dist/agent/src/main.js"}}' | jq . > release/tempo-node-manager/package.json
-
-          # Copy node_modules (production only)
-          cd agent
-          yarn install --production --frozen-lockfile
-          # Regenerate Prisma client after production install
-          npx prisma generate
-          cp -r node_modules ../release/tempo-node-manager/
           # Copy Prisma schema for migrations
-          mkdir -p ../release/tempo-node-manager/prisma
-          cp prisma/schema.prisma ../release/tempo-node-manager/prisma/
+          mkdir -p release/tempo-node-manager/prisma
+          cp agent/prisma/schema.prisma release/tempo-node-manager/prisma/
+
+          # Create package.json with dependencies for production install
+          cd agent
+          node -e "
+            const pkg = require('./package.json');
+            const prodPkg = {
+              name: 'tempo-node-manager',
+              version: '${VERSION#v}',
+              private: true,
+              main: 'dist/agent/src/main.js',
+              scripts: { start: 'node dist/agent/src/main.js' },
+              dependencies: pkg.dependencies
+            };
+            console.log(JSON.stringify(prodPkg, null, 2));
+          " > ../release/tempo-node-manager/package.json
           cd ..
+
+          # Install production dependencies in release directory
+          cd release/tempo-node-manager
+          yarn install --production
+          # Generate Prisma client
+          yarn prisma generate
+          cd ../..
 
           # Create tarball
           cd release
