@@ -129,6 +129,8 @@ export class DockerService implements OnModuleInit {
       platform: 'linux/amd64', // Tempo doesn't have ARM64 builds
       Cmd: [
         'node',
+        '--datadir',
+        '/root/.tempo',
         '--follow',
         '--http',
         '--http.addr',
