@@ -273,7 +273,7 @@ function DashboardOverview(): JSX.Element {
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <p className="text-[11px] text-gray-500 uppercase tracking-wider mb-1">
-                      Current Block
+                      Executed
                     </p>
                     <p className="text-[14px] font-mono font-medium text-gray-900">
                       {nodeInfo.syncStatus.currentBlock.toLocaleString()}
@@ -281,7 +281,7 @@ function DashboardOverview(): JSX.Element {
                   </div>
                   <div>
                     <p className="text-[11px] text-gray-500 uppercase tracking-wider mb-1">
-                      Highest Block
+                      Target
                     </p>
                     <p className="text-[14px] font-mono font-medium text-gray-900">
                       {nodeInfo.syncStatus.highestBlock.toLocaleString()}
@@ -296,6 +296,30 @@ function DashboardOverview(): JSX.Element {
                     </p>
                   </div>
                 </div>
+
+                {/* Sync Stages */}
+                {nodeInfo.syncStatus.stages && nodeInfo.syncStatus.stages.length > 0 && (
+                  <div className="pt-3 border-t border-gray-100">
+                    <p className="text-[11px] text-gray-500 uppercase tracking-wider mb-2">
+                      Sync Stages
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {nodeInfo.syncStatus.stages
+                        .filter(stage => ['Headers', 'Bodies', 'SenderRecovery', 'Execution'].includes(stage.name))
+                        .map(stage => (
+                          <div
+                            key={stage.name}
+                            className="flex items-center justify-between p-2 bg-slate-50 rounded-lg"
+                          >
+                            <span className="text-[11px] text-gray-600">{stage.name}</span>
+                            <span className="text-[11px] font-mono font-medium text-gray-900">
+                              {stage.block.toLocaleString()}
+                            </span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}

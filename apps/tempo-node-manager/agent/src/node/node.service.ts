@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DockerService } from '../docker/docker.service';
-import { NodeInfo, NodeActionResponse, SyncStatus } from '#types/index';
+import { NodeInfo, NodeActionResponse, SyncStatus, SyncStage } from '#types/index';
 
 @Injectable()
 export class NodeService {
@@ -87,9 +87,32 @@ export class NodeService {
       let highestBlock = currentBlock;
       let isSynced = true;
       let syncProgress = 100;
+      let stages: SyncStage[] | undefined;
 
       if (syncData.result && typeof syncData.result === 'object') {
-        highestBlock = parseInt(syncData.result.highestBlock, 16);
+        // Parse stages if available
+        if (Array.isArray(syncData.result.stages)) {
+          stages = syncData.result.stages.map((s: { name: string; block: string }) => ({
+            name: s.name,
+            block: parseInt(s.block, 16),
+          }));
+
+          // Use Headers stage block as the target (highest known block)
+          const headersStage = stages?.find(s => s.name === 'Headers');
+          const executionStage = stages?.find(s => s.name === 'Execution');
+
+          if (headersStage && headersStage.block > 0) {
+            highestBlock = headersStage.block;
+          }
+
+          // Use Execution stage as current progress if available
+          if (executionStage && executionStage.block > 0) {
+            // currentBlock from eth_blockNumber is the executed block, use it
+          }
+        } else if (syncData.result.highestBlock) {
+          highestBlock = parseInt(syncData.result.highestBlock, 16);
+        }
+
         isSynced = false;
         syncProgress = highestBlock > 0 ? Math.floor((currentBlock / highestBlock) * 100) : 0;
       }
@@ -100,6 +123,7 @@ export class NodeService {
         peerCount,
         isSynced,
         syncProgress,
+        stages,
       };
     } catch (error) {
       this.logger.warn('Failed to get sync status:', error);

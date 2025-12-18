@@ -11,6 +11,14 @@ export type NodeStatus =
   | 'not_installed';
 
 /**
+ * Sync stage information
+ */
+export interface SyncStage {
+  name: string;
+  block: number;
+}
+
+/**
  * Sync status information
  */
 export interface SyncStatus {
@@ -19,6 +27,7 @@ export interface SyncStatus {
   peerCount: number;
   isSynced: boolean;
   syncProgress: number; // 0-100 percentage
+  stages?: SyncStage[]; // Detailed sync stages
 }
 
 /**
