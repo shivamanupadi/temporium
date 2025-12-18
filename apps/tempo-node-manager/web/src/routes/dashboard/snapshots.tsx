@@ -213,7 +213,7 @@ function SnapshotsPage(): JSX.Element {
                 <span className="text-[13px]">Source</span>
               </div>
               <a
-                href="https://snapshots.tempoxyz.dev/42429"
+                href="https://snapshots.tempoxyz.dev"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[12px] font-mono text-violet-600 hover:underline flex items-center gap-1"

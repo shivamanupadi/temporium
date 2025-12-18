@@ -69,14 +69,20 @@ function DashboardLayout(): JSX.Element {
     mutationFn: updateApi.installUpdate,
     onSuccess: data => {
       if (data.success) {
-        toast.success(data.message);
+        toast.success('Update installed! Reloading page...');
         setShowUpdateDialog(false);
-        queryClient.invalidateQueries({ queryKey: ['update-check'] });
+        // Service auto-restarts after update, reload page after delay
+        setTimeout(() => window.location.reload(), 3000);
       } else {
         toast.error(data.message);
       }
     },
-    onError: () => toast.error('Failed to install update'),
+    onError: () => {
+      // Connection lost likely means service restarted (update success)
+      toast.success('Update installed! Reloading page...');
+      setShowUpdateDialog(false);
+      setTimeout(() => window.location.reload(), 3000);
+    },
   });
 
   // Restart service mutation

@@ -7,6 +7,7 @@ import {
   TEMPO_IMAGE,
   CONTAINER_NAME,
   DEFAULT_NODE_CONFIG,
+  TEMPO_BOOTNODES,
 } from '#types/index';
 
 @Injectable()
@@ -137,6 +138,11 @@ export class DockerService implements OnModuleInit {
         this.config.p2pPort.toString(),
         '--discovery.addr',
         '0.0.0.0',
+        '--discovery.port',
+        this.config.p2pPort.toString(),
+        // Bootnodes for peer discovery
+        '--bootnodes',
+        TEMPO_BOOTNODES.join(','),
         // HTTP RPC
         '--http',
         '--http.addr',
