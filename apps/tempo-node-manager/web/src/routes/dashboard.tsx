@@ -55,12 +55,13 @@ function DashboardLayout(): JSX.Element {
     staleTime: Infinity,
   });
 
-  // Check for updates periodically
+  // Check for updates on page load and periodically
   const { data: updateInfo } = useQuery({
     queryKey: ['update-check'],
     queryFn: updateApi.checkForUpdates,
+    refetchOnMount: 'always', // Always check on page load
     refetchInterval: 5 * 60 * 1000, // Check every 5 minutes
-    staleTime: 60 * 1000,
+    staleTime: 0, // Always fetch fresh data
   });
 
   // Install update mutation
