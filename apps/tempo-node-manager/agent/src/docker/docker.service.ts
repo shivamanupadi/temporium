@@ -132,6 +132,12 @@ export class DockerService implements OnModuleInit {
         '--datadir',
         '/root/.tempo',
         '--follow',
+        // P2P networking
+        '--port',
+        this.config.p2pPort.toString(),
+        '--discovery.addr',
+        '0.0.0.0',
+        // HTTP RPC
         '--http',
         '--http.addr',
         '0.0.0.0',
