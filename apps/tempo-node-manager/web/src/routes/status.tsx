@@ -1,10 +1,9 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
 import { useQuery } from '@tanstack/react-query';
-import type { JSX } from 'react';
+import { useState, useEffect, useRef, type JSX } from 'react';
 import { publicApi } from '@/lib/api';
 import {
   Zap,
-  Server,
   Activity,
   Box,
   Users,
@@ -107,16 +106,11 @@ function PublicStatusPage(): JSX.Element {
       {/* Header */}
       <header className="border-b border-slate-200/60 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
-              <Zap className="w-5 h-5 text-violet-600" />
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-slate-900">Temporium</h1>
-              <p className="text-xs text-slate-500 flex items-center gap-1">
-                <Server className="w-3 h-3" /> Node Status
-              </p>
-            </div>
+          <div className="flex items-center gap-2.5">
+            <Zap className="w-6 h-6 text-slate-900" strokeWidth={2} />
+            <span className="text-lg font-bold text-slate-900 tracking-tight">Temporium</span>
+            <span className="text-slate-300 font-light">|</span>
+            <span className="text-lg text-slate-600">Node Manager</span>
           </div>
           <Link
             to="/login"
@@ -181,20 +175,10 @@ function PublicStatusPage(): JSX.Element {
             )}
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <StatCard
-                icon={Box}
-                label="Current Block"
-                value={formatNumber(status?.currentBlock ?? 0)}
-                iconColor="text-blue-600"
-                iconBg="bg-blue-50"
-              />
-              <StatCard
-                icon={Box}
-                label="Network Head"
-                value={formatNumber(status?.highestBlock ?? 0)}
-                iconColor="text-violet-600"
-                iconBg="bg-violet-50"
+            <div className="grid grid-cols-3 gap-4">
+              <AnimatedBlockCard
+                currentBlock={status?.currentBlock ?? 0}
+                formatNumber={formatNumber}
               />
               <StatCard
                 icon={Users}
@@ -211,11 +195,6 @@ function PublicStatusPage(): JSX.Element {
                 iconBg="bg-amber-50"
               />
             </div>
-
-            {/* Version Info */}
-            <div className="text-center pt-4">
-              <span className="text-xs text-slate-400">Tempo Node v{status?.version || '-'}</span>
-            </div>
           </div>
         )}
       </main>
@@ -223,17 +202,14 @@ function PublicStatusPage(): JSX.Element {
       {/* Footer */}
       <footer className="border-t border-slate-200/60 mt-auto">
         <div className="max-w-4xl mx-auto px-6 py-6 text-center">
-          <p className="text-xs text-slate-400">
-            Powered by{' '}
-            <a
-              href="https://tempo.xyz/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-slate-500 hover:text-slate-700 transition-colors"
-            >
-              Tempo
-            </a>
-          </p>
+          <a
+            href="https://temporium.xyz"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+          >
+            temporium.xyz
+          </a>
         </div>
       </footer>
     </div>
@@ -256,6 +232,67 @@ function StatCard({ icon: Icon, label, value, iconColor, iconBg }: StatCardProps
       </div>
       <p className="text-2xl font-bold text-slate-900 mb-0.5">{value}</p>
       <p className="text-xs text-slate-500">{label}</p>
+    </div>
+  );
+}
+
+interface AnimatedBlockCardProps {
+  currentBlock: number;
+  formatNumber: (num: number) => string;
+}
+
+function AnimatedBlockCard({ currentBlock, formatNumber }: AnimatedBlockCardProps): JSX.Element {
+  const [displayBlock, setDisplayBlock] = useState(currentBlock);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const prevBlockRef = useRef(currentBlock);
+
+  useEffect(() => {
+    if (currentBlock !== prevBlockRef.current && currentBlock > prevBlockRef.current) {
+      const startValue = prevBlockRef.current;
+      const endValue = currentBlock;
+      const duration = 500;
+      const startTime = performance.now();
+
+      setIsAnimating(true);
+
+      const animate = (currentTime: number): void => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        // Easing function for smooth animation
+        const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+        const currentValue = Math.round(startValue + (endValue - startValue) * easeOutQuart);
+
+        setDisplayBlock(currentValue);
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        } else {
+          setIsAnimating(false);
+        }
+      };
+
+      requestAnimationFrame(animate);
+      prevBlockRef.current = currentBlock;
+    } else if (currentBlock !== displayBlock && !isAnimating) {
+      setDisplayBlock(currentBlock);
+      prevBlockRef.current = currentBlock;
+    }
+  }, [currentBlock, displayBlock, isAnimating]);
+
+  return (
+    <div className="bg-white rounded-xl border border-slate-200/60 shadow-sm p-5">
+      <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center mb-3">
+        <Box className="w-5 h-5 text-blue-600" />
+      </div>
+      <p
+        className={`text-2xl font-bold text-slate-900 mb-0.5 font-mono tabular-nums transition-colors duration-200 ${
+          isAnimating ? 'text-blue-600' : ''
+        }`}
+      >
+        {formatNumber(displayBlock)}
+      </p>
+      <p className="text-xs text-slate-500">Current Block</p>
     </div>
   );
 }

@@ -4,10 +4,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { authApi } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Loader2, Zap, Server } from 'lucide-react';
+import { Loader2, ArrowRight, Zap } from 'lucide-react';
 
 export const Route = createFileRoute('/login')({
   component: LoginPage,
@@ -19,14 +16,12 @@ function LoginPage(): JSX.Element {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate({ to: '/dashboard' });
     }
   }, [isAuthenticated, navigate]);
 
-  // Check setup status
   const { data: status, isLoading: isLoadingStatus } = useQuery({
     queryKey: ['auth-status'],
     queryFn: authApi.getStatus,
@@ -34,7 +29,6 @@ function LoginPage(): JSX.Element {
 
   const isSetup = status?.isSetup ?? false;
 
-  // Login mutation
   const loginMutation = useMutation({
     mutationFn: authApi.login,
     onSuccess: data => {
@@ -47,12 +41,11 @@ function LoginPage(): JSX.Element {
     },
   });
 
-  // Setup mutation
   const setupMutation = useMutation({
     mutationFn: authApi.setup,
     onSuccess: data => {
       setToken(data.accessToken);
-      toast.success('Setup complete! Welcome to Tempo Node Manager');
+      toast.success('Setup complete!');
       navigate({ to: '/dashboard' });
     },
     onError: error => {
@@ -62,7 +55,6 @@ function LoginPage(): JSX.Element {
 
   const handleSubmit = (e: React.FormEvent): void => {
     e.preventDefault();
-
     if (!isSetup) {
       if (password !== confirmPassword) {
         toast.error('Passwords do not match');
@@ -82,114 +74,184 @@ function LoginPage(): JSX.Element {
 
   if (isLoadingStatus) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#FAFAFA]">
-        <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center">
+        <Loader2 className="w-5 h-5 animate-spin text-[#7c5cff]" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#FAFAFA] px-4">
-      <div className="w-full max-w-md">
-        {/* Card Container */}
-        <div className="bg-white rounded-2xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_2px_4px_rgba(0,0,0,0.04),0_12px_24px_rgba(0,0,0,0.04)] p-8">
-          {/* Logo & Brand */}
-          <div className="flex flex-col items-center mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center"
-                style={{ backgroundColor: '#EDE9FE' }}
-              >
-                <Zap className="w-6 h-6" style={{ color: '#7C3AED' }} />
-              </div>
-            </div>
-            <h1 className="text-xl font-bold text-gray-900 mb-1">Temporium</h1>
-            <div className="flex items-center gap-1.5 text-gray-500">
-              <Server className="w-3.5 h-3.5" />
-              <span className="text-[13px] font-medium">Node Manager</span>
-            </div>
+    <div className="min-h-screen flex bg-[#fafafa]">
+      {/* Left Panel */}
+      <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden bg-[#f5f3ff]">
+        {/* Subtle grid pattern */}
+        <div
+          className="absolute inset-0 opacity-[0.4]"
+          style={{
+            backgroundImage: `
+              linear-gradient(to right, #e9e5ff 1px, transparent 1px),
+              linear-gradient(to bottom, #e9e5ff 1px, transparent 1px)
+            `,
+            backgroundSize: '48px 48px',
+          }}
+        />
+
+        {/* Content */}
+        <div className="relative z-10 flex flex-col justify-between w-full p-12 xl:p-16">
+          {/* Top - Logo */}
+          <div className="flex items-center gap-2.5">
+            <Zap className="w-6 h-6 text-[#0f172a]" strokeWidth={2.5} />
+            <span className="text-[17px] font-semibold text-[#0f172a] tracking-[-0.01em]">
+              Temporium
+            </span>
           </div>
 
-          {/* Heading */}
-          <div className="text-center mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">
-              {isSetup ? 'Welcome back' : 'Get started'}
-            </h2>
-            <p className="text-[13px] text-gray-500">
-              {isSetup
-                ? 'Enter your password to access the dashboard'
-                : 'Create an admin password to begin'}
+          {/* Center - Main content */}
+          <div className="max-w-[420px]">
+            <h1 className="text-[52px] xl:text-[60px] font-semibold text-[#0f172a] leading-[1.05] tracking-[-0.035em] mb-6">
+              Node
+              <br />
+              Manager
+            </h1>
+            <p className="text-[17px] text-[#64748b] leading-[1.6] max-w-[340px]">
+              Monitor sync status, manage snapshots, and keep your Tempo node running smoothly.
             </p>
+
+            {/* Stats row */}
+            <div className="flex gap-12 mt-12 pt-8 border-t border-[#e2e0f5]">
+              <div>
+                <div className="text-[28px] font-semibold text-[#0f172a] tracking-[-0.02em]">
+                  99.9%
+                </div>
+                <div className="text-[13px] text-[#94a3b8] mt-1">Uptime</div>
+              </div>
+              <div>
+                <div className="text-[28px] font-semibold text-[#0f172a] tracking-[-0.02em]">
+                  Real-time
+                </div>
+                <div className="text-[13px] text-[#94a3b8] mt-1">Sync monitoring</div>
+              </div>
+            </div>
           </div>
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-[13px] font-medium text-gray-700">
-                Password
-              </Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                placeholder={isSetup ? 'Enter your password' : 'Create a password'}
-                required
-                disabled={isSubmitting}
-                className="h-11 bg-gray-50 border-gray-200 focus:border-violet-500 focus:ring-violet-500/20"
-              />
-              {!isSetup && <p className="text-[11px] text-gray-400">Minimum 8 characters</p>}
-            </div>
+          {/* Bottom - Footer */}
+          <div className="text-[13px] text-[#94a3b8]">Powered by Tempo Network</div>
+        </div>
+      </div>
 
-            {!isSetup && (
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword" className="text-[13px] font-medium text-gray-700">
-                  Confirm Password
-                </Label>
-                <Input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={e => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm your password"
-                  required
-                  disabled={isSubmitting}
-                  className="h-11 bg-gray-50 border-gray-200 focus:border-violet-500 focus:ring-violet-500/20"
-                />
-              </div>
-            )}
-
-            <Button
-              type="submit"
-              className="w-full h-11 bg-gray-900 hover:bg-gray-800 text-white font-medium"
-              disabled={isSubmitting}
-            >
-              {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {isSetup ? 'Sign in' : 'Create account'}
-            </Button>
-          </form>
-
-          {/* Help text */}
-          <p className="mt-6 text-center text-[12px] text-gray-400">
-            {isSetup
-              ? 'Forgot your password? Reset the database to start fresh.'
-              : 'This password will be used to access your node dashboard.'}
-          </p>
+      {/* Right Panel - Form */}
+      <div className="flex-1 flex flex-col">
+        {/* Mobile header */}
+        <div className="lg:hidden p-6 flex items-center gap-2.5 border-b border-[#f0f0f0] bg-white">
+          <Zap className="w-5 h-5 text-[#0f172a]" strokeWidth={2.5} />
+          <span className="text-[15px] font-semibold text-[#0f172a]">Temporium</span>
         </div>
 
-        {/* Footer */}
-        <div className="mt-6 text-center">
-          <p className="text-[12px] text-gray-400">
-            Powered by{' '}
-            <a
-              href="https://tempo.xyz/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-500 hover:text-gray-700 transition-colors"
-            >
-              Tempo
-            </a>
-          </p>
+        {/* Form container */}
+        <div className="flex-1 flex items-center justify-center p-6 sm:p-8">
+          <div className="w-full max-w-[360px]">
+            {/* Header */}
+            <div className="mb-8">
+              <h2 className="text-[26px] font-semibold text-[#0f172a] tracking-[-0.02em] mb-2">
+                {isSetup ? 'Welcome back' : 'Get started'}
+              </h2>
+              <p className="text-[15px] text-[#64748b]">
+                {isSetup
+                  ? 'Enter your password to continue'
+                  : 'Create a password for your dashboard'}
+              </p>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label
+                  htmlFor="password"
+                  className="block text-[13px] font-medium text-[#374151] mb-2"
+                >
+                  Password
+                </label>
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder={isSetup ? 'Enter password' : 'Create password'}
+                  required
+                  disabled={isSubmitting}
+                  className="
+                    w-full h-[46px] px-4 rounded-lg text-[15px] text-[#0f172a]
+                    bg-white border border-[#e5e7eb] outline-none transition-shadow duration-200
+                    placeholder:text-[#a1a1aa]
+                    disabled:opacity-50 disabled:cursor-not-allowed
+                    hover:border-[#d1d5db]
+                    focus:border-[#7c5cff] focus:shadow-[0_0_0_3px_rgba(124,92,255,0.1)]
+                  "
+                />
+                {!isSetup && (
+                  <p className="text-[12px] text-[#94a3b8] mt-2">Minimum 8 characters</p>
+                )}
+              </div>
+
+              {!isSetup && (
+                <div>
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-[13px] font-medium text-[#374151] mb-2"
+                  >
+                    Confirm password
+                  </label>
+                  <input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={e => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm password"
+                    required
+                    disabled={isSubmitting}
+                    className="
+                      w-full h-[46px] px-4 rounded-lg text-[15px] text-[#0f172a]
+                      bg-white border border-[#e5e7eb] outline-none transition-shadow duration-200
+                      placeholder:text-[#a1a1aa]
+                      disabled:opacity-50 disabled:cursor-not-allowed
+                      hover:border-[#d1d5db]
+                      focus:border-[#7c5cff] focus:shadow-[0_0_0_3px_rgba(124,92,255,0.1)]
+                    "
+                  />
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="
+                  w-full h-[46px] mt-2 rounded-lg text-[15px] font-medium text-white
+                  bg-[#7c5cff] hover:bg-[#6b4fee] active:bg-[#5f43e5]
+                  flex items-center justify-center gap-2
+                  transition-all duration-200
+                  disabled:opacity-50 disabled:cursor-not-allowed
+                  shadow-[0_1px_2px_rgba(0,0,0,0.05),0_4px_12px_rgba(124,92,255,0.25)]
+                  hover:shadow-[0_1px_2px_rgba(0,0,0,0.05),0_6px_16px_rgba(124,92,255,0.35)]
+                "
+              >
+                {isSubmitting ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    {isSetup ? 'Sign in' : 'Create account'}
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Footer text */}
+            <p className="mt-8 text-center text-[13px] text-[#94a3b8]">
+              {isSetup
+                ? 'Forgot password? Reset the database to start fresh.'
+                : 'This password protects your node dashboard.'}
+            </p>
+          </div>
         </div>
       </div>
     </div>
