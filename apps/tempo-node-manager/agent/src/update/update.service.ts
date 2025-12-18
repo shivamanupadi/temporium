@@ -236,21 +236,27 @@ export class UpdateService {
 
   async restartService(): Promise<{ success: boolean; message: string }> {
     try {
-      // Try systemctl first (Linux)
-      await execAsync('sudo systemctl restart tempo-node-manager');
+      // Try systemctl without sudo first (when running as root)
+      await execAsync('systemctl restart tempo-node-manager');
       return { success: true, message: 'Service restart initiated' };
     } catch {
       try {
-        // Try launchctl (macOS)
-        await execAsync(
-          'launchctl unload ~/Library/LaunchAgents/com.tempo.node-manager.plist && launchctl load ~/Library/LaunchAgents/com.tempo.node-manager.plist'
-        );
+        // Try with sudo (when running as non-root user)
+        await execAsync('sudo systemctl restart tempo-node-manager');
         return { success: true, message: 'Service restart initiated' };
       } catch {
-        return {
-          success: false,
-          message: 'Could not restart service automatically. Please restart manually.',
-        };
+        try {
+          // Try launchctl (macOS)
+          await execAsync(
+            'launchctl unload ~/Library/LaunchAgents/com.tempo.node-manager.plist && launchctl load ~/Library/LaunchAgents/com.tempo.node-manager.plist'
+          );
+          return { success: true, message: 'Service restart initiated' };
+        } catch {
+          return {
+            success: false,
+            message: 'Could not restart service automatically. Please restart manually.',
+          };
+        }
       }
     }
   }
