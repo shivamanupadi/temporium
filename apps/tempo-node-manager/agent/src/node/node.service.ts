@@ -85,6 +85,7 @@ export class NodeService {
       const syncData = await syncResponse.json();
 
       let highestBlock = currentBlock;
+      let actualCurrentBlock = currentBlock;
       let isSynced = true;
       let syncProgress = 100;
       let stages: SyncStage[] | undefined;
@@ -105,20 +106,21 @@ export class NodeService {
             highestBlock = headersStage.block;
           }
 
-          // Use Execution stage as current progress if available
+          // Use Execution stage as current progress - this is the actual sync progress
+          // eth_blockNumber returns snapshot block until sync is complete
           if (executionStage && executionStage.block > 0) {
-            // currentBlock from eth_blockNumber is the executed block, use it
+            actualCurrentBlock = executionStage.block;
           }
         } else if (syncData.result.highestBlock) {
           highestBlock = parseInt(syncData.result.highestBlock, 16);
         }
 
         isSynced = false;
-        syncProgress = highestBlock > 0 ? Math.floor((currentBlock / highestBlock) * 100) : 0;
+        syncProgress = highestBlock > 0 ? Math.floor((actualCurrentBlock / highestBlock) * 100) : 0;
       }
 
       return {
-        currentBlock,
+        currentBlock: actualCurrentBlock,
         highestBlock,
         peerCount,
         isSynced,
