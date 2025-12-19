@@ -1,8 +1,7 @@
 import { createFileRoute, redirect, Outlet } from '@tanstack/react-router';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { useAuthStore } from '@/stores/auth';
 import { updateApi } from '@/lib/api';
-import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { ArrowUpCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,39 +13,21 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useState, useEffect, type JSX } from 'react';
-import { Sidebar } from '@/components/Sidebar';
-import { MobileHeader } from '@/components/MobileHeader';
+import { useState, type JSX } from 'react';
+import { Header } from '@/components/Header';
 
-export const Route = createFileRoute('/dashboard')({
+export const Route = createFileRoute('/portal')({
   beforeLoad: (): void => {
     const { isAuthenticated } = useAuthStore.getState();
     if (!isAuthenticated) {
       throw redirect({ to: '/login' });
     }
   },
-  component: DashboardLayout,
+  component: PortalLayout,
 });
 
-// Persist collapsed state in localStorage
-const SIDEBAR_COLLAPSED_KEY = 'tempo-node-manager-sidebar-collapsed';
-
-function getInitialCollapsed(): boolean {
-  if (typeof window === 'undefined') return false;
-  const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
-  return stored === 'true';
-}
-
-function DashboardLayout(): JSX.Element {
-  const queryClient = useQueryClient();
+function PortalLayout(): JSX.Element {
   const [showUpdateDialog, setShowUpdateDialog] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState(getInitialCollapsed);
-
-  // Persist collapsed state
-  useEffect(() => {
-    localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(collapsed));
-  }, [collapsed]);
 
   // Fetch current version
   const { data: versionData } = useQuery({
@@ -59,9 +40,9 @@ function DashboardLayout(): JSX.Element {
   const { data: updateInfo } = useQuery({
     queryKey: ['update-check'],
     queryFn: updateApi.checkForUpdates,
-    refetchOnMount: 'always', // Always check on page load
-    refetchInterval: 5 * 60 * 1000, // Check every 5 minutes
-    staleTime: 0, // Always fetch fresh data
+    refetchOnMount: 'always',
+    refetchInterval: 5 * 60 * 1000,
+    staleTime: 0,
   });
 
   // Install update mutation
@@ -71,14 +52,12 @@ function DashboardLayout(): JSX.Element {
       if (data.success) {
         toast.success('Update installed! Reloading page...');
         setShowUpdateDialog(false);
-        // Service auto-restarts after update, reload page after delay
         setTimeout(() => window.location.reload(), 3000);
       } else {
         toast.error(data.message);
       }
     },
     onError: () => {
-      // Connection lost likely means service restarted (update success)
       toast.success('Update installed! Reloading page...');
       setShowUpdateDialog(false);
       setTimeout(() => window.location.reload(), 3000);
@@ -103,40 +82,20 @@ function DashboardLayout(): JSX.Element {
   const updateAvailable = updateInfo?.updateAvailable || false;
   const latestVersion = updateInfo?.latest;
 
-  const handleCheckUpdate = (): void => {
-    queryClient.invalidateQueries({ queryKey: ['update-check'] });
-  };
-
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
-      {/* Sidebar */}
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        collapsed={collapsed}
-        onToggleCollapse={() => setCollapsed(!collapsed)}
+      {/* Header */}
+      <Header
         currentVersion={currentVersion}
         updateAvailable={updateAvailable}
         latestVersion={latestVersion ?? undefined}
-        onCheckUpdate={handleCheckUpdate}
         onShowUpdateDialog={() => setShowUpdateDialog(true)}
       />
 
       {/* Main Content */}
-      <main
-        className={cn(
-          'min-h-screen transition-[margin] duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)]',
-          collapsed ? 'md:ml-[68px]' : 'md:ml-56'
-        )}
-      >
-        {/* Mobile Header */}
-        <MobileHeader onMenuClick={() => setSidebarOpen(true)} />
-
-        {/* Page Content */}
-        <div className="p-6">
-          <div className="mx-auto max-w-5xl">
-            <Outlet />
-          </div>
+      <main className="pt-8 pb-6">
+        <div className="mx-auto max-w-5xl px-6">
+          <Outlet />
         </div>
       </main>
 

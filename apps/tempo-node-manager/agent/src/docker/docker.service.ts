@@ -24,6 +24,7 @@ export class DockerService implements OnModuleInit {
       version: this.configService.get('TEMPO_VERSION', DEFAULT_NODE_CONFIG.version),
       dataDir: this.configService.get('TEMPO_DATA_DIR', DEFAULT_NODE_CONFIG.dataDir),
       httpPort: this.configService.get('TEMPO_HTTP_PORT', DEFAULT_NODE_CONFIG.httpPort),
+      wsPort: this.configService.get('TEMPO_WS_PORT', DEFAULT_NODE_CONFIG.wsPort),
       p2pPort: this.configService.get('TEMPO_P2P_PORT', DEFAULT_NODE_CONFIG.p2pPort),
     };
   }
@@ -104,6 +105,87 @@ export class DockerService implements OnModuleInit {
     }
   }
 
+  async getImageVersion(): Promise<string | undefined> {
+    try {
+      const container = this.docker.getContainer(CONTAINER_NAME);
+      const containerInfo = await container.inspect();
+
+      // Try to get version from container labels first
+      const labels = containerInfo.Config.Labels || {};
+      if (labels['org.opencontainers.image.version']) {
+        return labels['org.opencontainers.image.version'];
+      }
+
+      // Try to get version by running tempo --version in the container
+      if (containerInfo.State.Running) {
+        try {
+          const exec = await container.exec({
+            Cmd: ['tempo', '--version'],
+            AttachStdout: true,
+            AttachStderr: true,
+          });
+          const stream = await exec.start({ Detach: false });
+          const output = await this.streamToString(stream);
+          this.logger.debug(`tempo --version output: ${output}`);
+
+          // Try multiple patterns to extract version
+          // Pattern 1: "tempo 0.1.0" or "tempo version 0.1.0" or "reth 0.1.0"
+          let versionMatch = output.match(
+            /(?:tempo|reth|version)\s+v?([\d]+\.[\d]+\.[\d]+[-\w]*)/i
+          );
+          if (versionMatch) {
+            return versionMatch[1];
+          }
+
+          // Pattern 2: Any semver-like version in the output
+          versionMatch = output.match(/v?([\d]+\.[\d]+\.[\d]+[-\w]*)/);
+          if (versionMatch) {
+            return versionMatch[1];
+          }
+        } catch (error) {
+          this.logger.debug(`Failed to get version from tempo --version: ${error}`);
+        }
+      }
+
+      // Fallback: get from image tags
+      const imageId = containerInfo.Image;
+      const image = this.docker.getImage(imageId);
+      const imageInfo = await image.inspect();
+
+      // Check image labels
+      const imageLabels = imageInfo.Config?.Labels || {};
+      if (imageLabels['org.opencontainers.image.version']) {
+        return imageLabels['org.opencontainers.image.version'];
+      }
+
+      // Look for a tag that matches our tempo image
+      const repoTags = imageInfo.RepoTags || [];
+      const tempoTag = repoTags.find((tag: string) => tag.startsWith(TEMPO_IMAGE));
+
+      if (tempoTag) {
+        const version = tempoTag.split(':')[1];
+        // Only return if it's not "latest"
+        if (version && version !== 'latest') {
+          return version;
+        }
+      }
+
+      // Last fallback: return short image ID
+      return imageId.replace('sha256:', '').slice(0, 12);
+    } catch {
+      return undefined;
+    }
+  }
+
+  private async streamToString(stream: NodeJS.ReadableStream): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      stream.on('data', (chunk: Buffer) => chunks.push(chunk));
+      stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+      stream.on('error', reject);
+    });
+  }
+
   async pullImage(): Promise<void> {
     const imageName = this.getImageName();
     this.logger.log(`Pulling image: ${imageName}`);
@@ -166,6 +248,14 @@ export class DockerService implements OnModuleInit {
       this.config.httpPort.toString(),
       '--http.api',
       this.config.httpApis.join(','),
+      // WebSocket RPC
+      '--ws',
+      '--ws.addr',
+      '0.0.0.0',
+      '--ws.port',
+      this.config.wsPort.toString(),
+      '--ws.api',
+      this.config.httpApis.join(','),
     ];
 
     // Add NAT configuration if external IP is available
@@ -181,12 +271,14 @@ export class DockerService implements OnModuleInit {
       Cmd: cmd,
       ExposedPorts: {
         [`${this.config.httpPort}/tcp`]: {},
+        [`${this.config.wsPort}/tcp`]: {},
         [`${this.config.p2pPort}/tcp`]: {},
         [`${this.config.p2pPort}/udp`]: {},
       },
       HostConfig: {
         PortBindings: {
           [`${this.config.httpPort}/tcp`]: [{ HostPort: this.config.httpPort.toString() }],
+          [`${this.config.wsPort}/tcp`]: [{ HostPort: this.config.wsPort.toString() }],
           [`${this.config.p2pPort}/tcp`]: [{ HostPort: this.config.p2pPort.toString() }],
           [`${this.config.p2pPort}/udp`]: [{ HostPort: this.config.p2pPort.toString() }],
         },

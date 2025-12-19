@@ -7,9 +7,9 @@ import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { NodeModule } from './node/node.module';
 import { LogsModule } from './logs/logs.module';
-import { SnapshotsModule } from './snapshots/snapshots.module';
 import { DockerModule } from './docker/docker.module';
 import { UpdateModule } from './update/update.module';
+import { SystemModule } from './system/system.module';
 import { HealthController } from './health/health.controller';
 
 @Module({
@@ -33,7 +33,7 @@ import { HealthController } from './health/health.controller';
 
     // Serve static files from web build
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', '..', 'web', 'dist'),
+      rootPath: join(process.cwd(), '..', 'web', 'dist'),
       exclude: ['/api/(.*)'],
     }),
 
@@ -42,8 +42,8 @@ import { HealthController } from './health/health.controller';
     DockerModule,
     NodeModule,
     LogsModule,
-    SnapshotsModule,
     UpdateModule,
+    SystemModule,
   ],
   controllers: [HealthController],
 })

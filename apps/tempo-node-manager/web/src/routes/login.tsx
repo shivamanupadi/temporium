@@ -4,7 +4,8 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { authApi } from '@/lib/api';
 import { useAuthStore } from '@/stores/auth';
-import { Loader2, ArrowRight, Zap } from 'lucide-react';
+import { validatePassword, PASSWORD_REQUIREMENTS } from '@/lib/validation';
+import { Loader2, ArrowRight, Zap, MousePointerClick, Activity, HardDrive } from 'lucide-react';
 
 export const Route = createFileRoute('/login')({
   component: LoginPage,
@@ -18,7 +19,7 @@ function LoginPage(): JSX.Element {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate({ to: '/dashboard' });
+      navigate({ to: '/portal/dashboard' });
     }
   }, [isAuthenticated, navigate]);
 
@@ -33,8 +34,7 @@ function LoginPage(): JSX.Element {
     mutationFn: authApi.login,
     onSuccess: data => {
       setToken(data.accessToken);
-      toast.success('Login successful');
-      navigate({ to: '/dashboard' });
+      navigate({ to: '/portal/dashboard' });
     },
     onError: error => {
       toast.error(error instanceof Error ? error.message : 'Login failed');
@@ -45,8 +45,7 @@ function LoginPage(): JSX.Element {
     mutationFn: authApi.setup,
     onSuccess: data => {
       setToken(data.accessToken);
-      toast.success('Setup complete!');
-      navigate({ to: '/dashboard' });
+      navigate({ to: '/portal/dashboard' });
     },
     onError: error => {
       toast.error(error instanceof Error ? error.message : 'Setup failed');
@@ -60,8 +59,9 @@ function LoginPage(): JSX.Element {
         toast.error('Passwords do not match');
         return;
       }
-      if (password.length < 8) {
-        toast.error('Password must be at least 8 characters');
+      const validationError = validatePassword(password);
+      if (validationError) {
+        toast.error(`Password requirement: ${validationError}`);
         return;
       }
       setupMutation.mutate(password);
@@ -81,9 +81,9 @@ function LoginPage(): JSX.Element {
   }
 
   return (
-    <div className="min-h-screen flex bg-[#fafafa]">
+    <div className="fixed inset-0 flex bg-[#fafafa]">
       {/* Left Panel */}
-      <div className="hidden lg:flex lg:w-[52%] relative overflow-hidden bg-[#f5f3ff]">
+      <div className="hidden lg:flex lg:w-[52%] relative bg-[#f5f3ff]">
         {/* Subtle grid pattern */}
         <div
           className="absolute inset-0 opacity-[0.4]"
@@ -107,29 +107,52 @@ function LoginPage(): JSX.Element {
           </div>
 
           {/* Center - Main content */}
-          <div className="max-w-[420px]">
-            <h1 className="text-[52px] xl:text-[60px] font-semibold text-[#0f172a] leading-[1.05] tracking-[-0.035em] mb-6">
-              Node
-              <br />
-              Manager
-            </h1>
-            <p className="text-[17px] text-[#64748b] leading-[1.6] max-w-[340px]">
-              Monitor sync status, manage snapshots, and keep your Tempo node running smoothly.
-            </p>
+          <div>
+            <div className="max-w-[420px]">
+              <h1 className="text-[52px] xl:text-[60px] font-semibold text-[#0f172a] leading-[1.05] tracking-[-0.035em] mb-6">
+                Node
+                <br />
+                Manager
+              </h1>
+              <p className="text-[17px] text-[#64748b] leading-[1.6] max-w-[340px]">
+                Streamlined deployment and real-time monitoring for your Tempo node.
+              </p>
+            </div>
 
             {/* Stats row */}
-            <div className="flex gap-12 mt-12 pt-8 border-t border-[#e2e0f5]">
-              <div>
-                <div className="text-[28px] font-semibold text-[#0f172a] tracking-[-0.02em]">
-                  99.9%
+            <div className="flex flex-nowrap gap-6 mt-12 pt-8 border-t border-[#e2e0f5]">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-[#e0f2fe] flex items-center justify-center">
+                  <MousePointerClick className="w-5 h-5 text-[#0284c7]" />
                 </div>
-                <div className="text-[13px] text-[#94a3b8] mt-1">Uptime</div>
+                <div>
+                  <div className="text-[17px] font-semibold text-[#0f172a] tracking-[-0.01em]">
+                    One-Click
+                  </div>
+                  <div className="text-[13px] text-[#94a3b8]">Setup</div>
+                </div>
               </div>
-              <div>
-                <div className="text-[28px] font-semibold text-[#0f172a] tracking-[-0.02em]">
-                  Real-time
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-[#dcfce7] flex items-center justify-center">
+                  <Activity className="w-5 h-5 text-[#16a34a]" />
                 </div>
-                <div className="text-[13px] text-[#94a3b8] mt-1">Sync monitoring</div>
+                <div>
+                  <div className="text-[17px] font-semibold text-[#0f172a] tracking-[-0.01em]">
+                    Real-time
+                  </div>
+                  <div className="text-[13px] text-[#94a3b8]">Sync monitoring</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-[#f0edff] flex items-center justify-center">
+                  <HardDrive className="w-5 h-5 text-[#7c5cff]" />
+                </div>
+                <div>
+                  <div className="text-[17px] font-semibold text-[#0f172a] tracking-[-0.01em]">
+                    Snapshot
+                  </div>
+                  <div className="text-[13px] text-[#94a3b8]">Fast sync</div>
+                </div>
               </div>
             </div>
           </div>
@@ -140,7 +163,7 @@ function LoginPage(): JSX.Element {
       </div>
 
       {/* Right Panel - Form */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col bg-[#fafafa]">
         {/* Mobile header */}
         <div className="lg:hidden p-6 flex items-center gap-2.5 border-b border-[#f0f0f0] bg-white">
           <Zap className="w-5 h-5 text-[#0f172a]" strokeWidth={2.5} />
@@ -181,15 +204,15 @@ function LoginPage(): JSX.Element {
                   disabled={isSubmitting}
                   className="
                     w-full h-[46px] px-4 rounded-lg text-[15px] text-[#0f172a]
-                    bg-white border border-[#e5e7eb] outline-none transition-shadow duration-200
+                    bg-white border border-[#e5e7eb]
                     placeholder:text-[#a1a1aa]
                     disabled:opacity-50 disabled:cursor-not-allowed
                     hover:border-[#d1d5db]
-                    focus:border-[#7c5cff] focus:shadow-[0_0_0_3px_rgba(124,92,255,0.1)]
+                    focus:border-[#b0b5bd]
                   "
                 />
                 {!isSetup && (
-                  <p className="text-[12px] text-[#94a3b8] mt-2">Minimum 8 characters</p>
+                  <p className="text-[12px] text-[#94a3b8] mt-2">{PASSWORD_REQUIREMENTS}</p>
                 )}
               </div>
 
@@ -211,11 +234,11 @@ function LoginPage(): JSX.Element {
                     disabled={isSubmitting}
                     className="
                       w-full h-[46px] px-4 rounded-lg text-[15px] text-[#0f172a]
-                      bg-white border border-[#e5e7eb] outline-none transition-shadow duration-200
+                      bg-white border border-[#e5e7eb]
                       placeholder:text-[#a1a1aa]
                       disabled:opacity-50 disabled:cursor-not-allowed
                       hover:border-[#d1d5db]
-                      focus:border-[#7c5cff] focus:shadow-[0_0_0_3px_rgba(124,92,255,0.1)]
+                      focus:border-[#b0b5bd]
                     "
                   />
                 </div>
@@ -234,13 +257,11 @@ function LoginPage(): JSX.Element {
                   hover:shadow-[0_1px_2px_rgba(0,0,0,0.05),0_6px_16px_rgba(124,92,255,0.35)]
                 "
               >
+                {isSetup ? 'Sign in' : 'Create account'}
                 {isSubmitting ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <>
-                    {isSetup ? 'Sign in' : 'Create account'}
-                    <ArrowRight className="w-4 h-4" />
-                  </>
+                  <ArrowRight className="w-4 h-4" />
                 )}
               </button>
             </form>

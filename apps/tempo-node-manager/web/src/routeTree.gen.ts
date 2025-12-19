@@ -10,17 +10,22 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as StatusRouteImport } from './routes/status'
+import { Route as PortalRouteImport } from './routes/portal'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
-import { Route as DashboardSnapshotsRouteImport } from './routes/dashboard/snapshots'
-import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
-import { Route as DashboardLogsRouteImport } from './routes/dashboard/logs'
+import { Route as PortalIndexRouteImport } from './routes/portal/index'
+import { Route as PortalSettingsRouteImport } from './routes/portal/settings'
+import { Route as PortalLogsRouteImport } from './routes/portal/logs'
+import { Route as PortalDashboardRouteImport } from './routes/portal/dashboard'
 
 const StatusRoute = StatusRouteImport.update({
   id: '/status',
   path: '/status',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalRoute = PortalRouteImport.update({
+  id: '/portal',
+  path: '/portal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -28,103 +33,98 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardIndexRoute = DashboardIndexRouteImport.update({
+const PortalIndexRoute = PortalIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => DashboardRoute,
+  getParentRoute: () => PortalRoute,
 } as any)
-const DashboardSnapshotsRoute = DashboardSnapshotsRouteImport.update({
-  id: '/snapshots',
-  path: '/snapshots',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
+const PortalSettingsRoute = PortalSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
-  getParentRoute: () => DashboardRoute,
+  getParentRoute: () => PortalRoute,
 } as any)
-const DashboardLogsRoute = DashboardLogsRouteImport.update({
+const PortalLogsRoute = PortalLogsRouteImport.update({
   id: '/logs',
   path: '/logs',
-  getParentRoute: () => DashboardRoute,
+  getParentRoute: () => PortalRoute,
+} as any)
+const PortalDashboardRoute = PortalDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => PortalRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRouteWithChildren
   '/login': typeof LoginRoute
+  '/portal': typeof PortalRouteWithChildren
   '/status': typeof StatusRoute
-  '/dashboard/logs': typeof DashboardLogsRoute
-  '/dashboard/settings': typeof DashboardSettingsRoute
-  '/dashboard/snapshots': typeof DashboardSnapshotsRoute
-  '/dashboard/': typeof DashboardIndexRoute
+  '/portal/dashboard': typeof PortalDashboardRoute
+  '/portal/logs': typeof PortalLogsRoute
+  '/portal/settings': typeof PortalSettingsRoute
+  '/portal/': typeof PortalIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/status': typeof StatusRoute
-  '/dashboard/logs': typeof DashboardLogsRoute
-  '/dashboard/settings': typeof DashboardSettingsRoute
-  '/dashboard/snapshots': typeof DashboardSnapshotsRoute
-  '/dashboard': typeof DashboardIndexRoute
+  '/portal/dashboard': typeof PortalDashboardRoute
+  '/portal/logs': typeof PortalLogsRoute
+  '/portal/settings': typeof PortalSettingsRoute
+  '/portal': typeof PortalIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRouteWithChildren
   '/login': typeof LoginRoute
+  '/portal': typeof PortalRouteWithChildren
   '/status': typeof StatusRoute
-  '/dashboard/logs': typeof DashboardLogsRoute
-  '/dashboard/settings': typeof DashboardSettingsRoute
-  '/dashboard/snapshots': typeof DashboardSnapshotsRoute
-  '/dashboard/': typeof DashboardIndexRoute
+  '/portal/dashboard': typeof PortalDashboardRoute
+  '/portal/logs': typeof PortalLogsRoute
+  '/portal/settings': typeof PortalSettingsRoute
+  '/portal/': typeof PortalIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/dashboard'
     | '/login'
+    | '/portal'
     | '/status'
-    | '/dashboard/logs'
-    | '/dashboard/settings'
-    | '/dashboard/snapshots'
-    | '/dashboard/'
+    | '/portal/dashboard'
+    | '/portal/logs'
+    | '/portal/settings'
+    | '/portal/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
     | '/status'
-    | '/dashboard/logs'
-    | '/dashboard/settings'
-    | '/dashboard/snapshots'
-    | '/dashboard'
+    | '/portal/dashboard'
+    | '/portal/logs'
+    | '/portal/settings'
+    | '/portal'
   id:
     | '__root__'
     | '/'
-    | '/dashboard'
     | '/login'
+    | '/portal'
     | '/status'
-    | '/dashboard/logs'
-    | '/dashboard/settings'
-    | '/dashboard/snapshots'
-    | '/dashboard/'
+    | '/portal/dashboard'
+    | '/portal/logs'
+    | '/portal/settings'
+    | '/portal/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  DashboardRoute: typeof DashboardRouteWithChildren
   LoginRoute: typeof LoginRoute
+  PortalRoute: typeof PortalRouteWithChildren
   StatusRoute: typeof StatusRoute
 }
 
@@ -137,18 +137,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StatusRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/portal': {
+      id: '/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof PortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -158,59 +158,58 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/dashboard/': {
-      id: '/dashboard/'
+    '/portal/': {
+      id: '/portal/'
       path: '/'
-      fullPath: '/dashboard/'
-      preLoaderRoute: typeof DashboardIndexRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/portal/'
+      preLoaderRoute: typeof PortalIndexRouteImport
+      parentRoute: typeof PortalRoute
     }
-    '/dashboard/snapshots': {
-      id: '/dashboard/snapshots'
-      path: '/snapshots'
-      fullPath: '/dashboard/snapshots'
-      preLoaderRoute: typeof DashboardSnapshotsRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/dashboard/settings': {
-      id: '/dashboard/settings'
+    '/portal/settings': {
+      id: '/portal/settings'
       path: '/settings'
-      fullPath: '/dashboard/settings'
-      preLoaderRoute: typeof DashboardSettingsRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/portal/settings'
+      preLoaderRoute: typeof PortalSettingsRouteImport
+      parentRoute: typeof PortalRoute
     }
-    '/dashboard/logs': {
-      id: '/dashboard/logs'
+    '/portal/logs': {
+      id: '/portal/logs'
       path: '/logs'
-      fullPath: '/dashboard/logs'
-      preLoaderRoute: typeof DashboardLogsRouteImport
-      parentRoute: typeof DashboardRoute
+      fullPath: '/portal/logs'
+      preLoaderRoute: typeof PortalLogsRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/portal/dashboard': {
+      id: '/portal/dashboard'
+      path: '/dashboard'
+      fullPath: '/portal/dashboard'
+      preLoaderRoute: typeof PortalDashboardRouteImport
+      parentRoute: typeof PortalRoute
     }
   }
 }
 
-interface DashboardRouteChildren {
-  DashboardLogsRoute: typeof DashboardLogsRoute
-  DashboardSettingsRoute: typeof DashboardSettingsRoute
-  DashboardSnapshotsRoute: typeof DashboardSnapshotsRoute
-  DashboardIndexRoute: typeof DashboardIndexRoute
+interface PortalRouteChildren {
+  PortalDashboardRoute: typeof PortalDashboardRoute
+  PortalLogsRoute: typeof PortalLogsRoute
+  PortalSettingsRoute: typeof PortalSettingsRoute
+  PortalIndexRoute: typeof PortalIndexRoute
 }
 
-const DashboardRouteChildren: DashboardRouteChildren = {
-  DashboardLogsRoute: DashboardLogsRoute,
-  DashboardSettingsRoute: DashboardSettingsRoute,
-  DashboardSnapshotsRoute: DashboardSnapshotsRoute,
-  DashboardIndexRoute: DashboardIndexRoute,
+const PortalRouteChildren: PortalRouteChildren = {
+  PortalDashboardRoute: PortalDashboardRoute,
+  PortalLogsRoute: PortalLogsRoute,
+  PortalSettingsRoute: PortalSettingsRoute,
+  PortalIndexRoute: PortalIndexRoute,
 }
 
-const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
-  DashboardRouteChildren,
-)
+const PortalRouteWithChildren =
+  PortalRoute._addFileChildren(PortalRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DashboardRoute: DashboardRouteWithChildren,
   LoginRoute: LoginRoute,
+  PortalRoute: PortalRouteWithChildren,
   StatusRoute: StatusRoute,
 }
 export const routeTree = rootRouteImport
