@@ -341,11 +341,15 @@ function RequirementsNotMet({
       </div>
 
       {/* Info box */}
-      <div className="p-4 rounded-xl bg-slate-50 border border-slate-100">
+      <div className="p-4 rounded-xl bg-slate-50 border border-slate-100 space-y-3">
         <p className="text-[13px] text-slate-600">
           Please upgrade your system to meet the minimum requirements before setting up the node
           manager.
         </p>
+        <p className="text-[13px] text-slate-600">After upgrading, re-run the install command:</p>
+        <code className="block text-[12px] font-mono text-slate-700 bg-slate-100 px-3 py-2 rounded-lg break-all">
+          curl -sSL https://cdn.temporium.xyz/node-manager/releases/install.sh | bash
+        </code>
       </div>
     </div>
   );

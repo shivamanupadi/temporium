@@ -27,7 +27,9 @@ import {
   CheckCircle2,
   MemoryStick,
   Trash2,
+  ExternalLink,
 } from 'lucide-react';
+import { Link } from '@tanstack/react-router';
 import { useState, useEffect, useRef, type JSX, type ReactNode } from 'react';
 import type { NodeStatus } from '#types/index';
 
@@ -192,7 +194,18 @@ function DashboardPage(): JSX.Element {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-          <p className="text-[13px] text-slate-500 mt-0.5">Manage your Tempo blockchain node</p>
+          <div className="flex items-center gap-3 mt-0.5">
+            <p className="text-[13px] text-slate-500">Manage your Tempo blockchain node</p>
+            <span className="text-slate-300">•</span>
+            <Link
+              to="/status"
+              target="_blank"
+              className="text-[13px] text-[#7c5cff] hover:text-[#6b4fee] flex items-center gap-1 transition-colors"
+            >
+              Public Status
+              <ExternalLink className="w-3 h-3" />
+            </Link>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button
@@ -318,6 +331,20 @@ function DashboardPage(): JSX.Element {
               </div>
               <div className="p-4 space-y-4">
                 <Progress value={nodeInfo.syncStatus.syncProgress} className="h-2" />
+
+                {/* Show note when uptime < 6 hours and not fully synced */}
+                {nodeInfo.uptime &&
+                  nodeInfo.uptime < 6 * 60 * 60 &&
+                  nodeInfo.syncStatus.syncProgress < 100 && (
+                    <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                      <Clock className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                      <p className="text-[12px] text-blue-700">
+                        The node was recently started. It may take a few hours to catch up with the
+                        latest blocks. This is normal behavior.
+                      </p>
+                    </div>
+                  )}
+
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <p className="text-[11px] text-gray-500 uppercase tracking-wider mb-1">
