@@ -193,8 +193,39 @@ export interface SystemInfo {
   };
 }
 
+export interface RequirementCheck {
+  name: string;
+  current: number;
+  currentFormatted: string;
+  minimum: number;
+  minimumFormatted: string;
+  recommended: number;
+  recommendedFormatted: string;
+  meetsMinimum: boolean;
+  meetsRecommended: boolean;
+}
+
+export interface SystemRequirements {
+  meetsMinimum: boolean;
+  meetsRecommended: boolean;
+  checks: {
+    cpu: RequirementCheck;
+    memory: RequirementCheck;
+    storage: RequirementCheck;
+  };
+}
+
 export const systemApi = {
   getInfo: (): Promise<SystemInfo> => request<SystemInfo>('/system/info'),
+
+  // Public endpoint (no auth required)
+  checkRequirements: async (): Promise<SystemRequirements> => {
+    const response = await fetch(`${API_BASE}/system/requirements`);
+    if (!response.ok) {
+      throw new Error('Failed to check system requirements');
+    }
+    return response.json();
+  },
 };
 
 export const updateApi = {

@@ -32,8 +32,10 @@ import { HealthController } from './health/health.controller';
     DatabaseModule,
 
     // Serve static files from web build
+    // __dirname is /opt/tempo-node-manager/dist/agent/src in production
+    // Web files are at /opt/tempo-node-manager/dist/web/dist
     ServeStaticModule.forRoot({
-      rootPath: join(process.cwd(), '..', 'web', 'dist'),
+      rootPath: join(__dirname, '..', '..', 'web', 'dist'),
       exclude: ['/api/(.*)'],
     }),
 

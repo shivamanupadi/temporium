@@ -996,10 +996,30 @@ function ConfigRow({
 function CopyButton({ value }: { value: string }): JSX.Element {
   const [copied, setCopied] = useState(false);
 
-  const copyToClipboard = (): void => {
-    navigator.clipboard.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+  const copyToClipboard = async (): Promise<void> => {
+    try {
+      // Try modern clipboard API first (requires HTTPS or localhost)
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(value);
+      } else {
+        // Fallback for HTTP contexts
+        const textArea = document.createElement('textarea');
+        textArea.value = value;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // If all else fails, show the value in a prompt
+      window.prompt('Copy this URL:', value);
+    }
   };
 
   return (
