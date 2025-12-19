@@ -19,7 +19,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "reset": "yarn clean && yarn install",
     "check:push": "yarn lint && yarn build",
-    "kill-ports": "lsof -ti:3000,3001,3002,3003 | xargs kill -9 || true",
+    "kill-ports": "lsof -ti:3000,3001,3002,3003,3005,3006 | xargs kill -9 || true",
     "build-api": "turbo build --filter=api",
     "start-api": "turbo start:prod --filter=api",
     "build-gateway": "turbo build --filter=gateway",
