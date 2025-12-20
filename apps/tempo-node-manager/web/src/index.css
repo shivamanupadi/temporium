@@ -92,11 +92,6 @@
   --color-accent-green: #00a67e;
   --color-accent-orange: #ff9500;
 
-  /* Token colors */
-  --color-token-usd: #00a67e;
-  --color-token-usdc: #2775ca;
-  --color-token-usdt: #26a17b;
-
   /* Semantic */
   --color-success: #00a67e;
   --color-warning: #ff9500;
@@ -121,6 +116,7 @@
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-y: scroll;
   }
 
   body {
@@ -146,28 +142,27 @@
   [role="listbox"],
   [role="option"],
   [data-radix-collection-item] {
-    outline: none !important;
-    box-shadow: none !important;
+    outline: none;
   }
 
-  input:focus,
-  textarea:focus,
-  select:focus,
-  button:focus,
-  [role="combobox"]:focus,
-  [data-radix-collection-item]:focus {
-    outline: none !important;
-    box-shadow: none !important;
-  }
-
-  input:focus-visible,
-  textarea:focus-visible,
-  select:focus-visible,
-  button:focus-visible,
-  [role="combobox"]:focus-visible,
-  [data-radix-collection-item]:focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
+  /* Pointer cursor for interactive elements */
+  button,
+  a,
+  [role="button"],
+  [role="link"],
+  [role="menuitem"],
+  [role="tab"],
+  [role="checkbox"],
+  [role="radio"],
+  [role="switch"],
+  [role="option"],
+  [role="combobox"],
+  [tabindex]:not([tabindex="-1"]),
+  label[for],
+  select,
+  summary,
+  [data-radix-collection-item] {
+    cursor: pointer;
   }
 
   /* Radix UI component focus overrides */
@@ -175,8 +170,7 @@
   [data-radix-select-trigger]:focus-visible,
   [data-state]:focus,
   [data-state]:focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
+    outline: none;
   }
 }
 

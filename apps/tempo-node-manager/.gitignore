@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+
+# Data directory (contains sensitive config)
+.data/
+
+# Environment files
+.env
+.env.local
+
+# Logs
+*.log
