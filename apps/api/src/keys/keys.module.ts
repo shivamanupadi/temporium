@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { KeysService } from './keys.service';
 import { KeysController } from './keys.controller';
-import { PrismaModule } from '../prisma/prisma.module';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule],
+  imports: [ConfigModule, AuthModule],
   controllers: [KeysController],
   providers: [KeysService],
   exports: [KeysService],
