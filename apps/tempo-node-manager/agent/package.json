@@ -1,6 +1,6 @@
 {
   "name": "@tempo-node-manager/agent",
-  "version": "0.1.30",
+  "version": "0.1.33",
   "private": true,
   "description": "Tempo Node Manager Agent - NestJS + Fastify backend",
   "scripts": {
@@ -28,16 +28,17 @@
     "@nestjs/throttler": "^6.4.0",
     "@nestjs/websockets": "^11.0.1",
     "@prisma/client": "^6.0.0",
-    "prisma": "^6.0.0",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "dockerode": "^4.0.4",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
+    "prisma": "^6.0.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "systeminformation": "^5.27.14"
   },
   "devDependencies": {
     "@nestjs/cli": "^11.0.0",

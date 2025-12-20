@@ -10061,6 +10061,11 @@ synckit@^0.11.7, synckit@^0.11.8:
   dependencies:
     "@pkgr/core" "^0.2.9"
 
+systeminformation@^5.27.14:
+  version "5.27.14"
+  resolved "https://registry.yarnpkg.com/systeminformation/-/systeminformation-5.27.14.tgz#9f2b181521c151dad4972d47936ebb49a3271e9d"
+  integrity sha512-3DoNDYSZBLxBwaJtQGWNpq0fonga/VZ47HY1+7/G3YoIPaPz93Df6egSzzTKbEMmlzUpy3eQ0nR9REuYIycXGg==
+
 tailwind-merge@^3.4.0:
   version "3.4.0"
   resolved "https://registry.yarnpkg.com/tailwind-merge/-/tailwind-merge-3.4.0.tgz#5a264e131a096879965f1175d11f8c36e6b64eca"

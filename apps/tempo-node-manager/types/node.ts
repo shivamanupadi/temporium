@@ -37,6 +37,7 @@ export interface NodeConfig {
   version: string;
   dataDir: string;
   httpPort: number;
+  wsPort: number;
   p2pPort: number;
   httpApis: string[];
 }
@@ -71,6 +72,7 @@ export const DEFAULT_NODE_CONFIG: NodeConfig = {
   version: 'latest',
   dataDir: '/var/lib/tempo',
   httpPort: 8545,
+  wsPort: 8546,
   p2pPort: 30303,
   httpApis: ['eth', 'net', 'web3', 'txpool', 'trace'],
 };

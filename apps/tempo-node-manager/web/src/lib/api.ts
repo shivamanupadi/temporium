@@ -7,12 +7,11 @@ import type {
   NodeActionResponse,
   SyncStatus,
   LogEntry,
-  SnapshotDownloadProgress,
-  SnapshotDownloadHistory,
 } from '#types/index';
 import { useAuthStore } from '@/stores/auth';
 
-const API_BASE = '/api';
+// Use VITE_API_URL env var for remote agent, otherwise default to local
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 class ApiError extends Error {
   constructor(
@@ -81,6 +80,21 @@ export const authApi = {
     }),
 };
 
+// Snapshot status type
+export interface SnapshotInfo {
+  exists: boolean;
+  sizeBytes: number;
+  sizeFormatted: string;
+  lastModified: string | null;
+}
+
+export interface SnapshotDownloadStatus {
+  isDownloading: boolean;
+  progress: number;
+  lastLog: string | null;
+  snapshot: SnapshotInfo;
+}
+
 // Node API
 export const nodeApi = {
   getStatus: (): Promise<NodeInfo> => request<NodeInfo>('/node/status'),
@@ -98,34 +112,21 @@ export const nodeApi = {
 
   pullImage: (): Promise<NodeActionResponse> =>
     request<NodeActionResponse>('/node/pull', { method: 'POST' }),
+
+  deleteContainer: (): Promise<NodeActionResponse> =>
+    request<NodeActionResponse>('/node/delete', { method: 'POST' }),
+
+  // Snapshot methods
+  getSnapshotStatus: (): Promise<SnapshotDownloadStatus> =>
+    request<SnapshotDownloadStatus>('/node/snapshot/status'),
+
+  downloadSnapshot: (): Promise<NodeActionResponse> =>
+    request<NodeActionResponse>('/node/snapshot/download', { method: 'POST' }),
 };
 
 // Logs API
 export const logsApi = {
   getLogs: (limit = 100): Promise<LogEntry[]> => request<LogEntry[]>(`/logs?limit=${limit}`),
-};
-
-// Snapshots API
-export const snapshotsApi = {
-  getStatus: (): Promise<{ isDownloading: boolean; progress: number; lastLog: string }> =>
-    request<{ isDownloading: boolean; progress: number; lastLog: string }>('/snapshots/status'),
-
-  getProgress: (): Promise<SnapshotDownloadProgress | null> =>
-    request<SnapshotDownloadProgress | null>('/snapshots/progress'),
-
-  download: (): Promise<{ success: boolean; message: string }> =>
-    request<{ success: boolean; message: string }>('/snapshots/download', {
-      method: 'POST',
-    }),
-
-  cancel: (): Promise<{ success: boolean }> =>
-    request<{ success: boolean }>('/snapshots/cancel', { method: 'POST' }),
-
-  getHistory: (): Promise<SnapshotDownloadHistory[]> =>
-    request<SnapshotDownloadHistory[]>('/snapshots/history'),
-
-  getLastDownload: (): Promise<SnapshotDownloadHistory | null> =>
-    request<SnapshotDownloadHistory | null>('/snapshots/last-download'),
 };
 
 // Update API
@@ -163,6 +164,65 @@ export const publicApi = {
     const response = await fetch(`${API_BASE}/public/status`);
     if (!response.ok) {
       throw new Error('Failed to fetch public status');
+    }
+    return response.json();
+  },
+};
+
+// System API
+export interface SystemInfo {
+  cpu: {
+    cores: number;
+    model: string;
+    usage: number;
+  };
+  memory: {
+    total: number;
+    used: number;
+    free: number;
+    usagePercent: number;
+  };
+  storage: {
+    total: number;
+    used: number;
+    free: number;
+    usagePercent: number;
+  };
+  network: {
+    host: string;
+  };
+}
+
+export interface RequirementCheck {
+  name: string;
+  current: number;
+  currentFormatted: string;
+  minimum: number;
+  minimumFormatted: string;
+  recommended: number;
+  recommendedFormatted: string;
+  meetsMinimum: boolean;
+  meetsRecommended: boolean;
+}
+
+export interface SystemRequirements {
+  meetsMinimum: boolean;
+  meetsRecommended: boolean;
+  checks: {
+    cpu: RequirementCheck;
+    memory: RequirementCheck;
+    storage: RequirementCheck;
+  };
+}
+
+export const systemApi = {
+  getInfo: (): Promise<SystemInfo> => request<SystemInfo>('/system/info'),
+
+  // Public endpoint (no auth required)
+  checkRequirements: async (): Promise<SystemRequirements> => {
+    const response = await fetch(`${API_BASE}/system/requirements`);
+    if (!response.ok) {
+      throw new Error('Failed to check system requirements');
     }
     return response.json();
   },

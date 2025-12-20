@@ -162,7 +162,9 @@ function HomePage(): ReactElement {
             className="flex items-center gap-2.5"
           >
             <Zap className="w-6 h-6 text-slate-900" strokeWidth={2} />
-            <span className="text-lg font-bold text-slate-900 tracking-tight">Temporium</span>
+            <span className="text-lg font-bold text-slate-900 tracking-tight">
+              Temporium<span className="text-slate-400 font-normal"> | Gateway</span>
+            </span>
           </motion.div>
           <motion.div
             initial={{ x: 20, opacity: 0 }}
@@ -306,7 +308,7 @@ function HomePage(): ReactElement {
             ))}
           </motion.div>
 
-          {/* Tempo branding & Contact */}
+          {/* Tempo branding */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -324,13 +326,6 @@ function HomePage(): ReactElement {
                 Tempo
               </a>
             </div>
-            <a
-              href="mailto:hello@temporium.xyz"
-              className="flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-primary transition-colors"
-            >
-              <Mail className="h-3.5 w-3.5" />
-              hello@temporium.xyz
-            </a>
           </motion.div>
         </div>
       </main>

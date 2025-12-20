@@ -7,9 +7,9 @@ import { DatabaseModule } from './database/database.module';
 import { AuthModule } from './auth/auth.module';
 import { NodeModule } from './node/node.module';
 import { LogsModule } from './logs/logs.module';
-import { SnapshotsModule } from './snapshots/snapshots.module';
 import { DockerModule } from './docker/docker.module';
 import { UpdateModule } from './update/update.module';
+import { SystemModule } from './system/system.module';
 import { HealthController } from './health/health.controller';
 
 @Module({
@@ -32,6 +32,8 @@ import { HealthController } from './health/health.controller';
     DatabaseModule,
 
     // Serve static files from web build
+    // __dirname is /opt/tempo-node-manager/dist/agent/src in production
+    // Web files are at /opt/tempo-node-manager/dist/web/dist
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '..', 'web', 'dist'),
       exclude: ['/api/(.*)'],
@@ -42,8 +44,8 @@ import { HealthController } from './health/health.controller';
     DockerModule,
     NodeModule,
     LogsModule,
-    SnapshotsModule,
     UpdateModule,
+    SystemModule,
   ],
   controllers: [HealthController],
 })

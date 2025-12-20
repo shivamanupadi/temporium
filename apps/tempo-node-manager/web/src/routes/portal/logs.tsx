@@ -7,10 +7,10 @@ import { useAuthStore } from '@/stores/auth';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollText, Search, Pause, Play, Trash2, Download } from 'lucide-react';
+import { ScrollText, Search, Pause, Play, Trash2 } from 'lucide-react';
 import type { LogEntry, LogMessage } from '#types/index';
 
-export const Route = createFileRoute('/dashboard/logs')({
+export const Route = createFileRoute('/portal/logs')({
   component: LogsPage,
 });
 
@@ -38,7 +38,11 @@ function LogsPage(): JSX.Element {
   useEffect(() => {
     if (!isLive || !token) return;
 
-    const socket = io('/logs', {
+    // Support remote agent via VITE_API_URL env var
+    const wsBase = import.meta.env.VITE_API_URL
+      ? import.meta.env.VITE_API_URL.replace('/api', '')
+      : '';
+    const socket = io(`${wsBase}/logs`, {
       query: { token },
       transports: ['websocket'],
     });
@@ -78,22 +82,6 @@ function LogsPage(): JSX.Element {
 
   const clearLogs = (): void => setLogs([]);
 
-  const downloadLogs = (): void => {
-    const content = filteredLogs
-      .map(
-        log =>
-          `${new Date(log.timestamp).toISOString()} [${log.level.toUpperCase()}] ${log.source ? `[${log.source}] ` : ''}${log.message}`
-      )
-      .join('\n');
-    const blob = new Blob([content], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `tempo-logs-${new Date().toISOString().slice(0, 10)}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -107,18 +95,30 @@ function LogsPage(): JSX.Element {
       {/* Logs Card */}
       <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_2px_4px_rgba(0,0,0,0.04)] overflow-hidden flex flex-col h-[calc(100vh-220px)]">
         {/* Header */}
-        <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between flex-shrink-0 bg-slate-50/50">
+        <div
+          className="px-4 py-3 flex items-center justify-between flex-shrink-0"
+          style={{ backgroundColor: '#f2f2f2' }}
+        >
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
-              <ScrollText className="w-4 h-4 text-slate-600" />
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: '#E0E7FF' }}
+            >
+              <ScrollText className="w-4 h-4" style={{ color: '#7c5cff' }} />
             </div>
             <div>
               <h2 className="text-sm font-semibold text-slate-800">Container Logs</h2>
               <p className="text-[11px] text-slate-500">{filteredLogs.length} entries</p>
             </div>
             {isLive && (
-              <span className="flex items-center gap-1.5 text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
-                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse" />
+              <span
+                className="flex items-center gap-1.5 text-[11px] font-medium px-2.5 py-1 rounded-full"
+                style={{ backgroundColor: '#D1FAE5', color: '#059669' }}
+              >
+                <span
+                  className="w-1.5 h-1.5 rounded-full animate-pulse"
+                  style={{ backgroundColor: '#059669' }}
+                />
                 Live
               </span>
             )}
@@ -154,14 +154,6 @@ function LogsPage(): JSX.Element {
                   <Play className="w-4 h-4 mr-1.5" /> Resume
                 </>
               )}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={downloadLogs}
-              className="h-9 px-3 text-[13px] text-slate-600 hover:text-slate-700 hover:bg-slate-100 rounded-lg"
-            >
-              <Download className="w-4 h-4 mr-1.5" /> Export
             </Button>
             <Button
               variant="ghost"

@@ -1,5 +1,5 @@
 import { Controller, Get, Post, UseGuards, HttpCode, HttpStatus } from '@nestjs/common';
-import { NodeService } from './node.service';
+import { NodeService, SnapshotDownloadStatus } from './node.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { NodeInfo, NodeActionResponse, SyncStatus } from '#types/index';
 
@@ -58,5 +58,31 @@ export class NodeController {
   @HttpCode(HttpStatus.OK)
   async pullImage(): Promise<NodeActionResponse> {
     return this.nodeService.pullImage();
+  }
+
+  /**
+   * Get snapshot download status
+   */
+  @Get('snapshot/status')
+  getSnapshotStatus(): SnapshotDownloadStatus {
+    return this.nodeService.getSnapshotStatus();
+  }
+
+  /**
+   * Start snapshot download
+   */
+  @Post('snapshot/download')
+  @HttpCode(HttpStatus.OK)
+  async downloadSnapshot(): Promise<NodeActionResponse> {
+    return this.nodeService.downloadSnapshot();
+  }
+
+  /**
+   * Delete the container
+   */
+  @Post('delete')
+  @HttpCode(HttpStatus.OK)
+  async deleteContainer(): Promise<NodeActionResponse> {
+    return this.nodeService.deleteContainer();
   }
 }

@@ -14,7 +14,6 @@ import {
   Loader2,
   ArrowRight,
 } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
 
 export const Route = createFileRoute('/status')({
   component: PublicStatusPage,
@@ -59,41 +58,41 @@ function PublicStatusPage(): JSX.Element {
         return {
           icon: CheckCircle2,
           label: 'Online',
-          color: 'text-emerald-600',
-          bg: 'bg-emerald-50',
-          dot: 'bg-emerald-500',
+          color: 'text-[#16a34a]',
+          bg: 'bg-[#dcfce7]',
+          dot: 'bg-[#16a34a]',
         };
       case 'syncing':
         return {
           icon: Activity,
           label: 'Syncing',
-          color: 'text-blue-600',
-          bg: 'bg-blue-50',
-          dot: 'bg-blue-500',
+          color: 'text-[#7c5cff]',
+          bg: 'bg-[#f0edff]',
+          dot: 'bg-[#7c5cff]',
         };
       case 'stopped':
         return {
           icon: XCircle,
           label: 'Offline',
-          color: 'text-gray-500',
-          bg: 'bg-gray-100',
-          dot: 'bg-gray-400',
+          color: 'text-[#64748b]',
+          bg: 'bg-[#f1f5f9]',
+          dot: 'bg-[#94a3b8]',
         };
       case 'error':
         return {
           icon: AlertCircle,
           label: 'Error',
-          color: 'text-red-600',
-          bg: 'bg-red-50',
-          dot: 'bg-red-500',
+          color: 'text-[#dc2626]',
+          bg: 'bg-[#fef2f2]',
+          dot: 'bg-[#dc2626]',
         };
       default:
         return {
           icon: AlertCircle,
           label: 'Unknown',
-          color: 'text-gray-500',
-          bg: 'bg-gray-100',
-          dot: 'bg-gray-400',
+          color: 'text-[#64748b]',
+          bg: 'bg-[#f1f5f9]',
+          dot: 'bg-[#94a3b8]',
         };
     }
   };
@@ -102,19 +101,19 @@ function PublicStatusPage(): JSX.Element {
   const StatusIcon = statusConfig.icon;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
+    <div className="fixed inset-0 bg-[#fafafa]">
       {/* Header */}
-      <header className="border-b border-slate-200/60 bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+      <header className="border-b border-[#eef0f3] bg-white">
         <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Zap className="w-6 h-6 text-slate-900" strokeWidth={2} />
-            <span className="text-lg font-bold text-slate-900 tracking-tight">Temporium</span>
-            <span className="text-slate-300 font-light">|</span>
-            <span className="text-lg text-slate-600">Node Manager</span>
+          <div className="flex items-center gap-2">
+            <Zap className="w-5 h-5 text-slate-900" strokeWidth={2} />
+            <span className="text-[15px] font-semibold text-slate-900">
+              Temporium<span className="text-slate-400 font-normal"> | Node Manager</span>
+            </span>
           </div>
           <Link
             to="/login"
-            className="text-sm text-slate-600 hover:text-slate-900 flex items-center gap-1.5 transition-colors"
+            className="text-[13px] text-[#64748b] hover:text-[#0f172a] flex items-center gap-1.5 transition-colors"
           >
             Dashboard <ArrowRight className="w-4 h-4" />
           </Link>
@@ -125,13 +124,19 @@ function PublicStatusPage(): JSX.Element {
       <main className="max-w-4xl mx-auto px-6 py-12">
         {isLoading ? (
           <div className="flex items-center justify-center py-24">
-            <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+            <Loader2 className="w-6 h-6 animate-spin text-[#7c5cff]" />
           </div>
         ) : error ? (
           <div className="text-center py-24">
-            <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-            <h2 className="text-lg font-semibold text-slate-900 mb-2">Unable to connect</h2>
-            <p className="text-sm text-slate-500">Could not fetch node status. Please try again.</p>
+            <div className="w-14 h-14 rounded-2xl bg-[#fef2f2] flex items-center justify-center mx-auto mb-5">
+              <AlertCircle className="w-7 h-7 text-[#dc2626]" />
+            </div>
+            <h2 className="text-[22px] font-semibold text-[#0f172a] tracking-[-0.02em] mb-2">
+              Unable to connect
+            </h2>
+            <p className="text-[15px] text-[#64748b]">
+              Could not fetch node status. Please try again.
+            </p>
           </div>
         ) : (
           <div className="space-y-8">
@@ -142,15 +147,15 @@ function PublicStatusPage(): JSX.Element {
               >
                 <span className={`w-2 h-2 rounded-full ${statusConfig.dot} animate-pulse`} />
                 <StatusIcon className={`w-4 h-4 ${statusConfig.color}`} />
-                <span className={`text-sm font-semibold ${statusConfig.color}`}>
+                <span className={`text-[13px] font-semibold ${statusConfig.color}`}>
                   {statusConfig.label}
                 </span>
               </div>
 
-              <h2 className="text-4xl font-bold text-slate-900 mb-2">
+              <h1 className="text-[42px] font-semibold text-[#0f172a] leading-[1.1] tracking-[-0.03em] mb-3">
                 {status?.isSynced ? 'Fully Synced' : 'Synchronizing'}
-              </h2>
-              <p className="text-slate-500">
+              </h1>
+              <p className="text-[17px] text-[#64748b] leading-relaxed">
                 {status?.isSynced
                   ? 'Your node is fully synchronized with the network'
                   : `Catching up with the network (${status?.syncProgress?.toFixed(1)}%)`}
@@ -159,15 +164,20 @@ function PublicStatusPage(): JSX.Element {
 
             {/* Sync Progress */}
             {!status?.isSynced && (status?.syncProgress ?? 0) > 0 && (
-              <div className="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-6">
-                <div className="flex justify-between items-center mb-3">
-                  <span className="text-sm font-medium text-slate-700">Sync Progress</span>
-                  <span className="text-sm font-semibold text-slate-900">
+              <div className="bg-white rounded-2xl border border-[#eef0f3] p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <span className="text-[15px] font-medium text-[#0f172a]">Sync Progress</span>
+                  <span className="text-[15px] font-semibold text-[#7c5cff]">
                     {status?.syncProgress?.toFixed(2)}%
                   </span>
                 </div>
-                <Progress value={status?.syncProgress ?? 0} className="h-2" />
-                <div className="flex justify-between mt-3 text-xs text-slate-500">
+                <div className="h-2 bg-[#f1f5f9] rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#7c5cff] rounded-full transition-all duration-500"
+                    style={{ width: `${status?.syncProgress ?? 0}%` }}
+                  />
+                </div>
+                <div className="flex justify-between mt-4 text-[13px] text-[#94a3b8]">
                   <span>Block {formatNumber(status?.currentBlock ?? 0)}</span>
                   <span>Target {formatNumber(status?.highestBlock ?? 0)}</span>
                 </div>
@@ -175,7 +185,7 @@ function PublicStatusPage(): JSX.Element {
             )}
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <AnimatedBlockCard
                 currentBlock={status?.currentBlock ?? 0}
                 formatNumber={formatNumber}
@@ -184,15 +194,15 @@ function PublicStatusPage(): JSX.Element {
                 icon={Users}
                 label="Connected Peers"
                 value={status?.peerCount?.toString() ?? '0'}
-                iconColor="text-emerald-600"
-                iconBg="bg-emerald-50"
+                iconColor="text-[#16a34a]"
+                iconBg="bg-[#dcfce7]"
               />
               <StatCard
                 icon={Clock}
                 label="Uptime"
                 value={formatUptime(status?.uptime)}
-                iconColor="text-amber-600"
-                iconBg="bg-amber-50"
+                iconColor="text-[#0284c7]"
+                iconBg="bg-[#e0f2fe]"
               />
             </div>
           </div>
@@ -200,13 +210,13 @@ function PublicStatusPage(): JSX.Element {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200/60 mt-auto">
-        <div className="max-w-4xl mx-auto px-6 py-6 text-center">
+      <footer className="absolute bottom-0 left-0 right-0 border-t border-[#eef0f3] bg-white">
+        <div className="max-w-4xl mx-auto px-6 py-4 text-center">
           <a
             href="https://temporium.xyz"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-xs text-slate-400 hover:text-slate-600 transition-colors"
+            className="text-[13px] text-[#94a3b8] hover:text-[#64748b] transition-colors"
           >
             temporium.xyz
           </a>
@@ -226,12 +236,14 @@ interface StatCardProps {
 
 function StatCard({ icon: Icon, label, value, iconColor, iconBg }: StatCardProps): JSX.Element {
   return (
-    <div className="bg-white rounded-xl border border-slate-200/60 shadow-sm p-5">
-      <div className={`w-10 h-10 rounded-lg ${iconBg} flex items-center justify-center mb-3`}>
-        <Icon className={`w-5 h-5 ${iconColor}`} />
+    <div className="bg-white rounded-2xl border border-[#eef0f3] p-5">
+      <div className="flex items-center gap-3 mb-4">
+        <div className={`w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center`}>
+          <Icon className={`w-5 h-5 ${iconColor}`} />
+        </div>
+        <span className="text-[13px] text-[#94a3b8]">{label}</span>
       </div>
-      <p className="text-2xl font-bold text-slate-900 mb-0.5">{value}</p>
-      <p className="text-xs text-slate-500">{label}</p>
+      <p className="text-[28px] font-semibold text-[#0f172a] tracking-[-0.02em]">{value}</p>
     </div>
   );
 }
@@ -243,56 +255,46 @@ interface AnimatedBlockCardProps {
 
 function AnimatedBlockCard({ currentBlock, formatNumber }: AnimatedBlockCardProps): JSX.Element {
   const [displayBlock, setDisplayBlock] = useState(currentBlock);
-  const [isAnimating, setIsAnimating] = useState(false);
   const prevBlockRef = useRef(currentBlock);
 
   useEffect(() => {
-    if (currentBlock !== prevBlockRef.current && currentBlock > prevBlockRef.current) {
+    if (currentBlock !== prevBlockRef.current) {
       const startValue = prevBlockRef.current;
       const endValue = currentBlock;
-      const duration = 500;
+      const duration = 400;
       const startTime = performance.now();
-
-      setIsAnimating(true);
 
       const animate = (currentTime: number): void => {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
 
-        // Easing function for smooth animation
-        const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-        const currentValue = Math.round(startValue + (endValue - startValue) * easeOutQuart);
+        // Ease out cubic
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const currentValue = Math.round(startValue + (endValue - startValue) * eased);
 
         setDisplayBlock(currentValue);
 
         if (progress < 1) {
           requestAnimationFrame(animate);
-        } else {
-          setIsAnimating(false);
         }
       };
 
       requestAnimationFrame(animate);
       prevBlockRef.current = currentBlock;
-    } else if (currentBlock !== displayBlock && !isAnimating) {
-      setDisplayBlock(currentBlock);
-      prevBlockRef.current = currentBlock;
     }
-  }, [currentBlock, displayBlock, isAnimating]);
+  }, [currentBlock]);
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200/60 shadow-sm p-5">
-      <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center mb-3">
-        <Box className="w-5 h-5 text-blue-600" />
+    <div className="bg-white rounded-2xl border border-[#eef0f3] p-5">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="w-10 h-10 rounded-xl bg-[#f0edff] flex items-center justify-center">
+          <Box className="w-5 h-5 text-[#7c5cff]" />
+        </div>
+        <span className="text-[13px] text-[#94a3b8]">Current Block</span>
       </div>
-      <p
-        className={`text-2xl font-bold text-slate-900 mb-0.5 font-mono tabular-nums transition-colors duration-200 ${
-          isAnimating ? 'text-blue-600' : ''
-        }`}
-      >
+      <p className="text-[28px] font-semibold tracking-[-0.02em] font-mono tabular-nums text-[#0f172a]">
         {formatNumber(displayBlock)}
       </p>
-      <p className="text-xs text-slate-500">Current Block</p>
     </div>
   );
 }
