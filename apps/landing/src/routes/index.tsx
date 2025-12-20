@@ -91,6 +91,8 @@ function HomePage(): ReactElement {
               <div className="flex flex-wrap gap-4">
                 <a
                   href={GATEWAY_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-[#7c5cff] hover:bg-[#6b4fee] text-white px-7 py-3.5 rounded-lg text-[15px] font-medium transition-colors"
                 >
                   Open Gateway
@@ -98,6 +100,8 @@ function HomePage(): ReactElement {
                 </a>
                 <a
                   href={NODE_MANAGER_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-900 px-7 py-3.5 rounded-lg text-[15px] font-medium border-2 border-slate-200 hover:border-slate-300 transition-colors"
                 >
                   Run a Node
@@ -113,7 +117,7 @@ function HomePage(): ReactElement {
               className="space-y-4"
             >
               {/* Gateway Card */}
-              <a href={GATEWAY_URL} className="block group">
+              <a href={GATEWAY_URL} target="_blank" rel="noopener noreferrer" className="block group">
                 <div className="relative bg-white border border-slate-200/80 rounded-2xl p-8 hover:border-slate-300 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
                   <div className="flex items-start gap-5">
                     <div className="mt-0.5">
@@ -138,7 +142,7 @@ function HomePage(): ReactElement {
               </a>
 
               {/* Node Manager Card */}
-              <a href={NODE_MANAGER_URL} className="block group">
+              <a href={NODE_MANAGER_URL} target="_blank" rel="noopener noreferrer" className="block group">
                 <div className="relative bg-white border border-slate-200/80 rounded-2xl p-8 hover:border-slate-300 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
                   <div className="flex items-start gap-5">
                     <div className="mt-0.5">
