@@ -1,6 +1,16 @@
-import { Controller, All, Req, Res, Logger, HttpStatus } from '@nestjs/common';
+import {
+  Controller,
+  All,
+  Req,
+  Res,
+  Logger,
+  HttpStatus,
+  UseGuards,
+} from '@nestjs/common';
 import type { FastifyRequest, FastifyReply } from 'fastify';
+import { ThrottlerGuard, Throttle } from '@nestjs/throttler';
 import { Handler } from 'tempo.ts/server';
+import { keccak256, type Hex } from 'viem';
 import { KeysService } from './keys.service';
 import { AuthService } from '../auth/auth.service';
 
@@ -29,6 +39,8 @@ interface KeysErrorResponse {
 }
 
 @Controller({ path: 'keys', version: '' })
+@UseGuards(ThrottlerGuard)
+@Throttle({ default: { limit: 30, ttl: 60000 } }) // 30 requests per minute for keys endpoints
 export class KeysController {
   private readonly logger = new Logger(KeysController.name);
   private readonly keysHandler: ReturnType<typeof Handler.keyManager>;
@@ -214,6 +226,40 @@ export class KeysController {
     return isSuccessful && hasCredentialId && !isExcluded;
   }
 
+  /**
+   * Normalize a P256 public key to 64 bytes (without 0x04 prefix)
+   * This matches the format expected by the PasskeyRegistry contract
+   */
+  private normalizePublicKey(publicKey: string): Hex {
+    const hexPart = publicKey.slice(2); // Remove 0x prefix
+
+    // If 130 chars (65 bytes with 0x04 prefix), strip the 04 prefix
+    if (hexPart.length === 130 && hexPart.startsWith('04')) {
+      return `0x${hexPart.slice(2)}`;
+    }
+
+    // If already 128 chars (64 bytes), return as-is
+    if (hexPart.length === 128) {
+      return publicKey as Hex;
+    }
+
+    // Log warning but continue - the contract will validate
+    this.logger.warn(
+      `Unexpected public key length: ${hexPart.length / 2} bytes (expected 64 or 65)`,
+    );
+    return publicKey as Hex;
+  }
+
+  /**
+   * Derive wallet address from public key
+   * Uses last 20 bytes of keccak256(normalizedPublicKey) - same as contract
+   */
+  private deriveWalletAddress(publicKey: string): string {
+    const normalized = this.normalizePublicKey(publicKey);
+    const hash = keccak256(normalized);
+    return `0x${hash.slice(-40)}`.toLowerCase();
+  }
+
   private async createAuthenticatedResponse(
     method: string,
     credentialId: string,
@@ -238,10 +284,14 @@ export class KeysController {
         return null;
       }
 
-      const token = this.authService.generateToken(credentialId);
+      // Derive wallet address from public key (same derivation as contract)
+      const walletAddress = this.deriveWalletAddress(publicKey);
+
+      // Generate JWT with the actual wallet address, not credentialId
+      const token = this.authService.generateToken(walletAddress);
 
       this.logger.log(
-        `[${requestId}] Generated JWT token for credential: ${credentialId}`,
+        `[${requestId}] Generated JWT token for wallet: ${walletAddress}`,
       );
 
       return {

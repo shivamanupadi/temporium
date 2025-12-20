@@ -9,6 +9,22 @@ pragma solidity ^0.8.20;
  */
 contract PasskeyRegistry {
 
+    // ============ Constants ============
+
+    /// @notice Maximum number of passkeys allowed per wallet
+    uint256 public constant MAX_PASSKEYS_PER_WALLET = 10;
+
+    // ============ State Variables ============
+
+    /// @notice Contract owner
+    address public owner;
+
+    /// @notice Whether the contract is paused
+    bool public paused;
+
+    /// @notice Authorized relayers that can register passkeys
+    mapping(address => bool) public authorizedRelayers;
+
     struct Passkey {
         bytes publicKey;      // P256 public key (64 bytes uncompressed)
         address wallet;       // Derived wallet address
@@ -22,7 +38,8 @@ contract PasskeyRegistry {
     // wallet => credentialIdHashes (for listing user's passkeys)
     mapping(address => bytes32[]) public walletPasskeys;
 
-    // Events for indexing and discovery
+    // ============ Events ============
+
     event PasskeyRegistered(
         bytes32 indexed credentialIdHash,
         address indexed wallet,
@@ -40,20 +57,107 @@ contract PasskeyRegistry {
         address indexed wallet
     );
 
+    event RelayerUpdated(
+        address indexed relayer,
+        bool authorized
+    );
+
+    event OwnershipTransferred(
+        address indexed previousOwner,
+        address indexed newOwner
+    );
+
+    event Paused(address account);
+    event Unpaused(address account);
+
+    // ============ Modifiers ============
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "PasskeyRegistry: not owner");
+        _;
+    }
+
+    modifier onlyRelayer() {
+        require(authorizedRelayers[msg.sender], "PasskeyRegistry: not authorized relayer");
+        _;
+    }
+
+    modifier whenNotPaused() {
+        require(!paused, "PasskeyRegistry: paused");
+        _;
+    }
+
+    // ============ Constructor ============
+
+    constructor() {
+        owner = msg.sender;
+        emit OwnershipTransferred(address(0), msg.sender);
+    }
+
+    // ============ Owner Functions ============
+
     /**
-     * @notice Register a new passkey
+     * @notice Transfer ownership to a new address
+     * @param newOwner The new owner address
+     */
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "PasskeyRegistry: invalid new owner");
+        address previousOwner = owner;
+        owner = newOwner;
+        emit OwnershipTransferred(previousOwner, newOwner);
+    }
+
+    /**
+     * @notice Set relayer authorization status
+     * @param relayer The relayer address
+     * @param authorized Whether the relayer is authorized
+     */
+    function setRelayer(address relayer, bool authorized) external onlyOwner {
+        require(relayer != address(0), "PasskeyRegistry: invalid relayer");
+        authorizedRelayers[relayer] = authorized;
+        emit RelayerUpdated(relayer, authorized);
+    }
+
+    /**
+     * @notice Pause the contract
+     */
+    function pause() external onlyOwner {
+        require(!paused, "PasskeyRegistry: already paused");
+        paused = true;
+        emit Paused(msg.sender);
+    }
+
+    /**
+     * @notice Unpause the contract
+     */
+    function unpause() external onlyOwner {
+        require(paused, "PasskeyRegistry: not paused");
+        paused = false;
+        emit Unpaused(msg.sender);
+    }
+
+    // ============ Relayer Functions ============
+
+    /**
+     * @notice Register a new passkey (only authorized relayers)
      * @param credentialIdHash keccak256 hash of the WebAuthn credentialId
-     * @param publicKey The P256 public key bytes
-     * @param wallet The derived wallet address
+     * @param publicKey The P256 public key bytes (64 bytes uncompressed)
      */
     function register(
         bytes32 credentialIdHash,
-        bytes calldata publicKey,
-        address wallet
-    ) external {
+        bytes calldata publicKey
+    ) external onlyRelayer whenNotPaused {
+        require(publicKey.length == 64, "PasskeyRegistry: invalid P256 key length");
         require(passkeys[credentialIdHash].wallet == address(0), "PasskeyRegistry: already registered");
-        require(wallet != address(0), "PasskeyRegistry: invalid wallet");
-        require(publicKey.length > 0, "PasskeyRegistry: invalid public key");
+
+        // Derive wallet address from public key (last 20 bytes of keccak256)
+        address wallet = address(uint160(uint256(keccak256(publicKey))));
+
+        // Check max passkeys limit
+        require(
+            walletPasskeys[wallet].length < MAX_PASSKEYS_PER_WALLET,
+            "PasskeyRegistry: max passkeys reached"
+        );
 
         passkeys[credentialIdHash] = Passkey({
             publicKey: publicKey,
@@ -66,6 +170,8 @@ contract PasskeyRegistry {
 
         emit PasskeyRegistered(credentialIdHash, wallet, publicKey, block.timestamp);
     }
+
+    // ============ View Functions ============
 
     /**
      * @notice Get public key by credentialId hash
@@ -121,6 +227,16 @@ contract PasskeyRegistry {
     {
         return walletPasskeys[wallet];
     }
+
+    /**
+     * @notice Get the number of passkeys for a wallet
+     * @param wallet The wallet address
+     */
+    function getWalletPasskeyCount(address wallet) external view returns (uint256) {
+        return walletPasskeys[wallet].length;
+    }
+
+    // ============ Wallet Owner Functions ============
 
     /**
      * @notice Deactivate a passkey (only wallet owner)

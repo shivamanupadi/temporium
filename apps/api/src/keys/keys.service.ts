@@ -28,6 +28,12 @@ const tempoTestnet = {
 } as const;
 
 /**
+ * Minimum relayer balance in native currency (0.1 USD)
+ * Below this threshold, warnings are logged
+ */
+const MIN_RELAYER_BALANCE = BigInt(100000); // 0.1 USD with 6 decimals
+
+/**
  * Keys Service - On-Chain Implementation
  *
  * Provides a tempo.ts compatible Kv interface backed by blockchain storage.
@@ -39,6 +45,11 @@ const tempoTestnet = {
  * - Supports fee sponsorship for gasless registration
  * - Free reads (view functions don't cost gas)
  * - Challenge generation remains stateless (random bytes)
+ *
+ * Security:
+ * - Only authorized relayers can register passkeys
+ * - Wallet address is derived on-chain from public key (tamper-proof)
+ * - Contract can be paused in case of emergency
  */
 @Injectable()
 export class KeysService implements Kv.Kv, OnModuleInit {
@@ -85,7 +96,7 @@ export class KeysService implements Kv.Kv, OnModuleInit {
     }
   }
 
-  onModuleInit() {
+  async onModuleInit() {
     if (!this.registryAddress || this.registryAddress === '0x...') {
       this.logger.warn(
         'PASSKEY_REGISTRY_ADDRESS not configured. On-chain storage disabled.',
@@ -94,9 +105,68 @@ export class KeysService implements Kv.Kv, OnModuleInit {
         'Deploy the PasskeyRegistry contract and set the address in .env',
       );
     } else {
-      this.logger.log(
-        `PasskeyRegistry configured at: ${this.registryAddress}`,
-      );
+      this.logger.log(`PasskeyRegistry configured at: ${this.registryAddress}`);
+    }
+
+    // Check relayer balance on startup
+    await this.checkRelayerBalance();
+  }
+
+  /**
+   * Check relayer balance and log warnings if low
+   */
+  private async checkRelayerBalance(): Promise<void> {
+    if (!this.walletClient?.account) {
+      return;
+    }
+
+    try {
+      const balance = await this.publicClient.getBalance({
+        address: this.walletClient.account.address,
+      });
+
+      const balanceFormatted = Number(balance) / 1e6; // Convert to USD (6 decimals)
+
+      if (balance < MIN_RELAYER_BALANCE) {
+        this.logger.error(
+          `CRITICAL: Relayer balance is low: ${balanceFormatted.toFixed(2)} USD. ` +
+            `Passkey registrations may fail! Please top up: ${this.walletClient.account.address}`,
+        );
+      } else {
+        this.logger.log(
+          `Relayer balance: ${balanceFormatted.toFixed(2)} USD (${this.walletClient.account.address})`,
+        );
+      }
+    } catch (error) {
+      this.logger.error(`Failed to check relayer balance: ${error}`);
+    }
+  }
+
+  /**
+   * Get current relayer balance
+   */
+  async getRelayerBalance(): Promise<{
+    address: string;
+    balance: string;
+    isLow: boolean;
+  } | null> {
+    if (!this.walletClient?.account) {
+      return null;
+    }
+
+    try {
+      const balance = await this.publicClient.getBalance({
+        address: this.walletClient.account.address,
+      });
+
+      return {
+        address: this.walletClient.account.address,
+        balance: balance.toString(),
+        isLow: balance < MIN_RELAYER_BALANCE,
+      };
+    } catch (error) {
+      this.logger.error(`Failed to get relayer balance: ${error}`);
+      return null;
     }
   }
 
@@ -108,19 +178,52 @@ export class KeysService implements Kv.Kv, OnModuleInit {
   }
 
   /**
-   * Derive wallet address from public key
-   * Uses last 20 bytes of keccak256(publicKey)
-   */
-  private deriveWalletAddress(publicKey: string): Address {
-    const hash = keccak256(publicKey as Hex);
-    return `0x${hash.slice(-40)}` as Address;
-  }
-
-  /**
    * Check if on-chain storage is available
    */
   private isOnChainEnabled(): boolean {
     return !!this.registryAddress && this.registryAddress !== '0x...';
+  }
+
+  /**
+   * Normalize a P256 public key to 64 bytes (without 0x04 prefix)
+   * This matches the format expected by the PasskeyRegistry contract
+   */
+  private normalizePublicKey(publicKey: string): Hex {
+    const hexPart = publicKey.slice(2); // Remove 0x prefix
+
+    // If 130 chars (65 bytes with 0x04 prefix), strip the 04 prefix
+    if (hexPart.length === 130 && hexPart.startsWith('04')) {
+      return `0x${hexPart.slice(2)}`;
+    }
+
+    // If already 128 chars (64 bytes), return as-is
+    if (hexPart.length === 128) {
+      return publicKey as Hex;
+    }
+
+    throw new Error(
+      `Invalid public key: expected 64 or 65 bytes, got ${hexPart.length / 2} bytes`,
+    );
+  }
+
+  /**
+   * Validate and normalize public key format
+   * Returns the normalized 64-byte public key
+   */
+  private validateAndNormalizePublicKey(publicKey: string): Hex {
+    // Must start with 0x
+    if (!publicKey.startsWith('0x')) {
+      throw new Error('Invalid public key: must start with 0x');
+    }
+
+    // Must be valid hex
+    const hexPart = publicKey.slice(2);
+    if (!/^[a-fA-F0-9]+$/.test(hexPart)) {
+      throw new Error('Invalid public key: must be valid hexadecimal');
+    }
+
+    // Normalize to 64 bytes (will throw if invalid length)
+    return this.normalizePublicKey(publicKey);
   }
 
   /**
@@ -160,7 +263,9 @@ export class KeysService implements Kv.Kv, OnModuleInit {
 
       // Check if passkey exists and is active
       if (!publicKey || publicKey === '0x' || !isActive) {
-        this.logger.debug(`Passkey not found for credentialId: ${credentialId}`);
+        this.logger.debug(
+          `Passkey not found for credentialId: ${credentialId}`,
+        );
         return undefined as T;
       }
 
@@ -179,6 +284,9 @@ export class KeysService implements Kv.Kv, OnModuleInit {
    *
    * This registers a new passkey on-chain. The transaction fee is sponsored
    * so users don't need to have any funds to register.
+   *
+   * Note: The contract derives the wallet address from the public key on-chain,
+   * ensuring the mapping cannot be tampered with.
    */
   async set(key: string, value: unknown): Promise<void> {
     // Handle challenge keys (not stored on-chain)
@@ -211,23 +319,47 @@ export class KeysService implements Kv.Kv, OnModuleInit {
 
     try {
       // Parse the public key from value
-      const publicKey =
-        typeof value === 'string' ? value : (value as { publicKey?: string })?.publicKey || JSON.stringify(value);
+      const rawPublicKey =
+        typeof value === 'string'
+          ? value
+          : (value as { publicKey?: string })?.publicKey ||
+            JSON.stringify(value);
+
+      // Validate and normalize public key format before sending to blockchain
+      const normalizedPublicKey =
+        this.validateAndNormalizePublicKey(rawPublicKey);
 
       const credentialIdHash = this.hashCredentialId(credentialId);
-      const wallet = this.deriveWalletAddress(publicKey);
 
-      this.logger.log(`Registering passkey on-chain for wallet: ${wallet}`);
+      this.logger.log(
+        `Registering passkey on-chain for credentialId: ${credentialId}`,
+      );
 
       // Write to blockchain (fee sponsored by relayer)
+      // Note: Contract derives wallet address from publicKey on-chain
       const hash = await this.walletClient.writeContract({
+        chain: tempoTestnet,
+        account: this.walletClient.account!,
         address: this.registryAddress,
         abi: PasskeyRegistryABI,
         functionName: 'register',
-        args: [credentialIdHash, publicKey as Hex, wallet],
+        args: [credentialIdHash, normalizedPublicKey],
       });
 
-      this.logger.log(`Passkey registered on-chain. Tx: ${hash}`);
+      this.logger.log(`Transaction submitted: ${hash}`);
+
+      // Wait for transaction confirmation
+      const receipt = await this.publicClient.waitForTransactionReceipt({
+        hash,
+        confirmations: 1,
+      });
+
+      if (receipt.status === 'success') {
+        this.logger.log(`Passkey registered on-chain. Tx: ${hash}`);
+      } else {
+        this.logger.error(`Transaction failed. Tx: ${hash}`);
+        throw new Error('Transaction failed');
+      }
     } catch (error) {
       // Check if already registered (not an error)
       if (
@@ -238,8 +370,48 @@ export class KeysService implements Kv.Kv, OnModuleInit {
         return;
       }
 
+      // Check for relayer not authorized error
+      if (
+        error instanceof Error &&
+        error.message.includes('not authorized relayer')
+      ) {
+        this.logger.error(
+          'Relayer is not authorized. The contract owner must call setRelayer() to authorize this relayer.',
+        );
+        // Generic error message for client
+        throw new Error('Registration service temporarily unavailable');
+      }
+
+      // Check for contract paused error
+      if (error instanceof Error && error.message.includes('paused')) {
+        this.logger.error(
+          'Contract is paused. Registration is temporarily disabled.',
+        );
+        // Generic error message for client
+        throw new Error('Registration service temporarily unavailable');
+      }
+
+      // Check for max passkeys limit
+      if (
+        error instanceof Error &&
+        error.message.includes('max passkeys reached')
+      ) {
+        this.logger.warn('User has reached maximum passkeys limit');
+        throw new Error('Maximum number of passkeys reached for this wallet');
+      }
+
+      // Check for invalid public key error
+      if (
+        error instanceof Error &&
+        error.message.includes('Invalid public key')
+      ) {
+        this.logger.error(`Invalid public key format: ${error.message}`);
+        throw new Error('Invalid passkey format');
+      }
+
       this.logger.error(`Failed to write to blockchain: ${error}`);
-      throw error;
+      // Generic error for unexpected failures
+      throw new Error('Failed to register passkey. Please try again.');
     }
   }
 
@@ -249,12 +421,14 @@ export class KeysService implements Kv.Kv, OnModuleInit {
    * Note: Only the wallet owner can deactivate their passkey.
    * This requires the wallet owner to sign the transaction.
    */
-  async delete(key: string): Promise<void> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  delete(key: string): Promise<void> {
     // For now, we don't support deletion from the API
     // Users must deactivate their own passkeys via the frontend
     this.logger.warn(
       'Delete operation not supported from API. Users must deactivate passkeys themselves.',
     );
+    return Promise.resolve();
   }
 
   /**
@@ -287,7 +461,7 @@ export class KeysService implements Kv.Kv, OnModuleInit {
         args: [credentialIdHash],
       });
 
-      return result as boolean;
+      return result;
     } catch (error) {
       this.logger.error(`Failed to check registration: ${error}`);
       return false;
@@ -314,6 +488,52 @@ export class KeysService implements Kv.Kv, OnModuleInit {
     } catch (error) {
       this.logger.error(`Failed to get wallet passkeys: ${error}`);
       return [];
+    }
+  }
+
+  /**
+   * Check if the contract is paused
+   */
+  async isPaused(): Promise<boolean> {
+    if (!this.isOnChainEnabled()) {
+      return false;
+    }
+
+    try {
+      const result = await this.publicClient.readContract({
+        address: this.registryAddress,
+        abi: PasskeyRegistryABI,
+        functionName: 'paused',
+        args: [],
+      });
+
+      return result;
+    } catch (error) {
+      this.logger.error(`Failed to check paused status: ${error}`);
+      return false;
+    }
+  }
+
+  /**
+   * Check if the relayer is authorized
+   */
+  async isRelayerAuthorized(): Promise<boolean> {
+    if (!this.isOnChainEnabled() || !this.walletClient?.account) {
+      return false;
+    }
+
+    try {
+      const result = await this.publicClient.readContract({
+        address: this.registryAddress,
+        abi: PasskeyRegistryABI,
+        functionName: 'authorizedRelayers',
+        args: [this.walletClient.account.address],
+      });
+
+      return result;
+    } catch (error) {
+      this.logger.error(`Failed to check relayer authorization: ${error}`);
+      return false;
     }
   }
 }

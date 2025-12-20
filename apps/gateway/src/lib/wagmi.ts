@@ -105,26 +105,19 @@ const keyManager = KeyManager.from({
   },
 
   async getPublicKey(parameters) {
-    console.log('[getPublicKey] Fetching:', `${KEYS_API_URL}/${parameters.credential.id}`);
-
     const response = await fetch(`${KEYS_API_URL}/${parameters.credential.id}`);
-    console.log('[getPublicKey] Response status:', response.status);
 
     if (!response.ok) {
       throw new Error('publicKey not found.');
     }
     const data: KeysApiResponse = await response.json();
-    console.log('[getPublicKey] Response data:', data);
 
     // Extract and store JWT token if present
     if (data.accessToken && data.expiresIn) {
-      console.log('[getPublicKey] Saving auth token');
       saveAuthToken({
         accessToken: data.accessToken,
         expiresIn: data.expiresIn,
       });
-    } else {
-      console.warn('[getPublicKey] Response missing token');
     }
 
     return data.publicKey;
@@ -133,8 +126,6 @@ const keyManager = KeyManager.from({
   async setPublicKey(parameters) {
     // Serialize credential with ArrayBuffers converted to base64
     const serialized = serializeCredential(parameters.credential as unknown as PublicKeyCredential);
-
-    console.log('[setPublicKey] Posting to:', `${KEYS_API_URL}/${parameters.credential.id}`);
 
     const response = await fetch(`${KEYS_API_URL}/${parameters.credential.id}`, {
       method: 'POST',
@@ -145,8 +136,6 @@ const keyManager = KeyManager.from({
       }),
     });
 
-    console.log('[setPublicKey] Response status:', response.status);
-
     if (!response.ok) {
       const error = await response.text();
       throw new Error(`Failed to save public key: ${error}`);
@@ -154,26 +143,16 @@ const keyManager = KeyManager.from({
 
     // Extract and store JWT token from response
     const text = await response.text();
-    console.log('[setPublicKey] Response body:', text);
 
     if (text) {
       const data: KeysApiResponse = JSON.parse(text);
-      console.log('[setPublicKey] Parsed data:', data);
 
       if (data.accessToken && data.expiresIn) {
-        console.log('[setPublicKey] Saving auth token');
         saveAuthToken({
           accessToken: data.accessToken,
           expiresIn: data.expiresIn,
         });
-      } else {
-        console.warn('[setPublicKey] Response missing token:', {
-          hasAccessToken: !!data.accessToken,
-          hasExpiresIn: !!data.expiresIn,
-        });
       }
-    } else {
-      console.warn('[setPublicKey] Empty response body');
     }
   },
 });
