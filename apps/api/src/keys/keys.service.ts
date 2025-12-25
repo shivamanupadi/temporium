@@ -1,7 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Kv } from 'tempo.ts/server';
-import { PrismaService } from '../prisma/prisma.service';
 import {
   createPublicClient,
   createWalletClient,
@@ -35,21 +34,32 @@ const tempoTestnet = {
 const MIN_RELAYER_BALANCE = BigInt(100000); // 0.1 USD with 6 decimals
 
 /**
- * Keys Service - On-Chain Implementation
+ * Challenge expiration time in milliseconds (5 minutes)
+ */
+const CHALLENGE_EXPIRATION_MS = 5 * 60 * 1000;
+
+/**
+ * Cleanup interval for expired challenges (1 minute)
+ */
+const CHALLENGE_CLEANUP_INTERVAL_MS = 60 * 1000;
+
+/**
+ * Keys Service - Fully Decentralized Implementation
  *
- * Provides a tempo.ts compatible Kv interface backed by blockchain storage.
- * This eliminates the database as a single point of failure - users can
- * always recover access to their wallets as long as the blockchain exists.
+ * Provides a tempo.ts compatible Kv interface backed entirely by blockchain storage.
+ * No database dependency - users can always recover access to their wallets
+ * as long as the blockchain exists.
  *
  * Features:
  * - Stores passkey public keys on-chain via PasskeyRegistry contract
+ * - In-memory challenge storage (ephemeral, no DB needed)
  * - Supports fee sponsorship for gasless registration
  * - Free reads (view functions don't cost gas)
- * - Challenge generation remains stateless (random bytes)
  *
  * Security:
  * - Only authorized relayers can register passkeys
  * - Wallet address is derived on-chain from public key (tamper-proof)
+ * - Challenges are single-use and expire after 5 minutes
  * - Contract can be paused in case of emergency
  */
 @Injectable()
@@ -58,12 +68,15 @@ export class KeysService implements Kv.Kv, OnModuleInit {
   private publicClient: PublicClient;
   private walletClient: WalletClient | null = null;
   private registryAddress: Address;
-  private feeSponsorUrl: string | null = null;
 
-  constructor(
-    private configService: ConfigService,
-    private prisma: PrismaService,
-  ) {
+  /**
+   * In-memory challenge storage: challenge -> timestamp
+   * Challenges are ephemeral (5 min TTL) and don't need persistence
+   */
+  private challenges = new Map<string, number>();
+  private cleanupInterval: NodeJS.Timeout | null = null;
+
+  constructor(private configService: ConfigService) {
     const rpcUrl = this.configService.get<string>(
       'TEMPO_RPC_URL',
       'https://rpc.testnet.tempo.xyz',
@@ -73,11 +86,6 @@ export class KeysService implements Kv.Kv, OnModuleInit {
       'PASSKEY_REGISTRY_ADDRESS',
       '',
     ) as Address;
-
-    this.feeSponsorUrl = this.configService.get<string>(
-      'FEE_SPONSOR_URL',
-      'https://sponsor.testnet.tempo.xyz',
-    );
 
     // Initialize public client for reading from blockchain (free)
     this.publicClient = createPublicClient({
@@ -98,6 +106,11 @@ export class KeysService implements Kv.Kv, OnModuleInit {
       });
       this.logger.log('Wallet client initialized with relayer account');
     }
+
+    // Start periodic cleanup of expired challenges
+    this.cleanupInterval = setInterval(() => {
+      this.cleanupExpiredChallenges();
+    }, CHALLENGE_CLEANUP_INTERVAL_MS);
   }
 
   async onModuleInit() {
@@ -231,34 +244,36 @@ export class KeysService implements Kv.Kv, OnModuleInit {
   }
 
   /**
-   * Get a value by key (credentialId) - READ FROM BLOCKCHAIN FIRST, FALLBACK TO DB
+   * Get a value by key (credentialId) - READ FROM BLOCKCHAIN
    *
-   * Key format: "credential:{credentialId}" or "challenge:{random}"
+   * Key format: "credential:{credentialId}" or "challenge:{challenge}"
+   *
+   * For challenges: Checks in-memory storage and expiration
+   * For credentials: Reads from blockchain
    */
   async get<T = unknown>(key: string): Promise<T> {
-    // Handle challenge keys - stored in DB only
+    // Handle challenge keys - check in-memory storage
     if (key.startsWith('challenge:')) {
-      try {
-        const dbResult = await this.prisma.passkey.findUnique({
-          where: { key },
-        });
-        if (dbResult) {
-          try {
-            return JSON.parse(dbResult.value) as T;
-          } catch {
-            return dbResult.value as T;
-          }
+      const challenge = key.replace('challenge:', '');
+      const timestamp = this.challenges.get(challenge);
+
+      if (timestamp) {
+        const age = Date.now() - timestamp;
+        if (age <= CHALLENGE_EXPIRATION_MS) {
+          // Return truthy value (tempo.ts just checks if it exists)
+          return '1' as T;
         }
-      } catch (error) {
-        this.logger.error(`Failed to read challenge from DB: ${error}`);
+        // Expired - clean up
+        this.challenges.delete(challenge);
       }
+
       return undefined as T;
     }
 
     // Extract credentialId from key
     const credentialId = key.replace('credential:', '');
 
-    // Try blockchain first if configured
+    // Read from blockchain if configured
     if (this.isOnChainEnabled()) {
       try {
         const credentialIdHash = this.hashCredentialId(credentialId);
@@ -282,76 +297,35 @@ export class KeysService implements Kv.Kv, OnModuleInit {
         }
       } catch (error) {
         this.logger.error(`Failed to read from blockchain: ${error}`);
-        // Fall through to DB fallback
       }
     }
-
-    // Fallback to DB - TEMPORARILY DISABLED FOR TESTING
-    // try {
-    //   const dbResult = await this.prisma.passkey.findUnique({
-    //     where: { key },
-    //   });
-
-    //   if (dbResult) {
-    //     this.logger.debug(`Retrieved passkey from DB (contract miss): ${key}`);
-    //     try {
-    //       return JSON.parse(dbResult.value) as T;
-    //     } catch {
-    //       return dbResult.value as T;
-    //     }
-    //   }
-    // } catch (error) {
-    //   this.logger.error(`Failed to read from DB: ${error}`);
-    // }
 
     this.logger.debug(`Passkey not found for credentialId: ${credentialId}`);
     return undefined as T;
   }
 
   /**
-   * Set a value by key (store public key) - WRITE TO BOTH DB AND BLOCKCHAIN
+   * Set a value by key (store public key) - WRITE TO BLOCKCHAIN ONLY
    *
-   * This registers a new passkey in both DB (fast) and on-chain (permanent).
+   * This registers a new passkey on-chain (permanent, decentralized).
    * The transaction fee for blockchain is sponsored so users don't need funds.
    *
    * Note: The contract derives the wallet address from the public key on-chain,
    * ensuring the mapping cannot be tampered with.
+   *
+   * Challenges are stored in-memory with TTL (no database needed).
    */
   async set(key: string, value: unknown): Promise<void> {
-    // Serialize value for DB storage
-    const serialized =
-      typeof value === 'string' ? value : JSON.stringify(value);
-
-    // Handle challenge keys - store in DB only (not on blockchain)
+    // Store challenges in memory with timestamp
     if (key.startsWith('challenge:')) {
-      try {
-        await this.prisma.passkey.upsert({
-          where: { key },
-          update: { value: serialized },
-          create: { key, value: serialized },
-        });
-        this.logger.debug(`Challenge saved to DB: ${key}`);
-      } catch (error) {
-        this.logger.error(`Failed to save challenge to DB: ${error}`);
-      }
+      const challenge = key.replace('challenge:', '');
+      this.challenges.set(challenge, Date.now());
+      this.logger.debug(`Challenge stored: ${challenge.substring(0, 16)}...`);
       return;
     }
 
     // Extract credentialId from key
     const credentialId = key.replace('credential:', '');
-
-    // Write to DB first (fast, immediate)
-    try {
-      await this.prisma.passkey.upsert({
-        where: { key },
-        update: { value: serialized },
-        create: { key, value: serialized },
-      });
-      this.logger.debug(`Passkey saved to DB: ${key}`);
-    } catch (error) {
-      this.logger.error(`Failed to save to DB: ${error}`);
-      // Continue to blockchain write even if DB fails
-    }
 
     // If on-chain not configured, log warning
     if (!this.isOnChainEnabled()) {
@@ -471,36 +445,48 @@ export class KeysService implements Kv.Kv, OnModuleInit {
   }
 
   /**
-   * Delete a key - ONLY FOR CHALLENGES
+   * Delete a key
    *
-   * Passkey deletion is intentionally disabled for security.
-   * Challenge deletion is allowed for cleanup.
+   * For challenges: Removes from in-memory storage (prevents replay)
+   * For passkeys: No-op (deletion intentionally disabled for security)
    */
-  async delete(key: string): Promise<void> {
-    // Only allow deleting challenges (for cleanup after verification)
+  delete(key: string): Promise<void> {
+    // Delete challenges from memory (prevents replay attacks)
     if (key.startsWith('challenge:')) {
-      try {
-        await this.prisma.passkey.delete({
-          where: { key },
-        });
-        this.logger.debug(`Challenge deleted from DB: ${key}`);
-      } catch {
-        // Ignore if not found
-      }
+      const challenge = key.replace('challenge:', '');
+      this.challenges.delete(challenge);
+      this.logger.debug(`Challenge consumed: ${challenge.substring(0, 16)}...`);
     }
-    // Passkey deletion not supported - intentionally a no-op
+
+    // Passkeys cannot be deleted - no-op
+    return Promise.resolve();
   }
 
   /**
-   * Generate a random challenge for WebAuthn authentication
-   *
-   * Challenges are stateless - we generate them on-demand and
-   * verify them when the user responds. No storage needed.
+   * Cleanup expired challenges from memory
+   * Called periodically by the cleanup interval
    */
-  generateChallenge(): string {
-    const array = new Uint8Array(32);
-    crypto.getRandomValues(array);
-    return Buffer.from(array).toString('base64url');
+  private cleanupExpiredChallenges(): void {
+    const now = Date.now();
+    let cleaned = 0;
+
+    for (const [challenge, timestamp] of this.challenges.entries()) {
+      if (now - timestamp > CHALLENGE_EXPIRATION_MS) {
+        this.challenges.delete(challenge);
+        cleaned++;
+      }
+    }
+
+    if (cleaned > 0) {
+      this.logger.debug(`Cleaned up ${cleaned} expired challenges`);
+    }
+  }
+
+  /**
+   * Get current challenge count (for monitoring)
+   */
+  getChallengeCount(): number {
+    return this.challenges.size;
   }
 
   /**

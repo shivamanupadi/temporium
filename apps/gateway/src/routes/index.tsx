@@ -18,11 +18,13 @@ import {
   Zap,
   Mail,
   Twitter,
+  HelpCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { CreateWalletModal } from '@/components/CreateWalletModal';
 import { WalletSelectModal } from '@/components/WalletSelectModal';
+import { HowItWorksModal } from '@/components/HowItWorksModal';
 import { useTempo } from '@/hooks/useTempo';
 
 export const Route = createFileRoute('/')({
@@ -35,6 +37,7 @@ function HomePage(): ReactElement {
   const navigate = useNavigate();
   const [showCreateWalletModal, setShowCreateWalletModal] = useState(false);
   const [showWalletSelectModal, setShowWalletSelectModal] = useState(false);
+  const [showHowItWorksModal, setShowHowItWorksModal] = useState(false);
 
   useEffect(() => {
     // Wait for full auth flow to complete (including SIWE for external wallets)
@@ -171,6 +174,13 @@ function HomePage(): ReactElement {
             animate={{ x: 0, opacity: 1 }}
             className="flex items-center gap-4"
           >
+            <button
+              onClick={() => setShowHowItWorksModal(true)}
+              className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+            >
+              <HelpCircle className="h-4 w-4" />
+              <span className="hidden sm:inline">How it works</span>
+            </button>
             <a
               href="https://x.com/HelloTemporium"
               target="_blank"
@@ -226,6 +236,20 @@ function HomePage(): ReactElement {
             <br />
             Tempo Blockchain
           </motion.h1>
+
+          {/* Passkey Badge */}
+          <motion.div
+            initial={{ y: 16, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.12 }}
+            className="inline-flex items-center gap-2 text-[15px] text-slate-500 mb-6"
+          >
+            <Fingerprint className="h-4 w-4 text-primary" />
+            <span>
+              powered by{' '}
+              <span className="font-medium text-slate-700">decentralised passkey wallet</span>
+            </span>
+          </motion.div>
 
           {/* Subtitle */}
           <motion.p
@@ -347,6 +371,9 @@ function HomePage(): ReactElement {
         onSelectPasskey={handlePasskeySignIn}
         onSelectInjected={handleInjectedConnect}
       />
+
+      {/* How It Works Modal */}
+      <HowItWorksModal isOpen={showHowItWorksModal} onClose={() => setShowHowItWorksModal(false)} />
     </>
   );
 }
