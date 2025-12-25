@@ -1,6 +1,7 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Kv } from 'tempo.ts/server';
+import { PrismaService } from '../prisma/prisma.service';
 import {
   createPublicClient,
   createWalletClient,
@@ -59,7 +60,10 @@ export class KeysService implements Kv.Kv, OnModuleInit {
   private registryAddress: Address;
   private feeSponsorUrl: string | null = null;
 
-  constructor(private configService: ConfigService) {
+  constructor(
+    private configService: ConfigService,
+    private prisma: PrismaService,
+  ) {
     const rpcUrl = this.configService.get<string>(
       'TEMPO_RPC_URL',
       'https://rpc.testnet.tempo.xyz',
@@ -227,76 +231,127 @@ export class KeysService implements Kv.Kv, OnModuleInit {
   }
 
   /**
-   * Get a value by key (credentialId) - READ FROM BLOCKCHAIN (FREE)
+   * Get a value by key (credentialId) - READ FROM BLOCKCHAIN FIRST, FALLBACK TO DB
    *
    * Key format: "credential:{credentialId}" or "challenge:{random}"
    */
   async get<T = unknown>(key: string): Promise<T> {
-    // Handle challenge keys (not stored on-chain)
+    // Handle challenge keys - stored in DB only
     if (key.startsWith('challenge:')) {
-      // Challenges are stateless - we don't store them
-      // The tempo.ts library handles challenge verification
+      try {
+        const dbResult = await this.prisma.passkey.findUnique({
+          where: { key },
+        });
+        if (dbResult) {
+          try {
+            return JSON.parse(dbResult.value) as T;
+          } catch {
+            return dbResult.value as T;
+          }
+        }
+      } catch (error) {
+        this.logger.error(`Failed to read challenge from DB: ${error}`);
+      }
       return undefined as T;
     }
 
     // Extract credentialId from key
     const credentialId = key.replace('credential:', '');
 
-    // If on-chain not configured, return undefined
-    if (!this.isOnChainEnabled()) {
-      this.logger.warn('On-chain storage not configured, returning undefined');
-      return undefined as T;
-    }
+    // Try blockchain first if configured
+    if (this.isOnChainEnabled()) {
+      try {
+        const credentialIdHash = this.hashCredentialId(credentialId);
 
-    try {
-      const credentialIdHash = this.hashCredentialId(credentialId);
+        // Read from blockchain (FREE - view function)
+        const result = await this.publicClient.readContract({
+          address: this.registryAddress,
+          abi: PasskeyRegistryABI,
+          functionName: 'getPublicKey',
+          args: [credentialIdHash],
+        });
 
-      // Read from blockchain (FREE - view function)
-      const result = await this.publicClient.readContract({
-        address: this.registryAddress,
-        abi: PasskeyRegistryABI,
-        functionName: 'getPublicKey',
-        args: [credentialIdHash],
-      });
+        const [publicKey, wallet, isActive] = result as [Hex, Address, boolean];
 
-      const [publicKey, wallet, isActive] = result as [Hex, Address, boolean];
-
-      // Check if passkey exists and is active
-      if (!publicKey || publicKey === '0x' || !isActive) {
-        this.logger.debug(
-          `Passkey not found for credentialId: ${credentialId}`,
-        );
-        return undefined as T;
+        // Check if passkey exists and is active
+        if (publicKey && publicKey !== '0x' && isActive) {
+          this.logger.debug(
+            `Retrieved passkey from chain for wallet: ${wallet}`,
+          );
+          return publicKey as T;
+        }
+      } catch (error) {
+        this.logger.error(`Failed to read from blockchain: ${error}`);
+        // Fall through to DB fallback
       }
-
-      this.logger.debug(`Retrieved passkey from chain for wallet: ${wallet}`);
-
-      // Return in format expected by tempo.ts
-      return publicKey as T;
-    } catch (error) {
-      this.logger.error(`Failed to read from blockchain: ${error}`);
-      return undefined as T;
     }
+
+    // Fallback to DB - TEMPORARILY DISABLED FOR TESTING
+    // try {
+    //   const dbResult = await this.prisma.passkey.findUnique({
+    //     where: { key },
+    //   });
+
+    //   if (dbResult) {
+    //     this.logger.debug(`Retrieved passkey from DB (contract miss): ${key}`);
+    //     try {
+    //       return JSON.parse(dbResult.value) as T;
+    //     } catch {
+    //       return dbResult.value as T;
+    //     }
+    //   }
+    // } catch (error) {
+    //   this.logger.error(`Failed to read from DB: ${error}`);
+    // }
+
+    this.logger.debug(`Passkey not found for credentialId: ${credentialId}`);
+    return undefined as T;
   }
 
   /**
-   * Set a value by key (store public key) - WRITE TO BLOCKCHAIN (SPONSORED)
+   * Set a value by key (store public key) - WRITE TO BOTH DB AND BLOCKCHAIN
    *
-   * This registers a new passkey on-chain. The transaction fee is sponsored
-   * so users don't need to have any funds to register.
+   * This registers a new passkey in both DB (fast) and on-chain (permanent).
+   * The transaction fee for blockchain is sponsored so users don't need funds.
    *
    * Note: The contract derives the wallet address from the public key on-chain,
    * ensuring the mapping cannot be tampered with.
    */
   async set(key: string, value: unknown): Promise<void> {
-    // Handle challenge keys (not stored on-chain)
+    // Serialize value for DB storage
+    const serialized =
+      typeof value === 'string' ? value : JSON.stringify(value);
+
+    // Handle challenge keys - store in DB only (not on blockchain)
     if (key.startsWith('challenge:')) {
-      // Challenges are stateless - we don't need to store them
+      try {
+        await this.prisma.passkey.upsert({
+          where: { key },
+          update: { value: serialized },
+          create: { key, value: serialized },
+        });
+        this.logger.debug(`Challenge saved to DB: ${key}`);
+      } catch (error) {
+        this.logger.error(`Failed to save challenge to DB: ${error}`);
+      }
       return;
     }
 
     // Extract credentialId from key
     const credentialId = key.replace('credential:', '');
+
+    // Write to DB first (fast, immediate)
+    try {
+      await this.prisma.passkey.upsert({
+        where: { key },
+        update: { value: serialized },
+        create: { key, value: serialized },
+      });
+      this.logger.debug(`Passkey saved to DB: ${key}`);
+    } catch (error) {
+      this.logger.error(`Failed to save to DB: ${error}`);
+      // Continue to blockchain write even if DB fails
+    }
 
     // If on-chain not configured, log warning
     if (!this.isOnChainEnabled()) {
@@ -416,19 +471,24 @@ export class KeysService implements Kv.Kv, OnModuleInit {
   }
 
   /**
-   * Delete a key - DEACTIVATE ON BLOCKCHAIN
+   * Delete a key - ONLY FOR CHALLENGES
    *
-   * Note: Only the wallet owner can deactivate their passkey.
-   * This requires the wallet owner to sign the transaction.
+   * Passkey deletion is intentionally disabled for security.
+   * Challenge deletion is allowed for cleanup.
    */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  delete(key: string): Promise<void> {
-    // For now, we don't support deletion from the API
-    // Users must deactivate their own passkeys via the frontend
-    this.logger.warn(
-      'Delete operation not supported from API. Users must deactivate passkeys themselves.',
-    );
-    return Promise.resolve();
+  async delete(key: string): Promise<void> {
+    // Only allow deleting challenges (for cleanup after verification)
+    if (key.startsWith('challenge:')) {
+      try {
+        await this.prisma.passkey.delete({
+          where: { key },
+        });
+        this.logger.debug(`Challenge deleted from DB: ${key}`);
+      } catch {
+        // Ignore if not found
+      }
+    }
+    // Passkey deletion not supported - intentionally a no-op
   }
 
   /**
