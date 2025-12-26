@@ -1,0 +1,37 @@
+name = "temporium-hono-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-26"
+compatibility_flags = ["nodejs_compat"]
+
+# Production: Custom domain (configured in Cloudflare dashboard)
+# The worker will handle all requests to api.temporium.xyz
+# routes = [{ pattern = "api.temporium.xyz", custom_domain = true }]
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "temporium-db"
+database_id = "placeholder-update-after-wrangler-d1-create"
+
+# Environment Variables
+[vars]
+TEMPO_RPC_URL = "https://rpc.testnet.tempo.xyz"
+PASSKEY_REGISTRY_ADDRESS = "0xca1Ab2151c94173480280869560542C94c5e5CC6"
+ALLOWED_ORIGINS = "*"
+JWT_EXPIRATION = "24h"
+
+# Secrets (set via CLI):
+# wrangler secret put JWT_SECRET
+# wrangler secret put RELAYER_PRIVATE_KEY
+
+# Staging Environment
+[env.staging]
+name = "temporium-hono-api-staging"
+# routes = [
+#   { pattern = "api-staging.temporium.xyz/*", custom_domain = true }
+# ]
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "temporium-db-staging"
+database_id = "placeholder-staging-db-id"

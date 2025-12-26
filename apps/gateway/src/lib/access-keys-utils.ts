@@ -8,6 +8,46 @@ import type { Address, Hex } from 'viem';
 import type { AccessKeyType } from '@/types';
 
 /**
+ * Normalize a P256 public key to the format expected by the PasskeyRegistry contract.
+ *
+ * Expected format: 64 bytes (128 hex chars) without the 0x04 uncompressed prefix
+ *
+ * Input formats handled:
+ * - 0x04... (65 bytes / 130 hex chars) - uncompressed with prefix -> strip prefix
+ * - 0x... (64 bytes / 128 hex chars) - already normalized -> return as-is
+ */
+export function normalizeP256PublicKey(publicKey: Hex): Hex {
+  const hexPart = publicKey.slice(2); // Remove 0x prefix
+
+  // If 130 chars (65 bytes with 0x04 prefix), strip the 04 prefix
+  if (hexPart.length === 130 && hexPart.startsWith('04')) {
+    return `0x${hexPart.slice(2)}` as Hex;
+  }
+
+  // If already 128 chars (64 bytes), return as-is
+  if (hexPart.length === 128) {
+    return publicKey;
+  }
+
+  throw new Error(
+    `Invalid P256 public key length: expected 64 or 65 bytes, got ${hexPart.length / 2} bytes`
+  );
+}
+
+/**
+ * Derive wallet address from a P256 public key.
+ * Uses keccak256 hash and takes last 20 bytes - same as PasskeyRegistry contract.
+ *
+ * @param publicKey - The P256 public key (will be normalized to 64 bytes)
+ * @returns The derived wallet address
+ */
+export function deriveWalletFromPublicKey(publicKey: Hex): Address {
+  const normalized = normalizeP256PublicKey(publicKey);
+  const hash = keccak256(normalized);
+  return `0x${hash.slice(-40)}`.toLowerCase() as Address;
+}
+
+/**
  * Generated Secp256k1 key pair
  */
 export interface Secp256k1KeyPair {
@@ -60,28 +100,30 @@ export function generateSecp256k1Key(): Secp256k1KeyPair {
 
 /**
  * Generate a random P256 key pair
- * The keyId is derived by hashing the compressed public key
+ * The keyId is derived by hashing the normalized public key (64 bytes without 0x04 prefix)
  */
 export function generateP256Key(): P256KeyPair {
   const privateKey = TempoP256.randomPrivateKey();
   const publicKey = OxP256.getPublicKey({ privateKey });
   const publicKeyHex = PublicKey.toHex(publicKey);
 
-  // Derive keyId from public key hash (take first 20 bytes)
-  const hash = keccak256(publicKeyHex);
-  const keyId = `0x${hash.slice(-40)}` as Address;
+  // Normalize to 64 bytes (strip 0x04 prefix if present)
+  const normalizedPublicKey = normalizeP256PublicKey(publicKeyHex);
+
+  // Derive keyId from normalized public key hash
+  const keyId = deriveWalletFromPublicKey(normalizedPublicKey);
 
   return {
     type: 'p256',
     privateKey,
-    publicKey: publicKeyHex,
+    publicKey: normalizedPublicKey,
     keyId,
   };
 }
 
 /**
  * Create a WebAuthn credential (passkey)
- * The keyId is derived from the credential's public key
+ * The keyId is derived from the credential's normalized public key (64 bytes)
  */
 export async function generateWebAuthnKey(
   label: string,
@@ -92,14 +134,16 @@ export async function generateWebAuthnKey(
     rpId: rpId ?? getRpId(),
   });
 
-  // Derive keyId from public key hash (take first 20 bytes)
-  const hash = keccak256(credential.publicKey as Hex);
-  const keyId = `0x${hash.slice(-40)}` as Address;
+  // Normalize public key to 64 bytes (strip 0x04 prefix if present)
+  const normalizedPublicKey = normalizeP256PublicKey(credential.publicKey as Hex);
+
+  // Derive keyId from normalized public key hash
+  const keyId = deriveWalletFromPublicKey(normalizedPublicKey);
 
   return {
     type: 'webAuthn',
     credentialId: credential.id,
-    publicKey: credential.publicKey as Hex,
+    publicKey: normalizedPublicKey,
     keyId,
     raw: credential.raw,
   };

@@ -22,7 +22,7 @@
     "kill-ports": "lsof -ti:3000,3001,3002,3003,3005,3006 | xargs kill -9 || true",
     "build-api": "turbo build --filter=api",
     "start-api": "turbo start:prod --filter=api",
-    "dev:gateway": "turbo dev --filter=gateway --filter=api",
+    "dev:gateway": "turbo dev --filter=gateway --filter=hono-api",
     "dev:node-manager": "turbo run dev --filter=tempo-node-manager...",
     "build:node-manager": "turbo build --filter=tempo-node-manager...",
     "build-website": "turbo build --filter=landing",

@@ -117,7 +117,12 @@ function HomePage(): ReactElement {
               className="space-y-4"
             >
               {/* Gateway Card */}
-              <a href={GATEWAY_URL} target="_blank" rel="noopener noreferrer" className="block group">
+              <a
+                href={GATEWAY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block group"
+              >
                 <div className="relative bg-white border border-slate-200/80 rounded-2xl p-8 hover:border-slate-300 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
                   <div className="flex items-start gap-5">
                     <div className="mt-0.5">
@@ -142,7 +147,12 @@ function HomePage(): ReactElement {
               </a>
 
               {/* Node Manager Card */}
-              <a href={NODE_MANAGER_URL} target="_blank" rel="noopener noreferrer" className="block group">
+              <a
+                href={NODE_MANAGER_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block group"
+              >
                 <div className="relative bg-white border border-slate-200/80 rounded-2xl p-8 hover:border-slate-300 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
                   <div className="flex items-start gap-5">
                     <div className="mt-0.5">

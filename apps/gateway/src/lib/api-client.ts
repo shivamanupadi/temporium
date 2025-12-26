@@ -14,6 +14,21 @@ interface ApiResponse<T> {
 }
 
 /**
+ * Standard API response format from hono-api
+ */
+interface StandardApiResponse<T> {
+  success: boolean;
+  data: T;
+}
+
+/**
+ * Check if response follows standard format
+ */
+function isStandardResponse<T>(data: unknown): data is StandardApiResponse<T> {
+  return typeof data === 'object' && data !== null && 'success' in data && 'data' in data;
+}
+
+/**
  * Make an authenticated API request
  */
 export async function apiRequest<T>(
@@ -49,12 +64,26 @@ export async function apiRequest<T>(
   }
 
   if (!response.ok) {
-    const error = await response.text();
-    throw new ApiClientError(error || 'Request failed', response.status);
+    const errorBody = await response.json().catch(() => null);
+    const message = errorBody?.error?.message || errorBody?.message || 'Request failed';
+    throw new ApiClientError(message, response.status);
   }
 
+  // Handle 204 No Content (for deletes)
+  if (response.status === 204) {
+    return {
+      data: undefined as T,
+      status: response.status,
+    };
+  }
+
+  const json = await response.json();
+
+  // Unwrap standard response format { success: true, data: T }
+  const data = isStandardResponse<T>(json) ? json.data : json;
+
   return {
-    data: await response.json(),
+    data,
     status: response.status,
   };
 }

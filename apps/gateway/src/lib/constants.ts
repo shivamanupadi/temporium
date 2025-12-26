@@ -106,6 +106,13 @@ export const TIMING = {
 export const ACCOUNT_KEYCHAIN_ADDRESS = '0xaAAAaaAA00000000000000000000000000000000' as Address;
 
 /**
+ * PasskeyRegistry contract address
+ * Stores WebAuthn/Passkey public keys on-chain
+ * Deploy the contract and update this address
+ */
+export const PASSKEY_REGISTRY_ADDRESS = '0x0000000000000000000000000000000000000000' as Address; // TODO: Update after deployment
+
+/**
  * Access Key signature type mapping (on-chain values)
  */
 export const ACCESS_KEY_TYPE_MAP = {
