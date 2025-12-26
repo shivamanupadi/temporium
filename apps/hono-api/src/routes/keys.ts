@@ -114,9 +114,9 @@ class KeysService implements Kv.Kv {
           args: [credentialIdHash],
         });
 
-        const [publicKey, wallet, isActive] = result as [Hex, Address, boolean];
+        const [publicKey, wallet] = result as [Hex, Address, bigint];
 
-        if (publicKey && publicKey !== '0x' && isActive) {
+        if (publicKey && publicKey !== '0x') {
           console.log(`Retrieved passkey from chain for wallet: ${wallet}`);
           return publicKey as T;
         }
@@ -216,17 +216,17 @@ class KeysService implements Kv.Kv {
         console.log('Passkey already registered on-chain');
         throw new ConflictError('Passkey already registered');
       }
-      if (errorMessage.includes('not authorized relayer')) {
-        console.error('Relayer not authorized on PasskeyRegistry contract');
-        throw new ServiceUnavailableError('Registration service temporarily unavailable');
+      if (errorMessage.includes('not owner')) {
+        console.error('Wallet not authorized as owner on PasskeyRegistry contract');
+        throw new ServiceUnavailableError('Registration service not configured correctly');
       }
-      if (errorMessage.includes('paused')) {
-        throw new ServiceUnavailableError('Registration service temporarily paused');
+      if (errorMessage.includes('key already registered')) {
+        throw new ConflictError('This passkey is already registered');
       }
-      if (errorMessage.includes('max passkeys reached')) {
-        throw new BadRequestError('Maximum number of passkeys reached for this wallet');
-      }
-      if (errorMessage.includes('Invalid public key')) {
+      if (
+        errorMessage.includes('invalid key length') ||
+        errorMessage.includes('Invalid public key')
+      ) {
         throw new BadRequestError('Invalid passkey format');
       }
 

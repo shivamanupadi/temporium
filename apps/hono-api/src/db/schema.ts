@@ -72,6 +72,7 @@ export const scheduledTransactions = sqliteTable(
   table => [
     index('scheduled_tx_owner_idx').on(table.owner),
     index('scheduled_tx_owner_status_idx').on(table.owner, table.status),
+    index('scheduled_tx_owner_scheduled_idx').on(table.owner, table.scheduledFor),
   ]
 );
 

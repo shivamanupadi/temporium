@@ -69,6 +69,14 @@ export async function apiRequest<T>(
     throw new ApiClientError(message, response.status);
   }
 
+  // Handle 204 No Content (for deletes)
+  if (response.status === 204) {
+    return {
+      data: undefined as T,
+      status: response.status,
+    };
+  }
+
   const json = await response.json();
 
   // Unwrap standard response format { success: true, data: T }

@@ -16,7 +16,7 @@ database_id = "placeholder-update-after-wrangler-d1-create"
 # Environment Variables
 [vars]
 TEMPO_RPC_URL = "https://rpc.testnet.tempo.xyz"
-PASSKEY_REGISTRY_ADDRESS = "0x5E69d86Bf4C13Fb4c9dcE2566CD52fDB658cAea9"
+PASSKEY_REGISTRY_ADDRESS = "0xca1Ab2151c94173480280869560542C94c5e5CC6"
 ALLOWED_ORIGINS = "*"
 JWT_EXPIRATION = "24h"
 
