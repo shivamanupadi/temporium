@@ -27,9 +27,11 @@
     "build:node-manager": "turbo build --filter=tempo-node-manager...",
     "build-website": "turbo build --filter=landing",
     "build-node-manager": "turbo build --filter=node-manager-landing",
-    "build-gateway": "turbo build --filter=gateway"
+    "build-gateway": "turbo build --filter=gateway",
+    "postinstall": "patch-package && node scripts/patch-ox.js"
   },
   "devDependencies": {
+    "patch-package": "^8.0.0",
     "prettier": "^3.2.5",
     "rimraf": "^5.0.5",
     "turbo": "^2.5.4",
