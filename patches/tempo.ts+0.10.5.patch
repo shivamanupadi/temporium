@@ -1,0 +1,21 @@
+diff --git a/node_modules/tempo.ts/dist/wagmi/Connector.js b/node_modules/tempo.ts/dist/wagmi/Connector.js
+index 528f337..f3d8113 100644
+--- a/node_modules/tempo.ts/dist/wagmi/Connector.js
++++ b/node_modules/tempo.ts/dist/wagmi/Connector.js
+@@ -158,7 +158,7 @@ export function webAuthn(options) {
+             const credential = await config.storage?.getItem('webAuthn.activeCredential');
+             if (!credential)
+                 return;
+-            account = Account.fromWebAuthnP256(credential);
++            account = Account.fromWebAuthnP256(credential, { rpId: options.rpId });
+         },
+         async connect(parameters = {}) {
+             const capabilities = 'capabilities' in parameters ? (parameters.capabilities ?? {}) : {};
+@@ -282,6 +282,7 @@ export function webAuthn(options) {
+             config.storage?.setItem('webAuthn.activeCredential', normalizeValue(credential));
+             account = Account.fromWebAuthnP256(credential, {
+                 storage: Storage.from(config.storage),
++                rpId: options.rpId,
+             });
+             if (keyPair) {
+                 accessKey = Account.fromWebCryptoP256(keyPair, {
