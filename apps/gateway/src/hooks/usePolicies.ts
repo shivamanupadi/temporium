@@ -74,47 +74,78 @@ export function usePolicies(): UsePoliciesReturn {
   const queryClient = useQueryClient();
 
   // Use React Query for policies data - shared across all components
-  const { data: policies = [], isLoading } = useQuery({
+  // Step 1: Fetch policies from API (fast)
+  const { data: storedPolicies = [], isLoading: isLoadingPolicies } = useQuery({
     queryKey: [POLICIES_QUERY_KEY, address],
-    queryFn: async (): Promise<PolicyWithMetadata[]> => {
+    queryFn: async (): Promise<Policy[]> => {
       if (!address) return [];
+      return getPoliciesByOwner(address);
+    },
+    enabled: !!address,
+    staleTime: 30000, // Consider data fresh for 30 seconds
+  });
 
-      const stored = await getPoliciesByOwner(address);
+  // Step 2: Fetch on-chain metadata in background (slow, but non-blocking)
+  const { data: onChainMetadata = {} } = useQuery({
+    queryKey: [
+      POLICIES_QUERY_KEY,
+      'metadata',
+      address,
+      storedPolicies.map(p => p.policyId).join(','),
+    ],
+    queryFn: async (): Promise<
+      Record<string, { admin: Address; type: 'whitelist' | 'blacklist' }>
+    > => {
+      if (!address || storedPolicies.length === 0) return {};
 
-      // Fetch current admin for each policy to check if user is still admin
-      const withMetadata = await Promise.all(
-        stored.map(async policy => {
+      const results: Record<string, { admin: Address; type: 'whitelist' | 'blacklist' }> = {};
+
+      // Fetch in parallel but don't block rendering
+      await Promise.allSettled(
+        storedPolicies.map(async policy => {
           try {
             const policyData = await Actions.policy.getData(tempoPublicClient, {
               policyId: BigInt(policy.policyId),
             });
-            const isAdmin = policyData.admin.toLowerCase() === address.toLowerCase();
-            return {
-              ...policy,
-              admin: policyData.admin, // Update with current admin
+            results[policy.policyId] = {
+              admin: policyData.admin,
               type: policyData.type,
-              isAdmin,
             };
           } catch (err) {
             console.error(`Failed to fetch policy data for ${policy.policyId}:`, err);
-            return {
-              ...policy,
-              isAdmin: policy.admin.toLowerCase() === address.toLowerCase(),
-            };
           }
         })
       );
 
-      return withMetadata;
+      return results;
     },
-    enabled: !!address,
-    staleTime: 10000, // Consider data fresh for 10 seconds
+    enabled: !!address && storedPolicies.length > 0,
+    staleTime: 60000, // Cache for 1 minute
   });
 
-  // Refresh function invalidates the query, triggering refetch in ALL components
+  // Merge stored policies with on-chain metadata
+  const policies: PolicyWithMetadata[] = storedPolicies.map(policy => {
+    const chainData = onChainMetadata[policy.policyId];
+    if (chainData) {
+      return {
+        ...policy,
+        admin: chainData.admin,
+        type: chainData.type,
+        isAdmin: chainData.admin.toLowerCase() === address?.toLowerCase(),
+      };
+    }
+    return {
+      ...policy,
+      isAdmin: policy.admin.toLowerCase() === address?.toLowerCase(),
+    };
+  });
+
+  const isLoading = isLoadingPolicies;
+
+  // Refresh function invalidates both queries, triggering refetch in ALL components
   const refresh = useCallback(async () => {
-    await queryClient.invalidateQueries({ queryKey: [POLICIES_QUERY_KEY, address] });
-  }, [queryClient, address]);
+    await queryClient.invalidateQueries({ queryKey: [POLICIES_QUERY_KEY] });
+  }, [queryClient]);
 
   const createPolicy = useCallback(
     async (params: { type: PolicyType; addresses?: readonly Address[]; feeToken?: Address }) => {
