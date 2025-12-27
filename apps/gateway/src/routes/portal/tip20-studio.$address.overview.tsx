@@ -185,7 +185,7 @@ function Tip20StudioOverview(): ReactElement {
                   <div className="flex items-center gap-2 mt-2">
                     <button
                       onClick={copyAddress}
-                      className="flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground font-mono transition-colors"
+                      className="flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground font-mono transition-colors cursor-pointer"
                     >
                       {formatAddress(tokenAddress, 8)}
                       {copied ? (
@@ -677,7 +677,7 @@ function TransferPolicyCard({
                     </span>
                     <button
                       onClick={copyAdminAddress}
-                      className="p-1 rounded hover:bg-muted transition-colors"
+                      className="p-1 rounded hover:bg-muted transition-colors cursor-pointer"
                       title="Copy address"
                     >
                       {copiedAdmin ? (

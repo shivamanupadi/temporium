@@ -172,29 +172,29 @@ function HomePage(): ReactElement {
           <motion.div
             initial={{ x: 20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="flex items-center gap-4"
+            className="flex items-center gap-1"
           >
             <button
               onClick={() => setShowHowItWorksModal(true)}
-              className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
             >
-              <HelpCircle className="h-4 w-4" />
+              <HelpCircle className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">How it works</span>
             </button>
+            <a
+              href="mailto:hello@temporium.xyz"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
+            >
+              <Mail className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Contact</span>
+            </a>
             <a
               href="https://x.com/HelloTemporium"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-primary transition-colors"
+              className="flex items-center justify-center w-8 h-8 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
             >
               <Twitter className="h-4 w-4" />
-            </a>
-            <a
-              href="mailto:hello@temporium.xyz"
-              className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-primary transition-colors"
-            >
-              <Mail className="h-4 w-4" />
-              <span className="hidden sm:inline">hello@temporium.xyz</span>
             </a>
           </motion.div>
         </div>

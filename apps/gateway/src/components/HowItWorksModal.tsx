@@ -1,181 +1,172 @@
-import { type ReactElement } from 'react';
+import { type ReactElement, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  X,
-  Fingerprint,
-  Globe,
-  Shield,
-  ArrowRight,
-  Lock,
-  Database,
-  CheckCircle2,
-} from 'lucide-react';
+import { X, Fingerprint, Database, Shield, ExternalLink, Copy, Check } from 'lucide-react';
+import { getApiBaseUrl } from '@/lib/api';
+import { modalAnimation } from '@/lib/utils';
+
+interface ContractInfo {
+  address: string;
+  name: string;
+  explorerUrl: string;
+}
+
+interface ContractsData {
+  chain: {
+    id: number;
+    name: string;
+    explorerUrl: string;
+  };
+  contracts: {
+    passkeyRegistry: ContractInfo;
+  };
+}
 
 interface HowItWorksModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+function formatAddress(address: string): string {
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
 export function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProps): ReactElement | null {
+  const [contractsData, setContractsData] = useState<ContractsData | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetch(`${getApiBaseUrl()}/v1/contracts`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            setContractsData(data.data);
+          }
+        })
+        .catch(console.error);
+    }
+  }, [isOpen]);
+
+  const handleCopy = async (text: string): Promise<void> => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const steps = [
     {
       icon: Fingerprint,
-      title: 'Passkey Authentication',
-      description:
-        'Sign in using Face ID, Touch ID, or your device PIN. No passwords to remember or lose. Your private key never leaves your device.',
-      color: '#7c5cff',
+      title: 'Passkey Auth',
+      desc: 'Sign in with Face ID, Touch ID, or PIN',
     },
     {
       icon: Database,
       title: 'On-Chain Storage',
-      description:
-        'Your public key is stored on the Tempo blockchain, not in a centralised database. This means no single point of failure.',
-      color: '#0073e6',
+      desc: 'Public key stored on Tempo blockchain',
     },
     {
-      icon: Lock,
-      title: 'Immutable & Permanent',
-      description:
-        'Smart contracts cannot be deleted or modified. Your wallet access is guaranteed as long as the blockchain exists.',
-      color: '#10b981',
+      icon: Shield,
+      title: 'Permanent Access',
+      desc: 'Recover wallet anytime via blockchain',
     },
-  ];
-
-  const benefits = [
-    'No seed phrases to backup',
-    'No passwords to remember',
-    'No centralised servers',
-    'No account recovery needed',
-    'Works across all your devices',
-    'Phishing resistant by design',
   ];
 
   return (
     <AnimatePresence>
       {isOpen && (
         <>
-          {/* Backdrop */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            {...modalAnimation.backdrop}
             onClick={onClose}
             className="fixed inset-0 bg-black/50 z-50 cursor-pointer"
           />
 
-          {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.15 }}
-            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[480px] max-h-[90vh] overflow-y-auto z-50 px-4"
+            {...modalAnimation.content}
+            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[360px] z-50 px-4"
           >
-            <div className="bg-white rounded-2xl overflow-hidden shadow-xl">
+            <div className="bg-white rounded-2xl overflow-hidden shadow-2xl">
               {/* Header */}
-              <div className="px-6 pt-6 pb-4 border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <Globe className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-semibold text-gray-900">How It Works</h2>
-                      <p className="text-[13px] text-gray-500">Decentralised passkey wallet</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={onClose}
-                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-                  >
-                    <X className="h-4 w-4 text-gray-400" />
-                  </button>
-                </div>
+              <div className="px-5 pt-5 pb-4 flex items-center justify-between">
+                <h2 className="text-[15px] font-semibold text-gray-900">How It Works</h2>
+                <button
+                  onClick={onClose}
+                  className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                >
+                  <X className="h-4 w-4 text-gray-400" />
+                </button>
               </div>
 
-              {/* Content */}
-              <div className="px-6 py-5 space-y-6">
-                {/* Steps */}
-                <div className="space-y-4">
-                  {steps.map((step, index) => (
-                    <div key={step.title} className="flex gap-4">
-                      <div className="flex flex-col items-center">
-                        <div
-                          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                          style={{ backgroundColor: `${step.color}15` }}
-                        >
-                          <step.icon className="h-5 w-5" style={{ color: step.color }} />
-                        </div>
-                        {index < steps.length - 1 && (
-                          <div className="w-px h-full bg-gray-200 my-2" />
-                        )}
+              {/* Steps */}
+              <div className="px-5 pb-4">
+                <div className="space-y-3">
+                  {steps.map(step => (
+                    <div key={step.title} className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0">
+                        <step.icon className="h-4 w-4 text-gray-600" />
                       </div>
-                      <div className="flex-1 pb-4">
-                        <h3 className="text-[14px] font-semibold text-gray-900 mb-1">
-                          {step.title}
-                        </h3>
-                        <p className="text-[13px] text-gray-500 leading-relaxed">
-                          {step.description}
-                        </p>
+                      <div className="pt-0.5">
+                        <div className="text-[13px] font-medium text-gray-900">{step.title}</div>
+                        <div className="text-[12px] text-gray-500">{step.desc}</div>
                       </div>
                     </div>
                   ))}
                 </div>
-
-                {/* Divider */}
-                <div className="border-t border-gray-100" />
-
-                {/* Benefits */}
-                <div>
-                  <h3 className="text-[13px] font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <Shield className="h-4 w-4 text-primary" />
-                    Why This Matters
-                  </h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {benefits.map(benefit => (
-                      <div
-                        key={benefit}
-                        className="flex items-center gap-2 text-[12px] text-gray-600"
-                      >
-                        <CheckCircle2 className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
-                        <span>{benefit}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Divider */}
-                <div className="border-t border-gray-100" />
-
-                {/* Key Point */}
-                <div className="bg-gradient-to-br from-primary/5 to-[#0073e6]/5 rounded-xl p-4 border border-primary/10">
-                  <div className="flex gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Lock className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <h4 className="text-[13px] font-semibold text-gray-900 mb-1">
-                        You Never Lose Access
-                      </h4>
-                      <p className="text-[12px] text-gray-600 leading-relaxed">
-                        Your public key is stored in an immutable smart contract on the blockchain.
-                        Even if Temporium disappears, you can always recover your wallet using any
-                        blockchain explorer or compatible app. Your access is guaranteed forever.
-                      </p>
-                    </div>
-                  </div>
-                </div>
               </div>
 
+              {/* Contract Info */}
+              {contractsData && (
+                <div className="mx-5 mb-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                  <div className="text-[11px] font-medium text-gray-400 uppercase tracking-wide mb-2">
+                    Smart Contract
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-md bg-primary/10 flex items-center justify-center">
+                        <Database className="h-3 w-3 text-primary" />
+                      </div>
+                      <div>
+                        <div className="text-[12px] font-medium text-gray-900">
+                          {contractsData.contracts.passkeyRegistry.name}
+                        </div>
+                        <div className="text-[11px] text-gray-500 font-mono">
+                          {formatAddress(contractsData.contracts.passkeyRegistry.address)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleCopy(contractsData.contracts.passkeyRegistry.address)}
+                        className="p-1.5 rounded-md hover:bg-gray-200 transition-colors cursor-pointer"
+                        title="Copy address"
+                      >
+                        {copied ? (
+                          <Check className="h-3.5 w-3.5 text-green-500" />
+                        ) : (
+                          <Copy className="h-3.5 w-3.5 text-gray-400" />
+                        )}
+                      </button>
+                      <a
+                        href={contractsData.contracts.passkeyRegistry.explorerUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-1.5 rounded-md hover:bg-gray-200 transition-colors cursor-pointer"
+                        title="View on explorer"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5 text-gray-400" />
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Footer */}
-              <div className="px-6 pb-6">
+              <div className="px-5 pb-5">
                 <button
                   onClick={onClose}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-900 hover:bg-gray-800 text-white text-[14px] font-medium rounded-xl transition-colors cursor-pointer"
+                  className="w-full py-2.5 bg-primary hover:bg-primary/90 text-white text-[13px] font-medium rounded-xl transition-colors cursor-pointer"
                 >
                   Got it
-                  <ArrowRight className="h-4 w-4" />
                 </button>
               </div>
             </div>

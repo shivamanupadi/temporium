@@ -304,7 +304,7 @@ export function CreateKeyModal({ isOpen, onSuccess, onClose }: CreateKeyModalPro
                   <p className="font-mono text-sm break-all flex-1">{formatAddress(txHash, 10)}</p>
                   <button
                     onClick={handleCopyTxHash}
-                    className="p-1.5 rounded-md hover:bg-muted transition-colors"
+                    className="p-1.5 rounded-md hover:bg-muted transition-colors cursor-pointer"
                   >
                     {copiedTxHash ? (
                       <Check className="h-4 w-4 text-emerald-500" />
@@ -316,7 +316,7 @@ export function CreateKeyModal({ isOpen, onSuccess, onClose }: CreateKeyModalPro
                     href={getExplorerTxUrl(txHash)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-1.5 rounded-md hover:bg-muted transition-colors"
+                    className="p-1.5 rounded-md hover:bg-muted transition-colors cursor-pointer"
                   >
                     <ExternalLink className="h-4 w-4 text-muted-foreground" />
                   </a>
@@ -362,7 +362,7 @@ export function CreateKeyModal({ isOpen, onSuccess, onClose }: CreateKeyModalPro
                 <button
                   onClick={() => goToStep(step)}
                   disabled={index > currentStepIndex + 1}
-                  className={`px-2.5 py-1 text-[11px] font-medium rounded-full transition-all duration-200 whitespace-nowrap ${
+                  className={`px-2.5 py-1 text-[11px] font-medium rounded-full transition-all duration-200 whitespace-nowrap cursor-pointer disabled:cursor-not-allowed ${
                     currentStep === step
                       ? 'bg-slate-900 text-white'
                       : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
@@ -392,7 +392,7 @@ export function CreateKeyModal({ isOpen, onSuccess, onClose }: CreateKeyModalPro
                   <button
                     key={type}
                     onClick={() => setKeyType(type)}
-                    className={`w-full p-4 rounded-xl transition-colors text-left ${
+                    className={`w-full p-4 rounded-xl transition-colors text-left cursor-pointer ${
                       keyType === type
                         ? 'bg-primary/5'
                         : 'border border-border hover:border-muted-foreground/30'

@@ -273,7 +273,7 @@ function AccessKeyDashboard(): ReactElement {
                     <div className="flex items-center gap-2 mt-2">
                       <button
                         onClick={copyKeyId}
-                        className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground font-mono transition-colors"
+                        className="flex items-center gap-1.5 text-[13px] text-muted-foreground hover:text-foreground font-mono transition-colors cursor-pointer"
                       >
                         {keyId}
                         {copied ? (
@@ -435,7 +435,7 @@ function AccessKeyDashboard(): ReactElement {
                     </span>
                     <button
                       onClick={copyKeyId}
-                      className="p-1 rounded hover:bg-muted transition-colors"
+                      className="p-1 rounded hover:bg-muted transition-colors cursor-pointer"
                     >
                       {copied ? (
                         <Check className="h-3 w-3 text-emerald-500" />

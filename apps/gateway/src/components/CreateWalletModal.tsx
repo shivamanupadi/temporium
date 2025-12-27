@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Fingerprint, Wallet, ArrowRight, Shield, X, Smartphone, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { modalAnimation } from '@/lib/utils';
 
 interface CreateWalletModalProps {
   isOpen: boolean;
@@ -47,20 +48,14 @@ export function CreateWalletModal({
         <>
           {/* Backdrop */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            {...modalAnimation.backdrop}
             onClick={handleClose}
             className="fixed inset-0 bg-black/50 z-50"
           />
 
           {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.15 }}
+            {...modalAnimation.content}
             className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[400px] z-50 px-4"
           >
             <div className="bg-white rounded-2xl overflow-hidden">
@@ -71,7 +66,7 @@ export function CreateWalletModal({
                   <button
                     onClick={handleClose}
                     disabled={isLoading}
-                    className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+                    className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 cursor-pointer"
                   >
                     <X className="h-4 w-4 text-gray-400" />
                   </button>
@@ -129,7 +124,7 @@ export function CreateWalletModal({
                       </div>
 
                       {/* Benefits */}
-                      <div className="space-y-2.5">
+                      <div className="space-y-1">
                         {[
                           { icon: Shield, text: 'No passwords or seed phrases', color: '#10b981' },
                           {
@@ -148,10 +143,7 @@ export function CreateWalletModal({
                             color: '#06b6d4',
                           },
                         ].map(benefit => (
-                          <div
-                            key={benefit.text}
-                            className="flex items-center gap-3 p-3 rounded-xl bg-gray-50"
-                          >
+                          <div key={benefit.text} className="flex items-center gap-3 py-2">
                             <div
                               className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
                               style={{ backgroundColor: `${benefit.color}15` }}

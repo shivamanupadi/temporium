@@ -161,7 +161,7 @@ export function YourAccessCard({ tokenAddress }: YourAccessCardProps): ReactElem
               {availableRoles.length > 0 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-1 text-[11px] font-medium text-primary hover:text-primary/80 transition-colors">
+                    <button className="flex items-center gap-1 text-[11px] font-medium text-primary hover:text-primary/80 transition-colors cursor-pointer">
                       <Plus className="h-3 w-3" />
                       Add Role
                     </button>
@@ -195,7 +195,7 @@ export function YourAccessCard({ tokenAddress }: YourAccessCardProps): ReactElem
                     key={role}
                     onClick={() => handleRevokeRoleFromSelf(role)}
                     disabled={roleLoading === role}
-                    className={`group flex items-center gap-1 text-[11px] font-medium pl-2.5 pr-1.5 py-1 rounded-full transition-all ${getRoleColor(role)} hover:opacity-80`}
+                    className={`group flex items-center gap-1 text-[11px] font-medium pl-2.5 pr-1.5 py-1 rounded-full transition-all cursor-pointer disabled:cursor-not-allowed ${getRoleColor(role)} hover:opacity-80`}
                     title={`Click to revoke ${getRoleLabel(role)} role`}
                   >
                     {roleLoading === role ? (
@@ -247,7 +247,7 @@ export function YourAccessCard({ tokenAddress }: YourAccessCardProps): ReactElem
                     <span className="text-xs text-muted-foreground">Transaction</span>
                     <button
                       onClick={() => window.open(getExplorerTxUrl(roleTxHash), '_blank')}
-                      className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors"
+                      className="flex items-center gap-1 text-xs text-primary hover:text-primary/80 transition-colors cursor-pointer"
                     >
                       <span className="font-mono">
                         {roleTxHash.slice(0, 8)}...{roleTxHash.slice(-4)}

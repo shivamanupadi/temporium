@@ -1,6 +1,7 @@
 import { type ReactElement } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Fingerprint, Wallet, X, ExternalLink } from 'lucide-react';
+import { modalAnimation } from '@/lib/utils';
 
 interface WalletOption {
   id: 'passkey' | 'injected';
@@ -69,20 +70,14 @@ export function WalletSelectModal({
         <>
           {/* Backdrop */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.15 }}
+            {...modalAnimation.backdrop}
             onClick={handleClose}
             className="fixed inset-0 bg-black/50 z-50"
           />
 
           {/* Modal */}
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
-            transition={{ duration: 0.15 }}
+            {...modalAnimation.content}
             className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[360px] z-50 px-4"
           >
             <div className="bg-white rounded-2xl overflow-hidden">
@@ -93,7 +88,7 @@ export function WalletSelectModal({
                   <button
                     onClick={handleClose}
                     disabled={isLoading}
-                    className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+                    className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50 cursor-pointer"
                   >
                     <X className="h-4 w-4 text-gray-400" />
                   </button>

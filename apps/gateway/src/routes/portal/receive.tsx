@@ -74,7 +74,7 @@ function ReceivePage(): ReactElement | null {
           </p>
           <button
             onClick={handleCopy}
-            className="group inline-flex items-center gap-2 font-mono text-[13px] text-foreground bg-gray-50 hover:bg-gray-100 px-4 py-2.5 rounded-lg transition-colors"
+            className="group inline-flex items-center gap-2 font-mono text-[13px] text-foreground bg-gray-50 hover:bg-gray-100 px-4 py-2.5 rounded-lg transition-colors cursor-pointer"
           >
             <span className="break-all">{formatAddress(address, 8)}</span>
             {copied ? (

@@ -238,7 +238,7 @@ function Tip403FactoryDashboard(): ReactElement {
                   <div className="flex items-center gap-2 mt-2">
                     <button
                       onClick={copyPolicyId}
-                      className="flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground font-mono transition-colors"
+                      className="flex items-center gap-1.5 text-[12px] text-muted-foreground hover:text-foreground font-mono transition-colors cursor-pointer"
                     >
                       Policy ID: {policyId}
                       {copied ? (

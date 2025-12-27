@@ -126,3 +126,21 @@ export function isUnlimitedSupply(value: bigint | undefined): boolean {
 export function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+/**
+ * Modal animation configuration for framer-motion
+ */
+export const modalAnimation = {
+  backdrop: {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+    transition: { duration: 0.15 },
+  },
+  content: {
+    initial: { opacity: 0, y: 10 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: 10 },
+    transition: { duration: 0.15 },
+  },
+} as const;

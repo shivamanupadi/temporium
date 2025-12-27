@@ -253,7 +253,7 @@ function Tip20StudioRewards(): ReactElement {
                   <div className="flex items-center gap-1">
                     <button
                       onClick={copyRecipientAddress}
-                      className="p-2 rounded-lg hover:bg-muted transition-colors"
+                      className="p-2 rounded-lg hover:bg-muted transition-colors cursor-pointer"
                       title="Copy address"
                     >
                       {copiedRecipient ? (

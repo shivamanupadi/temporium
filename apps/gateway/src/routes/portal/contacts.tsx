@@ -278,7 +278,7 @@ function ContactsPage(): ReactElement {
                         onClick={() =>
                           window.open(getExplorerAddressUrl(contact.address), '_blank')
                         }
-                        className="p-0.5 rounded hover:bg-muted transition-colors"
+                        className="p-0.5 rounded hover:bg-muted transition-colors cursor-pointer"
                       >
                         <ExternalLink className="h-3 w-3 text-muted-foreground hover:text-primary" />
                       </button>
@@ -288,7 +288,7 @@ function ContactsPage(): ReactElement {
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => handleCopy(contact)}
-                    className="p-2 rounded-md hover:bg-muted transition-colors"
+                    className="p-2 rounded-md hover:bg-muted transition-colors cursor-pointer"
                   >
                     {copiedId === contact.id ? (
                       <Check className="h-3.5 w-3.5 text-emerald-500" />
@@ -298,13 +298,13 @@ function ContactsPage(): ReactElement {
                   </button>
                   <button
                     onClick={() => handleOpenEdit(contact)}
-                    className="p-2 rounded-md hover:bg-muted transition-colors"
+                    className="p-2 rounded-md hover:bg-muted transition-colors cursor-pointer"
                   >
                     <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
                   </button>
                   <button
                     onClick={() => handleOpenDelete(contact)}
-                    className="p-2 rounded-md hover:bg-red-50 transition-colors"
+                    className="p-2 rounded-md hover:bg-red-50 transition-colors cursor-pointer"
                   >
                     <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-red-500" />
                   </button>
