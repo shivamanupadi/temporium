@@ -18,6 +18,9 @@
   "dependencies": {
     "@hono/zod-validator": "^0.4.2",
     "@paralleldrive/cuid2": "^2.2.2",
+    "@remix-run/headers": "^0.17.2",
+    "@remix-run/route-pattern": "^0.15.3",
+    "@remix-run/session": "^0.4.0",
     "drizzle-orm": "^0.38.3",
     "hono": "^4.6.16",
     "tempo.ts": "^0.12.1",
