@@ -1,11 +1,12 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useAccount, useConnect, useDisconnect, useWalletClient, useConnectors } from 'wagmi';
 import { getWalletClient } from '@wagmi/core';
 import { useQueryClient } from '@tanstack/react-query';
 import { type Address } from 'viem';
+import { Hooks } from 'tempo.ts/wagmi';
 import { tempoPasskeyConnector, injectedConnector, wagmiConfig } from '@/lib/wagmi';
 import { tempoChain } from '@/lib/tempo-client';
-import { getTokenBalance, stringToBytes32, Actions } from '@/lib/tempo-client';
+import { stringToBytes32, Actions } from '@/lib/tempo-client';
 import { DEFAULT_FEE_TOKEN_ADDRESS, MAX_SCHEDULE_SECONDS, TIMING } from '@/lib/constants';
 import { clearAuthTokens } from '@/lib/auth-storage';
 import { signInWithEthereum } from '@/lib/siwe-auth';
@@ -440,51 +441,19 @@ interface UseTokenBalanceReturn {
 
 /**
  * Hook to get balance for a specific token
+ * Uses tempo.ts/wagmi hook with React Query for caching and auto-refresh
  */
 export function useTokenBalance(token: Address | undefined): UseTokenBalanceReturn {
   const { address } = useAccount();
-  const [balance, setBalance] = useState<bigint>(0n);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    // Don't fetch if no address or no token
-    if (!address || !token) {
-      setBalance(0n);
-      setIsLoading(false);
-      return;
-    }
+  const { data, isLoading } = Hooks.token.useGetBalance({
+    token,
+    account: address,
+    query: {
+      enabled: !!address && !!token,
+      refetchInterval: TIMING.BALANCE_REFRESH_MS,
+    },
+  });
 
-    let cancelled = false;
-
-    const fetchBalance = async (): Promise<void> => {
-      setIsLoading(true);
-      try {
-        const result = await getTokenBalance(token, address);
-        if (!cancelled) {
-          setBalance(result ?? 0n);
-        }
-      } catch (err) {
-        console.error('Failed to fetch balance:', err);
-        if (!cancelled) {
-          setBalance(0n);
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchBalance();
-
-    // Refresh periodically
-    const interval = setInterval(fetchBalance, TIMING.BALANCE_REFRESH_MS);
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [address, token]);
-
-  return { data: { value: balance }, isLoading };
+  return { data: { value: data ?? 0n }, isLoading };
 }

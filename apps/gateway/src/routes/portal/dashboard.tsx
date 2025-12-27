@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router';
-import { useState, useRef, useEffect, type ReactElement } from 'react';
+import { useEffect, type ReactElement } from 'react';
 import {
   ArrowUpRight,
   ArrowDownLeft,
@@ -16,12 +16,12 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Hooks } from 'tempo.ts/wagmi';
 import { useTempo } from '@/hooks/useTempo';
 import { useTokensWithBalances } from '@/hooks/useTokenList';
 import { formatAmount, cn } from '@/lib/utils';
 import { getTokenColors } from '@/lib/tokenlist';
-import { fundFromFaucet } from '@/lib/tempo-client';
-import { LINKS, TIMING } from '@/lib/constants';
+import { LINKS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { CopyButton } from '@/components/CopyButton';
 
@@ -92,38 +92,39 @@ const quickActions = [
 function DashboardPage(): ReactElement | null {
   const { address } = useTempo();
   const { tokens, totalBalance, isLoading, refetch } = useTokensWithBalances();
-  const [isFunding, setIsFunding] = useState(false);
-  const [fundingSuccess, setFundingSuccess] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Cleanup timeout on unmount
+  // Faucet mutation hook from tempo.ts/wagmi
+  const {
+    mutate: fundFromFaucet,
+    isPending: isFunding,
+    isSuccess: fundingSuccess,
+    reset: resetFaucet,
+  } = Hooks.faucet.useFundSync({
+    mutation: {
+      onSuccess: () => {
+        toast.success('Tokens received! Refreshing balances...');
+        refetch();
+      },
+      onError: err => {
+        console.error('Faucet error:', err);
+        toast.error('Failed to get tokens. Try again later.');
+      },
+    },
+  });
+
+  // Reset success state after showing feedback
   useEffect(() => {
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, []);
+    if (fundingSuccess) {
+      const timeout = setTimeout(resetFaucet, 2000);
+      return () => clearTimeout(timeout);
+    }
+  }, [fundingSuccess, resetFaucet]);
 
   if (!address) return null;
 
-  const handleFaucet = async (): Promise<void> => {
+  const handleFaucet = (): void => {
     if (!address || isFunding) return;
-    setIsFunding(true);
-    setFundingSuccess(false);
-    try {
-      await fundFromFaucet(address);
-      setFundingSuccess(true);
-      toast.success('Tokens received! Refreshing balances...');
-      // Refresh balances after a short delay
-      timeoutRef.current = setTimeout(() => {
-        refetch();
-        setFundingSuccess(false);
-      }, TIMING.FAUCET_REFRESH_DELAY_MS);
-    } catch (err) {
-      console.error('Faucet error:', err);
-      toast.error('Failed to get tokens. Try again later.');
-    } finally {
-      setIsFunding(false);
-    }
+    fundFromFaucet({ account: address });
   };
 
   return (

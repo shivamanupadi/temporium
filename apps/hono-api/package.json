@@ -20,8 +20,8 @@
     "@paralleldrive/cuid2": "^2.2.2",
     "drizzle-orm": "^0.38.3",
     "hono": "^4.6.16",
-    "tempo.ts": "^0.10.5",
-    "viem": "^2.42.1",
+    "tempo.ts": "^0.12.1",
+    "viem": "^2.43.3",
     "zod": "^3.24.1"
   },
   "devDependencies": {

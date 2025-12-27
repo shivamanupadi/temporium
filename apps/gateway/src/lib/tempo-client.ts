@@ -1,12 +1,12 @@
 import { createPublicClient, http, type Address, type Hash } from 'viem';
-import { tempoTestnet } from 'tempo.ts/chains';
-import { Actions } from 'tempo.ts/viem';
+import { tempoTestnet } from 'viem/chains';
+import { Actions } from 'viem/tempo';
 import { DEFAULT_FEE_TOKEN_ADDRESS } from './constants';
 
 /**
  * Create tempo chain with fee token
  */
-export const tempoChain = tempoTestnet({ feeToken: DEFAULT_FEE_TOKEN_ADDRESS });
+export const tempoChain = tempoTestnet.extend({ feeToken: DEFAULT_FEE_TOKEN_ADDRESS });
 
 /**
  * Public client for reading from Tempo chain

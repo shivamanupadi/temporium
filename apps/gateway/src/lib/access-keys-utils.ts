@@ -1,6 +1,6 @@
 import { keccak256 } from 'viem';
 import { privateKeyToAddress } from 'viem/accounts';
-import { Secp256k1 as TempoSecp256k1, P256 as TempoP256, WebAuthnP256 } from 'tempo.ts/viem';
+import { Secp256k1 as TempoSecp256k1, P256 as TempoP256, WebAuthnP256 } from 'viem/tempo';
 import * as OxSecp256k1 from 'ox/Secp256k1';
 import * as OxP256 from 'ox/P256';
 import * as PublicKey from 'ox/PublicKey';

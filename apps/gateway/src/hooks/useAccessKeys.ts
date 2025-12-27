@@ -4,7 +4,7 @@ import { useWalletClient, useAccount } from 'wagmi';
 import { tempoPublicClient } from '@/lib/tempo-client';
 import { ACCOUNT_KEYCHAIN_ADDRESS } from '@/lib/constants';
 import { getSignatureTypeLabel } from '@/lib/access-keys-utils';
-import { Abis } from 'tempo.ts/viem';
+import { Abis } from 'viem/tempo';
 import type { Address } from 'viem';
 import type { AccessKey } from '@/types';
 
@@ -67,6 +67,7 @@ export function useAccessKeys(): UseAccessKeysReturn {
         const fromBlock = currentBlock > 99000n ? currentBlock - 99000n : 0n;
 
         // Get KeyAuthorized events for this account
+        // The event emits publicKey as address (the keyId)
         const logs = await tempoPublicClient.getLogs({
           address: ACCOUNT_KEYCHAIN_ADDRESS,
           event: {
@@ -74,7 +75,7 @@ export function useAccessKeys(): UseAccessKeysReturn {
             name: 'KeyAuthorized',
             inputs: [
               { type: 'address', name: 'account', indexed: true },
-              { type: 'bytes32', name: 'publicKey', indexed: true },
+              { type: 'address', name: 'publicKey', indexed: true },
               { type: 'uint8', name: 'signatureType' },
               { type: 'uint64', name: 'expiry' },
             ],
@@ -89,9 +90,8 @@ export function useAccessKeys(): UseAccessKeysReturn {
         // Get current state for each key
         const keysWithState = await Promise.all(
           logs.map(async log => {
-            const publicKeyHash = log.args.publicKey as `0x${string}`;
-            // Derive keyId from public key hash (last 20 bytes)
-            const keyId = `0x${publicKeyHash.slice(-40)}` as Address;
+            // publicKey in the event is actually the keyId (address type)
+            const keyId = log.args.publicKey as Address;
 
             try {
               const keyData = (await tempoPublicClient.readContract({
@@ -113,7 +113,6 @@ export function useAccessKeys(): UseAccessKeysReturn {
                 expiry: Number(keyData.expiry),
                 enforceLimits: keyData.enforceLimits,
                 isRevoked: keyData.isRevoked,
-                publicKeyHash,
               };
             } catch (error) {
               // Key might not exist or query failed

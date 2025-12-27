@@ -1,5 +1,6 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useMemo } from 'react';
 import { useAccount } from 'wagmi';
+import { useQuery, useQueries } from '@tanstack/react-query';
 import type { Address } from 'viem';
 import { getTokens, getTokenByAddress, type Token } from '@/lib/tokenlist';
 import { getTokenBalance } from '@/lib/tempo-client';
@@ -13,42 +14,20 @@ interface UseTokenListReturn {
 
 /**
  * Hook to fetch the full tokenlist
+ * Uses React Query for caching
  */
 export function useTokenList(): UseTokenListReturn {
-  const [tokens, setTokens] = useState<Token[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const {
+    data: tokens = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ['tokenlist'],
+    queryFn: getTokens,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
 
-  useEffect(() => {
-    let cancelled = false;
-
-    const fetchTokens = async (): Promise<void> => {
-      try {
-        setIsLoading(true);
-        const tokenList = await getTokens();
-        if (!cancelled) {
-          setTokens(tokenList);
-          setError(null);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError(err as Error);
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchTokens();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  return { tokens, isLoading, error };
+  return { tokens, isLoading, error: error as Error | null };
 }
 
 interface UseTokenReturn {
@@ -58,41 +37,15 @@ interface UseTokenReturn {
 
 /**
  * Hook to get token metadata by address
+ * Uses React Query for caching
  */
 export function useToken(address: Address | undefined): UseTokenReturn {
-  const [token, setToken] = useState<Token | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (!address) {
-      setToken(null);
-      return;
-    }
-
-    let cancelled = false;
-
-    const fetchToken = async (): Promise<void> => {
-      setIsLoading(true);
-      try {
-        const data = await getTokenByAddress(address);
-        if (!cancelled) {
-          setToken(data);
-        }
-      } catch (err) {
-        console.error('Failed to fetch token:', err);
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    };
-
-    fetchToken();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [address]);
+  const { data: token = null, isLoading } = useQuery({
+    queryKey: ['token', address],
+    queryFn: () => getTokenByAddress(address!),
+    enabled: !!address,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
 
   return { token, isLoading };
 }
@@ -111,69 +64,39 @@ interface UseTokensWithBalancesReturn {
 
 /**
  * Hook to get all tokens with their balances
+ * Uses React Query for caching and tempo.ts hooks for balance fetching
  */
 export function useTokensWithBalances(): UseTokensWithBalancesReturn {
   const { address: accountAddress } = useAccount();
   const { tokens, isLoading: tokensLoading, error } = useTokenList();
-  const [balances, setBalances] = useState<Map<string, bigint>>(new Map());
-  const [balancesLoading, setBalancesLoading] = useState(false);
-  const [refetchCounter, setRefetchCounter] = useState(0);
 
-  const refetch = useCallback(() => {
-    setRefetchCounter(c => c + 1);
-  }, []);
+  // Fetch balances for all tokens using useQueries with React Query caching
+  const balanceQueries = useQueries({
+    queries: tokens.map(token => ({
+      queryKey: ['tokenBalance', token.address, accountAddress],
+      queryFn: () => getTokenBalance(token.address, accountAddress!),
+      enabled: !!accountAddress && tokens.length > 0,
+      refetchInterval: TIMING.BALANCE_REFRESH_MS,
+      staleTime: 5000,
+    })),
+  });
 
-  useEffect(() => {
-    if (!accountAddress || tokens.length === 0) {
-      setBalances(new Map());
-      return;
-    }
-
-    let cancelled = false;
-
-    const fetchBalances = async (): Promise<void> => {
-      setBalancesLoading(true);
-      try {
-        const balancePromises = tokens.map(async token => {
-          const balance = await getTokenBalance(token.address, accountAddress);
-          return [token.address.toLowerCase(), balance] as const;
-        });
-
-        const results = await Promise.all(balancePromises);
-
-        if (!cancelled) {
-          setBalances(new Map(results));
-        }
-      } catch (err) {
-        console.error('Failed to fetch balances:', err);
-      } finally {
-        if (!cancelled) {
-          setBalancesLoading(false);
-        }
-      }
-    };
-
-    fetchBalances();
-
-    // Refresh balances periodically
-    const interval = setInterval(fetchBalances, TIMING.BALANCE_REFRESH_MS);
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [accountAddress, tokens, refetchCounter]);
+  const balancesLoading = balanceQueries.some(q => q.isLoading);
 
   const tokensWithBalances = useMemo((): TokenWithBalance[] => {
-    return tokens.map(token => ({
+    return tokens.map((token, index) => ({
       ...token,
-      balance: balances.get(token.address.toLowerCase()) || 0n,
+      balance: balanceQueries[index]?.data ?? 0n,
     }));
-  }, [tokens, balances]);
+  }, [tokens, balanceQueries]);
 
   const totalBalance = useMemo(() => {
     return tokensWithBalances.reduce((sum, token) => sum + token.balance, 0n);
   }, [tokensWithBalances]);
+
+  const refetch = (): void => {
+    balanceQueries.forEach(q => q.refetch());
+  };
 
   return {
     tokens: tokensWithBalances,
