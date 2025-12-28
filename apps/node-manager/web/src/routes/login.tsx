@@ -136,7 +136,7 @@ function LoginPage(): JSX.Element {
                 Manager
               </h1>
               <p className="text-[17px] text-[#64748b] leading-[1.6] max-w-[340px]">
-                Streamlined deployment and real-time monitoring for your Tempo node.
+                Streamlined deployment and real-time monitoring for your Tempo RPC node.
               </p>
             </div>
 
@@ -329,7 +329,7 @@ function RequirementsNotMet({
           System Requirements
         </h2>
         <p className="text-[15px] text-[#64748b]">
-          Your system does not meet the minimum requirements to run a Tempo node.
+          Your system does not meet the minimum requirements to run a Tempo RPC node.
         </p>
       </div>
 

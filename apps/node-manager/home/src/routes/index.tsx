@@ -150,7 +150,7 @@ function HomePage(): ReactElement {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
             </span>
-            <span className="text-[12px] sm:text-[13px] font-medium text-foreground">Run Your Own Tempo Node</span>
+            <span className="text-[12px] sm:text-[13px] font-medium text-foreground">Run Your Own Tempo RPC Node</span>
           </motion.div>
 
           {/* Heading */}
@@ -172,7 +172,7 @@ function HomePage(): ReactElement {
             transition={{ delay: 0.15 }}
             className="text-[14px] sm:text-[16px] text-muted-foreground mb-6 sm:mb-8 max-w-lg mx-auto px-2"
           >
-            One-click deployment and real-time monitoring for your Tempo node. Web dashboard and
+            One-click deployment and real-time monitoring for your Tempo RPC node. Web dashboard and
             snapshot sync.
           </motion.p>
 

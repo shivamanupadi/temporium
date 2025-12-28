@@ -168,7 +168,7 @@ function HomePage(): ReactElement {
                         <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#0073e6] group-hover:translate-x-0.5 transition-all duration-300" />
                       </div>
                       <p className="text-[13px] sm:text-[15px] text-slate-600 leading-relaxed">
-                        Run your own Tempo node. One-click deployment with web dashboard, snapshot
+                        Run your own Tempo RPC node. One-click deployment with web dashboard, snapshot
                         sync, and monitoring.
                       </p>
                     </div>
