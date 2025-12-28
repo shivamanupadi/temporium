@@ -1,6 +1,6 @@
 {
   "name": "@temporium/node-manager",
-  "version": "0.1.33",
+  "version": "0.1.34",
   "private": true,
   "description": "Tempo Node Manager - Self-hosted node management system",
   "scripts": {
