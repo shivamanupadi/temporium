@@ -195,7 +195,9 @@ function DashboardPage(): JSX.Element {
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Dashboard</h1>
           <div className="flex items-center gap-2 sm:gap-3 mt-0.5 flex-wrap">
-            <p className="text-[12px] sm:text-[13px] text-slate-500">Manage your Tempo blockchain node</p>
+            <p className="text-[12px] sm:text-[13px] text-slate-500">
+              Manage your Tempo blockchain node
+            </p>
             <span className="text-slate-300 hidden sm:inline">•</span>
             <Link
               to="/status"
@@ -991,7 +993,9 @@ function EndpointRow({
       >
         {protocol}
       </span>
-      <code className="flex-1 text-[11px] sm:text-[13px] font-mono text-gray-700 break-all">{url}</code>
+      <code className="flex-1 text-[11px] sm:text-[13px] font-mono text-gray-700 break-all">
+        {url}
+      </code>
       <CopyButton value={url} />
     </div>
   );

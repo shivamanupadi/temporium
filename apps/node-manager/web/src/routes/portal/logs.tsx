@@ -88,7 +88,9 @@ function LogsPage(): JSX.Element {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Logs</h1>
-          <p className="text-[12px] sm:text-[13px] text-slate-500 mt-0.5">Real-time container logs</p>
+          <p className="text-[12px] sm:text-[13px] text-slate-500 mt-0.5">
+            Real-time container logs
+          </p>
         </div>
       </div>
 
@@ -107,8 +109,12 @@ function LogsPage(): JSX.Element {
               <ScrollText className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: '#7c5cff' }} />
             </div>
             <div className="min-w-0">
-              <h2 className="text-[13px] sm:text-sm font-semibold text-slate-800">Container Logs</h2>
-              <p className="text-[10px] sm:text-[11px] text-slate-500">{filteredLogs.length} entries</p>
+              <h2 className="text-[13px] sm:text-sm font-semibold text-slate-800">
+                Container Logs
+              </h2>
+              <p className="text-[10px] sm:text-[11px] text-slate-500">
+                {filteredLogs.length} entries
+              </p>
             </div>
             {isLive && (
               <span
@@ -170,7 +176,10 @@ function LogsPage(): JSX.Element {
         </div>
 
         {/* Log Content - Light Theme */}
-        <div ref={scrollRef} className="flex-1 overflow-auto font-mono text-[11px] sm:text-[12px] bg-white p-2 sm:p-4">
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-auto font-mono text-[11px] sm:text-[12px] bg-white p-2 sm:p-4"
+        >
           {filteredLogs.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-slate-400">
               <ScrollText className="w-10 h-10 mb-3 text-slate-300" />
@@ -240,7 +249,9 @@ function LogLine({ log, search }: { log: LogEntry; search: string }): JSX.Elemen
           {log.source}
         </span>
       )}
-      <span className="text-slate-700 break-all leading-relaxed min-w-0">{highlightText(log.message)}</span>
+      <span className="text-slate-700 break-all leading-relaxed min-w-0">
+        {highlightText(log.message)}
+      </span>
     </div>
   );
 }

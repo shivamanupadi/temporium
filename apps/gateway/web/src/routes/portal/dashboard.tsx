@@ -151,7 +151,9 @@ function DashboardPage(): ReactElement | null {
                     ${formatAmount(totalBalance.toString(), 6)}
                   </h1>
                   <div className="flex items-center gap-1 min-w-0">
-                    <p className="text-[10px] sm:text-[12px] font-mono text-gray-500 truncate">{address}</p>
+                    <p className="text-[10px] sm:text-[12px] font-mono text-gray-500 truncate">
+                      {address}
+                    </p>
                     <CopyButton value={address} />
                     <a
                       href={`${LINKS.explorer}/address/${address}`}
@@ -276,7 +278,9 @@ function DashboardPage(): ReactElement | null {
         <div className="lg:col-span-2 flex flex-col">
           <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_2px_4px_rgba(0,0,0,0.04)] overflow-hidden flex-1 flex flex-col">
             <div className="px-3 sm:px-4 py-3 sm:py-3.5 border-b border-gray-100">
-              <h2 className="text-[12px] sm:text-[13px] font-semibold text-gray-900">Quick Actions</h2>
+              <h2 className="text-[12px] sm:text-[13px] font-semibold text-gray-900">
+                Quick Actions
+              </h2>
             </div>
             <div className="p-2 sm:p-3 flex-1 flex flex-col justify-center">
               <div className="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 sm:gap-2">
@@ -290,9 +294,14 @@ function DashboardPage(): ReactElement | null {
                       className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 mb-1 sm:mb-2"
                       style={{ backgroundColor: action.bgColor }}
                     >
-                      <action.icon className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: action.iconColor }} />
+                      <action.icon
+                        className="h-4 w-4 sm:h-5 sm:w-5"
+                        style={{ color: action.iconColor }}
+                      />
                     </div>
-                    <p className="text-[10px] sm:text-[12px] font-medium text-gray-700 text-center leading-tight">{action.label}</p>
+                    <p className="text-[10px] sm:text-[12px] font-medium text-gray-700 text-center leading-tight">
+                      {action.label}
+                    </p>
                   </Link>
                 ))}
               </div>

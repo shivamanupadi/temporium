@@ -72,7 +72,9 @@ function SettingsPage(): JSX.Element {
       {/* Page Header */}
       <div>
         <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Settings</h1>
-        <p className="text-[12px] sm:text-[13px] text-slate-500 mt-1">Manage your node manager configuration</p>
+        <p className="text-[12px] sm:text-[13px] text-slate-500 mt-1">
+          Manage your node manager configuration
+        </p>
       </div>
 
       <div className="max-w-md">

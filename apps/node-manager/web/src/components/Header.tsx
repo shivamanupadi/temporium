@@ -85,7 +85,8 @@ export function Header({
             <Link to="/portal/dashboard" className="flex items-center gap-2 shrink-0">
               <Zap className="w-5 h-5 text-slate-900" strokeWidth={2} />
               <span className="text-[15px] font-semibold text-slate-900">
-                Temporium<span className="text-slate-400 font-normal hidden md:inline"> | Node Manager</span>
+                Temporium
+                <span className="text-slate-400 font-normal hidden md:inline"> | Node Manager</span>
               </span>
             </Link>
 

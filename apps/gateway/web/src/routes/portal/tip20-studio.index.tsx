@@ -43,8 +43,12 @@ function Tip20StudioIndexPage(): ReactElement {
               disabled={isLoading || isRefreshing}
               className="h-8 px-2 sm:px-3"
             >
-              <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline ml-1.5">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
+              <RefreshCw
+                className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+              />
+              <span className="hidden sm:inline ml-1.5">
+                {isRefreshing ? 'Refreshing...' : 'Refresh'}
+              </span>
             </Button>
             <Button
               variant="outline"

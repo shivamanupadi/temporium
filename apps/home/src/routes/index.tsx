@@ -18,7 +18,9 @@ function HomePage(): ReactElement {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-slate-900" strokeWidth={2} />
-            <span className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">Temporium</span>
+            <span className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+              Temporium
+            </span>
           </div>
           <a
             href="https://x.com/HelloTemporium"
@@ -168,8 +170,8 @@ function HomePage(): ReactElement {
                         <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#0073e6] group-hover:translate-x-0.5 transition-all duration-300" />
                       </div>
                       <p className="text-[13px] sm:text-[15px] text-slate-600 leading-relaxed">
-                        Run your own Tempo RPC node. One-click deployment with web dashboard, snapshot
-                        sync, and monitoring.
+                        Run your own Tempo RPC node. One-click deployment with web dashboard,
+                        snapshot sync, and monitoring.
                       </p>
                     </div>
                   </div>

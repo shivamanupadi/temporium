@@ -166,7 +166,8 @@ function HomePage(): ReactElement {
           >
             <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-slate-900" strokeWidth={2} />
             <span className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-              Temporium<span className="text-slate-400 font-normal hidden sm:inline"> | Gateway</span>
+              Temporium
+              <span className="text-slate-400 font-normal hidden sm:inline"> | Gateway</span>
             </span>
           </motion.div>
           <motion.div
@@ -323,11 +324,16 @@ function HomePage(): ReactElement {
                   className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center mx-auto mb-1.5 sm:mb-2"
                   style={{ backgroundColor: `${feature.color}15` }}
                 >
-                  <feature.icon className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: feature.color }} />
+                  <feature.icon
+                    className="h-4 w-4 sm:h-5 sm:w-5"
+                    style={{ color: feature.color }}
+                  />
                 </motion.div>
 
                 <h3 className="text-[12px] sm:text-[13px] font-semibold mb-0.5">{feature.title}</h3>
-                <p className="text-[10px] sm:text-[11px] text-muted-foreground">{feature.description}</p>
+                <p className="text-[10px] sm:text-[11px] text-muted-foreground">
+                  {feature.description}
+                </p>
               </motion.div>
             ))}
           </motion.div>
