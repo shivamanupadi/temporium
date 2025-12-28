@@ -9,8 +9,8 @@ routes = [{ pattern = "gateway-api.temporium.xyz", custom_domain = true }]
 # D1 Database
 [[d1_databases]]
 binding = "DB"
-database_name = "temporium-db"
-database_id = "b38de441-3dfd-4757-bc52-2a0294ae1fa1"
+database_name = "temporium-gateway-db"
+database_id = "9437bbcb-ec3f-428e-bbd8-afbd573eaea5"
 
 # Environment Variables
 [vars]
