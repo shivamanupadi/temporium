@@ -128,43 +128,43 @@ function DashboardPage(): ReactElement | null {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Dashboard</h1>
       </div>
 
       {/* Two Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 sm:gap-6 lg:items-stretch">
         {/* Left Column - Balance & Assets */}
-        <div className="lg:col-span-3 space-y-6">
+        <div className="lg:col-span-3 space-y-4 sm:space-y-6">
           {/* Balance Card */}
           <div className="bg-white rounded-2xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_2px_4px_rgba(0,0,0,0.04)] overflow-hidden">
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-[12px] font-medium text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] sm:text-[12px] font-medium text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
                     Total Balance
                     {isLoading && <Loader2 className="h-3 w-3 animate-spin" />}
                   </p>
-                  <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900 mb-3">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-gray-900 mb-2 sm:mb-3">
                     ${formatAmount(totalBalance.toString(), 6)}
                   </h1>
-                  <div className="flex items-center gap-1">
-                    <p className="text-[12px] font-mono text-gray-500 truncate">{address}</p>
+                  <div className="flex items-center gap-1 min-w-0">
+                    <p className="text-[10px] sm:text-[12px] font-mono text-gray-500 truncate">{address}</p>
                     <CopyButton value={address} />
                     <a
                       href={`${LINKS.explorer}/address/${address}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors"
+                      className="p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition-colors shrink-0"
                     >
-                      <ExternalLink className="h-3.5 w-3.5" />
+                      <ExternalLink className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                     </a>
                   </div>
                 </div>
                 <div
-                  className="hidden sm:flex w-10 h-10 rounded-xl items-center justify-center"
+                  className="hidden sm:flex w-10 h-10 rounded-xl items-center justify-center shrink-0 ml-4"
                   style={{ backgroundColor: '#EDE9FE' }}
                 >
                   <TrendingUp className="h-5 w-5" style={{ color: '#7C3AED' }} />
@@ -275,24 +275,24 @@ function DashboardPage(): ReactElement | null {
         {/* Right Column - Quick Actions */}
         <div className="lg:col-span-2 flex flex-col">
           <div className="bg-white rounded-xl shadow-[0_0_0_1px_rgba(0,0,0,0.03),0_2px_4px_rgba(0,0,0,0.04)] overflow-hidden flex-1 flex flex-col">
-            <div className="px-4 py-3.5 border-b border-gray-100">
-              <h2 className="text-[13px] font-semibold text-gray-900">Quick Actions</h2>
+            <div className="px-3 sm:px-4 py-3 sm:py-3.5 border-b border-gray-100">
+              <h2 className="text-[12px] sm:text-[13px] font-semibold text-gray-900">Quick Actions</h2>
             </div>
-            <div className="p-3 flex-1 flex flex-col justify-center">
-              <div className="grid grid-cols-2 gap-2">
+            <div className="p-2 sm:p-3 flex-1 flex flex-col justify-center">
+              <div className="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-2 gap-1.5 sm:gap-2">
                 {quickActions.map(action => (
                   <Link
                     key={action.label}
                     to={action.href}
-                    className="group flex flex-col items-center justify-center py-4 px-3 rounded-xl transition-all bg-slate-50 hover:bg-slate-100"
+                    className="group flex flex-col items-center justify-center py-2.5 sm:py-4 px-2 sm:px-3 rounded-lg sm:rounded-xl transition-all bg-slate-50 hover:bg-slate-100"
                   >
                     <div
-                      className="w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 mb-2"
+                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 mb-1 sm:mb-2"
                       style={{ backgroundColor: action.bgColor }}
                     >
-                      <action.icon className="h-5 w-5" style={{ color: action.iconColor }} />
+                      <action.icon className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: action.iconColor }} />
                     </div>
-                    <p className="text-[12px] font-medium text-gray-700">{action.label}</p>
+                    <p className="text-[10px] sm:text-[12px] font-medium text-gray-700 text-center leading-tight">{action.label}</p>
                   </Link>
                 ))}
               </div>

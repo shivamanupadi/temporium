@@ -68,11 +68,11 @@ function SettingsPage(): JSX.Element {
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
-        <p className="text-[13px] text-slate-500 mt-1">Manage your node manager configuration</p>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Settings</h1>
+        <p className="text-[12px] sm:text-[13px] text-slate-500 mt-1">Manage your node manager configuration</p>
       </div>
 
       <div className="max-w-md">

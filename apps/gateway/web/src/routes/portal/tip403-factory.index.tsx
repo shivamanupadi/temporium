@@ -35,29 +35,29 @@ function Tip403FactoryIndexPage(): ReactElement {
       <PageHeader
         title="TIP403 Factory"
         action={
-          <div className="flex gap-2">
+          <div className="flex gap-1.5 sm:gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={handleRefresh}
               disabled={isLoading || isRefreshing}
-              className="h-8 px-3"
+              className="h-8 px-2 sm:px-3"
             >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+              <RefreshCw className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline ml-1.5">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowImportModal(true)}
-              className="h-8 px-3"
+              className="h-8 px-2 sm:px-3"
             >
-              <Download className="h-4 w-4" />
-              Import
+              <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline ml-1.5">Import</span>
             </Button>
-            <Button size="sm" onClick={() => setShowCreateModal(true)} className="h-8 px-3">
-              <Plus className="h-4 w-4" />
-              Create
+            <Button size="sm" onClick={() => setShowCreateModal(true)} className="h-8 px-2 sm:px-3">
+              <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden xs:inline ml-1.5">Create</span>
             </Button>
           </div>
         }

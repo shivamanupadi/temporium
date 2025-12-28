@@ -157,33 +157,33 @@ function HomePage(): ReactElement {
   return (
     <>
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 px-6 py-6">
+      <div className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 py-4 sm:py-6">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="flex items-center gap-2.5"
+            className="flex items-center gap-2"
           >
-            <Zap className="w-6 h-6 text-slate-900" strokeWidth={2} />
-            <span className="text-lg font-bold text-slate-900 tracking-tight">
-              Temporium<span className="text-slate-400 font-normal"> | Gateway</span>
+            <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-slate-900" strokeWidth={2} />
+            <span className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+              Temporium<span className="text-slate-400 font-normal hidden sm:inline"> | Gateway</span>
             </span>
           </motion.div>
           <motion.div
             initial={{ x: 20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="flex items-center gap-1"
+            className="flex items-center gap-0.5 sm:gap-1"
           >
             <button
               onClick={() => setShowHowItWorksModal(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-[13px] font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
             >
               <HelpCircle className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">How it works</span>
             </button>
             <a
               href="mailto:hello@temporium.xyz"
-              className="flex items-center gap-1.5 px-3 py-1.5 text-[13px] font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-[13px] font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
             >
               <Mail className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Contact</span>
@@ -200,11 +200,11 @@ function HomePage(): ReactElement {
         </div>
       </div>
 
-      <main className="min-h-screen flex flex-col items-center justify-center px-6 pt-28 pb-12">
+      <main className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 pt-24 sm:pt-28 pb-8 sm:pb-12">
         {/* Static background gradient - no animations for performance */}
         <div className="fixed inset-0 -z-10 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/15 rounded-full blur-3xl" />
-          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-[#0073e6]/15 rounded-full blur-3xl" />
+          <div className="absolute top-1/4 left-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-primary/15 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-56 sm:w-80 h-56 sm:h-80 bg-[#0073e6]/15 rounded-full blur-3xl" />
         </div>
 
         {/* Content */}
@@ -214,13 +214,13 @@ function HomePage(): ReactElement {
             initial={{ y: -16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.05 }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white backdrop-blur border border-border shadow-sm mb-6"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white backdrop-blur border border-border shadow-sm mb-4 sm:mb-6"
           >
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
             </span>
-            <span className="text-[13px] font-medium text-foreground">
+            <span className="text-[12px] sm:text-[13px] font-medium text-foreground">
               Built for Tempo Blockchain
             </span>
           </motion.div>
@@ -230,7 +230,7 @@ function HomePage(): ReactElement {
             initial={{ y: 16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="text-4xl sm:text-5xl font-bold tracking-tight mb-4"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-3 sm:mb-4"
           >
             Your <span className="text-primary">Gateway</span> to
             <br />
@@ -242,7 +242,7 @@ function HomePage(): ReactElement {
             initial={{ y: 16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.12 }}
-            className="inline-flex items-center gap-2 text-[15px] text-slate-500 mb-6"
+            className="inline-flex items-center gap-2 text-[13px] sm:text-[15px] text-slate-500 mb-4 sm:mb-6"
           >
             <Fingerprint className="h-4 w-4 text-primary" />
             <span>
@@ -256,7 +256,7 @@ function HomePage(): ReactElement {
             initial={{ y: 16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.15 }}
-            className="text-[16px] text-muted-foreground mb-8 max-w-lg mx-auto"
+            className="text-[14px] sm:text-[16px] text-muted-foreground mb-6 sm:mb-8 max-w-lg mx-auto px-2"
           >
             Send, receive, swap, provide liquidity, create tokens, schedule payments, and manage
             access. All with sub-cent fees.
@@ -267,13 +267,13 @@ function HomePage(): ReactElement {
             initial={{ y: 16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className="flex flex-wrap justify-center gap-3 mb-12"
+            className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-8 sm:mb-12"
           >
             <Button
               size="lg"
               onClick={() => setShowCreateWalletModal(true)}
               isLoading={isConnecting}
-              className="group px-6"
+              className="group px-4 sm:px-6 text-[14px] sm:text-base"
             >
               <Wallet className="h-4 w-4" />
               Create Wallet
@@ -285,7 +285,7 @@ function HomePage(): ReactElement {
               size="lg"
               onClick={() => setShowWalletSelectModal(true)}
               disabled={isConnecting}
-              className="px-6 bg-white backdrop-blur"
+              className="px-4 sm:px-6 text-[14px] sm:text-base bg-white backdrop-blur"
             >
               <Fingerprint className="h-4 w-4" />
               Sign In
@@ -297,7 +297,7 @@ function HomePage(): ReactElement {
             initial={{ y: 24, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.25 }}
-            className="grid grid-cols-2 sm:grid-cols-5 gap-2.5"
+            className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-2.5"
           >
             {features.map((feature, index) => (
               <motion.div
@@ -306,7 +306,7 @@ function HomePage(): ReactElement {
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.25 + index * 0.05 }}
                 whileHover={{ y: -2, transition: { duration: 0.2 } }}
-                className="group relative bg-white backdrop-blur rounded-xl border border-border p-4 cursor-default"
+                className="group relative bg-white backdrop-blur rounded-xl border border-border p-3 sm:p-4 cursor-default"
               >
                 {/* Hover glow */}
                 <div
@@ -320,14 +320,14 @@ function HomePage(): ReactElement {
                 <motion.div
                   whileHover={{ scale: 1.1, rotate: 5 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-                  className="w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center mx-auto mb-1.5 sm:mb-2"
                   style={{ backgroundColor: `${feature.color}15` }}
                 >
-                  <feature.icon className="h-5 w-5" style={{ color: feature.color }} />
+                  <feature.icon className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: feature.color }} />
                 </motion.div>
 
-                <h3 className="text-[13px] font-semibold mb-0.5">{feature.title}</h3>
-                <p className="text-[11px] text-muted-foreground">{feature.description}</p>
+                <h3 className="text-[12px] sm:text-[13px] font-semibold mb-0.5">{feature.title}</h3>
+                <p className="text-[10px] sm:text-[11px] text-muted-foreground">{feature.description}</p>
               </motion.div>
             ))}
           </motion.div>
@@ -337,15 +337,15 @@ function HomePage(): ReactElement {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="mt-10 flex flex-col items-center gap-3"
+            className="mt-8 sm:mt-10 flex flex-col items-center gap-3"
           >
             <div className="flex items-center gap-2 text-muted-foreground">
-              <span className="text-[12px]">Powered by</span>
+              <span className="text-[11px] sm:text-[12px]">Powered by</span>
               <a
                 href="https://tempo.xyz/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[13px] font-semibold text-foreground hover:text-primary transition-colors"
+                className="text-[12px] sm:text-[13px] font-semibold text-foreground hover:text-primary transition-colors"
               >
                 Tempo
               </a>
