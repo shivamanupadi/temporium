@@ -3,12 +3,7 @@
   "ui": "tui",
   "globalEnv": [
     "NODE_ENV",
-    "CI",
-    "DATABASE_URL",
-    "JWT_SECRET",
-    "JWT_EXPIRATION",
-    "PORT",
-    "VITE_API_URL"
+    "CI"
   ],
   "tasks": {
     "build": {
@@ -19,7 +14,13 @@
         "JWT_SECRET",
         "JWT_EXPIRATION",
         "PORT",
-        "VITE_API_URL"
+        "TEMPO_RPC_URL",
+        "PASSKEY_REGISTRY_ADDRESS",
+        "RELAYER_PRIVATE_KEY",
+        "ALLOWED_ORIGINS",
+        "VITE_API_URL",
+        "VITE_GATEWAY_URL",
+        "VITE_NODE_MANAGER_URL"
       ]
     },
     "dev": {
@@ -30,7 +31,13 @@
         "JWT_SECRET",
         "JWT_EXPIRATION",
         "PORT",
-        "VITE_API_URL"
+        "TEMPO_RPC_URL",
+        "PASSKEY_REGISTRY_ADDRESS",
+        "RELAYER_PRIVATE_KEY",
+        "ALLOWED_ORIGINS",
+        "VITE_API_URL",
+        "VITE_GATEWAY_URL",
+        "VITE_NODE_MANAGER_URL"
       ]
     },
     "start": {
@@ -51,9 +58,7 @@
         "PORT"
       ]
     },
-    "lint": {
-      "dependsOn": ["^lint"]
-    },
+    "lint": {},
     "lint:fix": {
       "cache": false
     },
@@ -61,6 +66,9 @@
       "dependsOn": ["^build"]
     },
     "clean": {
+      "cache": false
+    },
+    "format": {
       "cache": false
     }
   }

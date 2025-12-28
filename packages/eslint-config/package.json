@@ -2,6 +2,10 @@
   "name": "@temporium/eslint-config",
   "version": "1.0.0",
   "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./backend": "./backend.js"
+  },
   "scripts": {
     "lint": "echo 'No linting configured for eslint-config'",
     "format": "prettier --write .",
@@ -13,12 +17,10 @@
     "@typescript-eslint/parser": "^6.0.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-react": "^7.33.0",
-    "eslint-plugin-react-hooks": "^4.6.0"
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-unused-imports": "^4.3.0"
   },
   "peerDependencies": {
     "eslint": "^8.0.0"
-  },
-  "devDependencies": {
-    "eslint-plugin-unused-imports": "^4.3.0"
   }
 }
