@@ -1,4 +1,4 @@
-name = "temporium-hono-api"
+name = "temporium-gateway-api"
 main = "src/index.ts"
 compatibility_date = "2024-12-26"
 compatibility_flags = ["nodejs_compat"]
@@ -25,7 +25,7 @@ JWT_EXPIRATION = "24h"
 
 # Staging Environment
 [env.staging]
-name = "temporium-hono-api-staging"
+name = "temporium-gateway-api-staging"
 # routes = [
 #   { pattern = "api-staging.temporium.xyz/*", custom_domain = true }
 # ]
