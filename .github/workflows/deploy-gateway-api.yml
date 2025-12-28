@@ -45,5 +45,5 @@ jobs:
       - name: Deployment Summary
         run: |
           echo "## Deployment Complete! :rocket:" >> $GITHUB_STEP_SUMMARY
-          echo "- **API URL:** https://api.temporium.xyz" >> $GITHUB_STEP_SUMMARY
+          echo "- **API URL:** https://gateway-api.temporium.xyz" >> $GITHUB_STEP_SUMMARY
           echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY

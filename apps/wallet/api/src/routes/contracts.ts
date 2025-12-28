@@ -4,7 +4,7 @@ import type { Env, Variables } from '../types/env';
 const contractsRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 /**
- * GET /v1/contracts
+ * GET /contracts
  * Returns contract addresses and chain info
  */
 contractsRouter.get('/', c => {

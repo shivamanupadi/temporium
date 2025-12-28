@@ -1,7 +1,7 @@
 import { type ReactElement, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Fingerprint, Database, Shield, ExternalLink, Copy, Check } from 'lucide-react';
-import { getApiBaseUrl } from '@/lib/api';
+import { getWalletApiUrl } from '@/lib/api';
 import { modalAnimation } from '@/lib/utils';
 
 interface ContractInfo {
@@ -36,7 +36,7 @@ export function HowItWorksModal({ isOpen, onClose }: HowItWorksModalProps): Reac
 
   useEffect(() => {
     if (isOpen) {
-      fetch(`${getApiBaseUrl()}/v1/contracts`)
+      fetch(`${getWalletApiUrl()}/contracts`)
         .then(res => res.json())
         .then(data => {
           if (data.success) {

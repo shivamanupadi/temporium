@@ -34,7 +34,7 @@ async function bootstrap(): Promise<void> {
     exclude: ['/'],
   });
 
-  const port = process.env.PORT || 4007;
+  const port = process.env.PORT || 4006;
   await app.listen(port, '0.0.0.0');
 
   logger.log(`Tempo Node Manager running on http://localhost:${port}`);

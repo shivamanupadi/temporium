@@ -13,14 +13,14 @@ export default defineConfig({
     },
   },
   server: {
-    port: 4006,
+    port: 4005,
     proxy: {
       '/api': {
-        target: 'http://localhost:4007',
+        target: 'http://localhost:4006',
         changeOrigin: true,
       },
       '/socket.io': {
-        target: 'http://localhost:4007',
+        target: 'http://localhost:4006',
         ws: true,
       },
     },

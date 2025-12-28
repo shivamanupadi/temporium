@@ -1,28 +1,42 @@
 /**
  * API Configuration
- * All API URLs are derived from a single base URL
  */
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 /**
- * Keys API URL - for passkey storage
+ * Gateway API base URL
  */
-export const KEYS_API_URL = `${API_BASE_URL}/keys`;
+const GATEWAY_API_URL = import.meta.env.VITE_GATEWAY_API_URL || 'https://gateway-api.temporium.xyz';
 
 /**
- * Auth API URL - for SIWE authentication
+ * Wallet API base URL (passkey storage & auth)
  */
-export const AUTH_API_URL = `${API_BASE_URL}/v1/auth`;
+const WALLET_API_URL = import.meta.env.VITE_WALLET_API_URL || 'https://wallet-api.temporium.xyz';
 
 /**
- * Tokenlist API URL - proxied to avoid CORS
+ * Keys API URL - for passkey storage (wallet-api)
  */
-export const TOKENLIST_API_URL = `${API_BASE_URL}/tokenlist`;
+export const KEYS_API_URL = `${WALLET_API_URL}/keys`;
 
 /**
- * Get the base API URL
+ * Auth API URL - for SIWE authentication (wallet-api)
  */
-export function getApiBaseUrl(): string {
-  return API_BASE_URL;
+export const AUTH_API_URL = `${WALLET_API_URL}/auth`;
+
+/**
+ * Tokenlist API URL - proxied to avoid CORS (gateway-api)
+ */
+export const TOKENLIST_API_URL = `${GATEWAY_API_URL}/tokenlist`;
+
+/**
+ * Get the gateway API base URL
+ */
+export function getGatewayApiUrl(): string {
+  return GATEWAY_API_URL;
+}
+
+/**
+ * Get the wallet API base URL
+ */
+export function getWalletApiUrl(): string {
+  return WALLET_API_URL;
 }

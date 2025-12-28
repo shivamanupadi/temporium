@@ -3,10 +3,10 @@
  * Simple JWT with 24hr expiry - when expired, user re-authenticates with passkey
  */
 
-import { getApiBaseUrl } from './api';
+import { getGatewayApiUrl } from './api';
 import { getAccessToken, clearAuthToken, isAccessTokenExpired } from './auth-storage';
 
-const API_BASE_URL = getApiBaseUrl();
+const GATEWAY_API_URL = getGatewayApiUrl();
 
 interface ApiResponse<T> {
   data: T;
@@ -46,7 +46,7 @@ export async function apiRequest<T>(
     throw new ApiClientError('Not authenticated', 401);
   }
 
-  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+  const url = endpoint.startsWith('http') ? endpoint : `${GATEWAY_API_URL}${endpoint}`;
 
   const response = await fetch(url, {
     ...options,

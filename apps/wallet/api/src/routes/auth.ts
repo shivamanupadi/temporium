@@ -75,7 +75,7 @@ function parseSiweMessage(message: string): {
 }
 
 /**
- * POST /v1/auth/challenge
+ * POST /auth/challenge
  * Generate a SIWE challenge for wallet authentication
  */
 auth.post('/challenge', zValidator('json', challengeRequestSchema), async c => {
@@ -101,7 +101,7 @@ auth.post('/challenge', zValidator('json', challengeRequestSchema), async c => {
 });
 
 /**
- * POST /v1/auth/verify
+ * POST /auth/verify
  * Verify a SIWE signature and return a JWT token
  */
 auth.post('/verify', zValidator('json', verifyRequestSchema), async c => {

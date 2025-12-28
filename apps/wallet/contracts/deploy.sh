@@ -7,9 +7,9 @@ CHAIN_ID=42429
 
 # File paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-GATEWAY_ROOT="$(dirname "$SCRIPT_DIR")"
-DEV_VARS_FILE="$GATEWAY_ROOT/api/.dev.vars"
-WRANGLER_FILE="$GATEWAY_ROOT/api/wrangler.toml"
+WALLET_ROOT="$(dirname "$SCRIPT_DIR")"
+DEV_VARS_FILE="$WALLET_ROOT/api/.dev.vars"
+WRANGLER_FILE="$WALLET_ROOT/api/wrangler.toml"
 
 # Parse flags
 UPDATE_TARGET=""
@@ -18,12 +18,12 @@ while [[ $# -gt 0 ]]; do
     case $1 in
         --dev|-d)
             UPDATE_TARGET="dev"
-            OP_ITEM="Temporium Gateway Contract Owner Development"
+            OP_ITEM="Temporium Wallet Contract Owner Development"
             shift
             ;;
         --prod|-p)
             UPDATE_TARGET="prod"
-            OP_ITEM="Temporium Gateway Contract Owner Production"
+            OP_ITEM="Temporium Wallet Contract Owner Production"
             shift
             ;;
         --help|-h)
@@ -150,7 +150,7 @@ elif [ "$UPDATE_TARGET" = "prod" ]; then
     # Set RELAYER_PRIVATE_KEY as wrangler secret
     echo ""
     echo "Setting RELAYER_PRIVATE_KEY as wrangler secret..."
-    cd "$GATEWAY_ROOT/api"
+    cd "$WALLET_ROOT/api"
     echo "$PRIVATE_KEY" | npx wrangler secret put RELAYER_PRIVATE_KEY
     echo "RELAYER_PRIVATE_KEY secret updated"
 fi
