@@ -86,8 +86,8 @@ function PortalLayout(): JSX.Element {
       />
 
       {/* Main Content */}
-      <main className="pt-8 pb-6">
-        <div className="mx-auto max-w-5xl px-6">
+      <main className="pt-6 sm:pt-8 pb-6">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6">
           <Outlet />
         </div>
       </main>

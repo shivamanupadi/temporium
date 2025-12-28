@@ -77,15 +77,15 @@ export function Header({
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-slate-100">
-      <div className="max-w-5xl mx-auto px-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-14">
           {/* Left: Logo & Nav */}
-          <div className="flex items-center gap-24">
+          <div className="flex items-center gap-4 sm:gap-8 md:gap-12 lg:gap-24">
             {/* Logo */}
-            <Link to="/portal/dashboard" className="flex items-center gap-2">
+            <Link to="/portal/dashboard" className="flex items-center gap-2 shrink-0">
               <Zap className="w-5 h-5 text-slate-900" strokeWidth={2} />
               <span className="text-[15px] font-semibold text-slate-900">
-                Temporium<span className="text-slate-400 font-normal"> | Node Manager</span>
+                Temporium<span className="text-slate-400 font-normal hidden md:inline"> | Node Manager</span>
               </span>
             </Link>
 
@@ -107,15 +107,16 @@ export function Header({
           </div>
 
           {/* Right: Update & User Menu */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Update Badge */}
             {updateAvailable && (
               <button
                 onClick={onShowUpdateDialog}
-                className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[12px] font-medium hover:bg-emerald-100 transition-colors"
+                className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-[11px] sm:text-[12px] font-medium hover:bg-emerald-100 transition-colors"
               >
-                <ArrowUpCircle className="w-3.5 h-3.5" />
-                <span>v{latestVersion}</span>
+                <ArrowUpCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                <span className="hidden xs:inline">v{latestVersion}</span>
+                <span className="xs:hidden">New</span>
               </button>
             )}
 
@@ -123,9 +124,9 @@ export function Header({
             <div ref={menuRef} className="relative">
               <button
                 onClick={() => setShowMenu(!showMenu)}
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
+                className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-2.5 py-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors"
               >
-                <span className="text-[13px] font-medium">v{currentVersion}</span>
+                <span className="text-[12px] sm:text-[13px] font-medium">v{currentVersion}</span>
                 <ChevronDown
                   className={cn('w-3.5 h-3.5 transition-transform', showMenu && 'rotate-180')}
                 />

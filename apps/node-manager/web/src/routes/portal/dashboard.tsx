@@ -189,31 +189,31 @@ function DashboardPage(): JSX.Element {
   const isStopped = status === 'stopped' || status === 'not_installed';
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-          <div className="flex items-center gap-3 mt-0.5">
-            <p className="text-[13px] text-slate-500">Manage your Tempo blockchain node</p>
-            <span className="text-slate-300">•</span>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Dashboard</h1>
+          <div className="flex items-center gap-2 sm:gap-3 mt-0.5 flex-wrap">
+            <p className="text-[12px] sm:text-[13px] text-slate-500">Manage your Tempo blockchain node</p>
+            <span className="text-slate-300 hidden sm:inline">•</span>
             <Link
               to="/status"
               target="_blank"
-              className="text-[13px] text-[#7c5cff] hover:text-[#6b4fee] flex items-center gap-1 transition-colors"
+              className="text-[12px] sm:text-[13px] text-[#7c5cff] hover:text-[#6b4fee] flex items-center gap-1 transition-colors"
             >
               Public Status
               <ExternalLink className="w-3 h-3" />
             </Link>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             onClick={() => setConfirmAction('start')}
             disabled={isActionPending || isRunning}
             size="sm"
             className={cn(
-              'h-8',
+              'h-8 flex-1 sm:flex-none',
               isStopped
                 ? 'bg-[#10b981] hover:bg-[#059669] text-white'
                 : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-50'
@@ -227,7 +227,7 @@ function DashboardPage(): JSX.Element {
             disabled={isActionPending || !isRunning}
             size="sm"
             variant="outline"
-            className="h-8 border-slate-200"
+            className="h-8 flex-1 sm:flex-none border-slate-200"
           >
             <Square className="w-3.5 h-3.5 mr-1.5" />
             Stop
@@ -237,12 +237,12 @@ function DashboardPage(): JSX.Element {
             disabled={isActionPending || !isRunning}
             size="sm"
             variant="outline"
-            className="h-8 border-slate-200"
+            className="h-8 flex-1 sm:flex-none border-slate-200"
           >
             <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
             Restart
           </Button>
-          <div className="w-px h-6 bg-slate-200 mx-1" />
+          <div className="hidden sm:block w-px h-6 bg-slate-200 mx-1 self-center" />
           <Button
             onClick={() => setConfirmAction('delete')}
             disabled={isActionPending || isRunning}
@@ -289,7 +289,7 @@ function DashboardPage(): JSX.Element {
 
             {/* Stats Grid */}
             {!nodeLoading && nodeInfo && (
-              <div className="border-t border-gray-100 grid grid-cols-3 divide-x divide-gray-100">
+              <div className="border-t border-gray-100 grid grid-cols-1 xs:grid-cols-3 divide-y xs:divide-y-0 xs:divide-x divide-gray-100">
                 <StatItem
                   icon={<Clock className="w-3.5 h-3.5" />}
                   label="Uptime"
@@ -345,26 +345,26 @@ function DashboardPage(): JSX.Element {
                     </div>
                   )}
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                   <div>
-                    <p className="text-[11px] text-gray-500 uppercase tracking-wider mb-1">
+                    <p className="text-[10px] sm:text-[11px] text-gray-500 uppercase tracking-wider mb-1">
                       Current Block
                     </p>
                     <AnimatedNumber value={nodeInfo.syncStatus.currentBlock} />
                   </div>
                   <div>
-                    <p className="text-[11px] text-gray-500 uppercase tracking-wider mb-1">
+                    <p className="text-[10px] sm:text-[11px] text-gray-500 uppercase tracking-wider mb-1">
                       {nodeInfo.syncStatus.isSynced ? 'Latest' : 'Target'}
                     </p>
-                    <p className="text-[14px] font-mono font-medium text-gray-900">
+                    <p className="text-[13px] sm:text-[14px] font-mono font-medium text-gray-900">
                       {nodeInfo.syncStatus.highestBlock.toLocaleString()}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-[11px] text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
+                  <div className="col-span-2 sm:col-span-1">
+                    <p className="text-[10px] sm:text-[11px] text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
                       <Users className="w-3 h-3" /> Peers
                     </p>
-                    <p className="text-[14px] font-mono font-medium text-gray-900">
+                    <p className="text-[13px] sm:text-[14px] font-mono font-medium text-gray-900">
                       {nodeInfo.syncStatus.peerCount}
                     </p>
                   </div>
@@ -984,14 +984,14 @@ function EndpointRow({
   color: string;
 }): JSX.Element {
   return (
-    <div className="flex items-center gap-3 group">
+    <div className="flex items-center gap-2 sm:gap-3 group">
       <span
-        className="w-12 text-[11px] font-semibold uppercase tracking-wide text-center py-1 rounded"
+        className="w-10 sm:w-12 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide text-center py-1 rounded shrink-0"
         style={{ backgroundColor: `${color}15`, color }}
       >
         {protocol}
       </span>
-      <code className="flex-1 text-[13px] font-mono text-gray-700">{url}</code>
+      <code className="flex-1 text-[11px] sm:text-[13px] font-mono text-gray-700 break-all">{url}</code>
       <CopyButton value={url} />
     </div>
   );
