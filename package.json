@@ -28,7 +28,6 @@
     "dev:node-manager": "turbo run dev --filter=@temporium/node-manager",
     "build:gateway": "turbo run build --filter=@temporium/gateway",
     "build:node-manager": "turbo run build --filter=@temporium/node-manager",
-    "build:home": "turbo run build --filter=@temporium/home",
     "postinstall": "patch-package && node scripts/patch-ox.js"
   },
   "devDependencies": {

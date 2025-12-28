@@ -8,6 +8,10 @@ const fs = require('fs');
 const path = require('path');
 
 const files = [
+  // Hoisted location (yarn workspaces)
+  'node_modules/ox/_esm/core/WebAuthnP256.js',
+  'node_modules/ox/_cjs/core/WebAuthnP256.js',
+  // Nested location (npm/some yarn configs)
   'node_modules/tempo.ts/node_modules/ox/_esm/core/WebAuthnP256.js',
   'node_modules/tempo.ts/node_modules/ox/_cjs/core/WebAuthnP256.js',
 ];

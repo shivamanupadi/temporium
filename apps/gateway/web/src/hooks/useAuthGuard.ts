@@ -47,7 +47,7 @@ export function useAuthGuard(): void {
 
   // Listen for storage events (logout from another tab)
   useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
+    const handleStorageChange = (e: StorageEvent): void => {
       if (e.key === 'temporium_auth' && e.newValue === null) {
         console.log('[AuthGuard] Auth cleared from another tab, logging out...');
         disconnect();
