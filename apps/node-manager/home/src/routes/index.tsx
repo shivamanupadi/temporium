@@ -100,22 +100,22 @@ function HomePage(): ReactElement {
   return (
     <>
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 px-6 py-6">
+      <div className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 py-4 sm:py-6">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="flex items-center gap-2.5"
+            className="flex items-center gap-2"
           >
-            <Zap className="w-6 h-6 text-slate-900" strokeWidth={2} />
-            <span className="text-lg font-bold text-slate-900 tracking-tight">
-              Temporium<span className="text-slate-400 font-normal"> | Node Manager</span>
+            <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-slate-900" strokeWidth={2} />
+            <span className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
+              Temporium<span className="text-slate-400 font-normal hidden sm:inline"> | Node Manager</span>
             </span>
           </motion.div>
           <motion.div
             initial={{ x: 20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="flex items-center gap-4"
+            className="flex items-center gap-3 sm:gap-4"
           >
             <a
               href="https://x.com/HelloTemporium"
@@ -136,7 +136,7 @@ function HomePage(): ReactElement {
         </div>
       </div>
 
-      <main className="min-h-screen flex flex-col items-center justify-center px-6 pt-28 pb-12">
+      <main className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 pt-24 sm:pt-28 pb-8 sm:pb-12">
         {/* Content */}
         <div className="max-w-4xl w-full text-center">
           {/* Badge */}
@@ -144,13 +144,13 @@ function HomePage(): ReactElement {
             initial={{ y: -16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.05 }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white backdrop-blur border border-border shadow-sm mb-6"
+            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white backdrop-blur border border-border shadow-sm mb-4 sm:mb-6"
           >
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
             </span>
-            <span className="text-[13px] font-medium text-foreground">Run Your Own Tempo Node</span>
+            <span className="text-[12px] sm:text-[13px] font-medium text-foreground">Run Your Own Tempo Node</span>
           </motion.div>
 
           {/* Heading */}
@@ -158,7 +158,7 @@ function HomePage(): ReactElement {
             initial={{ y: 16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.1 }}
-            className="text-4xl sm:text-5xl font-bold tracking-tight mb-4"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-3 sm:mb-4"
           >
             <span className="text-primary">Node Manager</span> for
             <br />
@@ -170,7 +170,7 @@ function HomePage(): ReactElement {
             initial={{ y: 16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.15 }}
-            className="text-[16px] text-muted-foreground mb-8 max-w-lg mx-auto"
+            className="text-[14px] sm:text-[16px] text-muted-foreground mb-6 sm:mb-8 max-w-lg mx-auto px-2"
           >
             One-click deployment and real-time monitoring for your Tempo node. Web dashboard and
             snapshot sync.
@@ -203,11 +203,11 @@ function HomePage(): ReactElement {
             initial={{ y: 16, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.25 }}
-            className="mb-12"
+            className="mb-8 sm:mb-12 px-2"
           >
-            <div className="inline-flex items-center gap-3 px-4 py-3 bg-white rounded-lg border border-border">
-              <Terminal className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-              <code className="text-[13px] font-mono text-foreground break-all">
+            <div className="inline-flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-2.5 sm:py-3 bg-white rounded-lg border border-border max-w-full overflow-hidden">
+              <Terminal className="h-4 w-4 text-muted-foreground flex-shrink-0 hidden xs:block" />
+              <code className="text-[11px] sm:text-[13px] font-mono text-foreground break-all text-left">
                 {installCommand}
               </code>
               <button
@@ -229,7 +229,7 @@ function HomePage(): ReactElement {
             initial={{ y: 24, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-12"
+            className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5 mb-8 sm:mb-12"
           >
             {features.map((feature, index) => (
               <motion.div
@@ -238,7 +238,7 @@ function HomePage(): ReactElement {
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 + index * 0.05 }}
                 whileHover={{ y: -2, transition: { duration: 0.2 } }}
-                className="group relative bg-white backdrop-blur rounded-xl border border-border p-4 cursor-default"
+                className="group relative bg-white backdrop-blur rounded-xl border border-border p-3 sm:p-4 cursor-default"
               >
                 <div
                   className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"
@@ -249,14 +249,14 @@ function HomePage(): ReactElement {
                 <motion.div
                   whileHover={{ scale: 1.1, rotate: 5 }}
                   transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-                  className="w-10 h-10 rounded-lg flex items-center justify-center mx-auto mb-2"
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center mx-auto mb-1.5 sm:mb-2"
                   style={{ backgroundColor: `${feature.color}15` }}
                 >
-                  <feature.icon className="h-5 w-5" style={{ color: feature.color }} />
+                  <feature.icon className="h-4 w-4 sm:h-5 sm:w-5" style={{ color: feature.color }} />
                 </motion.div>
-                <h3 className="text-[13px] font-semibold mb-0.5">{feature.title}</h3>
+                <h3 className="text-[12px] sm:text-[13px] font-semibold mb-0.5">{feature.title}</h3>
                 <p
-                  className={`text-[11px] ${feature.comingSoon ? 'text-amber-600' : 'text-muted-foreground'}`}
+                  className={`text-[10px] sm:text-[11px] ${feature.comingSoon ? 'text-amber-600' : 'text-muted-foreground'}`}
                 >
                   {feature.description}
                 </p>
@@ -269,20 +269,20 @@ function HomePage(): ReactElement {
             initial={{ y: 24, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.4 }}
-            className="mb-10"
+            className="mb-8 sm:mb-10"
           >
-            <p className="text-[12px] text-muted-foreground uppercase tracking-wider mb-3">
+            <p className="text-[11px] sm:text-[12px] text-muted-foreground uppercase tracking-wider mb-2 sm:mb-3">
               Minimum Requirements
             </p>
-            <div className="inline-flex items-center gap-6 px-6 py-3 bg-white rounded-xl border border-border">
+            <div className="inline-flex flex-col sm:flex-row items-center gap-2 sm:gap-6 px-4 sm:px-6 py-3 bg-white rounded-xl border border-border">
               {requirements.map((req, index) => (
                 <div key={req.label} className="flex items-center gap-2">
                   <req.icon className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-[13px]">
+                  <span className="text-[12px] sm:text-[13px]">
                     <span className="text-muted-foreground">{req.label}:</span>{' '}
                     <span className="font-medium">{req.value}</span>
                   </span>
-                  {index < requirements.length - 1 && <span className="ml-4 text-border">|</span>}
+                  {index < requirements.length - 1 && <span className="ml-4 text-border hidden sm:inline">|</span>}
                 </div>
               ))}
             </div>
