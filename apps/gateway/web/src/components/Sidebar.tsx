@@ -27,6 +27,7 @@ import {
 import { useTempo } from '@/hooks/useTempo';
 import { formatAddress, copyToClipboard, cn } from '@/lib/utils';
 import { LINKS, TIMING } from '@/lib/constants';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 interface NavItemProps {
   to: string;
@@ -42,7 +43,7 @@ function NavItem({ to, icon, label, isCollapsed }: NavItemProps): ReactElement {
     location.pathname.startsWith(to + '/') ||
     (to === '/portal/dashboard' && location.pathname === '/portal');
 
-  return (
+  const linkElement = (
     <Link
       to={to}
       className={cn(
@@ -52,7 +53,6 @@ function NavItem({ to, icon, label, isCollapsed }: NavItemProps): ReactElement {
           ? 'font-semibold bg-[#f2f2f2]'
           : 'text-slate-800 hover:text-slate-900 hover:bg-slate-100'
       )}
-      title={isCollapsed ? label : undefined}
     >
       <span
         className={cn(
@@ -65,6 +65,19 @@ function NavItem({ to, icon, label, isCollapsed }: NavItemProps): ReactElement {
       {!isCollapsed && <span className={isActive ? 'text-black' : ''}>{label}</span>}
     </Link>
   );
+
+  if (isCollapsed) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>{linkElement}</TooltipTrigger>
+        <TooltipContent side="right" sideOffset={8}>
+          {label}
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return linkElement;
 }
 
 interface SidebarProps {
@@ -156,12 +169,19 @@ export function Sidebar({
       {/* Expand button when collapsed */}
       {collapsed && (
         <div className="hidden md:block px-2 pb-2">
-          <button
-            onClick={onToggleCollapse}
-            className="h-8 w-full flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-          >
-            <PanelLeft className="w-4 h-4" />
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={onToggleCollapse}
+                className="h-8 w-full flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+              >
+                <PanelLeft className="w-4 h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={8}>
+              Expand sidebar
+            </TooltipContent>
+          </Tooltip>
         </div>
       )}
 
@@ -170,13 +190,19 @@ export function Sidebar({
         {/* Network Selector */}
         <div ref={networkDropdownRef} className={cn('relative mb-5', collapsed ? 'px-0' : 'px-0')}>
           {collapsed ? (
-            <button
-              onClick={() => setShowNetworkMenu(!showNetworkMenu)}
-              className="w-9 h-9 mx-auto flex items-center justify-center rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer"
-              title="Testnet"
-            >
-              <Globe className="w-4 h-4 text-emerald-500" />
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setShowNetworkMenu(!showNetworkMenu)}
+                  className="w-9 h-9 mx-auto flex items-center justify-center rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer"
+                >
+                  <Globe className="w-4 h-4 text-emerald-500" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right" sideOffset={8}>
+                Testnet
+              </TooltipContent>
+            </Tooltip>
           ) : (
             <button
               onClick={() => setShowNetworkMenu(!showNetworkMenu)}
@@ -352,12 +378,19 @@ export function Sidebar({
         )}
       >
         {collapsed ? (
-          <button
-            onClick={() => setShowMenu(!showMenu)}
-            className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
-          >
-            <Wallet className="w-5 h-5 text-slate-600" />
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setShowMenu(!showMenu)}
+                className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+              >
+                <Wallet className="w-5 h-5 text-slate-600" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={8}>
+              Wallet
+            </TooltipContent>
+          </Tooltip>
         ) : (
           <button
             onClick={() => setShowMenu(!showMenu)}
