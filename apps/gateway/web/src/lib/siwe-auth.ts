@@ -7,15 +7,25 @@ import type { WalletClient } from 'viem';
 import { AUTH_API_URL } from './api';
 import { saveAuthToken, type AuthToken } from './auth-storage';
 
-interface ChallengeResponse {
+interface ChallengeData {
   message: string;
   nonce: string;
   expiresAt: number;
 }
 
-interface VerifyResponse {
+interface ChallengeResponse {
+  success: boolean;
+  data: ChallengeData;
+}
+
+interface VerifyData {
   accessToken: string;
   expiresIn: number;
+}
+
+interface VerifyResponse {
+  success: boolean;
+  data: VerifyData;
 }
 
 /**
@@ -46,7 +56,8 @@ export async function signInWithEthereum(walletClient: WalletClient): Promise<Au
     throw new Error(`Failed to get challenge: ${error}`);
   }
 
-  const { message } = (await challengeResponse.json()) as ChallengeResponse;
+  const challengeResult = (await challengeResponse.json()) as ChallengeResponse;
+  const { message } = challengeResult.data;
 
   // 2. Sign message with wallet
   const signature = await walletClient.signMessage({
@@ -66,7 +77,8 @@ export async function signInWithEthereum(walletClient: WalletClient): Promise<Au
     throw new Error(`Failed to verify signature: ${error}`);
   }
 
-  const { accessToken, expiresIn } = (await verifyResponse.json()) as VerifyResponse;
+  const verifyResult = (await verifyResponse.json()) as VerifyResponse;
+  const { accessToken, expiresIn } = verifyResult.data;
 
   // 4. Store JWT
   saveAuthToken({ accessToken, expiresIn });
