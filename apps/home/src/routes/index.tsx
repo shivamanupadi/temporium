@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { type ReactElement } from 'react';
 import { motion } from 'framer-motion';
-import { Zap, Wallet, Server, ArrowRight, Twitter, CheckCircle2 } from 'lucide-react';
+import { Zap, Wallet, Server, ArrowRight, Twitter, CheckCircle2, Mail, Code2 } from 'lucide-react';
 
 export const Route = createFileRoute('/')({
   component: HomePage,
@@ -22,14 +22,23 @@ function HomePage(): ReactElement {
               Temporium
             </span>
           </div>
-          <a
-            href="https://x.com/HelloTemporium"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-slate-400 hover:text-slate-900 transition-colors"
-          >
-            <Twitter className="h-4 w-4" />
-          </a>
+          <div className="flex items-center gap-0.5 sm:gap-1">
+            <a
+              href="mailto:hello@temporium.xyz"
+              className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-[13px] font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+            >
+              <Mail className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Contact</span>
+            </a>
+            <a
+              href="https://x.com/HelloTemporium"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center w-8 h-8 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+            >
+              <Twitter className="h-4 w-4" />
+            </a>
+          </div>
         </div>
       </header>
 
@@ -177,6 +186,33 @@ function HomePage(): ReactElement {
                   </div>
                 </div>
               </a>
+
+              {/* Playground Card - Coming Soon */}
+              <div className="block">
+                <div className="relative bg-white border border-slate-200/80 rounded-xl sm:rounded-2xl p-5 sm:p-8 opacity-75">
+                  <div className="flex items-start gap-3 sm:gap-5">
+                    <div className="mt-0.5 shrink-0">
+                      <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl bg-[#10b981]/15 flex items-center justify-center">
+                        <Code2 className="w-5 h-5 sm:w-7 sm:h-7 text-[#10b981]" strokeWidth={2} />
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 sm:mb-2">
+                        <h3 className="text-base sm:text-lg font-semibold text-slate-900 tracking-tight">
+                          Playground
+                        </h3>
+                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 font-medium">
+                          Coming Soon
+                        </span>
+                      </div>
+                      <p className="text-[13px] sm:text-[15px] text-slate-600 leading-relaxed">
+                        Write, compile, and deploy Solidity contracts. Full editor with one-click
+                        deployment to Tempo.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </motion.div>
           </div>
         </div>

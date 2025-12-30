@@ -21,7 +21,8 @@ import {
   Zap,
   ChevronsUpDown,
   Key,
-  FlaskConical,
+  ChevronDown,
+  Globe,
 } from 'lucide-react';
 import { useTempo } from '@/hooks/useTempo';
 import { formatAddress, copyToClipboard, cn } from '@/lib/utils';
@@ -82,7 +83,9 @@ export function Sidebar({
   const { address, disconnect } = useTempo();
   const [copied, setCopied] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [showNetworkMenu, setShowNetworkMenu] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const networkDropdownRef = useRef<HTMLDivElement>(null);
   const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const iconSize = 'w-4 h-4';
@@ -99,10 +102,16 @@ export function Sidebar({
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setShowMenu(false);
       }
+      if (
+        networkDropdownRef.current &&
+        !networkDropdownRef.current.contains(event.target as Node)
+      ) {
+        setShowNetworkMenu(false);
+      }
     }
-    if (showMenu) document.addEventListener('mousedown', handleClickOutside);
+    if (showMenu || showNetworkMenu) document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showMenu]);
+  }, [showMenu, showNetworkMenu]);
 
   const handleCopy = async (): Promise<void> => {
     if (!address) return;
@@ -158,6 +167,72 @@ export function Sidebar({
 
       {/* Navigation */}
       <nav className={cn('flex-1 pt-4 pb-2 overflow-y-auto', collapsed ? 'px-2' : 'px-3')}>
+        {/* Network Selector */}
+        <div ref={networkDropdownRef} className={cn('relative mb-5', collapsed ? 'px-0' : 'px-0')}>
+          {collapsed ? (
+            <button
+              onClick={() => setShowNetworkMenu(!showNetworkMenu)}
+              className="w-9 h-9 mx-auto flex items-center justify-center rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer"
+              title="Testnet"
+            >
+              <Globe className="w-4 h-4 text-emerald-500" />
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowNetworkMenu(!showNetworkMenu)}
+              className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5">
+                <Globe className="w-4 h-4 text-emerald-500" />
+                <span className="text-[13px] font-medium text-slate-700">Testnet</span>
+              </div>
+              <ChevronDown
+                className={cn(
+                  'w-4 h-4 text-slate-400 transition-transform duration-200',
+                  showNetworkMenu && 'rotate-180'
+                )}
+              />
+            </button>
+          )}
+
+          {/* Network Dropdown Menu */}
+          {showNetworkMenu && (
+            <div
+              onMouseDown={e => e.stopPropagation()}
+              className={cn(
+                'absolute z-50 rounded-xl bg-white border border-slate-200 shadow-xl overflow-hidden',
+                collapsed ? 'left-full top-0 ml-2 min-w-[200px]' : 'left-0 right-0 top-full mt-2'
+              )}
+            >
+              <div className="px-2 pt-2 pb-1.5">
+                <p className="px-2 pb-2 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                  Select Network
+                </p>
+                <button
+                  onClick={() => setShowNetworkMenu(false)}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] bg-slate-50 rounded-lg border border-slate-100 cursor-pointer"
+                >
+                  <Globe className="w-4 h-4 text-emerald-500" />
+                  <span className="font-medium text-slate-800">Testnet</span>
+                  <Check className="w-4 h-4 text-emerald-500 ml-auto" />
+                </button>
+              </div>
+              <div className="px-2 pb-2">
+                <button
+                  disabled
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] text-slate-400 rounded-lg cursor-not-allowed opacity-60"
+                >
+                  <Globe className="w-4 h-4 text-slate-300" />
+                  <span>Mainnet</span>
+                  <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 font-medium">
+                    Soon
+                  </span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Main Section */}
         {!collapsed && (
           <p className="px-3 py-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
@@ -267,16 +342,6 @@ export function Sidebar({
           />
         </div>
       </nav>
-
-      {/* Testnet Indicator */}
-      {!collapsed && (
-        <div className="px-3 pb-3">
-          <div className="flex items-center gap-2.5 px-2.5">
-            <FlaskConical className="w-4 h-4 text-emerald-400" />
-            <span className="text-[12px] text-slate-400">Testnet</span>
-          </div>
-        </div>
-      )}
 
       {/* Wallet Profile */}
       <div
