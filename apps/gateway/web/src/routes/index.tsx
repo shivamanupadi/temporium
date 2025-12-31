@@ -3,7 +3,6 @@ import { useEffect, useState, type ReactElement } from 'react';
 import { motion } from 'framer-motion';
 import {
   Fingerprint,
-  Wallet,
   ArrowRight,
   Clock,
   Shield,
@@ -19,6 +18,7 @@ import {
   Mail,
   Twitter,
   HelpCircle,
+  Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -30,6 +30,70 @@ import { useTempo } from '@/hooks/useTempo';
 export const Route = createFileRoute('/')({
   component: HomePage,
 });
+
+// Features list
+const features = [
+  {
+    icon: LayoutDashboard,
+    title: 'Dashboard',
+    description: 'Overview of your wallet',
+    color: '#7c5cff',
+  },
+  {
+    icon: Send,
+    title: 'Send',
+    description: 'Transfer tokens instantly',
+    color: '#10b981',
+  },
+  {
+    icon: Download,
+    title: 'Receive',
+    description: 'Get your wallet address',
+    color: '#06b6d4',
+  },
+  {
+    icon: ArrowLeftRight,
+    title: 'Swap',
+    description: 'Exchange tokens easily',
+    color: '#f59e0b',
+  },
+  {
+    icon: Droplets,
+    title: 'Liquidity',
+    description: 'Provide liquidity & earn',
+    color: '#0ea5e9',
+  },
+  {
+    icon: Coins,
+    title: 'TIP20 Studio',
+    description: 'Create & manage tokens',
+    color: '#f97316',
+  },
+  {
+    icon: Clock,
+    title: 'Scheduled',
+    description: 'Automate transactions',
+    color: '#ec4899',
+  },
+  {
+    icon: Shield,
+    title: 'TIP403 Factory',
+    description: 'Access control policies',
+    color: '#8b5cf6',
+  },
+  {
+    icon: Key,
+    title: 'Access Keys',
+    description: 'Manage session keys',
+    color: '#eab308',
+  },
+  {
+    icon: Users,
+    title: 'Contacts',
+    description: 'Save frequent addresses',
+    color: '#a78bfa',
+  },
+];
 
 function HomePage(): ReactElement {
   const { isConnected, isConnecting, signUp, signIn, connectInjected, hasInjectedWallet } =
@@ -45,69 +109,6 @@ function HomePage(): ReactElement {
       navigate({ to: '/portal/dashboard' });
     }
   }, [isConnected, isConnecting, navigate]);
-
-  const features = [
-    {
-      icon: LayoutDashboard,
-      title: 'Dashboard',
-      description: 'Overview of your wallet',
-      color: '#7c5cff',
-    },
-    {
-      icon: Send,
-      title: 'Send',
-      description: 'Transfer tokens instantly',
-      color: '#10b981',
-    },
-    {
-      icon: Download,
-      title: 'Receive',
-      description: 'Get your wallet address',
-      color: '#06b6d4',
-    },
-    {
-      icon: ArrowLeftRight,
-      title: 'Swap',
-      description: 'Exchange tokens easily',
-      color: '#f59e0b',
-    },
-    {
-      icon: Droplets,
-      title: 'Liquidity',
-      description: 'Provide liquidity & earn',
-      color: '#0ea5e9',
-    },
-    {
-      icon: Coins,
-      title: 'TIP20 Studio',
-      description: 'Create & manage tokens',
-      color: '#f97316',
-    },
-    {
-      icon: Shield,
-      title: 'TIP403 Factory',
-      description: 'Access control policies',
-      color: '#8b5cf6',
-    },
-    {
-      icon: Clock,
-      title: 'Scheduled',
-      description: 'Sign once, execute later',
-      color: '#ec4899',
-    },
-    {
-      icon: Users,
-      title: 'Contacts',
-      description: 'Save frequent addresses',
-      color: '#a78bfa',
-    },
-    {
-      icon: Key,
-      title: 'Access Keys',
-      description: 'Manage session keys',
-      color: '#eab308',
-    },
-  ];
 
   const handleCreateWallet = async (walletName?: string): Promise<void> => {
     try {
@@ -158,13 +159,16 @@ function HomePage(): ReactElement {
     <>
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 py-4 sm:py-6">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2.5"
           >
-            <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-slate-900" strokeWidth={2} />
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full" />
+              <Zap className="relative w-5 h-5 sm:w-6 sm:h-6 text-primary" strokeWidth={2.5} />
+            </div>
             <span className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
               Temporium
               <span className="text-slate-400 font-normal hidden sm:inline"> | Gateway</span>
@@ -201,162 +205,165 @@ function HomePage(): ReactElement {
         </div>
       </div>
 
-      <main className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 pt-24 sm:pt-28 pb-8 sm:pb-12">
-        {/* Static background gradient - no animations for performance */}
+      <main className="min-h-screen flex flex-col justify-center px-4 sm:px-6 pt-20 pb-12">
+        {/* Refined background with mesh gradient effect */}
         <div className="fixed inset-0 -z-10 overflow-hidden">
-          <div className="absolute top-1/4 left-1/4 w-64 sm:w-96 h-64 sm:h-96 bg-primary/15 rounded-full blur-3xl" />
-          <div className="absolute bottom-1/4 right-1/4 w-56 sm:w-80 h-56 sm:h-80 bg-[#0073e6]/15 rounded-full blur-3xl" />
+          {/* Base gradient */}
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-50 via-white to-slate-50/80" />
+          {/* Ambient orbs */}
+          <div className="absolute top-0 left-1/4 w-[600px] h-[600px] bg-primary/8 rounded-full blur-[120px] -translate-y-1/2" />
+          <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-blue-500/6 rounded-full blur-[100px] translate-y-1/3" />
+          <div className="absolute top-1/2 right-0 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[80px] translate-x-1/2" />
+          {/* Subtle grid overlay */}
+          <div
+            className="absolute inset-0 opacity-[0.015]"
+            style={{
+              backgroundImage: `linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)`,
+              backgroundSize: '64px 64px',
+            }}
+          />
         </div>
 
-        {/* Content */}
-        <div className="max-w-4xl w-full text-center">
-          {/* Badge */}
-          <motion.div
-            initial={{ y: -16, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.05 }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white backdrop-blur border border-border shadow-sm mb-4 sm:mb-6"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-            </span>
-            <span className="text-[12px] sm:text-[13px] font-medium text-foreground">
-              Built for Tempo Blockchain
-            </span>
-          </motion.div>
-
-          {/* Heading */}
-          <motion.h1
-            initial={{ y: 16, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-3 sm:mb-4"
-          >
-            Your <span className="text-primary">Gateway</span> to
-            <br />
-            Tempo Blockchain
-          </motion.h1>
-
-          {/* Passkey Badge */}
-          <motion.div
-            initial={{ y: 16, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.12 }}
-            className="inline-flex items-center gap-2 text-[13px] sm:text-[15px] text-slate-500 mb-4 sm:mb-6"
-          >
-            <Fingerprint className="h-4 w-4 text-primary" />
-            <span>
-              powered by{' '}
-              <span className="font-medium text-slate-700">decentralised passkey wallet</span>
-            </span>
-          </motion.div>
-
-          {/* Subtitle */}
-          <motion.p
-            initial={{ y: 16, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.15 }}
-            className="text-[14px] sm:text-[16px] text-muted-foreground mb-6 sm:mb-8 max-w-lg mx-auto px-2"
-          >
-            Send, receive, swap, provide liquidity, create tokens, schedule payments, and manage
-            access. All with sub-cent fees.
-          </motion.p>
-
-          {/* CTAs */}
-          <motion.div
-            initial={{ y: 16, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-8 sm:mb-12"
-          >
-            <Button
-              size="lg"
-              onClick={() => setShowCreateWalletModal(true)}
-              isLoading={isConnecting}
-              className="group px-4 sm:px-6 text-[14px] sm:text-base"
+        {/* 2-Column Layout */}
+        <div className="max-w-6xl mx-auto w-full">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left Column - Hero Content */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
             >
-              <Wallet className="h-4 w-4" />
-              Create Wallet
-              <ArrowRight className="h-4 w-4 ml-1 opacity-60 group-hover:translate-x-0.5 transition-transform" />
-            </Button>
+              {/* Heading */}
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.03em] mb-5 sm:mb-6 leading-[1.1]">
+                <span className="text-slate-900">Your </span>
+                <span className="relative">
+                  <span className="relative z-10 text-primary">Gateway</span>
+                  <span className="absolute -inset-1 bg-primary/10 blur-2xl rounded-full" />
+                </span>
+                <span className="text-slate-900"> to</span>
+                <br />
+                <span className="text-slate-900">Tempo Blockchain</span>
+              </h1>
 
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => setShowWalletSelectModal(true)}
-              disabled={isConnecting}
-              className="px-4 sm:px-6 text-[14px] sm:text-base bg-white backdrop-blur"
-            >
-              <Fingerprint className="h-4 w-4" />
-              Sign In
-            </Button>
-          </motion.div>
+              {/* Passkey Badge */}
+              <div className="inline-flex items-center gap-2.5 text-[13px] sm:text-[15px] text-slate-600 mb-5">
+                <div className="flex items-center justify-center w-6 h-6 rounded-md bg-primary/10">
+                  <Fingerprint className="h-3.5 w-3.5 text-primary" />
+                </div>
+                <span>
+                  Powered by{' '}
+                  <span className="font-semibold text-slate-800">decentralized passkey wallet</span>
+                </span>
+              </div>
 
-          {/* Features Grid */}
-          <motion.div
-            initial={{ y: 24, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.25 }}
-            className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-2.5"
-          >
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ y: 16, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.25 + index * 0.05 }}
-                whileHover={{ y: -2, transition: { duration: 0.2 } }}
-                className="group relative bg-white backdrop-blur rounded-xl border border-border p-3 sm:p-4 cursor-default"
-              >
-                {/* Hover glow */}
-                <div
-                  className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"
-                  style={{
-                    background: `radial-gradient(circle at center, ${feature.color}15 0%, transparent 70%)`,
-                  }}
-                />
+              {/* Subtitle */}
+              <p className="text-[15px] sm:text-[17px] text-slate-500 mb-8 leading-relaxed max-w-lg">
+                Send, receive, swap, provide liquidity, create tokens, schedule payments, and manage
+                access keys. All with{' '}
+                <span className="text-slate-700 font-medium">sub-cent fees</span>.
+              </p>
 
-                {/* Icon */}
-                <motion.div
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center mx-auto mb-1.5 sm:mb-2"
-                  style={{ backgroundColor: `${feature.color}15` }}
+              {/* CTAs */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <Button
+                  size="lg"
+                  onClick={() => setShowCreateWalletModal(true)}
+                  isLoading={isConnecting}
+                  className="group relative px-7 py-6 text-[15px] font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300"
                 >
-                  <feature.icon
-                    className="h-4 w-4 sm:h-5 sm:w-5"
-                    style={{ color: feature.color }}
-                  />
-                </motion.div>
+                  <Sparkles className="h-4 w-4 mr-2 opacity-80" />
+                  Create Wallet
+                  <ArrowRight className="h-4 w-4 ml-2 opacity-60 group-hover:translate-x-1 transition-transform duration-300" />
+                </Button>
 
-                <h3 className="text-[12px] sm:text-[13px] font-semibold mb-0.5">{feature.title}</h3>
-                <p className="text-[10px] sm:text-[11px] text-muted-foreground">
-                  {feature.description}
-                </p>
-              </motion.div>
-            ))}
-          </motion.div>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={() => setShowWalletSelectModal(true)}
+                  disabled={isConnecting}
+                  className="group px-7 py-6 text-[15px] font-semibold bg-white/80 backdrop-blur-sm border-slate-200 hover:border-slate-300 hover:bg-white transition-all duration-300"
+                >
+                  <Fingerprint className="h-4 w-4 mr-2 text-slate-500 group-hover:text-primary transition-colors" />
+                  Sign In
+                </Button>
+              </div>
 
-          {/* Tempo branding */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="mt-8 sm:mt-10 flex flex-col items-center gap-3"
-          >
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <span className="text-[11px] sm:text-[12px]">Powered by</span>
-              <a
-                href="https://tempo.xyz/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[12px] sm:text-[13px] font-semibold text-foreground hover:text-primary transition-colors"
-              >
-                Tempo
-              </a>
-            </div>
-          </motion.div>
+              {/* Powered by */}
+              <div className="mt-10 flex items-center gap-3 text-slate-400">
+                <span className="text-[12px] sm:text-[13px]">Powered by</span>
+                <a
+                  href="https://tempo.xyz/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[12px] sm:text-[13px] font-bold text-slate-600 hover:text-primary transition-colors duration-300"
+                >
+                  Tempo
+                </a>
+              </div>
+            </motion.div>
+
+            {/* Right Column - Features Grid */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <div className="grid grid-cols-2 gap-3">
+                {features.map((feature, index) => (
+                  <motion.div
+                    key={feature.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.3 + index * 0.05 }}
+                    whileHover={{
+                      y: -3,
+                      transition: { duration: 0.2 },
+                    }}
+                    className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-4 cursor-default hover:border-slate-300 hover:shadow-md transition-all duration-300"
+                  >
+                    {/* Hover gradient overlay */}
+                    <div
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400"
+                      style={{
+                        background: `radial-gradient(ellipse at 50% 0%, ${feature.color}08 0%, transparent 70%)`,
+                      }}
+                    />
+
+                    {/* Top accent line */}
+                    <div
+                      className="absolute top-0 left-0 right-0 h-[2px] scale-x-0 group-hover:scale-x-100 transition-transform duration-400 origin-left"
+                      style={{ background: feature.color }}
+                    />
+
+                    {/* Content */}
+                    <div className="relative flex items-start gap-3">
+                      {/* Icon */}
+                      <div
+                        className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-105"
+                        style={{ backgroundColor: `${feature.color}12` }}
+                      >
+                        <feature.icon
+                          className="h-4.5 w-4.5"
+                          style={{ color: feature.color }}
+                          strokeWidth={1.75}
+                        />
+                      </div>
+
+                      {/* Text */}
+                      <div className="min-w-0">
+                        <h3 className="text-[13px] sm:text-[14px] font-semibold text-slate-900 mb-0.5 truncate">
+                          {feature.title}
+                        </h3>
+                        <p className="text-[11px] sm:text-[12px] text-slate-500 leading-snug">
+                          {feature.description}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
         </div>
       </main>
 

@@ -57,7 +57,7 @@ function HomePage(): ReactElement {
       icon: MousePointerClick,
       title: 'One-Click Setup',
       description: 'Get running in minutes',
-      color: '#0073e6',
+      color: '#7c5cff',
     },
     {
       icon: Activity,
@@ -102,14 +102,17 @@ function HomePage(): ReactElement {
   return (
     <>
       {/* Header */}
-      <div className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 py-4 sm:py-6 bg-white/80 backdrop-blur-sm">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
+      <div className="fixed top-0 left-0 right-0 z-50 px-4 sm:px-6 py-4 sm:py-6">
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
           <motion.div
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2.5"
           >
-            <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-slate-900" strokeWidth={2} />
+            <div className="relative">
+              <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full" />
+              <Zap className="relative w-5 h-5 sm:w-6 sm:h-6 text-primary" strokeWidth={2.5} />
+            </div>
             <span className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
               Temporium
               <span className="text-slate-400 font-normal hidden sm:inline"> | Node Manager</span>
@@ -139,153 +142,160 @@ function HomePage(): ReactElement {
         </div>
       </div>
 
-      <main className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 pt-24 sm:pt-28 pb-8 sm:pb-12">
-        {/* Content */}
-        <div className="max-w-4xl w-full text-center">
-          {/* Badge */}
-          <motion.div
-            initial={{ y: -16, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.05 }}
-            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white backdrop-blur border border-border shadow-sm mb-4 sm:mb-6"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-            </span>
-            <span className="text-[12px] sm:text-[13px] font-medium text-foreground">
-              Run Your Own Tempo RPC Node
-            </span>
-          </motion.div>
+      <main className="min-h-screen flex flex-col justify-center px-4 sm:px-6 pt-20 pb-12">
+        {/* Background */}
+        <div className="fixed inset-0 -z-10 bg-[#fafafa]" />
 
-          {/* Heading */}
-          <motion.h1
-            initial={{ y: 16, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.1 }}
-            className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-3 sm:mb-4"
-          >
-            <span className="text-primary">Node Manager</span> for
-            <br />
-            Tempo Blockchain
-          </motion.h1>
-
-          {/* Subtitle */}
-          <motion.p
-            initial={{ y: 16, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.15 }}
-            className="text-[14px] sm:text-[16px] text-muted-foreground mb-6 sm:mb-8 max-w-lg mx-auto px-2"
-          >
-            One-click deployment and real-time monitoring for your Tempo RPC node. Web dashboard and
-            snapshot sync.
-          </motion.p>
-
-          {/* CTA */}
-          <motion.div
-            initial={{ y: 16, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-wrap justify-center gap-3 mb-8 sm:mb-12"
-          >
-            <button
-              onClick={() => setShowInstallModal(true)}
-              className="group inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors cursor-pointer"
+        {/* 2-Column Layout */}
+        <div className="max-w-6xl mx-auto w-full">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+            {/* Left Column - Hero Content */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6 }}
             >
-              <Server className="h-4 w-4" />
-              Install Now
-              <ArrowRight className="h-4 w-4 opacity-60 group-hover:translate-x-0.5 transition-transform" />
-            </button>
-          </motion.div>
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm mb-6">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+                </span>
+                <span className="text-[12px] sm:text-[13px] font-medium text-slate-600">
+                  Run Your Own Tempo RPC Node
+                </span>
+              </div>
 
-          {/* Features Grid */}
-          <motion.div
-            initial={{ y: 24, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-2.5 mb-8 sm:mb-12"
-          >
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ y: 16, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                transition={{ delay: 0.3 + index * 0.05 }}
-                whileHover={{ y: -2, transition: { duration: 0.2 } }}
-                className="group relative bg-white backdrop-blur rounded-xl border border-border p-3 sm:p-4 cursor-default"
-              >
-                <div
-                  className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"
-                  style={{
-                    background: `radial-gradient(circle at center, ${feature.color}15 0%, transparent 70%)`,
-                  }}
-                />
-                <motion.div
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 17 }}
-                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center mx-auto mb-1.5 sm:mb-2"
-                  style={{ backgroundColor: `${feature.color}15` }}
+              {/* Heading */}
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-[-0.03em] mb-5 sm:mb-6 leading-[1.1]">
+                <span className="relative">
+                  <span className="relative z-10 text-primary">Node Manager</span>
+                  <span className="absolute -inset-1 bg-primary/10 blur-2xl rounded-full" />
+                </span>
+                <span className="text-slate-900"> for</span>
+                <br />
+                <span className="text-slate-900">Tempo Blockchain</span>
+              </h1>
+
+              {/* Subtitle */}
+              <p className="text-[15px] sm:text-[17px] text-slate-500 mb-8 leading-relaxed max-w-lg">
+                One-click deployment and real-time monitoring for your Tempo RPC node. Web dashboard
+                with <span className="text-slate-700 font-medium">snapshot sync</span>.
+              </p>
+
+              {/* CTAs */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+                <motion.button
+                  onClick={() => setShowInstallModal(true)}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer outline-none bg-primary text-primary-foreground hover:bg-primary/90 h-11 px-6 group relative px-7 py-6 text-[15px] font-semibold"
                 >
-                  <feature.icon
-                    className="h-4 w-4 sm:h-5 sm:w-5"
-                    style={{ color: feature.color }}
-                  />
-                </motion.div>
-                <h3 className="text-[12px] sm:text-[13px] font-semibold mb-0.5">{feature.title}</h3>
-                <p
-                  className={`text-[10px] sm:text-[11px] ${feature.comingSoon ? 'text-amber-600' : 'text-muted-foreground'}`}
-                >
-                  {feature.description}
+                  <Server className="h-4 w-4 mr-2 opacity-80" />
+                  Install Now
+                  <ArrowRight className="h-4 w-4 ml-2 opacity-60 group-hover:translate-x-1 transition-transform duration-300" />
+                </motion.button>
+              </div>
+
+              {/* Requirements */}
+              <div className="mt-8 mb-8">
+                <p className="text-[11px] sm:text-[12px] text-slate-400 uppercase tracking-wider mb-3">
+                  Minimum Requirements
                 </p>
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {/* Requirements */}
-          <motion.div
-            initial={{ y: 24, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.4 }}
-            className="mb-8 sm:mb-10"
-          >
-            <p className="text-[11px] sm:text-[12px] text-muted-foreground uppercase tracking-wider mb-2 sm:mb-3">
-              Minimum Requirements
-            </p>
-            <div className="inline-flex flex-col sm:flex-row items-center gap-2 sm:gap-6 px-4 sm:px-6 py-3 bg-white rounded-xl border border-border">
-              {requirements.map((req, index) => (
-                <div key={req.label} className="flex items-center gap-2">
-                  <req.icon className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-[12px] sm:text-[13px]">
-                    <span className="text-muted-foreground">{req.label}:</span>{' '}
-                    <span className="font-medium">{req.value}</span>
-                  </span>
-                  {index < requirements.length - 1 && (
-                    <span className="ml-4 text-border hidden sm:inline">|</span>
-                  )}
+                <div className="inline-flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6 px-4 py-3 bg-white rounded-xl border border-slate-200">
+                  {requirements.map((req, index) => (
+                    <div key={req.label} className="flex items-center gap-2">
+                      <req.icon className="h-4 w-4 text-slate-400" />
+                      <span className="text-[12px] sm:text-[13px]">
+                        <span className="text-slate-400">{req.label}:</span>{' '}
+                        <span className="font-medium text-slate-700">{req.value}</span>
+                      </span>
+                      {index < requirements.length - 1 && (
+                        <span className="ml-3 text-slate-200 hidden sm:inline">|</span>
+                      )}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </motion.div>
+              </div>
 
-          {/* Footer */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="flex flex-col items-center gap-3"
-          >
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <span className="text-[12px]">Powered by</span>
-              <a
-                href="https://tempo.xyz/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[13px] font-semibold text-foreground hover:text-primary transition-colors"
-              >
-                Tempo
-              </a>
-            </div>
-          </motion.div>
+              {/* Powered by */}
+              <div className="flex items-center gap-3 text-slate-400">
+                <span className="text-[12px] sm:text-[13px]">Powered by</span>
+                <a
+                  href="https://tempo.xyz/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[12px] sm:text-[13px] font-bold text-slate-600 hover:text-primary transition-colors duration-300"
+                >
+                  Tempo
+                </a>
+              </div>
+            </motion.div>
+
+            {/* Right Column - Features Grid */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              <div className="grid grid-cols-2 gap-3">
+                {features.map((feature, index) => (
+                  <motion.div
+                    key={feature.title}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4, delay: 0.3 + index * 0.05 }}
+                    whileHover={{
+                      y: -3,
+                      transition: { duration: 0.2 },
+                    }}
+                    className="group relative overflow-hidden rounded-xl border border-slate-200 bg-white p-4 cursor-default hover:border-slate-300 hover:shadow-md transition-all duration-300"
+                  >
+                    {/* Hover gradient overlay */}
+                    <div
+                      className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-400"
+                      style={{
+                        background: `radial-gradient(ellipse at 50% 0%, ${feature.color}08 0%, transparent 70%)`,
+                      }}
+                    />
+
+                    {/* Top accent line */}
+                    <div
+                      className="absolute top-0 left-0 right-0 h-[2px] scale-x-0 group-hover:scale-x-100 transition-transform duration-400 origin-left"
+                      style={{ background: feature.color }}
+                    />
+
+                    {/* Content */}
+                    <div className="relative flex items-start gap-3">
+                      {/* Icon */}
+                      <div
+                        className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform duration-300 group-hover:scale-105"
+                        style={{ backgroundColor: `${feature.color}12` }}
+                      >
+                        <feature.icon
+                          className="h-4.5 w-4.5"
+                          style={{ color: feature.color }}
+                          strokeWidth={1.75}
+                        />
+                      </div>
+
+                      {/* Text */}
+                      <div className="min-w-0">
+                        <h3 className="text-[13px] sm:text-[14px] font-semibold text-slate-900 mb-0.5 truncate">
+                          {feature.title}
+                        </h3>
+                        <p
+                          className={`text-[11px] sm:text-[12px] leading-snug ${feature.comingSoon ? 'text-amber-600' : 'text-slate-500'}`}
+                        >
+                          {feature.description}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          </div>
         </div>
       </main>
 
@@ -414,9 +424,11 @@ function HomePage(): ReactElement {
 
                 {/* Footer */}
                 <div className="px-6 pb-6 pt-2">
-                  <button
+                  <motion.button
                     onClick={handleCopy}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-white font-medium rounded-lg hover:bg-primary/90 transition-colors cursor-pointer"
+                    whileTap={{ scale: 0.98 }}
+                    transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-primary-foreground font-semibold rounded-lg hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all duration-300 cursor-pointer"
                   >
                     {copied ? (
                       <>
@@ -429,7 +441,7 @@ function HomePage(): ReactElement {
                         Copy Install Command
                       </>
                     )}
-                  </button>
+                  </motion.button>
                   <p className="text-[11px] text-gray-400 text-center mt-3">
                     Need help? Contact us at hello@temporium.xyz
                   </p>

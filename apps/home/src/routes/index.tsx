@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
 import { type ReactElement } from 'react';
 import { motion } from 'framer-motion';
-import { Zap, Wallet, Server, ArrowRight, Twitter, CheckCircle2, Mail, Code2 } from 'lucide-react';
+import { Zap, Wallet, Server, ArrowRight, Twitter, Mail, Code2 } from 'lucide-react';
 
 export const Route = createFileRoute('/')({
   component: HomePage,
@@ -10,224 +10,285 @@ export const Route = createFileRoute('/')({
 const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL || 'https://gateway.temporium.xyz';
 const NODE_MANAGER_URL = import.meta.env.VITE_NODE_MANAGER_URL || 'https://node.temporium.xyz';
 
+const products = [
+  {
+    id: 'gateway',
+    title: 'Gateway',
+    tagline: 'Your Wallet',
+    description:
+      'Send, receive, swap tokens, provide liquidity, and create TIP20 assets. Secured by passkeys.',
+    icon: Wallet,
+    color: '#7c5cff',
+    href: GATEWAY_URL,
+    available: true,
+  },
+  {
+    id: 'node-manager',
+    title: 'Node Manager',
+    tagline: 'Your Infrastructure',
+    description:
+      'Deploy your own Tempo RPC node. One-click setup with dashboard, snapshot sync, and monitoring.',
+    icon: Server,
+    color: '#34d399',
+    href: NODE_MANAGER_URL,
+    available: true,
+  },
+  {
+    id: 'playground',
+    title: 'Playground',
+    tagline: 'Your Studio',
+    description:
+      'Write, compile, and deploy Solidity contracts. Full editor with one-click deployment.',
+    icon: Code2,
+    color: '#f59e0b',
+    href: '#',
+    available: false,
+  },
+];
+
 function HomePage(): ReactElement {
   return (
-    <div className="min-h-screen flex flex-col bg-white">
+    <div className="min-h-screen bg-[#fafafa] text-slate-900 overflow-hidden">
+      {/* Ambient background effects */}
+      <div className="fixed inset-0 -z-10">
+        {/* Base gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-white via-slate-50/50 to-white" />
+        {/* Gradient orbs */}
+        <div className="absolute top-0 left-1/4 w-[700px] h-[700px] bg-violet-500/[0.07] rounded-full blur-[140px] -translate-y-1/2" />
+        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-blue-500/[0.05] rounded-full blur-[120px] translate-y-1/3" />
+        <div className="absolute top-1/2 right-0 w-[400px] h-[400px] bg-emerald-500/[0.04] rounded-full blur-[100px] translate-x-1/2" />
+        {/* Subtle grid */}
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px)`,
+            backgroundSize: '64px 64px',
+          }}
+        />
+      </div>
+
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-sm border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-slate-900" strokeWidth={2} />
-            <span className="text-base sm:text-lg font-bold text-slate-900 tracking-tight">
-              Temporium
-            </span>
-          </div>
-          <div className="flex items-center gap-0.5 sm:gap-1">
-            <a
-              href="mailto:hello@temporium.xyz"
-              className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 text-[13px] font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+      <header className="fixed top-0 left-0 right-0 z-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-5">
+          <div className="flex items-center justify-between">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+              className="flex items-center gap-2.5"
             >
-              <Mail className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Contact</span>
-            </a>
-            <a
-              href="https://x.com/HelloTemporium"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center w-8 h-8 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+              <div className="relative">
+                <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full" />
+                <Zap className="relative w-6 h-6 text-primary" strokeWidth={2.5} />
+              </div>
+              <span className="text-lg font-bold tracking-tight text-slate-900">Temporium</span>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5 }}
+              className="flex items-center gap-1"
             >
-              <Twitter className="h-4 w-4" />
-            </a>
+              <a
+                href="mailto:hello@temporium.xyz"
+                className="flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+              >
+                <Mail className="h-4 w-4" />
+                <span className="hidden sm:inline">Contact</span>
+              </a>
+              <a
+                href="https://x.com/HelloTemporium"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center w-9 h-9 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-all"
+              >
+                <Twitter className="h-4 w-4" />
+              </a>
+            </motion.div>
           </div>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section
-        className="relative pt-24 pb-12 sm:pt-32 sm:pb-20 md:pt-40 md:pb-28 px-4 sm:px-6 bg-white overflow-hidden"
-        style={{
-          backgroundImage: `
-            linear-gradient(to right, #f1f5f9 1px, transparent 1px),
-            linear-gradient(to bottom, #f1f5f9 1px, transparent 1px)
-          `,
-          backgroundSize: '48px 48px',
-        }}
-      >
-        <div className="max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
-            {/* Left Column - Content */}
+      {/* Main Content */}
+      <main className="relative min-h-screen flex flex-col justify-center px-4 sm:px-6 pt-24 pb-12">
+        <div className="max-w-6xl mx-auto w-full">
+          {/* Hero */}
+          <div className="text-center mb-14 sm:mb-18">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.6 }}
             >
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-slate-50 border border-slate-200 mb-6 sm:mb-8">
-                <Zap className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#7c5cff]" />
-                <span className="text-[13px] sm:text-sm font-medium text-slate-700">
-                  Built for Tempo Blockchain
+              {/* Tagline */}
+              <div className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full bg-white border border-slate-200 shadow-sm mb-8">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
+                </span>
+                <span className="text-[13px] font-medium text-slate-600">
+                  Tools for Tempo Blockchain
                 </span>
               </div>
 
               {/* Main Heading */}
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 text-slate-900 leading-[1.1] tracking-tight">
-                Your Tools for
-                <br />
-                Tempo Blockchain
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-[-0.03em] mb-6 leading-[1.05]">
+                <span className="relative inline-block">
+                  <span className="relative z-10 bg-gradient-to-r from-primary via-violet-500 to-primary bg-clip-text text-transparent">
+                    Tempo
+                  </span>
+                  <span className="absolute -inset-1 bg-primary/10 blur-2xl rounded-full" />
+                </span>
+                <span className="text-slate-900"> at Your Fingertips</span>
               </h1>
 
-              {/* Description */}
-              <p className="text-base sm:text-lg md:text-xl text-slate-600 mb-6 sm:mb-8 leading-relaxed font-light max-w-lg">
-                Everything you need to interact with Tempo. Manage your wallet or run your own
-                infrastructure node.
+              {/* Subtitle */}
+              <p className="text-lg sm:text-xl text-slate-500 max-w-2xl mx-auto leading-relaxed">
+                Everything you need to interact with Tempo blockchain.
+                <br className="hidden sm:block" />
+                Manage your wallet or run your own infrastructure.
               </p>
-
-              {/* Trust indicators */}
-              <div className="flex flex-wrap items-center gap-3 sm:gap-6 mb-8 sm:mb-10 text-[13px] sm:text-sm font-medium text-slate-700">
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#7c5cff]" />
-                  <span>Passkey Auth</span>
-                </div>
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#7c5cff]" />
-                  <span>One-Click Setup</span>
-                </div>
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#7c5cff]" />
-                  <span>Web Dashboard</span>
-                </div>
-              </div>
-
-              {/* CTA Buttons */}
-              <div className="flex flex-wrap gap-3 sm:gap-4">
-                <a
-                  href={GATEWAY_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-[#7c5cff] hover:bg-[#6b4fee] text-white px-5 sm:px-7 py-3 sm:py-3.5 rounded-lg text-[14px] sm:text-[15px] font-medium transition-colors"
-                >
-                  Open Gateway
-                  <ArrowRight className="w-4 h-4" />
-                </a>
-                <a
-                  href={NODE_MANAGER_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-900 px-5 sm:px-7 py-3 sm:py-3.5 rounded-lg text-[14px] sm:text-[15px] font-medium border-2 border-slate-200 hover:border-slate-300 transition-colors"
-                >
-                  Run a Node
-                </a>
-              </div>
             </motion.div>
+          </div>
 
-            {/* Right Column - Products Showcase */}
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.15 }}
-              className="space-y-3 sm:space-y-4"
-            >
-              {/* Gateway Card */}
-              <a
-                href={GATEWAY_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block group"
+          {/* Product Cards */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="grid md:grid-cols-3 gap-5 sm:gap-6"
+          >
+            {products.map((product, index) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
+                whileHover={product.available ? { y: -6, transition: { duration: 0.25 } } : {}}
+                className="h-full"
               >
-                <div className="relative bg-white border border-slate-200/80 rounded-xl sm:rounded-2xl p-5 sm:p-8 hover:border-slate-300 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-                  <div className="flex items-start gap-3 sm:gap-5">
-                    <div className="mt-0.5 shrink-0">
-                      <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl bg-[#7c5cff]/15 flex items-center justify-center">
-                        <Wallet className="w-5 h-5 sm:w-7 sm:h-7 text-[#7c5cff]" strokeWidth={2} />
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 sm:mb-2">
-                        <h3 className="text-base sm:text-lg font-semibold text-slate-900 tracking-tight">
-                          Gateway
-                        </h3>
-                        <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#7c5cff] group-hover:translate-x-0.5 transition-all duration-300" />
-                      </div>
-                      <p className="text-[13px] sm:text-[15px] text-slate-600 leading-relaxed">
-                        Your wallet for Tempo. Send, receive, swap tokens, provide liquidity, and
-                        create TIP20 assets.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </a>
+                {product.available ? (
+                  <a
+                    href={product.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group block h-full"
+                  >
+                    <div className="relative h-full rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 transition-all duration-300 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/60 overflow-hidden">
+                      {/* Hover gradient overlay */}
+                      <div
+                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                        style={{
+                          background: `radial-gradient(ellipse at 50% 0%, ${product.color}08 0%, transparent 70%)`,
+                        }}
+                      />
 
-              {/* Node Manager Card */}
-              <a
-                href={NODE_MANAGER_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block group"
-              >
-                <div className="relative bg-white border border-slate-200/80 rounded-xl sm:rounded-2xl p-5 sm:p-8 hover:border-slate-300 transition-all duration-300 hover:shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-                  <div className="flex items-start gap-3 sm:gap-5">
-                    <div className="mt-0.5 shrink-0">
-                      <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl bg-[#0073e6]/15 flex items-center justify-center">
-                        <Server className="w-5 h-5 sm:w-7 sm:h-7 text-[#0073e6]" strokeWidth={2} />
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 sm:mb-2">
-                        <h3 className="text-base sm:text-lg font-semibold text-slate-900 tracking-tight">
-                          Node Manager
-                        </h3>
-                        <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-[#0073e6] group-hover:translate-x-0.5 transition-all duration-300" />
-                      </div>
-                      <p className="text-[13px] sm:text-[15px] text-slate-600 leading-relaxed">
-                        Run your own Tempo RPC node. One-click deployment with web dashboard,
-                        snapshot sync, and monitoring.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </a>
+                      {/* Top accent line */}
+                      <div
+                        className="absolute top-0 left-0 right-0 h-[3px] scale-x-0 group-hover:scale-x-100 transition-transform duration-400 origin-left"
+                        style={{ background: product.color }}
+                      />
 
-              {/* Playground Card - Coming Soon */}
-              <div className="block">
-                <div className="relative bg-white border border-slate-200/80 rounded-xl sm:rounded-2xl p-5 sm:p-8 opacity-75">
-                  <div className="flex items-start gap-3 sm:gap-5">
-                    <div className="mt-0.5 shrink-0">
-                      <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl bg-[#10b981]/15 flex items-center justify-center">
-                        <Code2 className="w-5 h-5 sm:w-7 sm:h-7 text-[#10b981]" strokeWidth={2} />
+                      {/* Content */}
+                      <div className="relative">
+                        {/* Icon */}
+                        <div
+                          className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-105"
+                          style={{ backgroundColor: `${product.color}12` }}
+                        >
+                          <product.icon
+                            className="w-6 h-6 sm:w-7 sm:h-7"
+                            style={{ color: product.color }}
+                            strokeWidth={1.75}
+                          />
+                        </div>
+
+                        {/* Tagline */}
+                        <div
+                          className="text-[11px] sm:text-[12px] font-semibold uppercase tracking-widest mb-2"
+                          style={{ color: product.color }}
+                        >
+                          {product.tagline}
+                        </div>
+
+                        {/* Title */}
+                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3 tracking-tight">
+                          {product.title}
+                        </h3>
+
+                        {/* Description */}
+                        <p className="text-[14px] sm:text-[15px] text-slate-500 leading-relaxed mb-6">
+                          {product.description}
+                        </p>
+
+                        {/* CTA Button */}
+                        <div
+                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] sm:text-[14px] font-semibold text-white transition-all duration-300 group-hover:gap-3"
+                          style={{ backgroundColor: product.color }}
+                        >
+                          <span>Launch App</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </div>
                       </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 sm:mb-2">
-                        <h3 className="text-base sm:text-lg font-semibold text-slate-900 tracking-tight">
-                          Playground
+                  </a>
+                ) : (
+                  <div className="relative h-full rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 overflow-hidden">
+                    {/* Content */}
+                    <div className="relative">
+                      {/* Icon */}
+                      <div
+                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-5 opacity-50"
+                        style={{ backgroundColor: `${product.color}12` }}
+                      >
+                        <product.icon
+                          className="w-6 h-6 sm:w-7 sm:h-7"
+                          style={{ color: product.color }}
+                          strokeWidth={1.75}
+                        />
+                      </div>
+
+                      {/* Tagline */}
+                      <div
+                        className="text-[11px] sm:text-[12px] font-semibold uppercase tracking-widest mb-2 opacity-50"
+                        style={{ color: product.color }}
+                      >
+                        {product.tagline}
+                      </div>
+
+                      {/* Title with badge */}
+                      <div className="flex items-center gap-2 mb-3">
+                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight opacity-60">
+                          {product.title}
                         </h3>
-                        <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 font-medium">
+                        <span className="text-[10px] sm:text-[11px] px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 font-medium">
                           Coming Soon
                         </span>
                       </div>
-                      <p className="text-[13px] sm:text-[15px] text-slate-600 leading-relaxed">
-                        Write, compile, and deploy Solidity contracts. Full editor with one-click
-                        deployment to Tempo.
+
+                      {/* Description */}
+                      <p className="text-[14px] sm:text-[15px] text-slate-400 leading-relaxed">
+                        {product.description}
                       </p>
                     </div>
                   </div>
-                </div>
-              </div>
-            </motion.div>
-          </div>
+                )}
+              </motion.div>
+            ))}
+          </motion.div>
         </div>
-      </section>
+      </main>
 
       {/* Footer */}
-      <footer className="mt-auto px-4 sm:px-6 py-6 sm:py-8 border-t border-slate-100">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
-          <div className="flex items-center gap-2 text-slate-400">
+      <footer className="relative px-4 sm:px-6 py-6 sm:py-8 border-t border-slate-100">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-3 text-slate-400">
             <span className="text-[12px] sm:text-[13px]">Powered by</span>
             <a
               href="https://tempo.xyz/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[12px] sm:text-[13px] font-semibold text-slate-600 hover:text-slate-900 transition-colors"
+              className="text-[12px] sm:text-[13px] font-semibold text-slate-600 hover:text-primary transition-colors"
             >
               Tempo
             </a>
