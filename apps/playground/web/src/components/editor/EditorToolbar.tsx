@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 
 interface EditorToolbarProps {
   projectName: string;
+  fileName?: string;
   isCompiling: boolean;
   onCompile: () => void;
   onOpenTemplates: () => void;
@@ -15,6 +16,7 @@ interface EditorToolbarProps {
 
 export function EditorToolbar({
   projectName,
+  fileName,
   isCompiling,
   onCompile,
   onOpenTemplates,
@@ -24,6 +26,12 @@ export function EditorToolbar({
       <div className="flex items-center gap-3">
         <FileCode2 className="h-4 w-4 text-muted-foreground" />
         <span className="text-sm font-medium">{projectName}</span>
+        {fileName && (
+          <>
+            <span className="text-muted-foreground">/</span>
+            <span className="text-sm text-muted-foreground">{fileName}</span>
+          </>
+        )}
       </div>
 
       <div className="flex items-center gap-2">

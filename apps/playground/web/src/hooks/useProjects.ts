@@ -16,6 +16,10 @@ import {
   updateProjectSource,
   deleteProject,
   renameProject,
+  createFile,
+  updateFileContent,
+  renamePath,
+  deletePath,
   type Project,
 } from '@/lib/projects-storage';
 import { DEFAULT_CONTRACT } from '@/lib/constants';
@@ -119,6 +123,110 @@ export function useDeleteProject(): UseMutationResult<void, Error, string> {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: PROJECTS_KEY });
+    },
+  });
+}
+
+/**
+ * Create a new file in a project
+ */
+export function useCreateFile(): UseMutationResult<
+  void,
+  Error,
+  { projectId: string; path: string; content?: string }
+> {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      projectId,
+      path,
+      content = '',
+    }: {
+      projectId: string;
+      path: string;
+      content?: string;
+    }) => {
+      await createFile(projectId, path, content);
+    },
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: [...PROJECTS_KEY, projectId] });
+    },
+  });
+}
+
+/**
+ * Update file content
+ */
+export function useUpdateFileContent(): UseMutationResult<
+  void,
+  Error,
+  { projectId: string; path: string; content: string }
+> {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      projectId,
+      path,
+      content,
+    }: {
+      projectId: string;
+      path: string;
+      content: string;
+    }) => {
+      await updateFileContent(projectId, path, content);
+    },
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: [...PROJECTS_KEY, projectId] });
+    },
+  });
+}
+
+/**
+ * Rename a file or folder
+ */
+export function useRenamePath(): UseMutationResult<
+  void,
+  Error,
+  { projectId: string; oldPath: string; newPath: string }
+> {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      projectId,
+      oldPath,
+      newPath,
+    }: {
+      projectId: string;
+      oldPath: string;
+      newPath: string;
+    }) => {
+      await renamePath(projectId, oldPath, newPath);
+    },
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: [...PROJECTS_KEY, projectId] });
+    },
+  });
+}
+
+/**
+ * Delete a file or folder
+ */
+export function useDeletePath(): UseMutationResult<
+  void,
+  Error,
+  { projectId: string; path: string }
+> {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ projectId, path }: { projectId: string; path: string }) => {
+      await deletePath(projectId, path);
+    },
+    onSuccess: (_, { projectId }) => {
+      queryClient.invalidateQueries({ queryKey: [...PROJECTS_KEY, projectId] });
     },
   });
 }

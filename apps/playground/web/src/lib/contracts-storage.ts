@@ -13,6 +13,7 @@ export interface DeployedContract {
   deployedAt: Date;
   txHash: Hash;
   projectId?: string;
+  sourcePath?: string; // e.g., "contracts/Token.sol"
 }
 
 // Define the database

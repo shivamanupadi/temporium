@@ -25,7 +25,7 @@ export function ProjectCard({ project, onDelete }: ProjectCardProps): React.Reac
 
   return (
     <Card className="group relative transition-colors hover:bg-accent/50">
-      <Link to="/editor/$projectId" params={{ projectId: project.id }}>
+      <Link to="/portal/editor/$projectId" params={{ projectId: project.id }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <FileCode2 className="h-4 w-4" />

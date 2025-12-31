@@ -7,7 +7,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ProjectCard, ProjectEmptyState, CreateProjectModal } from '@/components/projects';
 import { useProjects, useDeleteProject } from '@/hooks/useProjects';
 
-export const Route = createFileRoute('/editor/')({
+export const Route = createFileRoute('/portal/editor/')({
   component: EditorIndexPage,
 });
 

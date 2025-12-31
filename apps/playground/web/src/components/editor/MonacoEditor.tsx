@@ -7,6 +7,7 @@ import { useRef, useCallback } from 'react';
 import Editor, { type OnMount, type Monaco } from '@monaco-editor/react';
 import type { editor } from 'monaco-editor';
 import type { CompileError } from '@/lib/compiler';
+import { registerSolidityCompletions } from '@/lib/solidity-intellisense';
 
 interface MonacoEditorProps {
   value: string;
@@ -247,31 +248,8 @@ export function MonacoEditor({
       ],
     });
 
-    // Define dark theme for Solidity
-    monaco.editor.defineTheme('solidity-dark', {
-      base: 'vs-dark',
-      inherit: true,
-      rules: [
-        { token: 'keyword', foreground: 'c586c0' },
-        { token: 'type', foreground: '4ec9b0' },
-        { token: 'string', foreground: 'ce9178' },
-        { token: 'number', foreground: 'b5cea8' },
-        { token: 'number.hex', foreground: 'b5cea8' },
-        { token: 'comment', foreground: '6a9955', fontStyle: 'italic' },
-        { token: 'operator', foreground: 'd4d4d4' },
-        { token: 'identifier', foreground: '9cdcfe' },
-      ],
-      colors: {
-        'editor.background': '#1e1e1e',
-        'editor.foreground': '#d4d4d4',
-        'editorLineNumber.foreground': '#858585',
-        'editorLineNumber.activeForeground': '#c6c6c6',
-        'editor.selectionBackground': '#264f78',
-        'editor.inactiveSelectionBackground': '#3a3d41',
-      },
-    });
-
-    monaco.editor.setTheme('solidity-dark');
+    // Register Solidity intellisense
+    registerSolidityCompletions(monaco);
   }, []);
 
   // Update error markers when errors change
@@ -332,7 +310,8 @@ export function MonacoEditor({
           renderLineHighlight: 'line',
           padding: { top: 16 },
         }}
-        theme="solidity-dark"
+        theme="vs"
+        loading={<div className="h-full w-full bg-white" />}
       />
     </div>
   );

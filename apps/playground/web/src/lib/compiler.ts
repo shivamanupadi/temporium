@@ -4,7 +4,7 @@
  */
 
 import type { Abi } from 'viem';
-import { resolveImport, prefetchImports } from './import-resolver';
+import { resolveImport, prefetchImports, resolveRelativePath } from './import-resolver';
 
 export interface CompileError {
   severity: 'error' | 'warning';
@@ -237,10 +237,15 @@ async function resolveAllImports(
 ): Promise<void> {
   const importRegex = /import\s+.*?["'](.+?)["']/g;
 
-  for (const [, content] of Object.entries(files)) {
+  for (const [filePath, content] of Object.entries(files)) {
     let match;
     while ((match = importRegex.exec(content)) !== null) {
-      const importPath = match[1];
+      let importPath = match[1];
+
+      // Resolve relative imports to absolute paths
+      if (importPath.startsWith('.') && filePath.startsWith('@')) {
+        importPath = resolveRelativePath(filePath, importPath);
+      }
 
       if (resolved.has(importPath)) continue;
       resolved.add(importPath);

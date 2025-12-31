@@ -8,7 +8,7 @@ import { AddressDisplay } from '@/components/AddressDisplay';
 import { useDeployedContracts, useDeleteDeployedContract } from '@/hooks/useDeployedContracts';
 import { getExplorerAddressUrl } from '@/lib/tempo-client';
 
-export const Route = createFileRoute('/contracts/')({
+export const Route = createFileRoute('/portal/contracts/')({
   component: ContractsIndexPage,
 });
 
@@ -58,7 +58,7 @@ function EmptyState(): React.ReactElement {
       <p className="mb-4 text-center text-sm text-muted-foreground">
         Deploy a contract from the editor to see it here
       </p>
-      <Link to="/editor" className="text-sm font-medium text-primary hover:underline">
+      <Link to="/portal/editor" className="text-sm font-medium text-primary hover:underline">
         Go to Editor
       </Link>
     </div>
@@ -97,7 +97,7 @@ function ContractCard({ contract, onDelete }: ContractCardProps): React.ReactEle
 
   return (
     <Card className="group relative transition-colors hover:bg-accent/50">
-      <Link to="/contracts/$address" params={{ address: contract.address }}>
+      <Link to="/portal/contracts/$address" params={{ address: contract.address }}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">
             <Blocks className="h-4 w-4" />

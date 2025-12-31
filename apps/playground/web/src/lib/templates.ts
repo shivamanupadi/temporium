@@ -2,11 +2,18 @@
  * Contract templates for quick start.
  */
 
+export interface TemplateFile {
+  path: string;
+  content: string;
+}
+
 export interface Template {
   id: string;
   name: string;
   description: string;
   source: string;
+  /** For multi-file templates */
+  files?: TemplateFile[];
 }
 
 export const TEMPLATES: Template[] = [
@@ -355,6 +362,90 @@ contract MyNFT is ERC721, Ownable {
     }
 }
 `,
+  },
+  {
+    id: 'import-example',
+    name: 'Import Example',
+    description: 'Demonstrates importing between local Solidity files.',
+    source: `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "./interfaces/ICounter.sol";
+
+/**
+ * @title Counter
+ * @notice Implements ICounter interface
+ */
+contract Counter is ICounter {
+    uint256 private _count;
+
+    function count() external view override returns (uint256) {
+        return _count;
+    }
+
+    function increment() external override {
+        _count += 1;
+        emit CountChanged(_count);
+    }
+
+    function decrement() external override {
+        require(_count > 0, "Counter: underflow");
+        _count -= 1;
+        emit CountChanged(_count);
+    }
+}
+`,
+    files: [
+      {
+        path: 'contracts/Counter.sol',
+        content: `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "./interfaces/ICounter.sol";
+
+/**
+ * @title Counter
+ * @notice Implements ICounter interface
+ */
+contract Counter is ICounter {
+    uint256 private _count;
+
+    function count() external view override returns (uint256) {
+        return _count;
+    }
+
+    function increment() external override {
+        _count += 1;
+        emit CountChanged(_count);
+    }
+
+    function decrement() external override {
+        require(_count > 0, "Counter: underflow");
+        _count -= 1;
+        emit CountChanged(_count);
+    }
+}
+`,
+      },
+      {
+        path: 'contracts/interfaces/ICounter.sol',
+        content: `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+/**
+ * @title ICounter
+ * @notice Interface for Counter contract
+ */
+interface ICounter {
+    event CountChanged(uint256 newCount);
+
+    function count() external view returns (uint256);
+    function increment() external;
+    function decrement() external;
+}
+`,
+      },
+    ],
   },
 ];
 

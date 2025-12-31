@@ -8,7 +8,7 @@ import { ContractInteractor } from '@/components/interact';
 import { useDeployedContract } from '@/hooks/useDeployedContracts';
 import { getExplorerAddressUrl } from '@/lib/tempo-client';
 
-export const Route = createFileRoute('/contracts/$address')({
+export const Route = createFileRoute('/portal/contracts/$address')({
   component: ContractPage,
 });
 
@@ -39,7 +39,7 @@ function ContractPage(): React.ReactElement {
         <p className="text-sm text-muted-foreground">
           This contract may have been removed from your local storage.
         </p>
-        <Button variant="outline" onClick={() => navigate({ to: '/contracts' })}>
+        <Button variant="outline" onClick={() => navigate({ to: '/portal/contracts' })}>
           Back to Contracts
         </Button>
       </div>
@@ -49,7 +49,7 @@ function ContractPage(): React.ReactElement {
   return (
     <div className="p-6">
       <Button variant="ghost" className="mb-6" asChild>
-        <Link to="/contracts">
+        <Link to="/portal/contracts">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Contracts
         </Link>

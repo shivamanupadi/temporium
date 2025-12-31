@@ -98,10 +98,10 @@
   --color-error: #df1b41;
   --color-info: #0073e6;
 
-  /* Code editor colors (dark theme for contrast) */
-  --color-editor-bg: #1e1e1e;
-  --color-editor-line: #2d2d2d;
-  --color-editor-selection: rgba(124, 92, 255, 0.3);
+  /* Code editor colors (light theme) */
+  --color-editor-bg: #ffffff;
+  --color-editor-line: #f8f8f8;
+  --color-editor-selection: rgba(124, 92, 255, 0.15);
 
   /* Shadows */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -316,11 +316,17 @@
   font-family: var(--font-sans) !important;
 }
 
-/* Monaco Editor custom styles - keep dark theme for code */
+/* Monaco Editor custom styles */
 .monaco-editor {
   border-radius: 8px;
 }
 
 .monaco-editor .margin {
+  background-color: var(--color-editor-bg) !important;
+}
+
+.monaco-editor,
+.monaco-editor .monaco-scrollable-element,
+.monaco-editor .overflow-guard {
   background-color: var(--color-editor-bg) !important;
 }

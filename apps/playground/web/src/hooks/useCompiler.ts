@@ -3,7 +3,7 @@
  * Uses React Query mutation for async compilation with caching.
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { compile, compileSource, getSolcVersion, type CompileResult } from '@/lib/compiler';
 
@@ -87,11 +87,17 @@ export function useCompiler(): UseCompilerReturn {
     [compileFilesMutation]
   );
 
+  // Use refs for stable reset function identity
+  const compileMutationRef = useRef(compileMutation);
+  const compileFilesMutationRef = useRef(compileFilesMutation);
+  compileMutationRef.current = compileMutation;
+  compileFilesMutationRef.current = compileFilesMutation;
+
   const reset = useCallback(() => {
     setResult(null);
-    compileMutation.reset();
-    compileFilesMutation.reset();
-  }, [compileMutation, compileFilesMutation]);
+    compileMutationRef.current.reset();
+    compileFilesMutationRef.current.reset();
+  }, []);
 
   return {
     compile: compileSourceCode,
