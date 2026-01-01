@@ -3,9 +3,8 @@
  */
 
 import type React from 'react';
-import { Link } from '@tanstack/react-router';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, ExternalLink, ArrowRight, X, Copy, Check, Sparkles } from 'lucide-react';
+import { CheckCircle2, ExternalLink, X, Copy, Check, Blocks } from 'lucide-react';
 import type { Address, Hash } from 'viem';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -142,20 +141,16 @@ export function DeploySuccessModal({
 
               {/* Actions */}
               <div className="px-6 pb-6 space-y-3">
-                <Button className="w-full h-11 text-[13px] font-semibold shadow-sm" asChild>
-                  <Link
-                    to="/portal/contracts/$address"
-                    params={{ address: contractAddress }}
-                    onClick={handleClose}
-                  >
-                    <Sparkles className="mr-2 h-4 w-4" />
-                    Interact with Contract
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
+                <Button
+                  className="w-full h-11 text-[13px] font-semibold shadow-sm"
+                  onClick={handleClose}
+                >
+                  <Blocks className="mr-2 h-4 w-4" />
+                  View in Contracts Panel
                 </Button>
-                <Button variant="outline" className="w-full h-10 text-[13px]" onClick={handleClose}>
-                  Continue Editing
-                </Button>
+                <p className="text-center text-[11px] text-slate-400">
+                  Interact with your contract in the panel below
+                </p>
               </div>
 
               {/* Footer */}

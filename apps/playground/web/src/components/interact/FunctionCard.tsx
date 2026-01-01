@@ -1,15 +1,14 @@
 /**
- * Card for a single contract function with inputs and outputs.
+ * Function card - Clean, modern design matching DeployPanel.
  */
 
 import type React from 'react';
 import { useState, useCallback, useMemo } from 'react';
 import { Play, Send, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import type { AbiFunction, Hash } from 'viem';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { FunctionInput, parseInputValue } from './FunctionInput';
+import { Input } from '@/components/ui/input';
+import { parseInputValue } from './FunctionInput';
 import { FunctionOutput } from './FunctionOutput';
 
 type FunctionType = 'read' | 'write';
@@ -74,28 +73,42 @@ export function FunctionCard({
   };
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="flex items-center gap-2 text-sm">
-          <span className="font-mono">{fn.name}</span>
-          <Badge variant={isRead ? 'secondary' : 'default'} className="text-xs">
+    <div className="rounded-lg border border-slate-200 bg-white overflow-hidden">
+      {/* Function Header */}
+      <div className="px-3 py-2 bg-slate-50/80 border-b border-slate-100">
+        <div className="flex items-center gap-2">
+          <code className="text-[12px] font-semibold text-slate-800">{fn.name}</code>
+          <span
+            className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
+              isRead ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'
+            }`}
+          >
             {isRead ? 'view' : 'write'}
-          </Badge>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
+          </span>
+        </div>
+      </div>
+
+      <div className="p-3 space-y-3">
         {/* Inputs */}
         {inputs.length > 0 && (
           <div className="space-y-2">
-            {inputs.map((input, index) => (
-              <FunctionInput
-                key={input.name || index}
-                input={input}
-                index={index}
-                value={inputValues[input.name || `arg${index}`] || ''}
-                onChange={value => handleInputChange(input.name || `arg${index}`, value)}
-              />
-            ))}
+            {inputs.map((input, index) => {
+              const name = input.name || `arg${index}`;
+              return (
+                <div key={name} className="space-y-1">
+                  <label className="flex items-center gap-1.5 text-[11px]">
+                    <span className="font-medium text-slate-700">{name}</span>
+                    <span className="font-mono text-slate-400">({input.type})</span>
+                  </label>
+                  <Input
+                    placeholder={getPlaceholder(input.type)}
+                    value={inputValues[name] || ''}
+                    onChange={e => handleInputChange(name, e.target.value)}
+                    className="h-8 text-[12px] bg-slate-50/50"
+                  />
+                </div>
+              );
+            })}
           </div>
         )}
 
@@ -103,52 +116,64 @@ export function FunctionCard({
         <Button
           size="sm"
           variant={isRead ? 'outline' : 'default'}
-          className="w-full"
+          className="w-full h-8 text-[12px] font-medium"
           disabled={isLoading || (!isRead && !isConnected)}
           onClick={handleExecute}
         >
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+              <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
               {isRead ? 'Calling...' : 'Sending...'}
             </>
           ) : isRead ? (
             <>
-              <Play className="mr-2 h-3 w-3" />
+              <Play className="mr-1.5 h-3 w-3" />
               Call
             </>
           ) : (
             <>
-              <Send className="mr-2 h-3 w-3" />
-              {isConnected ? 'Send Transaction' : 'Connect Wallet'}
+              <Send className="mr-1.5 h-3 w-3" />
+              {isConnected ? 'Send' : 'Connect Wallet'}
             </>
           )}
         </Button>
 
         {/* Error */}
         {error && (
-          <div className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-2 text-xs text-destructive">
-            <AlertCircle className="mt-0.5 h-3 w-3 shrink-0" />
-            <span>{error}</span>
+          <div className="flex items-start gap-2 rounded-lg bg-red-50 border border-red-100 p-2">
+            <AlertCircle className="mt-0.5 h-3 w-3 shrink-0 text-red-500" />
+            <p className="text-[11px] text-red-600 break-all">{error}</p>
           </div>
         )}
 
         {/* Read Result */}
         {result !== null && isRead && (
           <div className="space-y-1">
-            <span className="text-xs text-muted-foreground">Result:</span>
-            <FunctionOutput value={result} />
+            <span className="text-[11px] font-medium text-slate-500">Result</span>
+            <div className="rounded-lg bg-green-50 border border-green-100 p-2">
+              <FunctionOutput value={result} />
+            </div>
           </div>
         )}
 
         {/* Write Result (tx hash) */}
         {txHash && !isRead && (
-          <div className="flex items-center gap-2 rounded-md border border-green-500/30 bg-green-500/10 p-2 text-xs text-green-500">
-            <CheckCircle className="h-3 w-3 shrink-0" />
-            <span className="truncate font-mono">{txHash}</span>
+          <div className="flex items-center gap-2 rounded-lg bg-green-50 border border-green-100 p-2">
+            <CheckCircle className="h-3 w-3 shrink-0 text-green-600" />
+            <span className="truncate font-mono text-[11px] text-green-700">{txHash}</span>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
+}
+
+function getPlaceholder(type: string): string {
+  if (type === 'address') return '0x...';
+  if (type.startsWith('uint') || type.startsWith('int')) return '0';
+  if (type === 'bool') return 'true or false';
+  if (type === 'string') return 'Enter text...';
+  if (type.startsWith('bytes')) return '0x...';
+  if (type.endsWith('[]')) return 'Comma-separated';
+  return 'Enter value...';
 }

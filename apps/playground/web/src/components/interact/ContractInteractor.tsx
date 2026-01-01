@@ -1,11 +1,11 @@
 /**
- * Main contract interaction UI with tabs for read/write functions.
+ * Contract interaction UI - Clean, modern design matching DeployPanel.
  */
 
 import type React from 'react';
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import type { Abi, AbiFunction, Address, Hash } from 'viem';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Eye, Pencil } from 'lucide-react';
 import { FunctionCard } from './FunctionCard';
 import { useTempo } from '@/hooks/useTempo';
 
@@ -16,6 +16,7 @@ interface ContractInteractorProps {
 
 export function ContractInteractor({ address, abi }: ContractInteractorProps): React.ReactElement {
   const { isConnected, callContract, writeContract } = useTempo();
+  const [activeTab, setActiveTab] = useState<'read' | 'write'>('read');
 
   // Categorize functions
   const { readFunctions, writeFunctions } = useMemo(() => {
@@ -56,58 +57,68 @@ export function ContractInteractor({ address, abi }: ContractInteractorProps): R
     [address, abi, writeContract]
   );
 
+  const currentFunctions = activeTab === 'read' ? readFunctions : writeFunctions;
+
   return (
-    <Tabs defaultValue="read" className="w-full">
-      <TabsList className="grid w-full grid-cols-2">
-        <TabsTrigger value="read">Read ({readFunctions.length})</TabsTrigger>
-        <TabsTrigger value="write">Write ({writeFunctions.length})</TabsTrigger>
-      </TabsList>
+    <div className="space-y-3">
+      {/* Tab Buttons */}
+      <div className="flex gap-1 p-1 bg-slate-100 rounded-lg">
+        <button
+          onClick={() => setActiveTab('read')}
+          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all ${
+            activeTab === 'read'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          <Eye className="h-3.5 w-3.5" />
+          Read ({readFunctions.length})
+        </button>
+        <button
+          onClick={() => setActiveTab('write')}
+          className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-[12px] font-medium transition-all ${
+            activeTab === 'write'
+              ? 'bg-white text-slate-900 shadow-sm'
+              : 'text-slate-500 hover:text-slate-700'
+          }`}
+        >
+          <Pencil className="h-3.5 w-3.5" />
+          Write ({writeFunctions.length})
+        </button>
+      </div>
 
-      <TabsContent value="read" className="mt-4">
-        {readFunctions.length === 0 ? (
-          <EmptyState message="No read functions" />
-        ) : (
-          <div className="space-y-4">
-            {readFunctions.map(fn => (
-              <FunctionCard
-                key={fn.name}
-                fn={fn}
-                type="read"
-                onCall={args => handleCall(fn, args)}
-                onWrite={args => handleWrite(fn, args)}
-                isConnected={isConnected}
-              />
-            ))}
-          </div>
-        )}
-      </TabsContent>
-
-      <TabsContent value="write" className="mt-4">
-        {writeFunctions.length === 0 ? (
-          <EmptyState message="No write functions" />
-        ) : (
-          <div className="space-y-4">
-            {writeFunctions.map(fn => (
-              <FunctionCard
-                key={fn.name}
-                fn={fn}
-                type="write"
-                onCall={args => handleCall(fn, args)}
-                onWrite={args => handleWrite(fn, args)}
-                isConnected={isConnected}
-              />
-            ))}
-          </div>
-        )}
-      </TabsContent>
-    </Tabs>
+      {/* Functions List */}
+      {currentFunctions.length === 0 ? (
+        <EmptyState type={activeTab} />
+      ) : (
+        <div className="space-y-2">
+          {currentFunctions.map(fn => (
+            <FunctionCard
+              key={fn.name}
+              fn={fn}
+              type={activeTab}
+              onCall={args => handleCall(fn, args)}
+              onWrite={args => handleWrite(fn, args)}
+              isConnected={isConnected}
+            />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 
-function EmptyState({ message }: { message: string }): React.ReactElement {
+function EmptyState({ type }: { type: 'read' | 'write' }): React.ReactElement {
   return (
-    <div className="flex h-32 items-center justify-center rounded-lg border border-dashed text-sm text-muted-foreground">
-      {message}
+    <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50/50 p-4">
+      <div className="flex flex-col items-center text-center">
+        {type === 'read' ? (
+          <Eye className="h-5 w-5 text-slate-300 mb-2" />
+        ) : (
+          <Pencil className="h-5 w-5 text-slate-300 mb-2" />
+        )}
+        <p className="text-[12px] text-slate-500">No {type} functions</p>
+      </div>
     </div>
   );
 }

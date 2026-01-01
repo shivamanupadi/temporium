@@ -45,7 +45,7 @@ export function CreateProjectModal({
     const project = await createProject.mutateAsync({ name: name.trim() });
     setName('');
     onOpenChange(false);
-    navigate({ to: '/portal/editor/$projectId', params: { projectId: project.id } });
+    navigate({ to: '/portal/$projectId/editor', params: { projectId: project.id } });
   };
 
   const isValidName = name.trim().length > 0;

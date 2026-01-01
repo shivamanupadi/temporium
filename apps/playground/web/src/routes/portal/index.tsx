@@ -7,11 +7,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ProjectCard, ProjectEmptyState, CreateProjectModal } from '@/components/projects';
 import { useProjects, useDeleteProject } from '@/hooks/useProjects';
 
-export const Route = createFileRoute('/portal/editor/')({
-  component: EditorIndexPage,
+export const Route = createFileRoute('/portal/')({
+  component: PortalIndexPage,
 });
 
-function EditorIndexPage(): React.ReactElement {
+function PortalIndexPage(): React.ReactElement {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const { data: projects, isLoading } = useProjects();
   const deleteProject = useDeleteProject();

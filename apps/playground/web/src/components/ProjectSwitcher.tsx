@@ -48,13 +48,13 @@ export function ProjectSwitcher({ onNewProject }: ProjectSwitcherProps): React.R
     if (!confirm(`Delete project "${name}"?`)) return;
     await deleteProject.mutateAsync(id);
     if (projectId === id) {
-      navigate({ to: '/portal/editor' });
+      navigate({ to: '/portal' });
     }
   };
 
   const handleSelect = (id: string): void => {
     setIsOpen(false);
-    navigate({ to: '/portal/editor/$projectId', params: { projectId: id } });
+    navigate({ to: '/portal/$projectId/editor', params: { projectId: id } });
   };
 
   const startEditing = (id: string, name: string, e: React.MouseEvent): void => {

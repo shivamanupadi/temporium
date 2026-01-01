@@ -172,7 +172,7 @@ function LandingPage(): React.ReactElement {
                   asChild
                   className="group relative px-7 py-6 text-[15px] font-semibold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300"
                 >
-                  <a href="/portal/editor">
+                  <a href="/portal">
                     <Sparkles className="h-4 w-4 mr-2 opacity-80" />
                     Start Building
                     <ArrowRight className="h-4 w-4 ml-2 opacity-60 group-hover:translate-x-1 transition-transform duration-300" />

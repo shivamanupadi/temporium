@@ -11,13 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root';
 import { Route as PortalRouteImport } from './routes/portal';
 import { Route as IndexRouteImport } from './routes/index';
-import { Route as PortalEditorRouteImport } from './routes/portal/editor';
-import { Route as PortalContractsRouteImport } from './routes/portal/contracts';
-import { Route as PortalEditorIndexRouteImport } from './routes/portal/editor.index';
-import { Route as PortalContractsIndexRouteImport } from './routes/portal/contracts.index';
-import { Route as PortalEditorNewRouteImport } from './routes/portal/editor.new';
-import { Route as PortalEditorProjectIdRouteImport } from './routes/portal/editor.$projectId';
-import { Route as PortalContractsAddressRouteImport } from './routes/portal/contracts.$address';
+import { Route as PortalIndexRouteImport } from './routes/portal/index';
+import { Route as PortalProjectIdEditorRouteImport } from './routes/portal/$projectId.editor';
 
 const PortalRoute = PortalRouteImport.update({
   id: '/portal',
@@ -29,106 +24,41 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any);
-const PortalEditorRoute = PortalEditorRouteImport.update({
-  id: '/editor',
-  path: '/editor',
-  getParentRoute: () => PortalRoute,
-} as any);
-const PortalContractsRoute = PortalContractsRouteImport.update({
-  id: '/contracts',
-  path: '/contracts',
-  getParentRoute: () => PortalRoute,
-} as any);
-const PortalEditorIndexRoute = PortalEditorIndexRouteImport.update({
+const PortalIndexRoute = PortalIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => PortalEditorRoute,
+  getParentRoute: () => PortalRoute,
 } as any);
-const PortalContractsIndexRoute = PortalContractsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => PortalContractsRoute,
-} as any);
-const PortalEditorNewRoute = PortalEditorNewRouteImport.update({
-  id: '/new',
-  path: '/new',
-  getParentRoute: () => PortalEditorRoute,
-} as any);
-const PortalEditorProjectIdRoute = PortalEditorProjectIdRouteImport.update({
-  id: '/$projectId',
-  path: '/$projectId',
-  getParentRoute: () => PortalEditorRoute,
-} as any);
-const PortalContractsAddressRoute = PortalContractsAddressRouteImport.update({
-  id: '/$address',
-  path: '/$address',
-  getParentRoute: () => PortalContractsRoute,
+const PortalProjectIdEditorRoute = PortalProjectIdEditorRouteImport.update({
+  id: '/$projectId/editor',
+  path: '/$projectId/editor',
+  getParentRoute: () => PortalRoute,
 } as any);
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute;
   '/portal': typeof PortalRouteWithChildren;
-  '/portal/contracts': typeof PortalContractsRouteWithChildren;
-  '/portal/editor': typeof PortalEditorRouteWithChildren;
-  '/portal/contracts/$address': typeof PortalContractsAddressRoute;
-  '/portal/editor/$projectId': typeof PortalEditorProjectIdRoute;
-  '/portal/editor/new': typeof PortalEditorNewRoute;
-  '/portal/contracts/': typeof PortalContractsIndexRoute;
-  '/portal/editor/': typeof PortalEditorIndexRoute;
+  '/portal/': typeof PortalIndexRoute;
+  '/portal/$projectId/editor': typeof PortalProjectIdEditorRoute;
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute;
-  '/portal': typeof PortalRouteWithChildren;
-  '/portal/contracts/$address': typeof PortalContractsAddressRoute;
-  '/portal/editor/$projectId': typeof PortalEditorProjectIdRoute;
-  '/portal/editor/new': typeof PortalEditorNewRoute;
-  '/portal/contracts': typeof PortalContractsIndexRoute;
-  '/portal/editor': typeof PortalEditorIndexRoute;
+  '/portal': typeof PortalIndexRoute;
+  '/portal/$projectId/editor': typeof PortalProjectIdEditorRoute;
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport;
   '/': typeof IndexRoute;
   '/portal': typeof PortalRouteWithChildren;
-  '/portal/contracts': typeof PortalContractsRouteWithChildren;
-  '/portal/editor': typeof PortalEditorRouteWithChildren;
-  '/portal/contracts/$address': typeof PortalContractsAddressRoute;
-  '/portal/editor/$projectId': typeof PortalEditorProjectIdRoute;
-  '/portal/editor/new': typeof PortalEditorNewRoute;
-  '/portal/contracts/': typeof PortalContractsIndexRoute;
-  '/portal/editor/': typeof PortalEditorIndexRoute;
+  '/portal/': typeof PortalIndexRoute;
+  '/portal/$projectId/editor': typeof PortalProjectIdEditorRoute;
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths:
-    | '/'
-    | '/portal'
-    | '/portal/contracts'
-    | '/portal/editor'
-    | '/portal/contracts/$address'
-    | '/portal/editor/$projectId'
-    | '/portal/editor/new'
-    | '/portal/contracts/'
-    | '/portal/editor/';
+  fullPaths: '/' | '/portal' | '/portal/' | '/portal/$projectId/editor';
   fileRoutesByTo: FileRoutesByTo;
-  to:
-    | '/'
-    | '/portal'
-    | '/portal/contracts/$address'
-    | '/portal/editor/$projectId'
-    | '/portal/editor/new'
-    | '/portal/contracts'
-    | '/portal/editor';
-  id:
-    | '__root__'
-    | '/'
-    | '/portal'
-    | '/portal/contracts'
-    | '/portal/editor'
-    | '/portal/contracts/$address'
-    | '/portal/editor/$projectId'
-    | '/portal/editor/new'
-    | '/portal/contracts/'
-    | '/portal/editor/';
+  to: '/' | '/portal' | '/portal/$projectId/editor';
+  id: '__root__' | '/' | '/portal' | '/portal/' | '/portal/$projectId/editor';
   fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
@@ -152,94 +82,31 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport;
       parentRoute: typeof rootRouteImport;
     };
-    '/portal/editor': {
-      id: '/portal/editor';
-      path: '/editor';
-      fullPath: '/portal/editor';
-      preLoaderRoute: typeof PortalEditorRouteImport;
+    '/portal/': {
+      id: '/portal/';
+      path: '/';
+      fullPath: '/portal/';
+      preLoaderRoute: typeof PortalIndexRouteImport;
       parentRoute: typeof PortalRoute;
     };
-    '/portal/contracts': {
-      id: '/portal/contracts';
-      path: '/contracts';
-      fullPath: '/portal/contracts';
-      preLoaderRoute: typeof PortalContractsRouteImport;
+    '/portal/$projectId/editor': {
+      id: '/portal/$projectId/editor';
+      path: '/$projectId/editor';
+      fullPath: '/portal/$projectId/editor';
+      preLoaderRoute: typeof PortalProjectIdEditorRouteImport;
       parentRoute: typeof PortalRoute;
-    };
-    '/portal/editor/': {
-      id: '/portal/editor/';
-      path: '/';
-      fullPath: '/portal/editor/';
-      preLoaderRoute: typeof PortalEditorIndexRouteImport;
-      parentRoute: typeof PortalEditorRoute;
-    };
-    '/portal/contracts/': {
-      id: '/portal/contracts/';
-      path: '/';
-      fullPath: '/portal/contracts/';
-      preLoaderRoute: typeof PortalContractsIndexRouteImport;
-      parentRoute: typeof PortalContractsRoute;
-    };
-    '/portal/editor/new': {
-      id: '/portal/editor/new';
-      path: '/new';
-      fullPath: '/portal/editor/new';
-      preLoaderRoute: typeof PortalEditorNewRouteImport;
-      parentRoute: typeof PortalEditorRoute;
-    };
-    '/portal/editor/$projectId': {
-      id: '/portal/editor/$projectId';
-      path: '/$projectId';
-      fullPath: '/portal/editor/$projectId';
-      preLoaderRoute: typeof PortalEditorProjectIdRouteImport;
-      parentRoute: typeof PortalEditorRoute;
-    };
-    '/portal/contracts/$address': {
-      id: '/portal/contracts/$address';
-      path: '/$address';
-      fullPath: '/portal/contracts/$address';
-      preLoaderRoute: typeof PortalContractsAddressRouteImport;
-      parentRoute: typeof PortalContractsRoute;
     };
   }
 }
 
-interface PortalContractsRouteChildren {
-  PortalContractsAddressRoute: typeof PortalContractsAddressRoute;
-  PortalContractsIndexRoute: typeof PortalContractsIndexRoute;
-}
-
-const PortalContractsRouteChildren: PortalContractsRouteChildren = {
-  PortalContractsAddressRoute: PortalContractsAddressRoute,
-  PortalContractsIndexRoute: PortalContractsIndexRoute,
-};
-
-const PortalContractsRouteWithChildren = PortalContractsRoute._addFileChildren(
-  PortalContractsRouteChildren
-);
-
-interface PortalEditorRouteChildren {
-  PortalEditorProjectIdRoute: typeof PortalEditorProjectIdRoute;
-  PortalEditorNewRoute: typeof PortalEditorNewRoute;
-  PortalEditorIndexRoute: typeof PortalEditorIndexRoute;
-}
-
-const PortalEditorRouteChildren: PortalEditorRouteChildren = {
-  PortalEditorProjectIdRoute: PortalEditorProjectIdRoute,
-  PortalEditorNewRoute: PortalEditorNewRoute,
-  PortalEditorIndexRoute: PortalEditorIndexRoute,
-};
-
-const PortalEditorRouteWithChildren = PortalEditorRoute._addFileChildren(PortalEditorRouteChildren);
-
 interface PortalRouteChildren {
-  PortalContractsRoute: typeof PortalContractsRouteWithChildren;
-  PortalEditorRoute: typeof PortalEditorRouteWithChildren;
+  PortalIndexRoute: typeof PortalIndexRoute;
+  PortalProjectIdEditorRoute: typeof PortalProjectIdEditorRoute;
 }
 
 const PortalRouteChildren: PortalRouteChildren = {
-  PortalContractsRoute: PortalContractsRouteWithChildren,
-  PortalEditorRoute: PortalEditorRouteWithChildren,
+  PortalIndexRoute: PortalIndexRoute,
+  PortalProjectIdEditorRoute: PortalProjectIdEditorRoute,
 };
 
 const PortalRouteWithChildren = PortalRoute._addFileChildren(PortalRouteChildren);

@@ -11,6 +11,7 @@ import {
   FileTree,
 } from '@/components/editor';
 import { DeployPanel, DeploySuccessModal } from '@/components/deploy';
+import { ContractsPanel } from '@/components/interact/ContractsPanel';
 import {
   useProject,
   useCreateFile,
@@ -25,7 +26,7 @@ import { getTemplate } from '@/lib/templates';
 import { filesToMap } from '@/lib/projects-storage';
 import type { CompiledContract } from '@/lib/compiler';
 
-export const Route = createFileRoute('/portal/editor/$projectId')({
+export const Route = createFileRoute('/portal/$projectId/editor')({
   component: EditorPage,
 });
 
@@ -286,10 +287,7 @@ function EditorPage(): React.ReactElement {
     return (
       <div className="flex h-full flex-col items-center justify-center gap-4">
         <div className="text-muted-foreground">Project not found</div>
-        <button
-          className="text-primary underline"
-          onClick={() => navigate({ to: '/portal/editor' })}
-        >
+        <button className="text-primary underline" onClick={() => navigate({ to: '/portal' })}>
           Back to projects
         </button>
       </div>
@@ -365,6 +363,12 @@ function EditorPage(): React.ReactElement {
             </div>
           </>
         )}
+
+        {/* Contracts Panel */}
+        <div className="mx-4 border-t border-slate-200" />
+        <div className="p-4">
+          <ContractsPanel projectId={projectId} />
+        </div>
       </div>
 
       {/* Modals */}
