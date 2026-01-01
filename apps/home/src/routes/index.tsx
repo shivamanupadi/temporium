@@ -1,7 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { type ReactElement } from 'react';
-import { motion } from 'framer-motion';
-import { Zap, Wallet, Server, ArrowRight, Twitter, Mail, Code2 } from 'lucide-react';
+import { useState, type ReactElement } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Zap, Wallet, Server, ArrowRight, Twitter, Mail, Code2, X } from 'lucide-react';
 
 export const Route = createFileRoute('/')({
   component: HomePage,
@@ -29,9 +29,9 @@ const products = [
     description:
       'Deploy your own Tempo RPC node. One-click setup with dashboard, snapshot sync, and monitoring.',
     icon: Server,
-    color: '#34d399',
+    color: '#fb7185',
     href: NODE_MANAGER_URL,
-    available: true,
+    available: false,
   },
   {
     id: 'playground',
@@ -40,13 +40,15 @@ const products = [
     description:
       'Write, compile, and deploy Solidity contracts. Full editor with one-click deployment.',
     icon: Code2,
-    color: '#f59e0b',
+    color: '#34d399',
     href: '#',
     available: false,
   },
 ];
 
 function HomePage(): ReactElement {
+  const [selectedProduct, setSelectedProduct] = useState<(typeof products)[number] | null>(null);
+
   return (
     <div className="min-h-screen bg-[#fafafa] text-slate-900 overflow-hidden">
       {/* Ambient background effects */}
@@ -111,7 +113,7 @@ function HomePage(): ReactElement {
       </header>
 
       {/* Main Content */}
-      <main className="relative min-h-screen flex flex-col justify-center px-4 sm:px-6 pt-24 pb-12">
+      <main className="relative min-h-screen flex flex-col justify-center px-4 sm:px-6 pt-28 sm:pt-32 pb-12">
         <div className="max-w-6xl mx-auto w-full">
           {/* Hero */}
           <div className="text-center mb-14 sm:mb-18">
@@ -164,7 +166,7 @@ function HomePage(): ReactElement {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.3 + index * 0.1 }}
-                whileHover={product.available ? { y: -6, transition: { duration: 0.25 } } : {}}
+                whileHover={{ y: -6, transition: { duration: 0.25 } }}
                 className="h-full"
               >
                 {product.available ? (
@@ -233,45 +235,68 @@ function HomePage(): ReactElement {
                     </div>
                   </a>
                 ) : (
-                  <div className="relative h-full rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 overflow-hidden">
-                    {/* Content */}
-                    <div className="relative">
-                      {/* Icon */}
+                  <button
+                    onClick={() => setSelectedProduct(product)}
+                    className="group block h-full w-full text-left cursor-pointer"
+                  >
+                    <div className="relative h-full rounded-2xl bg-white border border-slate-200 p-6 sm:p-8 transition-all duration-300 hover:border-slate-300 hover:shadow-xl hover:shadow-slate-200/60 overflow-hidden">
+                      {/* Hover gradient overlay */}
                       <div
-                        className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-5 opacity-50"
-                        style={{ backgroundColor: `${product.color}12` }}
-                      >
-                        <product.icon
-                          className="w-6 h-6 sm:w-7 sm:h-7"
+                        className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                        style={{
+                          background: `radial-gradient(ellipse at 50% 0%, ${product.color}08 0%, transparent 70%)`,
+                        }}
+                      />
+
+                      {/* Top accent line */}
+                      <div
+                        className="absolute top-0 left-0 right-0 h-[3px] scale-x-0 group-hover:scale-x-100 transition-transform duration-400 origin-left"
+                        style={{ background: product.color }}
+                      />
+
+                      {/* Content */}
+                      <div className="relative">
+                        {/* Icon */}
+                        <div
+                          className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl flex items-center justify-center mb-5 transition-transform duration-300 group-hover:scale-105"
+                          style={{ backgroundColor: `${product.color}12` }}
+                        >
+                          <product.icon
+                            className="w-6 h-6 sm:w-7 sm:h-7"
+                            style={{ color: product.color }}
+                            strokeWidth={1.75}
+                          />
+                        </div>
+
+                        {/* Tagline */}
+                        <div
+                          className="text-[11px] sm:text-[12px] font-semibold uppercase tracking-widest mb-2"
                           style={{ color: product.color }}
-                          strokeWidth={1.75}
-                        />
-                      </div>
+                        >
+                          {product.tagline}
+                        </div>
 
-                      {/* Tagline */}
-                      <div
-                        className="text-[11px] sm:text-[12px] font-semibold uppercase tracking-widest mb-2 opacity-50"
-                        style={{ color: product.color }}
-                      >
-                        {product.tagline}
-                      </div>
-
-                      {/* Title with badge */}
-                      <div className="flex items-center gap-2 mb-3">
-                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight opacity-60">
+                        {/* Title */}
+                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3 tracking-tight">
                           {product.title}
                         </h3>
-                        <span className="text-[10px] sm:text-[11px] px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 font-medium">
-                          Coming Soon
-                        </span>
-                      </div>
 
-                      {/* Description */}
-                      <p className="text-[14px] sm:text-[15px] text-slate-400 leading-relaxed">
-                        {product.description}
-                      </p>
+                        {/* Description */}
+                        <p className="text-[14px] sm:text-[15px] text-slate-500 leading-relaxed mb-6">
+                          {product.description}
+                        </p>
+
+                        {/* CTA Button */}
+                        <div
+                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] sm:text-[14px] font-semibold text-white transition-all duration-300 group-hover:gap-3"
+                          style={{ backgroundColor: product.color }}
+                        >
+                          <span>Launch App</span>
+                          <ArrowRight className="w-4 h-4" />
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  </button>
                 )}
               </motion.div>
             ))}
@@ -296,6 +321,79 @@ function HomePage(): ReactElement {
           <div className="text-[12px] sm:text-[13px] text-slate-400">Fast, secure, and simple.</div>
         </div>
       </footer>
+
+      {/* Coming Soon Modal */}
+      <AnimatePresence>
+        {selectedProduct && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.1, ease: 'easeOut' }}
+              onClick={() => setSelectedProduct(null)}
+              className="fixed inset-0 bg-black/50 z-50"
+            />
+
+            {/* Modal */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.1, ease: 'easeOut' }}
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[380px] z-50 px-4"
+            >
+              <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 pt-5 pb-3">
+                  <h2 className="text-[15px] font-semibold text-gray-900">
+                    {selectedProduct.title}
+                  </h2>
+                  <button
+                    onClick={() => setSelectedProduct(null)}
+                    className="p-1 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                  >
+                    <X className="h-4 w-4 text-gray-400" />
+                  </button>
+                </div>
+
+                {/* Content */}
+                <div className="px-5 pb-5">
+                  <div className="flex items-center gap-4 p-4 rounded-xl bg-gray-50 mb-4">
+                    <div
+                      className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+                      style={{ backgroundColor: `${selectedProduct.color}15` }}
+                    >
+                      <selectedProduct.icon
+                        className="h-6 w-6"
+                        style={{ color: selectedProduct.color }}
+                      />
+                    </div>
+                    <div>
+                      <div className="text-[13px] font-semibold text-gray-900 mb-0.5">
+                        Coming Soon
+                      </div>
+                      <p className="text-[12px] text-gray-500">{selectedProduct.description}</p>
+                    </div>
+                  </div>
+
+                  <a
+                    href="https://x.com/HelloTemporium"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full py-2.5 px-4 text-white text-[13px] font-semibold rounded-xl transition-opacity hover:opacity-90"
+                    style={{ backgroundColor: selectedProduct.color }}
+                  >
+                    <Twitter className="h-4 w-4" />
+                    Follow for Updates
+                  </a>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
