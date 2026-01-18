@@ -16,6 +16,7 @@ import {
   ArrowRight,
   Sparkles,
   Zap,
+  History,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
@@ -409,6 +410,27 @@ function HomePage(): ReactElement {
               )}
             </div>
           )}
+        </motion.div>
+
+        {/* Activity */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+          className="bg-white border border-border/50 rounded-2xl p-4 shadow-sm"
+        >
+          <Link to="/activity" className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                <History className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm">Activity</h3>
+                <p className="text-xs text-muted-foreground">View transaction history</p>
+              </div>
+            </div>
+            <ArrowUpRight className="w-4 h-4 text-muted-foreground" />
+          </Link>
         </motion.div>
 
         {/* Info */}

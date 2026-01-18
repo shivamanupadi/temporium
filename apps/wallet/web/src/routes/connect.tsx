@@ -1,4 +1,4 @@
-import { type ReactElement, useState, useEffect, useCallback } from 'react';
+import { type ReactElement, useState, useEffect, useCallback, useRef } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
 import {
@@ -12,6 +12,7 @@ import {
   ArrowRight,
   Wallet,
   RefreshCw,
+  Clock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ import { CreateWalletModal } from '@/components/CreateWalletModal';
 import { WalletSelectModal } from '@/components/WalletSelectModal';
 import { useTempo } from '@/hooks/useTempo';
 import { tempoChain } from '@/lib/tempo-client';
+import { TIMING } from '@/lib/constants';
 import {
   parseMessage,
   sendResponse,
@@ -47,13 +49,17 @@ function ConnectPage(): ReactElement {
   } = useTempo();
 
   const [pendingRequest, setPendingRequest] = useState<PendingRequest | null>(null);
-  const [status, setStatus] = useState<'waiting' | 'processing' | 'success' | 'error' | 'rejected'>('waiting');
+  const [status, setStatus] = useState<'waiting' | 'processing' | 'success' | 'error' | 'rejected' | 'timeout'>('waiting');
   const [error, setError] = useState<string | null>(null);
   const [sourceWindow, setSourceWindow] = useState<Window | null>(null);
   const [sourceOrigin, setSourceOrigin] = useState<string | null>(null);
   const [showCreateWalletModal, setShowCreateWalletModal] = useState(false);
   const [showWalletSelectModal, setShowWalletSelectModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<'connect' | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
+
+  // Timer ref for cleanup
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const completeConnection = useCallback(
     async (request: ConnectRequest, walletAddress: string) => {
@@ -142,6 +148,96 @@ function ConnectPage(): ReactElement {
       completeConnection(pendingRequest.request as ConnectRequest, address);
     }
   }, [isConnected, address, pendingAction, pendingRequest, isConnecting, completeConnection]);
+
+  // Request timeout countdown
+  useEffect(() => {
+    if (!pendingRequest || status !== 'waiting') {
+      // Clear timer if no request or not in waiting state
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      setTimeRemaining(null);
+      return;
+    }
+
+    // Start countdown
+    const timeoutMs = TIMING.CONNECTION_TIMEOUT_MS;
+    const endTime = Date.now() + timeoutMs;
+    setTimeRemaining(Math.ceil(timeoutMs / 1000));
+
+    timerRef.current = setInterval(() => {
+      const remaining = Math.ceil((endTime - Date.now()) / 1000);
+      if (remaining <= 0) {
+        // Timeout expired
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        setTimeRemaining(0);
+        setStatus('timeout');
+
+        // Send timeout response
+        if (sourceWindow && sourceOrigin && pendingRequest) {
+          const response = rejectConnect(
+            pendingRequest.request as ConnectRequest,
+            'Request timed out'
+          );
+          sendResponse(sourceOrigin, response, sourceWindow);
+        }
+
+        // Close window after delay
+        setTimeout(() => window.close(), 2000);
+      } else {
+        setTimeRemaining(remaining);
+      }
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [pendingRequest, status, sourceWindow, sourceOrigin]);
+
+  // Keyboard shortcuts (Enter to approve, Escape to reject)
+  useEffect(() => {
+    if (!pendingRequest || status !== 'waiting') return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if modal is open or user is typing
+      if (showCreateWalletModal || showWalletSelectModal) return;
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      if (e.key === 'Enter' && isConnected && address) {
+        e.preventDefault();
+        completeConnection(pendingRequest.request as ConnectRequest, address);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        const request = pendingRequest.request as ConnectRequest;
+        const response = rejectConnect(request, 'User rejected connection');
+        if (sourceWindow && sourceOrigin) {
+          sendResponse(sourceOrigin, response, sourceWindow);
+        }
+        setStatus('rejected');
+        setTimeout(() => window.close(), 1000);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    pendingRequest,
+    status,
+    isConnected,
+    address,
+    showCreateWalletModal,
+    showWalletSelectModal,
+    sourceWindow,
+    sourceOrigin,
+    completeConnection,
+  ]);
 
   const handleApprove = useCallback(() => {
     if (!pendingRequest || !sourceOrigin) return;
@@ -305,6 +401,29 @@ function ConnectPage(): ReactElement {
     );
   }
 
+  // Timeout state
+  if (status === 'timeout') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-sm"
+        >
+          <div className="bg-white border border-border/50 rounded-2xl p-8 text-center shadow-sm">
+            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-6">
+              <Clock className="w-8 h-8 text-gray-600" />
+            </div>
+            <h1 className="text-xl font-semibold mb-2">Request Timed Out</h1>
+            <p className="text-sm text-muted-foreground">
+              The connection request from {pendingRequest?.appInfo.name || 'the app'} has expired
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
   // Error state (actual error occurred)
   if (status === 'error') {
     return (
@@ -425,6 +544,21 @@ function ConnectPage(): ReactElement {
               )}
             </div>
 
+            {/* Timeout Countdown */}
+            {timeRemaining !== null && timeRemaining > 0 && (
+              <div className="px-6 pb-3">
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>
+                    Request expires in{' '}
+                    <span className={timeRemaining <= 10 ? 'text-amber-600 font-medium' : ''}>
+                      {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
+                    </span>
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* Actions */}
             <div className="p-6 pt-0 flex gap-3">
               <Button
@@ -451,6 +585,20 @@ function ConnectPage(): ReactElement {
                 )}
               </Button>
             </div>
+
+            {/* Keyboard hints */}
+            {isConnected && status === 'waiting' && (
+              <div className="px-6 pb-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Enter</kbd>
+                  <span>to connect</span>
+                </span>
+                <span className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Esc</kbd>
+                  <span>to reject</span>
+                </span>
+              </div>
+            )}
           </div>
         </motion.div>
       </div>

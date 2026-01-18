@@ -162,3 +162,30 @@ export interface PendingRequest {
  * Transaction modal states
  */
 export type TransactionModalState = 'confirm' | 'pending' | 'success' | null;
+
+/**
+ * Activity/History types
+ */
+export type ActivityType =
+  | 'connect'
+  | 'sign_message'
+  | 'send_payment'
+  | 'send_scheduled_payment'
+  | 'swap_tokens'
+  | 'add_liquidity'
+  | 'remove_liquidity'
+  | 'send_transaction';
+
+export type ActivityStatus = 'success' | 'failed' | 'rejected' | 'timeout';
+
+export interface ActivityItem {
+  id: string;
+  type: ActivityType;
+  status: ActivityStatus;
+  timestamp: number;
+  appName: string;
+  appUrl: string;
+  appIcon?: string;
+  txHash?: Hash;
+  details?: Record<string, unknown>;
+}

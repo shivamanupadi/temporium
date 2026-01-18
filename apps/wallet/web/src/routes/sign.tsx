@@ -23,6 +23,7 @@ import {
   Fingerprint,
   Sparkles,
   RefreshCw,
+  Timer,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -30,7 +31,7 @@ import { CreateWalletModal } from '@/components/CreateWalletModal';
 import { WalletSelectModal } from '@/components/WalletSelectModal';
 import { useTempo } from '@/hooks/useTempo';
 import { getExplorerTxUrl } from '@/lib/tempo-client';
-import { DEFAULT_FEE_TOKEN_ADDRESS } from '@/lib/constants';
+import { DEFAULT_FEE_TOKEN_ADDRESS, TIMING } from '@/lib/constants';
 import {
   parseMessage,
   sendResponse,
@@ -39,7 +40,8 @@ import {
   createSignMessageResponse,
 } from '@/lib/wallet-connect';
 import { isAppConnected, hasPermission } from '@/lib/connected-apps';
-import type { SignMessageRequest, SendTransactionRequest, PendingRequest } from '@/types';
+import { addActivity } from '@/lib/activity';
+import type { SignMessageRequest, SendTransactionRequest, PendingRequest, ActivityType } from '@/types';
 import { formatAddress, formatAmount, copyToClipboard } from '@/lib/utils';
 
 /**
@@ -203,7 +205,7 @@ function SignPage(): ReactElement {
 
   const [pendingRequest, setPendingRequest] = useState<PendingRequest | null>(null);
   const [requestType, setRequestType] = useState<RequestType | null>(null);
-  const [status, setStatus] = useState<'waiting' | 'processing' | 'success' | 'error' | 'rejected'>('waiting');
+  const [status, setStatus] = useState<'waiting' | 'processing' | 'success' | 'error' | 'rejected' | 'timeout'>('waiting');
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [sourceWindow, setSourceWindow] = useState<Window | null>(null);
@@ -212,9 +214,12 @@ function SignPage(): ReactElement {
   const [showCreateWalletModal, setShowCreateWalletModal] = useState(false);
   const [showWalletSelectModal, setShowWalletSelectModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<'sign' | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
 
   // Use ref to track if we should execute after auth
   const shouldExecuteAfterAuth = useRef(false);
+  // Timer ref for cleanup
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const handleCopy = async (value: string, field: string) => {
     const success = await copyToClipboard(value);
@@ -482,6 +487,17 @@ function SignPage(): ReactElement {
         if (sourceWindow) sendResponse(sourceOrigin, response, sourceWindow);
       }
 
+      // Log activity
+      addActivity({
+        type: request.method as ActivityType,
+        status: 'success',
+        appName: pendingRequest.appInfo.name,
+        appUrl: pendingRequest.appInfo.url,
+        appIcon: pendingRequest.appInfo.icon,
+        txHash: hash,
+        details: request.params as Record<string, unknown>,
+      });
+
       setStatus('success');
 
       // Close window after delay (giving user time to see success and explorer link)
@@ -493,6 +509,18 @@ function SignPage(): ReactElement {
       const friendlyError = getUserFriendlyError(err);
       setError(friendlyError);
       setStatus('error');
+
+      // Log failed activity
+      if (pendingRequest) {
+        addActivity({
+          type: request.method as ActivityType,
+          status: 'failed',
+          appName: pendingRequest.appInfo.name,
+          appUrl: pendingRequest.appInfo.url,
+          appIcon: pendingRequest.appInfo.icon,
+          details: { error: friendlyError },
+        });
+      }
 
       // Send error response
       if (pendingRequest && sourceWindow && sourceOrigin) {
@@ -522,6 +550,118 @@ function SignPage(): ReactElement {
       executeTransaction();
     }
   }, [isConnected, address, walletClient, pendingRequest, isConnecting, executeTransaction]);
+
+  // Request timeout countdown
+  useEffect(() => {
+    if (!pendingRequest || status !== 'waiting') {
+      // Clear timer if no request or not in waiting state
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+      setTimeRemaining(null);
+      return;
+    }
+
+    // Start countdown - use longer timeout for signing
+    const timeoutMs = TIMING.SIGNING_TIMEOUT_MS;
+    const endTime = Date.now() + timeoutMs;
+    setTimeRemaining(Math.ceil(timeoutMs / 1000));
+
+    timerRef.current = setInterval(() => {
+      const remaining = Math.ceil((endTime - Date.now()) / 1000);
+      if (remaining <= 0) {
+        // Timeout expired
+        if (timerRef.current) {
+          clearInterval(timerRef.current);
+          timerRef.current = null;
+        }
+        setTimeRemaining(0);
+        setStatus('timeout');
+
+        // Send timeout response
+        if (sourceWindow && sourceOrigin && pendingRequest) {
+          const response = {
+            id: pendingRequest.request.id,
+            success: false,
+            error: 'Request timed out',
+          };
+          sendResponse(sourceOrigin, response, sourceWindow);
+
+          // Log timeout activity
+          addActivity({
+            type: (pendingRequest.request.method || 'send_transaction') as ActivityType,
+            status: 'timeout',
+            appName: pendingRequest.appInfo.name,
+            appUrl: pendingRequest.appInfo.url,
+            appIcon: pendingRequest.appInfo.icon,
+          });
+        }
+
+        // Close window after delay
+        setTimeout(() => window.close(), 2000);
+      } else {
+        setTimeRemaining(remaining);
+      }
+    }, 1000);
+
+    return () => {
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, [pendingRequest, status, sourceWindow, sourceOrigin]);
+
+  // Keyboard shortcuts (Enter to approve, Escape to reject)
+  useEffect(() => {
+    if (!pendingRequest || status !== 'waiting') return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger if modal is open or user is typing
+      if (showCreateWalletModal || showWalletSelectModal) return;
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      if (e.key === 'Enter' && isConnected && address && walletClient) {
+        e.preventDefault();
+        executeTransaction();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        const response = {
+          id: pendingRequest.request.id,
+          success: false,
+          error: 'User rejected the request',
+        };
+        if (sourceWindow && sourceOrigin) {
+          sendResponse(sourceOrigin, response, sourceWindow);
+        }
+        // Log rejected activity
+        addActivity({
+          type: (pendingRequest.request.method || 'send_transaction') as ActivityType,
+          status: 'rejected',
+          appName: pendingRequest.appInfo.name,
+          appUrl: pendingRequest.appInfo.url,
+          appIcon: pendingRequest.appInfo.icon,
+        });
+        setStatus('rejected');
+        setTimeout(() => window.close(), 1000);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [
+    pendingRequest,
+    status,
+    isConnected,
+    address,
+    walletClient,
+    showCreateWalletModal,
+    showWalletSelectModal,
+    sourceWindow,
+    sourceOrigin,
+    executeTransaction,
+  ]);
 
   const handleApprove = useCallback(() => {
     if (!pendingRequest || !sourceOrigin) return;
@@ -604,6 +744,15 @@ function SignPage(): ReactElement {
     };
 
     sendResponse(sourceOrigin, response, sourceWindow);
+
+    // Log rejected activity
+    addActivity({
+      type: (pendingRequest.request.method || 'send_transaction') as ActivityType,
+      status: 'rejected',
+      appName: pendingRequest.appInfo.name,
+      appUrl: pendingRequest.appInfo.url,
+      appIcon: pendingRequest.appInfo.icon,
+    });
 
     setStatus('rejected');
 
@@ -697,6 +846,29 @@ function SignPage(): ReactElement {
             <h1 className="text-xl font-semibold mb-2">Request Rejected</h1>
             <p className="text-sm text-muted-foreground">
               You declined the {requestType === 'sign_message' ? 'signature' : 'transaction'} request
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Timeout state
+  if (status === 'timeout') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-sm"
+        >
+          <div className="bg-white border border-border/50 rounded-2xl p-8 text-center shadow-sm">
+            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-6">
+              <Timer className="w-8 h-8 text-gray-600" />
+            </div>
+            <h1 className="text-xl font-semibold mb-2">Request Timed Out</h1>
+            <p className="text-sm text-muted-foreground">
+              The {requestType === 'sign_message' ? 'signature' : 'transaction'} request has expired
             </p>
           </div>
         </motion.div>
@@ -1160,8 +1332,23 @@ function SignPage(): ReactElement {
               </div>
             </div>
 
+            {/* Timeout Countdown */}
+            {timeRemaining !== null && timeRemaining > 0 && (
+              <div className="px-6 pb-3">
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>
+                    Request expires in{' '}
+                    <span className={timeRemaining <= 10 ? 'text-amber-600 font-medium' : ''}>
+                      {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
+                    </span>
+                  </span>
+                </div>
+              </div>
+            )}
+
             {/* Actions */}
-            <div className="px-6 pb-6 flex gap-3">
+            <div className="px-6 pb-4 flex gap-3">
               <Button
                 variant="outline"
                 className="flex-1 h-11"
@@ -1183,6 +1370,20 @@ function SignPage(): ReactElement {
                   : 'Sign In First'}
               </Button>
             </div>
+
+            {/* Keyboard hints */}
+            {isConnected && status === 'waiting' && (
+              <div className="px-6 pb-6 flex items-center justify-center gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Enter</kbd>
+                  <span>to {requestType === 'sign_message' ? 'sign' : 'confirm'}</span>
+                </span>
+                <span className="flex items-center gap-1">
+                  <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Esc</kbd>
+                  <span>to reject</span>
+                </span>
+              </div>
+            )}
           </div>
         </motion.div>
       </div>
