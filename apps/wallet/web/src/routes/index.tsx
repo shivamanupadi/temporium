@@ -17,6 +17,9 @@ import {
   Sparkles,
   Zap,
   History,
+  Send,
+  ArrowDownLeft,
+  Users,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
@@ -340,9 +343,25 @@ function HomePage(): ReactElement {
             </div>
           </div>
 
-          {/* Quick Actions */}
+          {/* Primary Actions - Send/Receive */}
           <div className="grid grid-cols-2 gap-3 mt-4">
-            <Button variant="outline" onClick={handleFaucet} isLoading={isFunding}>
+            <Link to="/send">
+              <Button className="w-full">
+                <Send className="w-4 h-4 mr-2" />
+                Send
+              </Button>
+            </Link>
+            <Link to="/receive">
+              <Button variant="outline" className="w-full">
+                <ArrowDownLeft className="w-4 h-4 mr-2" />
+                Receive
+              </Button>
+            </Link>
+          </div>
+
+          {/* Secondary Actions - Faucet/Explorer */}
+          <div className="grid grid-cols-2 gap-3 mt-3">
+            <Button variant="ghost" size="sm" onClick={handleFaucet} isLoading={isFunding}>
               <Droplets className="w-4 h-4 mr-2" />
               Faucet
             </Button>
@@ -351,7 +370,7 @@ function HomePage(): ReactElement {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <Button variant="outline" className="w-full">
+              <Button variant="ghost" size="sm" className="w-full">
                 <ExternalLink className="w-4 h-4 mr-2" />
                 Explorer
               </Button>
@@ -412,14 +431,14 @@ function HomePage(): ReactElement {
           )}
         </motion.div>
 
-        {/* Activity */}
+        {/* Activity & Contacts */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.15 }}
-          className="bg-white border border-border/50 rounded-2xl p-4 shadow-sm"
+          className="bg-white border border-border/50 rounded-2xl shadow-sm divide-y divide-border/50"
         >
-          <Link to="/activity" className="flex items-center justify-between">
+          <Link to="/activity" className="flex items-center justify-between p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
                 <History className="w-5 h-5 text-muted-foreground" />
@@ -427,6 +446,18 @@ function HomePage(): ReactElement {
               <div>
                 <h3 className="font-semibold text-sm">Activity</h3>
                 <p className="text-xs text-muted-foreground">View transaction history</p>
+              </div>
+            </div>
+            <ArrowUpRight className="w-4 h-4 text-muted-foreground" />
+          </Link>
+          <Link to="/contacts" className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center">
+                <Users className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-sm">Contacts</h3>
+                <p className="text-xs text-muted-foreground">Manage saved addresses</p>
               </div>
             </div>
             <ArrowUpRight className="w-4 h-4 text-muted-foreground" />
