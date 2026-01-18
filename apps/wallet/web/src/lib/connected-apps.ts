@@ -109,7 +109,8 @@ export function clearConnectedApps(): void {
  * Check if app has a specific permission
  */
 export function hasPermission(origin: string, permission: AppPermission): boolean {
-  const app = getConnectedApp(origin);
+  const apps = getConnectedApps();
+  const app = apps.find(a => a.id === origin || a.url === origin);
   if (!app) return false;
   return app.permissions.includes(permission);
 }

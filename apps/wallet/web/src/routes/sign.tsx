@@ -78,6 +78,20 @@ function safeBigInt(value: string | number | bigint | undefined, fieldName: stri
 }
 
 /**
+ * Safely display a formatted amount, returning a fallback if invalid
+ */
+function safeDisplayAmount(value: string | number | bigint | undefined): string {
+  if (value === undefined || value === null || value === '') {
+    return '0';
+  }
+  try {
+    return formatAmount(BigInt(value));
+  } catch {
+    return String(value);
+  }
+}
+
+/**
  * Get user-friendly error message
  */
 function getUserFriendlyError(error: unknown): string {
@@ -279,22 +293,6 @@ function SignPage(): ReactElement {
       window.removeEventListener('message', handleMessage);
     };
   }, []);
-
-  // When user completes authentication, proceed with signing
-  useEffect(() => {
-    if (
-      shouldExecuteAfterAuth.current &&
-      isConnected &&
-      address &&
-      walletClient &&
-      pendingRequest &&
-      !isConnecting
-    ) {
-      shouldExecuteAfterAuth.current = false;
-      setPendingAction(null);
-      executeTransaction();
-    }
-  }, [isConnected, address, walletClient, pendingRequest, isConnecting]);
 
   const executeTransaction = useCallback(async () => {
     if (!pendingRequest || !sourceOrigin) {
@@ -507,6 +505,23 @@ function SignPage(): ReactElement {
       }
     }
   }, [pendingRequest, sourceOrigin, sourceWindow, signMessageAsync, walletClient, address]);
+
+  // When user completes authentication, proceed with signing
+  // Uses ref pattern to trigger execution only after auth, avoiding infinite loops
+  useEffect(() => {
+    if (
+      shouldExecuteAfterAuth.current &&
+      isConnected &&
+      address &&
+      walletClient &&
+      pendingRequest &&
+      !isConnecting
+    ) {
+      shouldExecuteAfterAuth.current = false;
+      setPendingAction(null);
+      executeTransaction();
+    }
+  }, [isConnected, address, walletClient, pendingRequest, isConnecting, executeTransaction]);
 
   const handleApprove = useCallback(() => {
     if (!pendingRequest || !sourceOrigin) return;
@@ -748,7 +763,7 @@ function SignPage(): ReactElement {
             <div className="bg-green-50 rounded-xl p-4 mb-4 text-center">
               <p className="text-xs text-green-600 mb-1">Amount</p>
               <p className="text-3xl font-bold text-green-700">
-                {amount ? formatAmount(BigInt(amount)) : '0'}
+                {safeDisplayAmount(amount)}
               </p>
               <p className="text-sm text-green-600">USD</p>
             </div>
@@ -801,7 +816,7 @@ function SignPage(): ReactElement {
             <div className="bg-amber-50 rounded-xl p-4 mb-4 text-center">
               <p className="text-xs text-amber-600 mb-1">Amount</p>
               <p className="text-3xl font-bold text-amber-700">
-                {amount ? formatAmount(BigInt(amount)) : '0'}
+                {safeDisplayAmount(amount)}
               </p>
               <p className="text-sm text-amber-600">USD</p>
             </div>
@@ -859,7 +874,7 @@ function SignPage(): ReactElement {
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">You Pay</p>
                   <p className="text-2xl font-bold">
-                    {amountIn ? formatAmount(BigInt(amountIn)) : '0'}
+                    {safeDisplayAmount(amountIn)}
                   </p>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
@@ -868,7 +883,7 @@ function SignPage(): ReactElement {
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground mb-1">You Receive (min)</p>
                   <p className="text-2xl font-bold text-green-600">
-                    {minAmountOut ? formatAmount(BigInt(minAmountOut)) : '0'}
+                    {safeDisplayAmount(minAmountOut)}
                   </p>
                 </div>
               </div>
@@ -918,7 +933,7 @@ function SignPage(): ReactElement {
             <div className="bg-cyan-50 rounded-xl p-4 mb-4 text-center">
               <p className="text-xs text-cyan-600 mb-1">Validator Token Amount</p>
               <p className="text-3xl font-bold text-cyan-700">
-                {validatorTokenAmount ? formatAmount(BigInt(validatorTokenAmount)) : '0'}
+                {safeDisplayAmount(validatorTokenAmount)}
               </p>
             </div>
 
@@ -966,7 +981,7 @@ function SignPage(): ReactElement {
             <div className="bg-orange-50 rounded-xl p-4 mb-4 text-center">
               <p className="text-xs text-orange-600 mb-1">LP Tokens to Burn</p>
               <p className="text-3xl font-bold text-orange-700">
-                {liquidity ? formatAmount(BigInt(liquidity)) : '0'}
+                {safeDisplayAmount(liquidity)}
               </p>
             </div>
 
