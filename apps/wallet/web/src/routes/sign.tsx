@@ -1,4 +1,4 @@
-import { type ReactElement, useState, useEffect, useCallback } from 'react';
+import { type ReactElement, useState, useEffect, useCallback, useRef } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useSignMessage, useWalletClient } from 'wagmi';
 import { type Address } from 'viem';
@@ -22,6 +22,7 @@ import {
   Wallet,
   Fingerprint,
   Sparkles,
+  RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -34,10 +35,11 @@ import {
   parseMessage,
   sendResponse,
   handleSignMessageRequest,
+  handleSendTransactionRequest,
   createSignMessageResponse,
 } from '@/lib/wallet-connect';
-import { isAppConnected } from '@/lib/connected-apps';
-import type { SignMessageRequest, PendingRequest } from '@/types';
+import { isAppConnected, hasPermission } from '@/lib/connected-apps';
+import type { SignMessageRequest, SendTransactionRequest, PendingRequest } from '@/types';
 import { formatAddress, formatAmount, copyToClipboard } from '@/lib/utils';
 
 /**
@@ -59,6 +61,53 @@ function decodeMemo(hex: string | undefined): string | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * Safely convert string to BigInt with validation
+ */
+function safeBigInt(value: string | number | bigint | undefined, fieldName: string): bigint {
+  if (value === undefined || value === null || value === '') {
+    throw new Error(`${fieldName} is required`);
+  }
+  try {
+    return BigInt(value);
+  } catch {
+    throw new Error(`Invalid ${fieldName}: must be a valid number`);
+  }
+}
+
+/**
+ * Get user-friendly error message
+ */
+function getUserFriendlyError(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+
+  // Common error patterns
+  if (message.includes('User rejected') || message.includes('user rejected')) {
+    return 'Transaction was cancelled';
+  }
+  if (message.includes('insufficient funds') || message.includes('Insufficient')) {
+    return 'Insufficient balance for this transaction';
+  }
+  if (message.includes('nonce')) {
+    return 'Transaction conflict. Please try again.';
+  }
+  if (message.includes('gas')) {
+    return 'Unable to estimate transaction fees. The transaction may fail.';
+  }
+  if (message.includes('timeout') || message.includes('Timeout')) {
+    return 'Request timed out. Please try again.';
+  }
+  if (message.includes('network') || message.includes('Network')) {
+    return 'Network error. Please check your connection.';
+  }
+  if (message.includes('Not authorized') || message.includes('permission')) {
+    return 'App does not have permission for this action';
+  }
+
+  // Return original if no match, but clean it up
+  return message.length > 100 ? message.substring(0, 100) + '...' : message;
 }
 
 /**
@@ -150,6 +199,9 @@ function SignPage(): ReactElement {
   const [showWalletSelectModal, setShowWalletSelectModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<'sign' | null>(null);
 
+  // Use ref to track if we should execute after auth
+  const shouldExecuteAfterAuth = useRef(false);
+
   const handleCopy = async (value: string, field: string) => {
     const success = await copyToClipboard(value);
     if (success) {
@@ -210,6 +262,10 @@ function SignPage(): ReactElement {
       setRequestType(request.method as RequestType);
       setSourceWindow(event.source as Window);
       setSourceOrigin(origin);
+      // Reset any previous error state
+      setStatus('waiting');
+      setError(null);
+      setTxHash(null);
     };
 
     window.addEventListener('message', handleMessage);
@@ -226,33 +282,56 @@ function SignPage(): ReactElement {
 
   // When user completes authentication, proceed with signing
   useEffect(() => {
-    if (pendingAction === 'sign' && isConnected && address && pendingRequest && !isConnecting) {
+    if (
+      shouldExecuteAfterAuth.current &&
+      isConnected &&
+      address &&
+      walletClient &&
+      pendingRequest &&
+      !isConnecting
+    ) {
+      shouldExecuteAfterAuth.current = false;
       setPendingAction(null);
-      // Small delay to ensure walletClient is ready
-      setTimeout(() => {
-        executeTransaction();
-      }, 100);
+      executeTransaction();
     }
-  }, [isConnected, address, pendingAction, pendingRequest, isConnecting]);
+  }, [isConnected, address, walletClient, pendingRequest, isConnecting]);
 
   const executeTransaction = useCallback(async () => {
-    if (!pendingRequest || !sourceOrigin) return;
+    if (!pendingRequest || !sourceOrigin) {
+      console.error('[Sign] Missing pendingRequest or sourceOrigin');
+      return;
+    }
+
+    // Double-check wallet is ready
+    if (!walletClient || !address) {
+      setError('Wallet not ready. Please try again.');
+      setStatus('error');
+      return;
+    }
 
     setStatus('processing');
+    setError(null);
 
     try {
-      if (!walletClient || !address) {
-        throw new Error('Wallet not available');
-      }
-
       const request = pendingRequest.request as TransactionRequest;
       let hash: `0x${string}` | undefined;
+
+      // Check permissions for transaction types
+      if (request.method !== 'sign_message') {
+        if (!hasPermission(sourceOrigin, 'send')) {
+          throw new Error('App does not have permission to send transactions');
+        }
+      }
 
       switch (request.method) {
         case 'sign_message': {
           const signReq = request as unknown as SignMessageRequest;
           const { authorized, error: authError } = handleSignMessageRequest(signReq, sourceOrigin);
-          if (!authorized) throw new Error(authError || 'Not authorized');
+          if (!authorized) throw new Error(authError || 'Not authorized to sign messages');
+
+          if (!signReq.params?.message) {
+            throw new Error('Message is required for signing');
+          }
 
           const signature = await signMessageAsync({ message: signReq.params.message });
           const response = createSignMessageResponse(signReq, signature);
@@ -269,10 +348,12 @@ function SignPage(): ReactElement {
             memo?: `0x${string}`;
           };
 
+          if (!params.to) throw new Error('Recipient address is required');
+
           hash = await Actions.token.transfer(walletClient, {
             token: params.token || DEFAULT_FEE_TOKEN_ADDRESS,
             to: params.to,
-            amount: BigInt(params.amount),
+            amount: safeBigInt(params.amount, 'Amount'),
             memo: params.memo,
             feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
           });
@@ -289,10 +370,13 @@ function SignPage(): ReactElement {
             scheduledFor: number;
           };
 
+          if (!params.to) throw new Error('Recipient address is required');
+          if (!params.scheduledFor) throw new Error('Schedule time is required');
+
           hash = await Actions.token.transfer(walletClient, {
             token: params.token || DEFAULT_FEE_TOKEN_ADDRESS,
             to: params.to,
-            amount: BigInt(params.amount),
+            amount: safeBigInt(params.amount, 'Amount'),
             memo: params.memo,
             feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
             validAfter: params.scheduledFor,
@@ -309,11 +393,15 @@ function SignPage(): ReactElement {
             feeToken?: Address;
           };
 
+          if (!params.tokenIn || !params.tokenOut) {
+            throw new Error('Token addresses are required for swap');
+          }
+
           hash = await Actions.dex.sell(walletClient, {
             tokenIn: params.tokenIn,
             tokenOut: params.tokenOut,
-            amountIn: BigInt(params.amountIn),
-            minAmountOut: BigInt(params.minAmountOut),
+            amountIn: safeBigInt(params.amountIn, 'Amount in'),
+            minAmountOut: safeBigInt(params.minAmountOut, 'Minimum amount out'),
             feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
           });
           break;
@@ -327,10 +415,14 @@ function SignPage(): ReactElement {
             feeToken?: Address;
           };
 
+          if (!params.userToken || !params.validatorToken) {
+            throw new Error('Token addresses are required for liquidity');
+          }
+
           hash = await Actions.amm.mint(walletClient, {
             userTokenAddress: params.userToken,
             validatorTokenAddress: params.validatorToken,
-            validatorTokenAmount: BigInt(params.validatorTokenAmount),
+            validatorTokenAmount: safeBigInt(params.validatorTokenAmount, 'Validator token amount'),
             to: address,
             feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
           });
@@ -345,18 +437,40 @@ function SignPage(): ReactElement {
             feeToken?: Address;
           };
 
+          if (!params.userToken || !params.validatorToken) {
+            throw new Error('Token addresses are required for liquidity');
+          }
+
           hash = await Actions.amm.burn(walletClient, {
             userToken: params.userToken,
             validatorToken: params.validatorToken,
-            liquidity: BigInt(params.liquidity),
+            liquidity: safeBigInt(params.liquidity, 'Liquidity amount'),
             to: address,
             feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
           });
           break;
         }
 
+        case 'send_transaction': {
+          // Generic transaction - use raw transaction params
+          const txReq = request as unknown as SendTransactionRequest;
+          const { authorized, error: authError } = handleSendTransactionRequest(txReq, sourceOrigin);
+          if (!authorized) throw new Error(authError || 'Not authorized to send transaction');
+
+          const params = txReq.params?.transaction;
+          if (!params?.to) throw new Error('Transaction recipient is required');
+
+          // For generic transactions, we need to use the underlying wallet client directly
+          hash = await walletClient.sendTransaction({
+            to: params.to,
+            value: params.value ? BigInt(params.value) : undefined,
+            data: params.data,
+          });
+          break;
+        }
+
         default:
-          throw new Error(`Unknown request type: ${request.method}`);
+          throw new Error(`Unsupported request type: ${request.method}`);
       }
 
       // Send success response for transaction requests
@@ -375,10 +489,11 @@ function SignPage(): ReactElement {
       // Close window after delay
       setTimeout(() => {
         window.close();
-      }, 2000);
+      }, 2500);
     } catch (err) {
       console.error('[Sign] Failed:', err);
-      setError(err instanceof Error ? err.message : 'Operation failed');
+      const friendlyError = getUserFriendlyError(err);
+      setError(friendlyError);
       setStatus('error');
 
       // Send error response
@@ -386,7 +501,7 @@ function SignPage(): ReactElement {
         const errorResponse = {
           id: pendingRequest.request.id,
           success: false,
-          error: err instanceof Error ? err.message : 'Operation failed',
+          error: friendlyError,
         };
         sendResponse(sourceOrigin, errorResponse, sourceWindow);
       }
@@ -405,14 +520,21 @@ function SignPage(): ReactElement {
     }
   }, [pendingRequest, sourceOrigin, isConnected, address, walletClient, executeTransaction]);
 
+  const handleRetry = useCallback(() => {
+    setStatus('waiting');
+    setError(null);
+  }, []);
+
   const handleCreateWallet = async (walletName?: string): Promise<void> => {
     try {
+      shouldExecuteAfterAuth.current = true;
       setPendingAction('sign');
       await signUp(walletName);
       setShowCreateWalletModal(false);
     } catch (err) {
       console.error('Wallet creation error:', err);
       toast.error(err instanceof Error ? err.message : 'Wallet creation cancelled');
+      shouldExecuteAfterAuth.current = false;
       setPendingAction(null);
     }
   };
@@ -420,6 +542,7 @@ function SignPage(): ReactElement {
   const handlePasskeySignIn = async (): Promise<void> => {
     setShowWalletSelectModal(false);
     try {
+      shouldExecuteAfterAuth.current = true;
       setPendingAction('sign');
       await signIn();
     } catch (err) {
@@ -430,6 +553,7 @@ function SignPage(): ReactElement {
       } else {
         toast.error(message);
       }
+      shouldExecuteAfterAuth.current = false;
       setPendingAction(null);
     }
   };
@@ -437,6 +561,7 @@ function SignPage(): ReactElement {
   const handleInjectedConnect = async (): Promise<void> => {
     setShowWalletSelectModal(false);
     try {
+      shouldExecuteAfterAuth.current = true;
       setPendingAction('sign');
       await connectInjected();
     } catch (err) {
@@ -449,6 +574,7 @@ function SignPage(): ReactElement {
       } else {
         toast.error(message);
       }
+      shouldExecuteAfterAuth.current = false;
       setPendingAction(null);
     }
   };
@@ -551,7 +677,16 @@ function SignPage(): ReactElement {
               <XCircle className="w-8 h-8 text-red-600" />
             </div>
             <h1 className="text-xl font-semibold mb-2">Request Failed</h1>
-            <p className="text-sm text-muted-foreground">{error || 'Something went wrong'}</p>
+            <p className="text-sm text-muted-foreground mb-6">{error || 'Something went wrong'}</p>
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={() => window.close()}>
+                Close
+              </Button>
+              <Button className="flex-1" onClick={handleRetry}>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Try Again
+              </Button>
+            </div>
           </div>
         </motion.div>
       </div>
@@ -588,7 +723,7 @@ function SignPage(): ReactElement {
               </div>
               <div className="bg-white rounded-lg p-3 border border-border/50 max-h-40 overflow-auto">
                 <p className="text-sm font-mono break-all whitespace-pre-wrap">
-                  {(params as { message?: string }).message}
+                  {(params as { message?: string }).message || '(empty message)'}
                 </p>
               </div>
             </div>
@@ -598,6 +733,7 @@ function SignPage(): ReactElement {
       case 'send_payment': {
         const toAddress = params.to as string;
         const token = params.token as string | undefined;
+        const amount = params.amount as string;
         return (
           <>
             <div className="w-14 h-14 rounded-2xl bg-green-500/10 flex items-center justify-center mx-auto mb-4">
@@ -612,7 +748,7 @@ function SignPage(): ReactElement {
             <div className="bg-green-50 rounded-xl p-4 mb-4 text-center">
               <p className="text-xs text-green-600 mb-1">Amount</p>
               <p className="text-3xl font-bold text-green-700">
-                {formatAmount(BigInt(params.amount as string))}
+                {amount ? formatAmount(BigInt(amount)) : '0'}
               </p>
               <p className="text-sm text-green-600">USD</p>
             </div>
@@ -621,10 +757,10 @@ function SignPage(): ReactElement {
             <div className="bg-muted/50 rounded-xl p-4 space-y-1">
               <DetailRow
                 label="Recipient"
-                value={toAddress}
+                value={toAddress || 'Not specified'}
                 mono
-                copyable
-                onCopy={() => handleCopy(toAddress, 'to')}
+                copyable={!!toAddress}
+                onCopy={() => toAddress && handleCopy(toAddress, 'to')}
                 copied={copiedField === 'to'}
               />
               {token && token !== DEFAULT_FEE_TOKEN_ADDRESS && (
@@ -648,8 +784,9 @@ function SignPage(): ReactElement {
 
       case 'send_scheduled_payment': {
         const scheduledFor = params.scheduledFor as number;
-        const scheduledDate = new Date(scheduledFor * 1000);
+        const scheduledDate = scheduledFor ? new Date(scheduledFor * 1000) : null;
         const toAddress = params.to as string;
+        const amount = params.amount as string;
         return (
           <>
             <div className="w-14 h-14 rounded-2xl bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
@@ -664,30 +801,32 @@ function SignPage(): ReactElement {
             <div className="bg-amber-50 rounded-xl p-4 mb-4 text-center">
               <p className="text-xs text-amber-600 mb-1">Amount</p>
               <p className="text-3xl font-bold text-amber-700">
-                {formatAmount(BigInt(params.amount as string))}
+                {amount ? formatAmount(BigInt(amount)) : '0'}
               </p>
               <p className="text-sm text-amber-600">USD</p>
             </div>
 
             {/* Schedule Info */}
-            <div className="bg-amber-50/50 rounded-xl p-3 mb-4 flex items-center gap-3">
-              <Clock className="w-5 h-5 text-amber-600" />
-              <div>
-                <p className="text-xs text-amber-600">Scheduled For</p>
-                <p className="text-sm font-semibold text-amber-800">
-                  {scheduledDate.toLocaleString()}
-                </p>
+            {scheduledDate && (
+              <div className="bg-amber-50/50 rounded-xl p-3 mb-4 flex items-center gap-3">
+                <Clock className="w-5 h-5 text-amber-600" />
+                <div>
+                  <p className="text-xs text-amber-600">Scheduled For</p>
+                  <p className="text-sm font-semibold text-amber-800">
+                    {scheduledDate.toLocaleString()}
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Details */}
             <div className="bg-muted/50 rounded-xl p-4 space-y-1">
               <DetailRow
                 label="Recipient"
-                value={toAddress}
+                value={toAddress || 'Not specified'}
                 mono
-                copyable
-                onCopy={() => handleCopy(toAddress, 'to')}
+                copyable={!!toAddress}
+                onCopy={() => toAddress && handleCopy(toAddress, 'to')}
                 copied={copiedField === 'to'}
               />
               {memo && <DetailRow label="Memo" value={memo} />}
@@ -702,6 +841,8 @@ function SignPage(): ReactElement {
       case 'swap_tokens': {
         const tokenIn = params.tokenIn as string;
         const tokenOut = params.tokenOut as string;
+        const amountIn = params.amountIn as string;
+        const minAmountOut = params.minAmountOut as string;
         return (
           <>
             <div className="w-14 h-14 rounded-2xl bg-purple-500/10 flex items-center justify-center mx-auto mb-4">
@@ -718,7 +859,7 @@ function SignPage(): ReactElement {
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">You Pay</p>
                   <p className="text-2xl font-bold">
-                    {formatAmount(BigInt(params.amountIn as string))}
+                    {amountIn ? formatAmount(BigInt(amountIn)) : '0'}
                   </p>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
@@ -727,7 +868,7 @@ function SignPage(): ReactElement {
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground mb-1">You Receive (min)</p>
                   <p className="text-2xl font-bold text-green-600">
-                    {formatAmount(BigInt(params.minAmountOut as string))}
+                    {minAmountOut ? formatAmount(BigInt(minAmountOut)) : '0'}
                   </p>
                 </div>
               </div>
@@ -737,18 +878,18 @@ function SignPage(): ReactElement {
             <div className="bg-muted/50 rounded-xl p-4 space-y-1">
               <DetailRow
                 label="Token In"
-                value={tokenIn}
+                value={tokenIn || 'Not specified'}
                 mono
-                copyable
-                onCopy={() => handleCopy(tokenIn, 'tokenIn')}
+                copyable={!!tokenIn}
+                onCopy={() => tokenIn && handleCopy(tokenIn, 'tokenIn')}
                 copied={copiedField === 'tokenIn'}
               />
               <DetailRow
                 label="Token Out"
-                value={tokenOut}
+                value={tokenOut || 'Not specified'}
                 mono
-                copyable
-                onCopy={() => handleCopy(tokenOut, 'tokenOut')}
+                copyable={!!tokenOut}
+                onCopy={() => tokenOut && handleCopy(tokenOut, 'tokenOut')}
                 copied={copiedField === 'tokenOut'}
               />
               {showFeeToken && (
@@ -762,6 +903,7 @@ function SignPage(): ReactElement {
       case 'add_liquidity': {
         const userToken = params.userToken as string;
         const validatorToken = params.validatorToken as string;
+        const validatorTokenAmount = params.validatorTokenAmount as string;
         return (
           <>
             <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 flex items-center justify-center mx-auto mb-4">
@@ -776,7 +918,7 @@ function SignPage(): ReactElement {
             <div className="bg-cyan-50 rounded-xl p-4 mb-4 text-center">
               <p className="text-xs text-cyan-600 mb-1">Validator Token Amount</p>
               <p className="text-3xl font-bold text-cyan-700">
-                {formatAmount(BigInt(params.validatorTokenAmount as string))}
+                {validatorTokenAmount ? formatAmount(BigInt(validatorTokenAmount)) : '0'}
               </p>
             </div>
 
@@ -784,18 +926,18 @@ function SignPage(): ReactElement {
             <div className="bg-muted/50 rounded-xl p-4 space-y-1">
               <DetailRow
                 label="User Token"
-                value={userToken}
+                value={userToken || 'Not specified'}
                 mono
-                copyable
-                onCopy={() => handleCopy(userToken, 'userToken')}
+                copyable={!!userToken}
+                onCopy={() => userToken && handleCopy(userToken, 'userToken')}
                 copied={copiedField === 'userToken'}
               />
               <DetailRow
                 label="Validator Token"
-                value={validatorToken}
+                value={validatorToken || 'Not specified'}
                 mono
-                copyable
-                onCopy={() => handleCopy(validatorToken, 'validatorToken')}
+                copyable={!!validatorToken}
+                onCopy={() => validatorToken && handleCopy(validatorToken, 'validatorToken')}
                 copied={copiedField === 'validatorToken'}
               />
               {showFeeToken && (
@@ -809,6 +951,7 @@ function SignPage(): ReactElement {
       case 'remove_liquidity': {
         const userToken = params.userToken as string;
         const validatorToken = params.validatorToken as string;
+        const liquidity = params.liquidity as string;
         return (
           <>
             <div className="w-14 h-14 rounded-2xl bg-orange-500/10 flex items-center justify-center mx-auto mb-4">
@@ -823,7 +966,7 @@ function SignPage(): ReactElement {
             <div className="bg-orange-50 rounded-xl p-4 mb-4 text-center">
               <p className="text-xs text-orange-600 mb-1">LP Tokens to Burn</p>
               <p className="text-3xl font-bold text-orange-700">
-                {formatAmount(BigInt(params.liquidity as string))}
+                {liquidity ? formatAmount(BigInt(liquidity)) : '0'}
               </p>
             </div>
 
@@ -831,18 +974,18 @@ function SignPage(): ReactElement {
             <div className="bg-muted/50 rounded-xl p-4 space-y-1">
               <DetailRow
                 label="User Token"
-                value={userToken}
+                value={userToken || 'Not specified'}
                 mono
-                copyable
-                onCopy={() => handleCopy(userToken, 'userToken')}
+                copyable={!!userToken}
+                onCopy={() => userToken && handleCopy(userToken, 'userToken')}
                 copied={copiedField === 'userToken'}
               />
               <DetailRow
                 label="Validator Token"
-                value={validatorToken}
+                value={validatorToken || 'Not specified'}
                 mono
-                copyable
-                onCopy={() => handleCopy(validatorToken, 'validatorToken')}
+                copyable={!!validatorToken}
+                onCopy={() => validatorToken && handleCopy(validatorToken, 'validatorToken')}
                 copied={copiedField === 'validatorToken'}
               />
               {showFeeToken && (
@@ -853,6 +996,7 @@ function SignPage(): ReactElement {
         );
       }
 
+      case 'send_transaction':
       default:
         return (
           <>
@@ -864,7 +1008,7 @@ function SignPage(): ReactElement {
               {pendingRequest.appInfo.name} wants to send a transaction
             </p>
             <div className="bg-muted/50 rounded-xl p-4">
-              <p className="text-xs text-muted-foreground mb-2">Raw Parameters:</p>
+              <p className="text-xs text-muted-foreground mb-2">Transaction Details:</p>
               <pre className="text-xs font-mono bg-white rounded-lg p-3 overflow-auto max-h-40 border border-border/50">
                 {JSON.stringify(params, null, 2)}
               </pre>
