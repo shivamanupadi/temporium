@@ -1,6 +1,6 @@
 import { type ReactElement } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Fingerprint, Wallet, X, ExternalLink } from 'lucide-react';
+import { Fingerprint, Wallet, X, ExternalLink, Sparkles } from 'lucide-react';
 import { modalAnimation } from '@/lib/utils';
 
 interface WalletOption {
@@ -19,6 +19,7 @@ interface WalletSelectModalProps {
   onClose: () => void;
   onSelectPasskey: () => void;
   onSelectInjected: () => void;
+  onCreateWallet?: () => void;
 }
 
 export function WalletSelectModal({
@@ -28,6 +29,7 @@ export function WalletSelectModal({
   onClose,
   onSelectPasskey,
   onSelectInjected,
+  onCreateWallet,
 }: WalletSelectModalProps): ReactElement | null {
   const walletOptions: WalletOption[] = [
     {
@@ -84,7 +86,7 @@ export function WalletSelectModal({
               {/* Header */}
               <div className="px-6 pt-6 pb-4">
                 <div className="flex items-center justify-between mb-2">
-                  <h2 className="text-lg font-semibold text-gray-900">Connect Wallet</h2>
+                  <h2 className="text-lg font-semibold text-gray-900">Sign In</h2>
                   <button
                     onClick={handleClose}
                     disabled={isLoading}
@@ -124,11 +126,28 @@ export function WalletSelectModal({
                 ))}
               </div>
 
-              {/* Footer note about Tempo network */}
-              <div className="px-6 pb-6">
+              {/* Footer */}
+              <div className="px-6 pb-6 space-y-3">
                 <p className="text-[11px] text-gray-400 text-center">
                   Browser wallets will be prompted to add Tempo network
                 </p>
+
+                {/* Create wallet option */}
+                {onCreateWallet && (
+                  <div className="pt-3 border-t border-gray-100">
+                    <button
+                      onClick={() => {
+                        onClose();
+                        onCreateWallet();
+                      }}
+                      disabled={isLoading}
+                      className="w-full flex items-center justify-center gap-2 p-3 text-[13px] text-primary hover:bg-primary/5 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      <span>Don&apos;t have a wallet? <strong>Create one</strong></span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </motion.div>

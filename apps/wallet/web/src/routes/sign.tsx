@@ -1,6 +1,6 @@
 import { type ReactElement, useState, useEffect, useCallback } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { useAccount, useConnect, useSignMessage, useWalletClient } from 'wagmi';
+import { useSignMessage, useWalletClient } from 'wagmi';
 import { type Address } from 'viem';
 import { Actions } from 'viem/tempo';
 import { motion } from 'framer-motion';
@@ -19,16 +19,21 @@ import {
   Check,
   MessageSquare,
   Coins,
+  Wallet,
+  Fingerprint,
+  Sparkles,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { tempoPasskeyConnector } from '@/lib/wagmi';
+import { CreateWalletModal } from '@/components/CreateWalletModal';
+import { WalletSelectModal } from '@/components/WalletSelectModal';
+import { useTempo } from '@/hooks/useTempo';
 import { getExplorerTxUrl } from '@/lib/tempo-client';
 import { DEFAULT_FEE_TOKEN_ADDRESS } from '@/lib/constants';
 import {
   parseMessage,
   sendResponse,
   handleSignMessageRequest,
-  handleSendTransactionRequest,
   createSignMessageResponse,
 } from '@/lib/wallet-connect';
 import { isAppConnected } from '@/lib/connected-apps';
@@ -39,7 +44,11 @@ import { formatAddress, formatAmount, copyToClipboard } from '@/lib/utils';
  * Decode memo from hex bytes to string
  */
 function decodeMemo(hex: string | undefined): string | null {
-  if (!hex || hex === '0x' || hex === '0x0000000000000000000000000000000000000000000000000000000000000000') {
+  if (
+    !hex ||
+    hex === '0x' ||
+    hex === '0x0000000000000000000000000000000000000000000000000000000000000000'
+  ) {
     return null;
   }
   try {
@@ -117,8 +126,15 @@ interface TransactionRequest {
 
 function SignPage(): ReactElement {
   const navigate = useNavigate();
-  const { address, isConnected } = useAccount();
-  const { connectAsync } = useConnect();
+  const {
+    isConnected,
+    isConnecting,
+    address,
+    signUp,
+    signIn,
+    connectInjected,
+    hasInjectedWallet,
+  } = useTempo();
   const { signMessageAsync } = useSignMessage();
   const { data: walletClient } = useWalletClient();
 
@@ -130,6 +146,9 @@ function SignPage(): ReactElement {
   const [sourceWindow, setSourceWindow] = useState<Window | null>(null);
   const [sourceOrigin, setSourceOrigin] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [showCreateWalletModal, setShowCreateWalletModal] = useState(false);
+  const [showWalletSelectModal, setShowWalletSelectModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'sign' | null>(null);
 
   const handleCopy = async (value: string, field: string) => {
     const success = await copyToClipboard(value);
@@ -205,17 +224,23 @@ function SignPage(): ReactElement {
     };
   }, []);
 
-  const handleApprove = useCallback(async () => {
+  // When user completes authentication, proceed with signing
+  useEffect(() => {
+    if (pendingAction === 'sign' && isConnected && address && pendingRequest && !isConnecting) {
+      setPendingAction(null);
+      // Small delay to ensure walletClient is ready
+      setTimeout(() => {
+        executeTransaction();
+      }, 100);
+    }
+  }, [isConnected, address, pendingAction, pendingRequest, isConnecting]);
+
+  const executeTransaction = useCallback(async () => {
     if (!pendingRequest || !sourceOrigin) return;
 
     setStatus('processing');
 
     try {
-      // Ensure wallet is connected
-      if (!isConnected) {
-        await connectAsync({ connector: tempoPasskeyConnector });
-      }
-
       if (!walletClient || !address) {
         throw new Error('Wallet not available');
       }
@@ -366,16 +391,67 @@ function SignPage(): ReactElement {
         sendResponse(sourceOrigin, errorResponse, sourceWindow);
       }
     }
-  }, [
-    pendingRequest,
-    sourceOrigin,
-    sourceWindow,
-    isConnected,
-    connectAsync,
-    signMessageAsync,
-    walletClient,
-    address,
-  ]);
+  }, [pendingRequest, sourceOrigin, sourceWindow, signMessageAsync, walletClient, address]);
+
+  const handleApprove = useCallback(() => {
+    if (!pendingRequest || !sourceOrigin) return;
+
+    if (isConnected && address && walletClient) {
+      // Already connected, execute transaction
+      executeTransaction();
+    } else {
+      // Need to authenticate first - show wallet select modal
+      setShowWalletSelectModal(true);
+    }
+  }, [pendingRequest, sourceOrigin, isConnected, address, walletClient, executeTransaction]);
+
+  const handleCreateWallet = async (walletName?: string): Promise<void> => {
+    try {
+      setPendingAction('sign');
+      await signUp(walletName);
+      setShowCreateWalletModal(false);
+    } catch (err) {
+      console.error('Wallet creation error:', err);
+      toast.error(err instanceof Error ? err.message : 'Wallet creation cancelled');
+      setPendingAction(null);
+    }
+  };
+
+  const handlePasskeySignIn = async (): Promise<void> => {
+    setShowWalletSelectModal(false);
+    try {
+      setPendingAction('sign');
+      await signIn();
+    } catch (err) {
+      console.error('Sign in error:', err);
+      const message = err instanceof Error ? err.message : 'Sign in failed';
+      if (message.includes('publicKey not found')) {
+        toast.error('Passkey not found. Please create a wallet first.');
+      } else {
+        toast.error(message);
+      }
+      setPendingAction(null);
+    }
+  };
+
+  const handleInjectedConnect = async (): Promise<void> => {
+    setShowWalletSelectModal(false);
+    try {
+      setPendingAction('sign');
+      await connectInjected();
+    } catch (err) {
+      console.error('Wallet connection error:', err);
+      const message = err instanceof Error ? err.message : 'Connection failed';
+      if (message.includes('User rejected') || message.includes('rejected')) {
+        toast.error('Connection cancelled');
+      } else if (message.includes('Chain not configured')) {
+        toast.error('Please add Tempo network to your wallet');
+      } else {
+        toast.error(message);
+      }
+      setPendingAction(null);
+    }
+  };
 
   const handleReject = useCallback(() => {
     if (!pendingRequest || !sourceOrigin || !sourceWindow) return;
@@ -506,7 +582,9 @@ function SignPage(): ReactElement {
             <div className="bg-muted/50 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-3">
                 <MessageSquare className="w-4 h-4 text-muted-foreground" />
-                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Message</span>
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  Message
+                </span>
               </div>
               <div className="bg-white rounded-lg p-3 border border-border/50 max-h-40 overflow-auto">
                 <p className="text-sm font-mono break-all whitespace-pre-wrap">
@@ -559,15 +637,9 @@ function SignPage(): ReactElement {
                   copied={copiedField === 'token'}
                 />
               )}
-              {memo && (
-                <DetailRow label="Memo" value={memo} />
-              )}
+              {memo && <DetailRow label="Memo" value={memo} />}
               {showFeeToken && (
-                <DetailRow
-                  label="Fee Token"
-                  value={formatAddress(feeToken!, 6)}
-                  mono
-                />
+                <DetailRow label="Fee Token" value={formatAddress(feeToken!, 6)} mono />
               )}
             </div>
           </>
@@ -602,7 +674,9 @@ function SignPage(): ReactElement {
               <Clock className="w-5 h-5 text-amber-600" />
               <div>
                 <p className="text-xs text-amber-600">Scheduled For</p>
-                <p className="text-sm font-semibold text-amber-800">{scheduledDate.toLocaleString()}</p>
+                <p className="text-sm font-semibold text-amber-800">
+                  {scheduledDate.toLocaleString()}
+                </p>
               </div>
             </div>
 
@@ -616,15 +690,9 @@ function SignPage(): ReactElement {
                 onCopy={() => handleCopy(toAddress, 'to')}
                 copied={copiedField === 'to'}
               />
-              {memo && (
-                <DetailRow label="Memo" value={memo} />
-              )}
+              {memo && <DetailRow label="Memo" value={memo} />}
               {showFeeToken && (
-                <DetailRow
-                  label="Fee Token"
-                  value={formatAddress(feeToken!, 6)}
-                  mono
-                />
+                <DetailRow label="Fee Token" value={formatAddress(feeToken!, 6)} mono />
               )}
             </div>
           </>
@@ -649,14 +717,18 @@ function SignPage(): ReactElement {
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <p className="text-xs text-muted-foreground mb-1">You Pay</p>
-                  <p className="text-2xl font-bold">{formatAmount(BigInt(params.amountIn as string))}</p>
+                  <p className="text-2xl font-bold">
+                    {formatAmount(BigInt(params.amountIn as string))}
+                  </p>
                 </div>
                 <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
                   <ArrowRightLeft className="w-5 h-5 text-purple-500" />
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-muted-foreground mb-1">You Receive (min)</p>
-                  <p className="text-2xl font-bold text-green-600">{formatAmount(BigInt(params.minAmountOut as string))}</p>
+                  <p className="text-2xl font-bold text-green-600">
+                    {formatAmount(BigInt(params.minAmountOut as string))}
+                  </p>
                 </div>
               </div>
             </div>
@@ -680,11 +752,7 @@ function SignPage(): ReactElement {
                 copied={copiedField === 'tokenOut'}
               />
               {showFeeToken && (
-                <DetailRow
-                  label="Fee Token"
-                  value={formatAddress(feeToken!, 6)}
-                  mono
-                />
+                <DetailRow label="Fee Token" value={formatAddress(feeToken!, 6)} mono />
               )}
             </div>
           </>
@@ -731,11 +799,7 @@ function SignPage(): ReactElement {
                 copied={copiedField === 'validatorToken'}
               />
               {showFeeToken && (
-                <DetailRow
-                  label="Fee Token"
-                  value={formatAddress(feeToken!, 6)}
-                  mono
-                />
+                <DetailRow label="Fee Token" value={formatAddress(feeToken!, 6)} mono />
               )}
             </div>
           </>
@@ -782,11 +846,7 @@ function SignPage(): ReactElement {
                 copied={copiedField === 'validatorToken'}
               />
               {showFeeToken && (
-                <DetailRow
-                  label="Fee Token"
-                  value={formatAddress(feeToken!, 6)}
-                  mono
-                />
+                <DetailRow label="Fee Token" value={formatAddress(feeToken!, 6)} mono />
               )}
             </div>
           </>
@@ -815,74 +875,151 @@ function SignPage(): ReactElement {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm"
-      >
-        <div className="bg-white border border-border/50 rounded-2xl shadow-sm overflow-hidden">
-          {/* App Info Header */}
-          <div className="px-6 pt-5 pb-3 border-b border-border/30">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                {pendingRequest.appInfo.icon ? (
-                  <img
-                    src={pendingRequest.appInfo.icon}
-                    alt={pendingRequest.appInfo.name}
-                    className="w-6 h-6"
-                  />
-                ) : (
-                  <div className="w-6 h-6 rounded bg-primary/20" />
-                )}
-              </div>
-              <div className="min-w-0">
-                <p className="text-sm font-medium truncate">{pendingRequest.appInfo.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{pendingRequest.appInfo.url}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Main Content */}
-          <div className="p-6">{renderRequestUI()}</div>
-
-          {/* Warning */}
-          <div className="px-6 pb-4">
-            <div className="flex items-start gap-2.5 p-3 bg-amber-50 rounded-xl border border-amber-100">
-              <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-xs font-medium text-amber-800 mb-0.5">
-                  {requestType === 'sign_message' ? 'Signing Request' : 'Transaction Request'}
-                </p>
-                <p className="text-xs text-amber-700">
-                  {requestType === 'sign_message'
-                    ? 'Only sign messages from apps you trust. This signature may be used for authentication or authorization.'
-                    : 'Review all details carefully before confirming. Blockchain transactions cannot be reversed.'}
-                </p>
+    <>
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-sm"
+        >
+          <div className="bg-white border border-border/50 rounded-2xl shadow-sm overflow-hidden">
+            {/* App Info Header */}
+            <div className="px-6 pt-5 pb-3 border-b border-border/30">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                  {pendingRequest.appInfo.icon ? (
+                    <img
+                      src={pendingRequest.appInfo.icon}
+                      alt={pendingRequest.appInfo.name}
+                      className="w-6 h-6"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 rounded bg-primary/20" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{pendingRequest.appInfo.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">
+                    {pendingRequest.appInfo.url}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Actions */}
-          <div className="px-6 pb-6 flex gap-3">
-            <Button
-              variant="outline"
-              className="flex-1 h-11"
-              onClick={handleReject}
-              disabled={status === 'processing'}
-            >
-              Reject
-            </Button>
-            <Button
-              className="flex-1 h-11"
-              onClick={handleApprove}
-              isLoading={status === 'processing'}
-            >
-              {requestType === 'sign_message' ? 'Sign Message' : 'Confirm & Send'}
-            </Button>
+            {/* Main Content */}
+            <div className="p-6">{renderRequestUI()}</div>
+
+            {/* Wallet Required - if not authenticated */}
+            {!isConnected && (
+              <div className="px-6 pb-4">
+                <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Wallet className="w-4 h-4 text-amber-600" />
+                    <p className="text-xs font-medium text-amber-700">Wallet Required</p>
+                  </div>
+                  <p className="text-sm text-amber-800 mb-3">
+                    Sign in to your wallet to approve this request.
+                  </p>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="flex-1 h-9 text-xs bg-white"
+                      onClick={() => setShowWalletSelectModal(true)}
+                      disabled={isConnecting}
+                    >
+                      <Fingerprint className="w-3.5 h-3.5 mr-1.5" />
+                      Sign In
+                    </Button>
+                    <Button
+                      size="sm"
+                      className="flex-1 h-9 text-xs"
+                      onClick={() => setShowCreateWalletModal(true)}
+                      disabled={isConnecting}
+                    >
+                      <Sparkles className="w-3.5 h-3.5 mr-1.5" />
+                      Create Wallet
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Connected wallet info */}
+            {isConnected && address && (
+              <div className="px-6 pb-4">
+                <div className="p-3 bg-green-50 rounded-lg border border-green-100">
+                  <div className="flex items-center gap-2 mb-1">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <p className="text-xs font-medium text-green-700">Signing with</p>
+                  </div>
+                  <p className="text-sm font-mono text-green-800">{formatAddress(address, 8)}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Warning */}
+            <div className="px-6 pb-4">
+              <div className="flex items-start gap-2.5 p-3 bg-amber-50 rounded-xl border border-amber-100">
+                <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-xs font-medium text-amber-800 mb-0.5">
+                    {requestType === 'sign_message' ? 'Signing Request' : 'Transaction Request'}
+                  </p>
+                  <p className="text-xs text-amber-700">
+                    {requestType === 'sign_message'
+                      ? 'Only sign messages from apps you trust. This signature may be used for authentication or authorization.'
+                      : 'Review all details carefully before confirming. Blockchain transactions cannot be reversed.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="px-6 pb-6 flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1 h-11"
+                onClick={handleReject}
+                disabled={status === 'processing' || isConnecting}
+              >
+                Reject
+              </Button>
+              <Button
+                className="flex-1 h-11"
+                onClick={handleApprove}
+                isLoading={status === 'processing' || isConnecting}
+                disabled={!isConnected}
+              >
+                {isConnected
+                  ? requestType === 'sign_message'
+                    ? 'Sign Message'
+                    : 'Confirm & Send'
+                  : 'Sign In First'}
+              </Button>
+            </div>
           </div>
-        </div>
-      </motion.div>
-    </div>
+        </motion.div>
+      </div>
+
+      {/* Create Wallet Modal */}
+      <CreateWalletModal
+        isOpen={showCreateWalletModal}
+        isLoading={isConnecting}
+        onClose={() => setShowCreateWalletModal(false)}
+        onCreateWallet={handleCreateWallet}
+      />
+
+      {/* Wallet Select Modal (Sign In) */}
+      <WalletSelectModal
+        isOpen={showWalletSelectModal}
+        isLoading={isConnecting}
+        hasInjectedWallet={hasInjectedWallet}
+        onClose={() => setShowWalletSelectModal(false)}
+        onSelectPasskey={handlePasskeySignIn}
+        onSelectInjected={handleInjectedConnect}
+        onCreateWallet={() => setShowCreateWalletModal(true)}
+      />
+    </>
   );
 }

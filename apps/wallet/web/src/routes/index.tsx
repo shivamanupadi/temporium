@@ -264,6 +264,7 @@ function HomePage(): ReactElement {
           onClose={() => setShowWalletSelectModal(false)}
           onSelectPasskey={handlePasskeySignIn}
           onSelectInjected={handleInjectedConnect}
+          onCreateWallet={() => setShowCreateWalletModal(true)}
         />
       </>
     );
