@@ -11,6 +11,7 @@ import {
   Sparkles,
   ArrowRight,
   Wallet,
+  RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -46,68 +47,13 @@ function ConnectPage(): ReactElement {
   } = useTempo();
 
   const [pendingRequest, setPendingRequest] = useState<PendingRequest | null>(null);
-  const [status, setStatus] = useState<'waiting' | 'processing' | 'success' | 'error'>('waiting');
+  const [status, setStatus] = useState<'waiting' | 'processing' | 'success' | 'error' | 'rejected'>('waiting');
   const [error, setError] = useState<string | null>(null);
   const [sourceWindow, setSourceWindow] = useState<Window | null>(null);
   const [sourceOrigin, setSourceOrigin] = useState<string | null>(null);
   const [showCreateWalletModal, setShowCreateWalletModal] = useState(false);
   const [showWalletSelectModal, setShowWalletSelectModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<'connect' | null>(null);
-
-  // Listen for incoming connection requests
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      const parsed = parseMessage(event);
-      if (!parsed) return;
-
-      const { request, origin } = parsed;
-
-      // Only handle connect requests on this page
-      if (request.method !== 'connect') {
-        console.log('[Connect] Ignoring non-connect request:', request.method);
-        return;
-      }
-
-      console.log('[Connect] Received connect request from:', origin);
-
-      const connectRequest = request as ConnectRequest;
-      const pending = createPendingRequest(connectRequest, origin);
-
-      setPendingRequest(pending);
-      setSourceWindow(event.source as Window);
-      setSourceOrigin(origin);
-
-      // Check if auto-approve (already connected)
-      const { autoApprove } = handleConnectRequest(connectRequest, origin);
-
-      if (autoApprove && isConnected && address) {
-        // Auto-approve for already connected apps
-        completeConnection(connectRequest, address);
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-
-    // Notify opener that wallet is ready
-    if (window.opener) {
-      window.opener.postMessage(
-        { type: 'TEMPO_WALLET_READY', version: '1.0.0' },
-        '*'
-      );
-    }
-
-    return () => {
-      window.removeEventListener('message', handleMessage);
-    };
-  }, [isConnected, address]);
-
-  // When user completes authentication, proceed with connection
-  useEffect(() => {
-    if (pendingAction === 'connect' && isConnected && address && pendingRequest && !isConnecting) {
-      setPendingAction(null);
-      completeConnection(pendingRequest.request as ConnectRequest, address);
-    }
-  }, [isConnected, address, pendingAction, pendingRequest, isConnecting]);
 
   const completeConnection = useCallback(
     async (request: ConnectRequest, walletAddress: string) => {
@@ -138,6 +84,64 @@ function ConnectPage(): ReactElement {
     },
     [sourceOrigin, sourceWindow]
   );
+
+  // Listen for incoming connection requests
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      const parsed = parseMessage(event);
+      if (!parsed) return;
+
+      const { request, origin } = parsed;
+
+      // Only handle connect requests on this page
+      if (request.method !== 'connect') {
+        console.log('[Connect] Ignoring non-connect request:', request.method);
+        return;
+      }
+
+      console.log('[Connect] Received connect request from:', origin);
+
+      const connectRequest = request as ConnectRequest;
+      const pending = createPendingRequest(connectRequest, origin);
+
+      setPendingRequest(pending);
+      setSourceWindow(event.source as Window);
+      setSourceOrigin(origin);
+      // Reset any previous error state
+      setStatus('waiting');
+      setError(null);
+
+      // Check if auto-approve (already connected)
+      const { autoApprove } = handleConnectRequest(connectRequest, origin);
+
+      if (autoApprove && isConnected && address) {
+        // Auto-approve for already connected apps
+        completeConnection(connectRequest, address);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    // Notify opener that wallet is ready
+    if (window.opener) {
+      window.opener.postMessage(
+        { type: 'TEMPO_WALLET_READY', version: '1.0.0' },
+        '*'
+      );
+    }
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [isConnected, address, completeConnection]);
+
+  // When user completes authentication, proceed with connection
+  useEffect(() => {
+    if (pendingAction === 'connect' && isConnected && address && pendingRequest && !isConnecting) {
+      setPendingAction(null);
+      completeConnection(pendingRequest.request as ConnectRequest, address);
+    }
+  }, [isConnected, address, pendingAction, pendingRequest, isConnecting, completeConnection]);
 
   const handleApprove = useCallback(() => {
     if (!pendingRequest || !sourceOrigin) return;
@@ -212,14 +216,18 @@ function ConnectPage(): ReactElement {
       sendResponse(sourceOrigin, response, sourceWindow);
     }
 
-    setStatus('error');
-    setError('Connection rejected');
+    setStatus('rejected');
 
     // Close window after short delay
     setTimeout(() => {
       window.close();
     }, 1000);
   }, [pendingRequest, sourceOrigin, sourceWindow]);
+
+  const handleRetry = useCallback(() => {
+    setStatus('waiting');
+    setError(null);
+  }, []);
 
   const handleGoToWallet = () => {
     navigate({ to: '/' });
@@ -274,7 +282,30 @@ function ConnectPage(): ReactElement {
     );
   }
 
-  // Error state
+  // Rejected state (user explicitly rejected)
+  if (status === 'rejected') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-sm"
+        >
+          <div className="bg-white border border-border/50 rounded-2xl p-8 text-center shadow-sm">
+            <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-6">
+              <XCircle className="w-8 h-8 text-amber-600" />
+            </div>
+            <h1 className="text-xl font-semibold mb-2">Connection Rejected</h1>
+            <p className="text-sm text-muted-foreground">
+              You declined to connect to {pendingRequest?.appInfo.name || 'the app'}
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Error state (actual error occurred)
   if (status === 'error') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -288,7 +319,16 @@ function ConnectPage(): ReactElement {
               <XCircle className="w-8 h-8 text-red-600" />
             </div>
             <h1 className="text-xl font-semibold mb-2">Connection Failed</h1>
-            <p className="text-sm text-muted-foreground">{error || 'Something went wrong'}</p>
+            <p className="text-sm text-muted-foreground mb-6">{error || 'Something went wrong'}</p>
+            <div className="flex gap-3">
+              <Button variant="outline" className="flex-1" onClick={() => window.close()}>
+                Close
+              </Button>
+              <Button className="flex-1" onClick={handleRetry}>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Try Again
+              </Button>
+            </div>
           </div>
         </motion.div>
       </div>
