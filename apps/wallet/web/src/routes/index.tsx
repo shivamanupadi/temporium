@@ -114,8 +114,8 @@ function HomePage(): ReactElement {
     }
   };
 
-  const handleDisconnect = () => {
-    disconnect();
+  const handleDisconnect = async () => {
+    await disconnect();
     setConnectedApps([]);
   };
 

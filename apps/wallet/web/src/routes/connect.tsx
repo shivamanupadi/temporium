@@ -72,10 +72,10 @@ function ConnectPage(): ReactElement {
 
         setStatus('success');
 
-        // Close window after short delay
+        // Close window after delay (giving user time to see success)
         setTimeout(() => {
           window.close();
-        }, 1500);
+        }, 2000);
       } catch (err) {
         console.error('[Connect] Approval failed:', err);
         setError(err instanceof Error ? err.message : 'Connection failed');

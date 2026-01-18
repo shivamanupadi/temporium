@@ -1,6 +1,6 @@
 import { type ReactElement } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Fingerprint, Wallet, X, ExternalLink, Sparkles } from 'lucide-react';
+import { Fingerprint, Wallet, X, ChevronRight, Sparkles } from 'lucide-react';
 import { modalAnimation } from '@/lib/utils';
 
 interface WalletOption {
@@ -121,7 +121,7 @@ export function WalletSelectModal({
                       <p className="text-[14px] font-medium text-gray-900">{option.name}</p>
                       <p className="text-[12px] text-gray-500">{option.description}</p>
                     </div>
-                    {option.available && <ExternalLink className="h-4 w-4 text-gray-300" />}
+                    {option.available && <ChevronRight className="h-4 w-4 text-gray-300" />}
                   </button>
                 ))}
               </div>

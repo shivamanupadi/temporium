@@ -203,7 +203,7 @@ function SignPage(): ReactElement {
 
   const [pendingRequest, setPendingRequest] = useState<PendingRequest | null>(null);
   const [requestType, setRequestType] = useState<RequestType | null>(null);
-  const [status, setStatus] = useState<'waiting' | 'processing' | 'success' | 'error'>('waiting');
+  const [status, setStatus] = useState<'waiting' | 'processing' | 'success' | 'error' | 'rejected'>('waiting');
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [sourceWindow, setSourceWindow] = useState<Window | null>(null);
@@ -484,10 +484,10 @@ function SignPage(): ReactElement {
 
       setStatus('success');
 
-      // Close window after delay
+      // Close window after delay (giving user time to see success and explorer link)
       setTimeout(() => {
         window.close();
-      }, 2500);
+      }, 3000);
     } catch (err) {
       console.error('[Sign] Failed:', err);
       const friendlyError = getUserFriendlyError(err);
@@ -605,9 +605,12 @@ function SignPage(): ReactElement {
 
     sendResponse(sourceOrigin, response, sourceWindow);
 
+    setStatus('rejected');
+
+    // Close window after showing rejection
     setTimeout(() => {
       window.close();
-    }, 500);
+    }, 1000);
   }, [pendingRequest, sourceOrigin, sourceWindow]);
 
   const handleGoToWallet = () => {
@@ -678,7 +681,30 @@ function SignPage(): ReactElement {
     );
   }
 
-  // Error state
+  // Rejected state (user explicitly rejected)
+  if (status === 'rejected') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-sm"
+        >
+          <div className="bg-white border border-border/50 rounded-2xl p-8 text-center shadow-sm">
+            <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-6">
+              <XCircle className="w-8 h-8 text-amber-600" />
+            </div>
+            <h1 className="text-xl font-semibold mb-2">Request Rejected</h1>
+            <p className="text-sm text-muted-foreground">
+              You declined the {requestType === 'sign_message' ? 'signature' : 'transaction'} request
+            </p>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Error state (actual error occurred)
   if (status === 'error') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
