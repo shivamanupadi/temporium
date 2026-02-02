@@ -16,7 +16,8 @@
     "apps/node-manager/home",
     "apps/playground",
     "apps/playground/*",
-    "packages/*"
+    "packages/*",
+    "packages/wallet-connect/example"
   ],
   "scripts": {
     "dev": "turbo run dev",

@@ -59,6 +59,9 @@ export { WalletConnect } from './client';
 export type {
   WalletConnectConfig,
   ConnectionResult,
+  ConnectionState,
+  ConnectionEventType,
+  ConnectionEventListener,
   SignMessageResult,
   TransactionResult,
   // Tempo SDK compatible types
@@ -69,4 +72,4 @@ export type {
   RemoveLiquidityParams,
   AppPermission,
 } from './types';
-export { WALLET_CONNECT_VERSION } from './types';
+export { WALLET_CONNECT_VERSION, WalletConnectErrorCode, WalletConnectError } from './types';

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { useState, type ReactElement } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -10,31 +10,25 @@ import {
   Pencil,
   Trash2,
   ExternalLink,
-  ChevronLeft,
   Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useContacts, type Contact } from '@/hooks/useContacts';
 import { formatAddress, isValidAddress } from '@/lib/utils';
 import { getExplorerAddressUrl } from '@/lib/tempo-client';
 import type { Address } from 'viem';
 
-export const Route = createFileRoute('/contacts')({
+export const Route = createFileRoute('/wallet/contacts')({
   component: ContactsPage,
 });
 
 type ModalState = 'add' | 'edit' | 'delete' | null;
 
 function ContactsPage(): ReactElement {
-  const { contacts, isLoading, addContact, editContact, removeContact, refresh } = useContacts();
+  const { contacts, isLoading, addContact, editContact, removeContact } = useContacts();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [modalState, setModalState] = useState<ModalState>(null);
@@ -143,147 +137,135 @@ function ContactsPage(): ReactElement {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-border/50">
-        <div className="max-w-lg mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link to="/">
-              <Button variant="ghost" size="icon" className="h-9 w-9">
-                <ChevronLeft className="w-5 h-5" />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-lg font-semibold">Contacts</h1>
-              <p className="text-xs text-muted-foreground">
-                {contacts.length} contact{contacts.length !== 1 ? 's' : ''}
-              </p>
-            </div>
-          </div>
-          <Button size="sm" onClick={handleOpenAdd} className="h-8 px-3">
-            <Plus className="h-4 w-4" />
-            Add
-          </Button>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-slate-900">Contacts</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {contacts.length} contact{contacts.length !== 1 ? 's' : ''}
+          </p>
         </div>
-      </header>
+        <Button size="sm" onClick={handleOpenAdd} className="h-8 px-3">
+          <Plus className="h-4 w-4" />
+          Add
+        </Button>
+      </div>
 
-      {/* Content */}
-      <main className="max-w-lg mx-auto p-4">
-        {/* Search */}
-        {contacts.length > 0 && (
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search contacts..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="pl-9 h-10"
-            />
+      {/* Search */}
+      {contacts.length > 0 && (
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search contacts..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="pl-9 h-10"
+          />
+        </div>
+      )}
+
+      {/* Contacts List */}
+      <div className="bg-white border border-border/50 rounded-2xl shadow-sm overflow-hidden">
+        {isLoading ? (
+          <div className="divide-y divide-border/50">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="flex items-center justify-between px-4 py-3 animate-pulse">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-muted" />
+                  <div>
+                    <div className="h-4 w-24 bg-muted rounded mb-1.5" />
+                    <div className="h-3 w-32 bg-muted rounded" />
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        )}
-
-        {/* Contacts List */}
-        <div className="bg-white border border-border/50 rounded-2xl shadow-sm overflow-hidden">
-          {isLoading ? (
-            <div className="divide-y divide-border/50">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="flex items-center justify-between px-4 py-3 animate-pulse">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-muted" />
-                    <div>
-                      <div className="h-4 w-24 bg-muted rounded mb-1.5" />
-                      <div className="h-3 w-32 bg-muted rounded" />
+        ) : filteredContacts.length === 0 ? (
+          <div className="p-8 text-center">
+            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+              <User className="h-6 w-6 text-muted-foreground" />
+            </div>
+            <p className="text-[14px] font-medium text-foreground mb-1">
+              {searchQuery ? 'No contacts found' : 'No contacts yet'}
+            </p>
+            <p className="text-[13px] text-muted-foreground mb-4">
+              {searchQuery ? 'Try a different search' : 'Add contacts for quick payments'}
+            </p>
+            {!searchQuery && (
+              <Button variant="outline" size="sm" onClick={handleOpenAdd}>
+                <Plus className="h-4 w-4" />
+                Add Contact
+              </Button>
+            )}
+          </div>
+        ) : (
+          <AnimatePresence>
+            {filteredContacts.map((contact, index) => (
+              <motion.div
+                key={contact.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ delay: index * 0.03 }}
+                className={`flex items-center justify-between px-4 py-3 ${
+                  index < filteredContacts.length - 1 ? 'border-b border-border/50' : ''
+                }`}
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <span className="text-[13px] font-semibold text-primary">
+                      {contact.name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-medium text-foreground truncate">
+                      {contact.name}
+                    </p>
+                    <div className="flex items-center gap-1">
+                      <span className="text-[11px] text-muted-foreground font-mono">
+                        {formatAddress(contact.address, 6)}
+                      </span>
+                      <button
+                        onClick={() =>
+                          window.open(getExplorerAddressUrl(contact.address), '_blank')
+                        }
+                        className="p-0.5 rounded hover:bg-muted transition-colors"
+                      >
+                        <ExternalLink className="h-3 w-3 text-muted-foreground hover:text-primary" />
+                      </button>
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
-          ) : filteredContacts.length === 0 ? (
-            <div className="p-8 text-center">
-              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
-                <User className="h-6 w-6 text-muted-foreground" />
-              </div>
-              <p className="text-[14px] font-medium text-foreground mb-1">
-                {searchQuery ? 'No contacts found' : 'No contacts yet'}
-              </p>
-              <p className="text-[13px] text-muted-foreground mb-4">
-                {searchQuery ? 'Try a different search' : 'Add contacts for quick payments'}
-              </p>
-              {!searchQuery && (
-                <Button variant="outline" size="sm" onClick={handleOpenAdd}>
-                  <Plus className="h-4 w-4" />
-                  Add Contact
-                </Button>
-              )}
-            </div>
-          ) : (
-            <AnimatePresence>
-              {filteredContacts.map((contact, index) => (
-                <motion.div
-                  key={contact.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ delay: index * 0.03 }}
-                  className={`flex items-center justify-between px-4 py-3 ${
-                    index < filteredContacts.length - 1 ? 'border-b border-border/50' : ''
-                  }`}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <span className="text-[13px] font-semibold text-primary">
-                        {contact.name.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[13px] font-medium text-foreground truncate">
-                        {contact.name}
-                      </p>
-                      <div className="flex items-center gap-1">
-                        <span className="text-[11px] text-muted-foreground font-mono">
-                          {formatAddress(contact.address, 6)}
-                        </span>
-                        <button
-                          onClick={() =>
-                            window.open(getExplorerAddressUrl(contact.address), '_blank')
-                          }
-                          className="p-0.5 rounded hover:bg-muted transition-colors"
-                        >
-                          <ExternalLink className="h-3 w-3 text-muted-foreground hover:text-primary" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => handleCopy(contact)}
-                      className="p-2 rounded-md hover:bg-muted transition-colors"
-                    >
-                      {copiedId === contact.id ? (
-                        <Check className="h-3.5 w-3.5 text-emerald-500" />
-                      ) : (
-                        <Copy className="h-3.5 w-3.5 text-muted-foreground" />
-                      )}
-                    </button>
-                    <button
-                      onClick={() => handleOpenEdit(contact)}
-                      className="p-2 rounded-md hover:bg-muted transition-colors"
-                    >
-                      <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                    </button>
-                    <button
-                      onClick={() => handleOpenDelete(contact)}
-                      className="p-2 rounded-md hover:bg-red-50 transition-colors"
-                    >
-                      <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-red-500" />
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          )}
-        </div>
-      </main>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => handleCopy(contact)}
+                    className="p-2 rounded-md hover:bg-muted transition-colors"
+                  >
+                    {copiedId === contact.id ? (
+                      <Check className="h-3.5 w-3.5 text-emerald-500" />
+                    ) : (
+                      <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleOpenEdit(contact)}
+                    className="p-2 rounded-md hover:bg-muted transition-colors"
+                  >
+                    <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                  <button
+                    onClick={() => handleOpenDelete(contact)}
+                    className="p-2 rounded-md hover:bg-red-50 transition-colors"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-red-500" />
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        )}
+      </div>
 
       {/* Add/Edit Modal */}
       <Dialog open={modalState === 'add' || modalState === 'edit'} onOpenChange={() => resetForm()}>

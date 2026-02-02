@@ -25,6 +25,7 @@ export type AppPermission = 'connect' | 'sign' | 'send';
 export type WalletConnectMethod =
   | 'connect'
   | 'disconnect'
+  | 'verify_connection'
   | 'sign_message'
   | 'sign_transaction'
   | 'send_transaction';
@@ -58,6 +59,16 @@ export interface ConnectRequest extends WalletConnectRequest {
 export interface DisconnectRequest extends WalletConnectRequest {
   method: 'disconnect';
   params: Record<string, never>;
+}
+
+/**
+ * Verify connection request (lightweight check if still connected)
+ */
+export interface VerifyConnectionRequest extends WalletConnectRequest {
+  method: 'verify_connection';
+  params: {
+    address?: string;
+  };
 }
 
 /**
@@ -107,9 +118,35 @@ export interface SendTransactionRequest extends WalletConnectRequest {
 export type AnyWalletConnectRequest =
   | ConnectRequest
   | DisconnectRequest
+  | VerifyConnectionRequest
   | SignMessageRequest
   | SignTransactionRequest
   | SendTransactionRequest;
+
+/**
+ * Error codes for programmatic error handling
+ */
+export type WalletConnectErrorCode =
+  | 'NOT_CONNECTED'
+  | 'CONNECTION_REVOKED'
+  | 'CONNECTION_TIMEOUT'
+  | 'POPUP_BLOCKED'
+  | 'PERMISSION_DENIED'
+  | 'SIGN_PERMISSION_REQUIRED'
+  | 'SEND_PERMISSION_REQUIRED'
+  | 'INVALID_ADDRESS'
+  | 'INVALID_AMOUNT'
+  | 'INVALID_PARAMS'
+  | 'MISSING_REQUIRED_FIELD'
+  | 'INSUFFICIENT_BALANCE'
+  | 'TRANSACTION_FAILED'
+  | 'GAS_ESTIMATION_FAILED'
+  | 'NONCE_CONFLICT'
+  | 'USER_REJECTED'
+  | 'REQUEST_TIMEOUT'
+  | 'NETWORK_ERROR'
+  | 'WALLET_NOT_READY'
+  | 'UNKNOWN';
 
 /**
  * Response types
@@ -118,6 +155,8 @@ export interface WalletConnectResponse {
   id: string;
   success: boolean;
   error?: string;
+  errorCode?: WalletConnectErrorCode;
+  result?: unknown;
 }
 
 export interface ConnectResponse extends WalletConnectResponse {

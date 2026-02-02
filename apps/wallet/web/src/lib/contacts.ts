@@ -37,17 +37,13 @@ export function addContact(name: string, address: Address): Contact {
   const contacts = getContacts();
 
   // Check for duplicate address
-  const existingAddress = contacts.find(
-    c => c.address.toLowerCase() === address.toLowerCase()
-  );
+  const existingAddress = contacts.find(c => c.address.toLowerCase() === address.toLowerCase());
   if (existingAddress) {
     throw new Error('Contact with this address already exists');
   }
 
   // Check for duplicate name
-  const existingName = contacts.find(
-    c => c.name.toLowerCase() === name.toLowerCase()
-  );
+  const existingName = contacts.find(c => c.name.toLowerCase() === name.toLowerCase());
   if (existingName) {
     throw new Error('Contact with this name already exists');
   }
@@ -142,9 +138,7 @@ export function searchContacts(query: string): Contact[] {
   const lowerQuery = query.toLowerCase();
 
   return contacts.filter(
-    c =>
-      c.name.toLowerCase().includes(lowerQuery) ||
-      c.address.toLowerCase().includes(lowerQuery)
+    c => c.name.toLowerCase().includes(lowerQuery) || c.address.toLowerCase().includes(lowerQuery)
   );
 }
 

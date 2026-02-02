@@ -1,19 +1,7 @@
 import { type ReactElement, useState, useEffect, useCallback, useRef } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
-import {
-  Shield,
-  CheckCircle,
-  XCircle,
-  Globe,
-  Loader2,
-  Fingerprint,
-  Sparkles,
-  ArrowRight,
-  Wallet,
-  RefreshCw,
-  Clock,
-} from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, Fingerprint, Plus, Clock, Globe } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { CreateWalletModal } from '@/components/CreateWalletModal';
@@ -26,9 +14,11 @@ import {
   sendResponse,
   handleConnectRequest,
   approveConnect,
-  rejectConnect,
   createPendingRequest,
+  WalletConnectErrorCode,
+  createErrorResponse,
 } from '@/lib/wallet-connect';
+import { isAppConnected } from '@/lib/connected-apps';
 import type { ConnectRequest, PendingRequest } from '@/types';
 import { formatAddress } from '@/lib/utils';
 
@@ -38,18 +28,13 @@ export const Route = createFileRoute('/connect')({
 
 function ConnectPage(): ReactElement {
   const navigate = useNavigate();
-  const {
-    isConnected,
-    isConnecting,
-    address,
-    signUp,
-    signIn,
-    connectInjected,
-    hasInjectedWallet,
-  } = useTempo();
+  const { isConnected, isConnecting, address, signUp, signIn, connectInjected, hasInjectedWallet } =
+    useTempo();
 
   const [pendingRequest, setPendingRequest] = useState<PendingRequest | null>(null);
-  const [status, setStatus] = useState<'waiting' | 'processing' | 'success' | 'error' | 'rejected' | 'timeout'>('waiting');
+  const [status, setStatus] = useState<
+    'waiting' | 'processing' | 'success' | 'error' | 'rejected' | 'timeout'
+  >('waiting');
   const [error, setError] = useState<string | null>(null);
   const [sourceWindow, setSourceWindow] = useState<Window | null>(null);
   const [sourceOrigin, setSourceOrigin] = useState<string | null>(null);
@@ -57,31 +42,35 @@ function ConnectPage(): ReactElement {
   const [showWalletSelectModal, setShowWalletSelectModal] = useState(false);
   const [pendingAction, setPendingAction] = useState<'connect' | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number | null>(null);
-
-  // Timer ref for cleanup
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const completeConnection = useCallback(
-    async (request: ConnectRequest, walletAddress: string) => {
-      if (!sourceOrigin) return;
+    async (
+      request: ConnectRequest,
+      walletAddress: string,
+      origin?: string,
+      targetWindow?: Window
+    ) => {
+      const effectiveOrigin = origin || sourceOrigin;
+      const effectiveWindow = targetWindow || sourceWindow;
+
+      if (!effectiveOrigin) {
+        console.error('[Connect] No origin available');
+        return;
+      }
 
       setStatus('processing');
 
       try {
-        // Create approval response
         const response = approveConnect(request, walletAddress as `0x${string}`, tempoChain.id);
+        console.log('[Connect] Sending approval response:', { origin: effectiveOrigin, response });
 
-        // Send response back to requesting app
-        if (sourceWindow) {
-          sendResponse(sourceOrigin, response, sourceWindow);
+        if (effectiveWindow) {
+          sendResponse(effectiveOrigin, response, effectiveWindow);
         }
 
         setStatus('success');
-
-        // Close window after delay (giving user time to see success)
-        setTimeout(() => {
-          window.close();
-        }, 2000);
+        setTimeout(() => window.close(), 2000);
       } catch (err) {
         console.error('[Connect] Approval failed:', err);
         setError(err instanceof Error ? err.message : 'Connection failed');
@@ -91,17 +80,33 @@ function ConnectPage(): ReactElement {
     [sourceOrigin, sourceWindow]
   );
 
-  // Listen for incoming connection requests
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
+    const handleMessage = (event: MessageEvent): void => {
       const parsed = parseMessage(event);
       if (!parsed) return;
 
       const { request, origin } = parsed;
 
-      // Only handle connect requests on this page
+      // Handle verify_connection requests immediately (lightweight check)
+      if (request.method === 'verify_connection') {
+        const isStillConnected = isAppConnected(origin);
+        const response = isStillConnected
+          ? { id: request.id, success: true, result: { valid: true, address } }
+          : createErrorResponse(
+              request.id,
+              'App not connected',
+              WalletConnectErrorCode.CONNECTION_REVOKED
+            );
+
+        if (event.source) {
+          sendResponse(origin, response, event.source as Window);
+        }
+        // Give enough time for the message to be sent before closing
+        setTimeout(() => window.close(), 500);
+        return;
+      }
+
       if (request.method !== 'connect') {
-        console.log('[Connect] Ignoring non-connect request:', request.method);
         return;
       }
 
@@ -113,35 +118,25 @@ function ConnectPage(): ReactElement {
       setPendingRequest(pending);
       setSourceWindow(event.source as Window);
       setSourceOrigin(origin);
-      // Reset any previous error state
       setStatus('waiting');
       setError(null);
 
-      // Check if auto-approve (already connected)
       const { autoApprove } = handleConnectRequest(connectRequest, origin);
 
       if (autoApprove && isConnected && address) {
-        // Auto-approve for already connected apps
-        completeConnection(connectRequest, address);
+        completeConnection(connectRequest, address, origin, event.source as Window);
       }
     };
 
     window.addEventListener('message', handleMessage);
 
-    // Notify opener that wallet is ready
     if (window.opener) {
-      window.opener.postMessage(
-        { type: 'TEMPO_WALLET_READY', version: '1.0.0' },
-        '*'
-      );
+      window.opener.postMessage({ type: 'TEMPO_WALLET_READY', version: '1.0.0' }, '*');
     }
 
-    return () => {
-      window.removeEventListener('message', handleMessage);
-    };
+    return () => window.removeEventListener('message', handleMessage);
   }, [isConnected, address, completeConnection]);
 
-  // When user completes authentication, proceed with connection
   useEffect(() => {
     if (pendingAction === 'connect' && isConnected && address && pendingRequest && !isConnecting) {
       setPendingAction(null);
@@ -149,10 +144,8 @@ function ConnectPage(): ReactElement {
     }
   }, [isConnected, address, pendingAction, pendingRequest, isConnecting, completeConnection]);
 
-  // Request timeout countdown
   useEffect(() => {
     if (!pendingRequest || status !== 'waiting') {
-      // Clear timer if no request or not in waiting state
       if (timerRef.current) {
         clearInterval(timerRef.current);
         timerRef.current = null;
@@ -161,7 +154,6 @@ function ConnectPage(): ReactElement {
       return;
     }
 
-    // Start countdown
     const timeoutMs = TIMING.CONNECTION_TIMEOUT_MS;
     const endTime = Date.now() + timeoutMs;
     setTimeRemaining(Math.ceil(timeoutMs / 1000));
@@ -169,24 +161,18 @@ function ConnectPage(): ReactElement {
     timerRef.current = setInterval(() => {
       const remaining = Math.ceil((endTime - Date.now()) / 1000);
       if (remaining <= 0) {
-        // Timeout expired
-        if (timerRef.current) {
-          clearInterval(timerRef.current);
-          timerRef.current = null;
-        }
+        if (timerRef.current) clearInterval(timerRef.current);
         setTimeRemaining(0);
         setStatus('timeout');
 
-        // Send timeout response
         if (sourceWindow && sourceOrigin && pendingRequest) {
-          const response = rejectConnect(
-            pendingRequest.request as ConnectRequest,
-            'Request timed out'
+          const response = createErrorResponse(
+            pendingRequest.request.id,
+            'Connection request timed out',
+            WalletConnectErrorCode.CONNECTION_TIMEOUT
           );
           sendResponse(sourceOrigin, response, sourceWindow);
         }
-
-        // Close window after delay
         setTimeout(() => window.close(), 2000);
       } else {
         setTimeRemaining(remaining);
@@ -194,19 +180,50 @@ function ConnectPage(): ReactElement {
     }, 1000);
 
     return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-        timerRef.current = null;
-      }
+      if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [pendingRequest, status, sourceWindow, sourceOrigin]);
 
-  // Keyboard shortcuts (Enter to approve, Escape to reject)
+  const handleReject = useCallback(() => {
+    if (!pendingRequest || !sourceOrigin) return;
+
+    const response = createErrorResponse(
+      pendingRequest.request.id,
+      'User rejected connection',
+      WalletConnectErrorCode.USER_REJECTED
+    );
+    if (sourceWindow) sendResponse(sourceOrigin, response, sourceWindow);
+
+    setStatus('rejected');
+    setTimeout(() => window.close(), 1000);
+  }, [pendingRequest, sourceOrigin, sourceWindow]);
+
+  // Handle window close as rejection
+  useEffect(() => {
+    if (!pendingRequest || status !== 'waiting' || !sourceWindow || !sourceOrigin) return;
+
+    const handleBeforeUnload = (): void => {
+      // Send rejection response when window is closed
+      sendResponse(
+        sourceOrigin,
+        createErrorResponse(
+          pendingRequest.request.id,
+          'User closed the wallet window',
+          WalletConnectErrorCode.USER_REJECTED
+        ),
+        sourceWindow
+      );
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [pendingRequest, status, sourceWindow, sourceOrigin]);
+
+  // Keyboard shortcuts
   useEffect(() => {
     if (!pendingRequest || status !== 'waiting') return;
 
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Don't trigger if modal is open or user is typing
+    const handleKeyDown = (e: KeyboardEvent): void => {
       if (showCreateWalletModal || showWalletSelectModal) return;
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
@@ -215,13 +232,7 @@ function ConnectPage(): ReactElement {
         completeConnection(pendingRequest.request as ConnectRequest, address);
       } else if (e.key === 'Escape') {
         e.preventDefault();
-        const request = pendingRequest.request as ConnectRequest;
-        const response = rejectConnect(request, 'User rejected connection');
-        if (sourceWindow && sourceOrigin) {
-          sendResponse(sourceOrigin, response, sourceWindow);
-        }
-        setStatus('rejected');
-        setTimeout(() => window.close(), 1000);
+        handleReject();
       }
     };
 
@@ -237,16 +248,15 @@ function ConnectPage(): ReactElement {
     sourceWindow,
     sourceOrigin,
     completeConnection,
+    handleReject,
   ]);
 
   const handleApprove = useCallback(() => {
     if (!pendingRequest || !sourceOrigin) return;
 
     if (isConnected && address) {
-      // Already connected, complete immediately
       completeConnection(pendingRequest.request as ConnectRequest, address);
     } else {
-      // Need to authenticate first - show wallet select modal
       setShowWalletSelectModal(true);
     }
   }, [pendingRequest, sourceOrigin, isConnected, address, completeConnection]);
@@ -256,9 +266,7 @@ function ConnectPage(): ReactElement {
       setPendingAction('connect');
       await signUp(walletName);
       setShowCreateWalletModal(false);
-      // Connection will be completed by useEffect when isConnected becomes true
     } catch (err) {
-      console.error('Wallet creation error:', err);
       toast.error(err instanceof Error ? err.message : 'Wallet creation cancelled');
       setPendingAction(null);
     }
@@ -269,15 +277,13 @@ function ConnectPage(): ReactElement {
     try {
       setPendingAction('connect');
       await signIn();
-      // Connection will be completed by useEffect when isConnected becomes true
     } catch (err) {
-      console.error('Sign in error:', err);
       const message = err instanceof Error ? err.message : 'Sign in failed';
-      if (message.includes('publicKey not found')) {
-        toast.error('Passkey not found. Please create a wallet first.');
-      } else {
-        toast.error(message);
-      }
+      toast.error(
+        message.includes('publicKey not found')
+          ? 'Passkey not found. Create a wallet first.'
+          : message
+      );
       setPendingAction(null);
     }
   };
@@ -287,66 +293,36 @@ function ConnectPage(): ReactElement {
     try {
       setPendingAction('connect');
       await connectInjected();
-      // Connection will be completed by useEffect when isConnected becomes true
     } catch (err) {
-      console.error('Wallet connection error:', err);
       const message = err instanceof Error ? err.message : 'Connection failed';
-      if (message.includes('User rejected') || message.includes('rejected')) {
-        toast.error('Connection cancelled');
-      } else if (message.includes('Chain not configured')) {
-        toast.error('Please add Tempo network to your wallet');
-      } else {
-        toast.error(message);
-      }
+      toast.error(message.includes('rejected') ? 'Connection cancelled' : message);
       setPendingAction(null);
     }
   };
 
-  const handleReject = useCallback(() => {
-    if (!pendingRequest || !sourceOrigin) return;
-
-    const request = pendingRequest.request as ConnectRequest;
-    const response = rejectConnect(request, 'User rejected connection');
-
-    if (sourceWindow) {
-      sendResponse(sourceOrigin, response, sourceWindow);
-    }
-
-    setStatus('rejected');
-
-    // Close window after short delay
-    setTimeout(() => {
-      window.close();
-    }, 1000);
-  }, [pendingRequest, sourceOrigin, sourceWindow]);
-
-  const handleRetry = useCallback(() => {
-    setStatus('waiting');
-    setError(null);
-  }, []);
-
-  const handleGoToWallet = () => {
-    navigate({ to: '/' });
-  };
-
-  // No pending request - show waiting state or redirect to wallet
+  // Status screens
   if (!pendingRequest) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-sm"
+          className="w-full max-w-[360px]"
         >
-          <div className="bg-white border border-border/50 rounded-2xl p-8 text-center shadow-sm">
-            <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-6">
-              <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
+          <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm">
+            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+              <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
             </div>
-            <h1 className="text-xl font-semibold mb-2">Waiting for Connection</h1>
-            <p className="text-sm text-muted-foreground mb-6">
+            <h1 className="text-[15px] font-semibold text-gray-900 mb-1">Waiting for Connection</h1>
+            <p className="text-[13px] text-gray-500 mb-5">
               Waiting for an app to request connection...
             </p>
-            <Button variant="outline" onClick={handleGoToWallet} className="w-full">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate({ to: '/' })}
+              className="w-full"
+            >
               Go to Wallet
             </Button>
           </div>
@@ -355,21 +331,20 @@ function ConnectPage(): ReactElement {
     );
   }
 
-  // Success state
   if (status === 'success') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-sm"
+          className="w-full max-w-[360px]"
         >
-          <div className="bg-white border border-border/50 rounded-2xl p-8 text-center shadow-sm">
-            <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="w-8 h-8 text-green-600" />
+          <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm">
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-6 h-6 text-primary" />
             </div>
-            <h1 className="text-xl font-semibold mb-2">Connected</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-[15px] font-semibold text-gray-900 mb-1">Connected</h1>
+            <p className="text-[13px] text-gray-500">
               Successfully connected to {pendingRequest.appInfo.name}
             </p>
           </div>
@@ -378,73 +353,72 @@ function ConnectPage(): ReactElement {
     );
   }
 
-  // Rejected state (user explicitly rejected)
   if (status === 'rejected') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-sm"
+          className="w-full max-w-[360px]"
         >
-          <div className="bg-white border border-border/50 rounded-2xl p-8 text-center shadow-sm">
-            <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center mx-auto mb-6">
-              <XCircle className="w-8 h-8 text-amber-600" />
+          <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm">
+            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+              <XCircle className="w-6 h-6 text-gray-500" />
             </div>
-            <h1 className="text-xl font-semibold mb-2">Connection Rejected</h1>
-            <p className="text-sm text-muted-foreground">
-              You declined to connect to {pendingRequest?.appInfo.name || 'the app'}
-            </p>
+            <h1 className="text-[15px] font-semibold text-gray-900 mb-1">Connection Rejected</h1>
+            <p className="text-[13px] text-gray-500">You declined to connect</p>
           </div>
         </motion.div>
       </div>
     );
   }
 
-  // Timeout state
   if (status === 'timeout') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-sm"
+          className="w-full max-w-[360px]"
         >
-          <div className="bg-white border border-border/50 rounded-2xl p-8 text-center shadow-sm">
-            <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-6">
-              <Clock className="w-8 h-8 text-gray-600" />
+          <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm">
+            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+              <Clock className="w-6 h-6 text-gray-500" />
             </div>
-            <h1 className="text-xl font-semibold mb-2">Request Timed Out</h1>
-            <p className="text-sm text-muted-foreground">
-              The connection request from {pendingRequest?.appInfo.name || 'the app'} has expired
-            </p>
+            <h1 className="text-[15px] font-semibold text-gray-900 mb-1">Request Timed Out</h1>
+            <p className="text-[13px] text-gray-500">The connection request has expired</p>
           </div>
         </motion.div>
       </div>
     );
   }
 
-  // Error state (actual error occurred)
   if (status === 'error') {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-sm"
+          className="w-full max-w-[360px]"
         >
-          <div className="bg-white border border-border/50 rounded-2xl p-8 text-center shadow-sm">
-            <div className="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-6">
-              <XCircle className="w-8 h-8 text-red-600" />
+          <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm">
+            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
+              <XCircle className="w-6 h-6 text-gray-500" />
             </div>
-            <h1 className="text-xl font-semibold mb-2">Connection Failed</h1>
-            <p className="text-sm text-muted-foreground mb-6">{error || 'Something went wrong'}</p>
-            <div className="flex gap-3">
-              <Button variant="outline" className="flex-1" onClick={() => window.close()}>
-                Close
+            <h1 className="text-[15px] font-semibold text-gray-900 mb-1">Connection Failed</h1>
+            <p className="text-[13px] text-gray-500 mb-5">{error || 'Something went wrong'}</p>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="flex-1" onClick={() => window.close()}>
+                Cancel
               </Button>
-              <Button className="flex-1" onClick={handleRetry}>
-                <RefreshCw className="w-4 h-4 mr-2" />
+              <Button
+                size="sm"
+                className="flex-1"
+                onClick={() => {
+                  setStatus('waiting');
+                  setError(null);
+                }}
+              >
                 Try Again
               </Button>
             </div>
@@ -454,148 +428,144 @@ function ConnectPage(): ReactElement {
     );
   }
 
-  // Connection request UI
+  // Main connection request UI
   return (
     <>
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-sm"
+          className="w-full max-w-[360px]"
         >
-          <div className="bg-white border border-border/50 rounded-2xl shadow-sm overflow-hidden">
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
             {/* Header */}
-            <div className="p-6 border-b border-border/50">
-              <div className="flex items-center justify-center mb-4">
-                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <div className="p-5 border-b border-gray-100">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
                   {pendingRequest.appInfo.icon ? (
-                    <img
-                      src={pendingRequest.appInfo.icon}
-                      alt={pendingRequest.appInfo.name}
-                      className="w-10 h-10 rounded-lg"
-                    />
+                    <img src={pendingRequest.appInfo.icon} alt="" className="w-6 h-6 rounded" />
                   ) : (
-                    <Globe className="w-8 h-8 text-primary" />
+                    <Globe className="w-5 h-5 text-gray-400" />
                   )}
                 </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[14px] font-medium text-gray-900 truncate">
+                    {pendingRequest.appInfo.name}
+                  </p>
+                  <p className="text-[12px] text-gray-500 truncate">{pendingRequest.appInfo.url}</p>
+                </div>
               </div>
-              <h1 className="text-xl font-semibold text-center mb-1">
-                Connect to {pendingRequest.appInfo.name}
-              </h1>
-              <p className="text-sm text-muted-foreground text-center">
-                {pendingRequest.appInfo.url}
+              <h1 className="text-[15px] font-semibold text-gray-900">Connect your wallet</h1>
+              <p className="text-[13px] text-gray-500 mt-1">
+                This app would like to connect to your wallet
               </p>
             </div>
 
             {/* Permissions */}
-            <div className="p-6 space-y-4">
-              <div className="flex items-start gap-3 p-3 bg-muted/50 rounded-lg">
-                <Shield className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-medium">This app will be able to:</p>
-                  <ul className="text-sm text-muted-foreground mt-1 space-y-1">
-                    <li>• View your wallet address</li>
-                    <li>• Request transaction signatures</li>
-                    <li>• Request message signatures</li>
-                  </ul>
-                </div>
-              </div>
-
-              {/* Connected wallet info or sign in prompt */}
-              {isConnected && address ? (
-                <div className="p-3 bg-green-50 rounded-lg border border-green-100">
-                  <div className="flex items-center gap-2 mb-1">
-                    <CheckCircle className="w-4 h-4 text-green-600" />
-                    <p className="text-xs font-medium text-green-700">Wallet Connected</p>
+            <div className="p-5 border-b border-gray-100">
+              <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-3">
+                This app will be able to
+              </p>
+              <div className="space-y-2">
+                {[
+                  'View your wallet address',
+                  'Request transaction approval',
+                  'Request message signatures',
+                ].map(perm => (
+                  <div key={perm} className="flex items-center gap-2">
+                    <CheckCircle className="w-4 h-4 text-primary" />
+                    <span className="text-[13px] text-gray-700">{perm}</span>
                   </div>
-                  <p className="text-sm font-mono text-green-800">{formatAddress(address, 8)}</p>
+                ))}
+              </div>
+            </div>
+
+            {/* Wallet Status */}
+            <div className="p-5 border-b border-gray-100">
+              {isConnected && address ? (
+                <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <CheckCircle className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-[12px] font-medium text-gray-700">Wallet Connected</p>
+                    <p className="text-[12px] font-mono text-primary">
+                      {formatAddress(address, 6)}
+                    </p>
+                  </div>
                 </div>
               ) : (
-                <div className="p-4 bg-amber-50 rounded-lg border border-amber-100">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Wallet className="w-4 h-4 text-amber-600" />
-                    <p className="text-xs font-medium text-amber-700">Wallet Required</p>
-                  </div>
-                  <p className="text-sm text-amber-800 mb-3">
-                    Sign in to your wallet or create a new one to connect.
-                  </p>
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <p className="text-[13px] font-medium text-gray-700 mb-3">Sign in to connect</p>
                   <div className="flex gap-2">
                     <Button
                       size="sm"
                       variant="outline"
-                      className="flex-1 h-9 text-xs bg-white"
+                      className="flex-1 h-9 text-[13px]"
                       onClick={() => setShowWalletSelectModal(true)}
                       disabled={isConnecting}
                     >
-                      <Fingerprint className="w-3.5 h-3.5 mr-1.5" />
+                      <Fingerprint className="w-4 h-4 mr-1.5" />
                       Sign In
                     </Button>
                     <Button
                       size="sm"
-                      className="flex-1 h-9 text-xs"
+                      className="flex-1 h-9 text-[13px]"
                       onClick={() => setShowCreateWalletModal(true)}
                       disabled={isConnecting}
                     >
-                      <Sparkles className="w-3.5 h-3.5 mr-1.5" />
-                      Create Wallet
+                      <Plus className="w-4 h-4 mr-1.5" />
+                      Create
                     </Button>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Timeout Countdown */}
+            {/* Timer */}
             {timeRemaining !== null && timeRemaining > 0 && (
-              <div className="px-6 pb-3">
-                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
+                <div className="flex items-center justify-center gap-1.5 text-[12px] text-gray-500">
                   <Clock className="w-3.5 h-3.5" />
                   <span>
-                    Request expires in{' '}
-                    <span className={timeRemaining <= 10 ? 'text-amber-600 font-medium' : ''}>
-                      {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}
-                    </span>
+                    Expires in {Math.floor(timeRemaining / 60)}:
+                    {(timeRemaining % 60).toString().padStart(2, '0')}
                   </span>
                 </div>
               </div>
             )}
 
             {/* Actions */}
-            <div className="p-6 pt-0 flex gap-3">
+            <div className="p-5 flex gap-3">
               <Button
                 variant="outline"
-                className="flex-1 h-11"
+                className="flex-1 h-10"
                 onClick={handleReject}
                 disabled={status === 'processing' || isConnecting}
               >
-                Reject
+                Cancel
               </Button>
               <Button
-                className="flex-1 h-11"
+                className="flex-1 h-10"
                 onClick={handleApprove}
                 isLoading={status === 'processing' || isConnecting}
-                disabled={!isConnected}
               >
-                {isConnected ? (
-                  <>
-                    Connect
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </>
-                ) : (
-                  'Sign In First'
-                )}
+                {isConnected ? 'Connect' : 'Sign In to Connect'}
               </Button>
             </div>
 
             {/* Keyboard hints */}
             {isConnected && status === 'waiting' && (
-              <div className="px-6 pb-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
+              <div className="px-5 pb-4 flex items-center justify-center gap-4 text-[11px] text-gray-400">
                 <span className="flex items-center gap-1">
-                  <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Enter</kbd>
-                  <span>to connect</span>
+                  <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-[10px] font-mono">
+                    Enter
+                  </kbd>
+                  <span>connect</span>
                 </span>
                 <span className="flex items-center gap-1">
-                  <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Esc</kbd>
-                  <span>to reject</span>
+                  <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Esc</kbd>
+                  <span>cancel</span>
                 </span>
               </div>
             )}
@@ -603,7 +573,6 @@ function ConnectPage(): ReactElement {
         </motion.div>
       </div>
 
-      {/* Create Wallet Modal */}
       <CreateWalletModal
         isOpen={showCreateWalletModal}
         isLoading={isConnecting}
@@ -611,15 +580,14 @@ function ConnectPage(): ReactElement {
         onCreateWallet={handleCreateWallet}
       />
 
-      {/* Wallet Select Modal (Sign In) */}
       <WalletSelectModal
         isOpen={showWalletSelectModal}
         isLoading={isConnecting}
-        hasInjectedWallet={hasInjectedWallet}
         onClose={() => setShowWalletSelectModal(false)}
         onSelectPasskey={handlePasskeySignIn}
-        onSelectInjected={handleInjectedConnect}
         onCreateWallet={() => setShowCreateWalletModal(true)}
+        onInjectedConnect={handleInjectedConnect}
+        hasInjectedWallet={hasInjectedWallet}
       />
     </>
   );

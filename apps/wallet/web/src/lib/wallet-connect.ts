@@ -27,6 +27,114 @@ import type {
 } from '@/types';
 
 /**
+ * Error codes for programmatic error handling
+ * Must match the WalletConnectErrorCode enum in @temporium/wallet-connect
+ */
+export enum WalletConnectErrorCode {
+  // Connection errors
+  NOT_CONNECTED = 'NOT_CONNECTED',
+  CONNECTION_REVOKED = 'CONNECTION_REVOKED',
+  CONNECTION_TIMEOUT = 'CONNECTION_TIMEOUT',
+  POPUP_BLOCKED = 'POPUP_BLOCKED',
+
+  // Permission errors
+  PERMISSION_DENIED = 'PERMISSION_DENIED',
+  SIGN_PERMISSION_REQUIRED = 'SIGN_PERMISSION_REQUIRED',
+  SEND_PERMISSION_REQUIRED = 'SEND_PERMISSION_REQUIRED',
+
+  // Validation errors
+  INVALID_ADDRESS = 'INVALID_ADDRESS',
+  INVALID_AMOUNT = 'INVALID_AMOUNT',
+  INVALID_PARAMS = 'INVALID_PARAMS',
+  MISSING_REQUIRED_FIELD = 'MISSING_REQUIRED_FIELD',
+
+  // Transaction errors
+  INSUFFICIENT_BALANCE = 'INSUFFICIENT_BALANCE',
+  TRANSACTION_FAILED = 'TRANSACTION_FAILED',
+  GAS_ESTIMATION_FAILED = 'GAS_ESTIMATION_FAILED',
+  NONCE_CONFLICT = 'NONCE_CONFLICT',
+
+  // User actions
+  USER_REJECTED = 'USER_REJECTED',
+  REQUEST_TIMEOUT = 'REQUEST_TIMEOUT',
+
+  // Network errors
+  NETWORK_ERROR = 'NETWORK_ERROR',
+  WALLET_NOT_READY = 'WALLET_NOT_READY',
+
+  // Unknown
+  UNKNOWN = 'UNKNOWN',
+}
+
+/**
+ * Map error message patterns to error codes
+ */
+export function getErrorCode(message: string): WalletConnectErrorCode {
+  const lowerMessage = message.toLowerCase();
+
+  if (lowerMessage.includes('not connected') || lowerMessage.includes('app not connected')) {
+    return WalletConnectErrorCode.NOT_CONNECTED;
+  }
+  if (lowerMessage.includes('revoked') || lowerMessage.includes('connection revoked')) {
+    return WalletConnectErrorCode.CONNECTION_REVOKED;
+  }
+  if (lowerMessage.includes('permission denied') || lowerMessage.includes('not authorized')) {
+    return WalletConnectErrorCode.PERMISSION_DENIED;
+  }
+  if (lowerMessage.includes('sign permission')) {
+    return WalletConnectErrorCode.SIGN_PERMISSION_REQUIRED;
+  }
+  if (lowerMessage.includes('send permission')) {
+    return WalletConnectErrorCode.SEND_PERMISSION_REQUIRED;
+  }
+  if (lowerMessage.includes('user rejected') || lowerMessage.includes('cancelled')) {
+    return WalletConnectErrorCode.USER_REJECTED;
+  }
+  if (lowerMessage.includes('timed out') || lowerMessage.includes('timeout')) {
+    return WalletConnectErrorCode.REQUEST_TIMEOUT;
+  }
+  if (lowerMessage.includes('insufficient') || lowerMessage.includes('balance')) {
+    return WalletConnectErrorCode.INSUFFICIENT_BALANCE;
+  }
+  if (lowerMessage.includes('invalid address') || lowerMessage.includes('recipient required')) {
+    return WalletConnectErrorCode.INVALID_ADDRESS;
+  }
+  if (lowerMessage.includes('invalid amount') || lowerMessage.includes('amount required')) {
+    return WalletConnectErrorCode.INVALID_AMOUNT;
+  }
+  if (lowerMessage.includes('missing') || lowerMessage.includes('required')) {
+    return WalletConnectErrorCode.MISSING_REQUIRED_FIELD;
+  }
+  if (lowerMessage.includes('gas')) {
+    return WalletConnectErrorCode.GAS_ESTIMATION_FAILED;
+  }
+  if (lowerMessage.includes('nonce')) {
+    return WalletConnectErrorCode.NONCE_CONFLICT;
+  }
+  if (lowerMessage.includes('network')) {
+    return WalletConnectErrorCode.NETWORK_ERROR;
+  }
+
+  return WalletConnectErrorCode.UNKNOWN;
+}
+
+/**
+ * Create an error response with proper error code
+ */
+export function createErrorResponse(
+  id: string,
+  error: string,
+  code?: WalletConnectErrorCode
+): WalletConnectResponse {
+  return {
+    id,
+    success: false,
+    error,
+    errorCode: code || getErrorCode(error),
+  };
+}
+
+/**
  * Message types for postMessage communication
  */
 export interface WalletConnectMessage {
@@ -106,12 +214,21 @@ export function sendResponse(
     payload: response,
   };
 
+  console.log('[WalletConnect] Sending response:', { targetOrigin, response, message });
+
   // If we have a reference to the target window (e.g., opener), use it
   // Otherwise, try to find the window or use broadcast
   const target = targetWindow || window.opener;
 
+  console.log('[WalletConnect] Target window:', target, 'closed:', target?.closed);
+
   if (target && !target.closed) {
-    target.postMessage(message, targetOrigin);
+    try {
+      target.postMessage(message, targetOrigin);
+      console.log('[WalletConnect] Message posted successfully to:', targetOrigin);
+    } catch (err) {
+      console.error('[WalletConnect] Failed to post message:', err);
+    }
   } else {
     console.warn('[WalletConnect] Target window not available');
   }

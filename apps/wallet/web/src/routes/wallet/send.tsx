@@ -1,11 +1,11 @@
-import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
+import { createFileRoute } from '@tanstack/react-router';
 import { useState, type ReactElement } from 'react';
-import { useBalance, useWalletClient } from 'wagmi';
+import { useReadContract, useWalletClient } from 'wagmi';
+import { erc20Abi } from 'viem';
 import { type Address } from 'viem';
 import { Actions } from 'viem/tempo';
 import { motion } from 'framer-motion';
 import {
-  ChevronLeft,
   Send,
   ExternalLink,
   Loader2,
@@ -18,28 +18,22 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AddressInput } from '@/components/AddressInput';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useTempo } from '@/hooks/useTempo';
 import { getExplorerTxUrl } from '@/lib/tempo-client';
 import { DEFAULT_FEE_TOKEN_ADDRESS } from '@/lib/constants';
 import { formatAddress, formatAmount, parseAmount, isValidAddress } from '@/lib/utils';
 import { addActivity } from '@/lib/activity';
 
-export const Route = createFileRoute('/send')({
+export const Route = createFileRoute('/wallet/send')({
   component: SendPage,
 });
 
 type ModalState = 'confirm' | 'pending' | 'success' | null;
 
-function SendPage(): ReactElement | null {
-  const { address, isConnected } = useTempo();
+function SendPage(): ReactElement {
+  const { address } = useTempo();
   const { data: walletClient } = useWalletClient();
-  const navigate = useNavigate();
 
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
@@ -47,25 +41,15 @@ function SendPage(): ReactElement | null {
   const [modalState, setModalState] = useState<ModalState>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
 
-  // Get balance of default token (AlphaUSD)
-  const { data: balance, isLoading: balanceLoading } = useBalance({
-    address,
-    token: DEFAULT_FEE_TOKEN_ADDRESS,
+  const { data: rawBalance, isLoading: balanceLoading } = useReadContract({
+    address: DEFAULT_FEE_TOKEN_ADDRESS,
+    abi: erc20Abi,
+    functionName: 'balanceOf',
+    args: address ? [address] : undefined,
     query: { enabled: !!address },
   });
 
-  if (!isConnected || !address) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4">
-        <div className="text-center">
-          <p className="text-muted-foreground mb-4">Please sign in to send payments</p>
-          <Link to="/">
-            <Button>Go to Wallet</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const balance = rawBalance ? { value: rawBalance, decimals: 6 } : undefined;
 
   const decimals = balance?.decimals || 6;
   const parsedAmount = parseAmount(amount, decimals);
@@ -78,7 +62,6 @@ function SendPage(): ReactElement | null {
     setModalState('pending');
 
     try {
-      // Encode memo if provided
       let encodedMemo: `0x${string}` | undefined;
       if (memo) {
         const encoder = new TextEncoder();
@@ -99,7 +82,6 @@ function SendPage(): ReactElement | null {
       setTxHash(hash);
       setModalState('success');
 
-      // Log activity
       addActivity({
         type: 'send_payment',
         status: 'success',
@@ -117,7 +99,6 @@ function SendPage(): ReactElement | null {
       toast.error(err instanceof Error ? err.message : 'Failed to send payment');
       setModalState('confirm');
 
-      // Log failed activity
       addActivity({
         type: 'send_payment',
         status: 'failed',
@@ -149,98 +130,87 @@ function SendPage(): ReactElement | null {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-sm border-b border-border/50">
-        <div className="max-w-lg mx-auto px-4 py-4 flex items-center gap-3">
-          <Link to="/">
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <ChevronLeft className="w-5 h-5" />
-            </Button>
-          </Link>
-          <h1 className="text-lg font-semibold">Send</h1>
-        </div>
-      </header>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div>
+        <h1 className="text-xl font-semibold text-slate-900">Send</h1>
+        <p className="text-sm text-muted-foreground mt-1">Send USD to any address</p>
+      </div>
 
-      {/* Content */}
-      <main className="max-w-lg mx-auto p-4">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white border border-border/50 rounded-2xl p-6 shadow-sm space-y-5"
-        >
-          {/* Amount Input */}
-          <div>
-            <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2 block">
-              Amount
-            </label>
-            <div className="relative">
-              <span className="absolute left-0 top-1/2 -translate-y-1/2 text-4xl font-light text-border">
-                $
-              </span>
-              <input
-                type="text"
-                inputMode="decimal"
-                placeholder="0"
-                value={amount}
-                onChange={e => {
-                  const val = e.target.value.replace(/[^0-9.]/g, '');
-                  if (val.split('.').length <= 2) setAmount(val);
-                }}
-                className="w-full text-4xl font-light text-foreground bg-transparent border-none outline-none pl-7 placeholder:text-border"
-              />
-            </div>
-            <div className="flex items-center justify-between mt-1.5">
-              <span className="text-[12px] text-muted-foreground">USD</span>
-              <button
-                onClick={() => {
-                  if (balance?.value) {
-                    setAmount(formatAmount(balance.value.toString(), decimals));
-                  }
-                }}
-                className="text-[12px] text-primary hover:text-primary/80 transition-colors font-medium min-w-[80px] text-right"
-              >
-                {balanceLoading
-                  ? '-.--'
-                  : formatAmount(balance?.value.toString() || '0', decimals)}{' '}
-                available
-              </button>
-            </div>
-            {amount && parsedAmount > 0n && !hasBalance && (
-              <p className="text-[12px] text-destructive mt-1">Insufficient balance</p>
-            )}
-          </div>
-
-          {/* Divider */}
-          <div className="border-t border-border/50" />
-
-          {/* Recipient */}
-          <AddressInput label="Recipient" value={recipient} onChange={setRecipient} />
-
-          {/* Memo */}
-          <div>
-            <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2 block">
-              Memo <span className="text-muted-foreground/60 normal-case">(optional)</span>
-            </label>
-            <Input
-              placeholder="Add a note..."
-              value={memo}
-              onChange={e => setMemo(e.target.value)}
-              className="text-[13px] h-10"
+      {/* Form */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white border border-border/50 rounded-2xl p-6 shadow-sm space-y-5"
+      >
+        {/* Amount Input */}
+        <div>
+          <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2 block">
+            Amount
+          </label>
+          <div className="relative">
+            <span className="absolute left-0 top-1/2 -translate-y-1/2 text-4xl font-light text-border">
+              $
+            </span>
+            <input
+              type="text"
+              inputMode="decimal"
+              placeholder="0"
+              value={amount}
+              onChange={e => {
+                const val = e.target.value.replace(/[^0-9.]/g, '');
+                if (val.split('.').length <= 2) setAmount(val);
+              }}
+              className="w-full text-4xl font-light text-foreground bg-transparent border-none outline-none pl-7 placeholder:text-border"
             />
           </div>
+          <div className="flex items-center justify-between mt-1.5">
+            <span className="text-[12px] text-muted-foreground">USD</span>
+            <button
+              onClick={() => {
+                if (balance?.value) {
+                  setAmount(formatAmount(balance.value.toString(), decimals));
+                }
+              }}
+              className="text-[12px] text-primary hover:text-primary/80 transition-colors font-medium min-w-[80px] text-right"
+            >
+              {balanceLoading ? '-.--' : formatAmount(balance?.value.toString() || '0', decimals)}{' '}
+              available
+            </button>
+          </div>
+          {amount && parsedAmount > 0n && !hasBalance && (
+            <p className="text-[12px] text-destructive mt-1">Insufficient balance</p>
+          )}
+        </div>
 
-          {/* Submit */}
-          <Button
-            className="w-full h-11 text-[14px] font-medium"
-            disabled={!isValidForm}
-            onClick={() => setModalState('confirm')}
-          >
-            <Send className="w-4 h-4 mr-2" />
-            Review Payment
-          </Button>
-        </motion.div>
-      </main>
+        <div className="border-t border-border/50" />
+
+        {/* Recipient */}
+        <AddressInput label="Recipient" value={recipient} onChange={setRecipient} />
+
+        {/* Memo */}
+        <div>
+          <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2 block">
+            Memo <span className="text-muted-foreground/60 normal-case">(optional)</span>
+          </label>
+          <Input
+            placeholder="Add a note..."
+            value={memo}
+            onChange={e => setMemo(e.target.value)}
+            className="text-[13px] h-10"
+          />
+        </div>
+
+        {/* Submit */}
+        <Button
+          className="w-full h-11 text-[14px] font-medium"
+          disabled={!isValidForm}
+          onClick={() => setModalState('confirm')}
+        >
+          <Send className="w-4 h-4 mr-2" />
+          Review Payment
+        </Button>
+      </motion.div>
 
       {/* Modal */}
       <Dialog open={modalState !== null} onOpenChange={handleCloseModal}>
@@ -259,7 +229,6 @@ function SendPage(): ReactElement | null {
               </div>
 
               <div className="px-6 pb-6">
-                {/* Amount Card */}
                 <div className="bg-muted/50 rounded-xl p-4 mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
@@ -272,7 +241,6 @@ function SendPage(): ReactElement | null {
                   </div>
                 </div>
 
-                {/* Recipient Card */}
                 <div className="bg-muted/50 rounded-xl p-4 mb-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -287,7 +255,6 @@ function SendPage(): ReactElement | null {
                   </div>
                 </div>
 
-                {/* Memo */}
                 {memo && (
                   <div className="bg-muted/50 rounded-xl p-4 mb-4">
                     <div className="flex items-start gap-3">
@@ -303,7 +270,6 @@ function SendPage(): ReactElement | null {
                 )}
               </div>
 
-              {/* Footer */}
               <div className="px-6 pb-6 flex items-center gap-2">
                 <Button variant="outline" className="flex-1" onClick={() => setModalState(null)}>
                   Cancel
@@ -322,7 +288,6 @@ function SendPage(): ReactElement | null {
               <DialogDescription className="sr-only">Processing your payment</DialogDescription>
 
               <div className="px-6 py-12 text-center">
-                {/* Animated icon */}
                 <div className="relative inline-flex items-center justify-center mb-6">
                   <motion.div
                     animate={{ scale: [1, 1.05, 1] }}
@@ -338,7 +303,6 @@ function SendPage(): ReactElement | null {
                   </motion.div>
                 </div>
 
-                {/* Content */}
                 <p className="text-[13px] font-medium text-muted-foreground uppercase tracking-wider mb-3">
                   Sending
                 </p>
@@ -347,7 +311,6 @@ function SendPage(): ReactElement | null {
                   <span className="text-[20px] font-medium text-muted-foreground ml-2">USD</span>
                 </p>
 
-                {/* Recipient */}
                 <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-muted/60">
                   <Wallet className="w-3.5 h-3.5 text-muted-foreground" />
                   <span className="font-mono text-[12px] text-muted-foreground">
@@ -365,7 +328,6 @@ function SendPage(): ReactElement | null {
               <DialogDescription className="sr-only">Payment completed</DialogDescription>
 
               <div className="relative px-6 pt-10 pb-8 text-center">
-                {/* Success icon */}
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -375,7 +337,6 @@ function SendPage(): ReactElement | null {
                   <CheckCircle className="w-7 h-7 text-white" />
                 </motion.div>
 
-                {/* Success text */}
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -388,14 +349,12 @@ function SendPage(): ReactElement | null {
                   </p>
                 </motion.div>
 
-                {/* Details card */}
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
                   className="bg-muted/50 rounded-xl p-4 space-y-3 text-left"
                 >
-                  {/* Recipient */}
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">To</span>
                     <div className="flex items-center gap-1.5">
@@ -406,7 +365,6 @@ function SendPage(): ReactElement | null {
                     </div>
                   </div>
 
-                  {/* Transaction hash */}
                   <div className="flex items-center justify-between">
                     <span className="text-xs text-muted-foreground">Transaction</span>
                     <button
@@ -422,7 +380,6 @@ function SendPage(): ReactElement | null {
                 </motion.div>
               </div>
 
-              {/* Footer */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

@@ -1,8 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useAccount, useConnect, useDisconnect, useConnectors } from 'wagmi';
-import { getWalletClient } from '@wagmi/core';
 import { type Address } from 'viem';
-import { tempoPasskeyConnector, injectedConnector, wagmiConfig } from '@/lib/wagmi';
+import { tempoPasskeyConnector, injectedConnector } from '@/lib/wagmi';
 import { tempoChain } from '@/lib/tempo-client';
 import { clearAuthToken } from '@/lib/auth-storage';
 

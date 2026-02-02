@@ -44,7 +44,7 @@ export function useContacts(): UseContactsReturn {
     loadContacts();
 
     // Listen for storage changes (in case another tab modifies contacts)
-    const handleStorage = (e: StorageEvent) => {
+    const handleStorage = (e: StorageEvent): void => {
       if (e.key === 'temporium_wallet_contacts') {
         loadContacts();
       }
@@ -82,10 +82,13 @@ export function useContacts(): UseContactsReturn {
     return findContactByAddressInStorage(address);
   }, []);
 
-  const search = useCallback((query: string): Contact[] => {
-    if (!query.trim()) return contacts;
-    return searchContactsInStorage(query);
-  }, [contacts]);
+  const search = useCallback(
+    (query: string): Contact[] => {
+      if (!query.trim()) return contacts;
+      return searchContactsInStorage(query);
+    },
+    [contacts]
+  );
 
   return {
     contacts,

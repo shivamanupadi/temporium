@@ -29,7 +29,7 @@
     "@temporium/typescript-config": "*",
     "rimraf": "^5.0.1",
     "tsup": "^8.4.0",
-    "typescript": "^5.9.4"
+    "typescript": "~5.9.3"
   },
   "peerDependencies": {
     "viem": "^2.0.0"
