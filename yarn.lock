@@ -2028,7 +2028,7 @@
   dependencies:
     "@radix-ui/react-compose-refs" "1.1.2"
 
-"@radix-ui/react-slot@1.2.4", "@radix-ui/react-slot@^1.2.3", "@radix-ui/react-slot@^1.2.4":
+"@radix-ui/react-slot@1.2.4", "@radix-ui/react-slot@^1.1.1", "@radix-ui/react-slot@^1.2.3", "@radix-ui/react-slot@^1.2.4":
   version "1.2.4"
   resolved "https://registry.yarnpkg.com/@radix-ui/react-slot/-/react-slot-1.2.4.tgz#63c0ba05fdf90cc49076b94029c852d7bac1fb83"
   integrity sha512-Jl+bCv8HxKnlTLVrcDE8zTMJ09R9/ukw4qBs/oZClOfoQk/cOTbDn+NceXfV7j09YPVQUryJPHurafcSg6EVKA==
@@ -8560,6 +8560,11 @@ systeminformation@^5.27.14:
   version "5.28.7"
   resolved "https://registry.yarnpkg.com/systeminformation/-/systeminformation-5.28.7.tgz#3b0d13a6cae5af9de1cff850478a585247a161dc"
   integrity sha512-9WLwVJm2vs1m05CjSjJb0Ia9EeAVpVulWdCOVwmqcUtyW8rlujT3qDp7pCEvx1e/kfbYufMJPkcjb1E9fTo8xg==
+
+tailwind-merge@^2.6.0:
+  version "2.6.1"
+  resolved "https://registry.yarnpkg.com/tailwind-merge/-/tailwind-merge-2.6.1.tgz#a9d58240f664d21c33c379a092d9a273f833443b"
+  integrity sha512-Oo6tHdpZsGpkKG88HJ8RR1rg/RdnEkQEfMoEk2x1XRI3F1AxeU+ijRXpiVUF4UbLfcxxRGw6TbUINKYdWVsQTQ==
 
 tailwind-merge@^3.4.0:
   version "3.4.0"

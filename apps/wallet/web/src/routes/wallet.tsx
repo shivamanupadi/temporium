@@ -51,7 +51,7 @@ function WalletLayout(): ReactElement | null {
       <main
         className={cn(
           'min-h-screen transition-[margin] duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)]',
-          collapsed ? 'md:ml-[68px]' : 'md:ml-56'
+          collapsed ? 'md:ml-[68px]' : 'md:ml-[220px]'
         )}
       >
         {/* Mobile Header */}

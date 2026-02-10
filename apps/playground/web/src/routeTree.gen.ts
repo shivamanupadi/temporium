@@ -8,113 +8,114 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root';
-import { Route as PortalRouteImport } from './routes/portal';
-import { Route as IndexRouteImport } from './routes/index';
-import { Route as PortalIndexRouteImport } from './routes/portal/index';
-import { Route as PortalProjectIdEditorRouteImport } from './routes/portal/$projectId.editor';
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as PortalRouteImport } from './routes/portal'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as PortalIndexRouteImport } from './routes/portal/index'
+import { Route as PortalProjectIdEditorRouteImport } from './routes/portal/$projectId.editor'
 
 const PortalRoute = PortalRouteImport.update({
   id: '/portal',
   path: '/portal',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as any);
+} as any)
 const PortalIndexRoute = PortalIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => PortalRoute,
-} as any);
+} as any)
 const PortalProjectIdEditorRoute = PortalProjectIdEditorRouteImport.update({
   id: '/$projectId/editor',
   path: '/$projectId/editor',
   getParentRoute: () => PortalRoute,
-} as any);
+} as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute;
-  '/portal': typeof PortalRouteWithChildren;
-  '/portal/': typeof PortalIndexRoute;
-  '/portal/$projectId/editor': typeof PortalProjectIdEditorRoute;
+  '/': typeof IndexRoute
+  '/portal': typeof PortalRouteWithChildren
+  '/portal/': typeof PortalIndexRoute
+  '/portal/$projectId/editor': typeof PortalProjectIdEditorRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute;
-  '/portal': typeof PortalIndexRoute;
-  '/portal/$projectId/editor': typeof PortalProjectIdEditorRoute;
+  '/': typeof IndexRoute
+  '/portal': typeof PortalIndexRoute
+  '/portal/$projectId/editor': typeof PortalProjectIdEditorRoute
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport;
-  '/': typeof IndexRoute;
-  '/portal': typeof PortalRouteWithChildren;
-  '/portal/': typeof PortalIndexRoute;
-  '/portal/$projectId/editor': typeof PortalProjectIdEditorRoute;
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/portal': typeof PortalRouteWithChildren
+  '/portal/': typeof PortalIndexRoute
+  '/portal/$projectId/editor': typeof PortalProjectIdEditorRoute
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath;
-  fullPaths: '/' | '/portal' | '/portal/' | '/portal/$projectId/editor';
-  fileRoutesByTo: FileRoutesByTo;
-  to: '/' | '/portal' | '/portal/$projectId/editor';
-  id: '__root__' | '/' | '/portal' | '/portal/' | '/portal/$projectId/editor';
-  fileRoutesById: FileRoutesById;
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths: '/' | '/portal' | '/portal/' | '/portal/$projectId/editor'
+  fileRoutesByTo: FileRoutesByTo
+  to: '/' | '/portal' | '/portal/$projectId/editor'
+  id: '__root__' | '/' | '/portal' | '/portal/' | '/portal/$projectId/editor'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute;
-  PortalRoute: typeof PortalRouteWithChildren;
+  IndexRoute: typeof IndexRoute
+  PortalRoute: typeof PortalRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
     '/portal': {
-      id: '/portal';
-      path: '/portal';
-      fullPath: '/portal';
-      preLoaderRoute: typeof PortalRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof PortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
-      id: '/';
-      path: '/';
-      fullPath: '/';
-      preLoaderRoute: typeof IndexRouteImport;
-      parentRoute: typeof rootRouteImport;
-    };
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/portal/': {
-      id: '/portal/';
-      path: '/';
-      fullPath: '/portal/';
-      preLoaderRoute: typeof PortalIndexRouteImport;
-      parentRoute: typeof PortalRoute;
-    };
+      id: '/portal/'
+      path: '/'
+      fullPath: '/portal/'
+      preLoaderRoute: typeof PortalIndexRouteImport
+      parentRoute: typeof PortalRoute
+    }
     '/portal/$projectId/editor': {
-      id: '/portal/$projectId/editor';
-      path: '/$projectId/editor';
-      fullPath: '/portal/$projectId/editor';
-      preLoaderRoute: typeof PortalProjectIdEditorRouteImport;
-      parentRoute: typeof PortalRoute;
-    };
+      id: '/portal/$projectId/editor'
+      path: '/$projectId/editor'
+      fullPath: '/portal/$projectId/editor'
+      preLoaderRoute: typeof PortalProjectIdEditorRouteImport
+      parentRoute: typeof PortalRoute
+    }
   }
 }
 
 interface PortalRouteChildren {
-  PortalIndexRoute: typeof PortalIndexRoute;
-  PortalProjectIdEditorRoute: typeof PortalProjectIdEditorRoute;
+  PortalIndexRoute: typeof PortalIndexRoute
+  PortalProjectIdEditorRoute: typeof PortalProjectIdEditorRoute
 }
 
 const PortalRouteChildren: PortalRouteChildren = {
   PortalIndexRoute: PortalIndexRoute,
   PortalProjectIdEditorRoute: PortalProjectIdEditorRoute,
-};
+}
 
-const PortalRouteWithChildren = PortalRoute._addFileChildren(PortalRouteChildren);
+const PortalRouteWithChildren =
+  PortalRoute._addFileChildren(PortalRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   PortalRoute: PortalRouteWithChildren,
-};
+}
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>();
+  ._addFileTypes<FileRouteTypes>()

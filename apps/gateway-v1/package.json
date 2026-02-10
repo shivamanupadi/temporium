@@ -1,0 +1,10 @@
+{
+  "name": "@temporium/gateway-v1",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "turbo run dev --filter=@temporium/gateway-v1-api --filter=@temporium/gateway-v1-web",
+    "build": "turbo run build --filter=@temporium/gateway-v1-api --filter=@temporium/gateway-v1-web",
+    "type-check": "turbo run type-check --filter=@temporium/gateway-v1-api --filter=@temporium/gateway-v1-web"
+  }
+}

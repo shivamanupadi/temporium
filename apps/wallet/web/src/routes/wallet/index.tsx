@@ -21,7 +21,7 @@ import {
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@temporium/shared-ui';
 import { useTempo } from '@/hooks/useTempo';
 import { useTokensWithBalances } from '@/hooks/useTokenList';
 import { getExplorerAddressUrl, fundFromFaucet } from '@/lib/tempo-client';
@@ -41,7 +41,7 @@ const quickActions = [
     icon: Send,
     label: 'Send',
     href: '/wallet/send',
-    color: '#E07A5F',
+    color: '#9B72CF',
   },
   {
     icon: ArrowDownLeft,
@@ -59,7 +59,7 @@ const quickActions = [
     icon: Users,
     label: 'Contacts',
     href: '/wallet/contacts',
-    color: '#E07A5F',
+    color: '#9B72CF',
   },
   {
     icon: Shield,
@@ -150,8 +150,8 @@ function DashboardPage(): ReactElement {
         transition={{ duration: 0.3 }}
         className="flex items-center gap-3"
       >
-        <div className="w-10 h-10 rounded-xl bg-[#E07A5F]/10 flex items-center justify-center">
-          <Wallet className="w-5 h-5 text-[#E07A5F]" />
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+          <Wallet className="w-5 h-5 text-primary" />
         </div>
         <div>
           <h1 className="text-xl font-semibold text-[#2D3436]">Dashboard</h1>
@@ -173,10 +173,10 @@ function DashboardPage(): ReactElement {
           <div className="flex items-center justify-between mb-1">
             <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest flex items-center gap-1.5">
               Total Balance
-              {isLoading && <Loader2 className="h-3 w-3 animate-spin text-[#E07A5F]" />}
+              {isLoading && <Loader2 className="h-3 w-3 animate-spin text-primary" />}
             </span>
-            <div className="w-8 h-8 rounded-lg bg-[#E07A5F]/8 flex items-center justify-center">
-              <TrendingUp className="h-4 w-4 text-[#E07A5F]" />
+            <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center">
+              <TrendingUp className="h-4 w-4 text-primary" />
             </div>
           </div>
 
@@ -213,7 +213,7 @@ function DashboardPage(): ReactElement {
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
                   >
-                    <Copy className="h-3 w-3 text-[#B5B0AA] group-hover:text-[#E07A5F] transition-colors" />
+                    <Copy className="h-3 w-3 text-[#B5B0AA] group-hover:text-primary transition-colors" />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -221,9 +221,9 @@ function DashboardPage(): ReactElement {
 
             <button
               onClick={() => setShowQR(true)}
-              className="w-8 h-8 rounded-lg border border-border/30 hover:border-[#9B72CF]/30 bg-[#FDFBF8] hover:bg-[#9B72CF]/[0.04] flex items-center justify-center transition-all group"
+              className="w-8 h-8 rounded-lg border border-border/30 hover:border-primary/30 bg-[#FDFBF8] hover:bg-primary/[0.04] flex items-center justify-center transition-all group"
             >
-              <QrCode className="h-3.5 w-3.5 text-[#B5B0AA] group-hover:text-[#9B72CF] transition-colors" />
+              <QrCode className="h-3.5 w-3.5 text-[#B5B0AA] group-hover:text-primary transition-colors" />
             </button>
 
             <a
@@ -312,7 +312,7 @@ function DashboardPage(): ReactElement {
               disabled={isFunding}
               size="sm"
               variant="outline"
-              className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border-[#E07A5F]/25 text-[#E07A5F] hover:bg-[#E07A5F]/[0.04] hover:border-[#E07A5F]/40"
+              className="h-7 px-2.5 text-[11px] font-semibold rounded-lg border-primary/25 text-primary hover:bg-primary/[0.04] hover:border-primary/40"
             >
               {isFunding ? (
                 <>
@@ -527,7 +527,7 @@ function DashboardPage(): ReactElement {
                   {/* Center logo */}
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                     <div className="w-11 h-11 bg-white rounded-xl shadow-sm border border-border/30 flex items-center justify-center">
-                      <QrCode className="w-5 h-5 text-[#E07A5F]" />
+                      <QrCode className="w-5 h-5 text-primary" />
                     </div>
                   </div>
                 </div>
@@ -583,7 +583,7 @@ function DashboardPage(): ReactElement {
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       exit={{ scale: 0 }}
-                      className="w-7 h-7 bg-white shadow-sm border border-border/20 rounded-lg flex items-center justify-center group-hover:bg-[#E07A5F] group-hover:border-[#E07A5F] group-hover:shadow-md transition-all"
+                      className="w-7 h-7 bg-white shadow-sm border border-border/20 rounded-lg flex items-center justify-center group-hover:bg-primary group-hover:border-primary group-hover:shadow-md transition-all"
                     >
                       <Copy className="w-3 h-3 text-muted-foreground/50 group-hover:text-white transition-colors" />
                     </motion.div>
@@ -596,13 +596,13 @@ function DashboardPage(): ReactElement {
             <div className="grid grid-cols-2 gap-2">
               <Button
                 variant="outline"
-                className="h-10 rounded-xl border-border/40 hover:border-[#E07A5F]/30 hover:bg-[#E07A5F]/[0.04] transition-all group text-[12px] font-semibold"
+                className="h-10 rounded-xl border-border/40 hover:border-primary/30 hover:bg-primary/[0.04] transition-all group text-[12px] font-semibold"
                 onClick={handleCopyAddress}
               >
                 {copied ? (
                   <Check className="h-3.5 w-3.5 mr-1.5 text-[#5B9A6F]" />
                 ) : (
-                  <Copy className="h-3.5 w-3.5 mr-1.5 text-muted-foreground group-hover:text-[#E07A5F] transition-colors" />
+                  <Copy className="h-3.5 w-3.5 mr-1.5 text-muted-foreground group-hover:text-primary transition-colors" />
                 )}
                 {copied ? 'Copied!' : 'Copy'}
               </Button>

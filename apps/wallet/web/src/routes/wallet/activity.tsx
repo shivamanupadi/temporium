@@ -16,10 +16,20 @@ import {
   AlertTriangle,
   Trash2,
   Filter,
+  ShoppingCart,
+  ListOrdered,
+  Ban,
+  GitBranch,
+  ShieldCheck,
+  Sparkles,
+  CirclePlus,
+  Flame,
+  Gift,
+  ArrowUpFromLine,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
 import { getActivity, clearActivity, getActivityTypeLabel } from '@/lib/activity';
 import { getExplorerTxUrl } from '@/lib/tempo-client';
 import { formatTimeAgo, formatAddress, cn } from '@/lib/utils';
@@ -44,14 +54,34 @@ function getActivityMeta(type: ActivityType): ActivityMeta {
       return { icon: FileSignature, color: '#9B72CF' };
     case 'send_payment':
     case 'send_scheduled_payment':
-      return { icon: Send, color: '#E07A5F' };
+      return { icon: Send, color: '#9B72CF' };
     case 'swap_tokens':
       return { icon: ArrowRightLeft, color: '#9B72CF' };
     case 'add_liquidity':
     case 'remove_liquidity':
       return { icon: Droplets, color: '#5B9A6F' };
     case 'send_transaction':
-      return { icon: Coins, color: '#E07A5F' };
+      return { icon: Coins, color: '#9B72CF' };
+    case 'buy_tokens':
+      return { icon: ShoppingCart, color: '#9B72CF' };
+    case 'place_order':
+      return { icon: ListOrdered, color: '#9B72CF' };
+    case 'cancel_order':
+      return { icon: Ban, color: '#9B72CF' };
+    case 'create_pair':
+      return { icon: GitBranch, color: '#9B72CF' };
+    case 'approve_token':
+      return { icon: ShieldCheck, color: '#5B9A6F' };
+    case 'create_token':
+      return { icon: Sparkles, color: '#5B9A6F' };
+    case 'mint_token':
+      return { icon: CirclePlus, color: '#5B9A6F' };
+    case 'burn_token':
+      return { icon: Flame, color: '#9B72CF' };
+    case 'claim_rewards':
+      return { icon: Gift, color: '#5B9A6F' };
+    case 'dex_withdraw':
+      return { icon: ArrowUpFromLine, color: '#9B72CF' };
     default:
       return { icon: Coins, color: '#6B6560' };
   }
@@ -85,6 +115,9 @@ const filterOptions: { value: FilterType; label: string }[] = [
   { value: 'swap_tokens', label: 'Swaps' },
   { value: 'sign_message', label: 'Signatures' },
   { value: 'connect', label: 'Connections' },
+  { value: 'place_order', label: 'Orders' },
+  { value: 'approve_token', label: 'Approvals' },
+  { value: 'claim_rewards', label: 'Rewards' },
 ];
 
 function ActivityPage(): ReactElement {
@@ -130,8 +163,8 @@ function ActivityPage(): ReactElement {
         className="flex items-center justify-between"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#9B72CF]/10 flex items-center justify-center">
-            <Clock className="w-5 h-5 text-[#9B72CF]" />
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Clock className="w-5 h-5 text-primary" />
           </div>
           <div>
             <h1 className="text-xl font-semibold text-[#2D3436]">Activity</h1>
@@ -187,8 +220,8 @@ function ActivityPage(): ReactElement {
           className="bg-white border border-border/60 rounded-2xl shadow-sm"
         >
           <div className="px-6 py-14 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-[#9B72CF]/8 flex items-center justify-center mx-auto mb-4">
-              <History className="w-7 h-7 text-[#9B72CF]" />
+            <div className="w-14 h-14 rounded-2xl bg-primary/8 flex items-center justify-center mx-auto mb-4">
+              <History className="w-7 h-7 text-primary" />
             </div>
             <h2 className="text-[15px] font-semibold text-[#2D3436] mb-1.5">No Activity Yet</h2>
             <p className="text-[13px] text-muted-foreground max-w-[260px] mx-auto leading-relaxed">
@@ -274,7 +307,7 @@ function ActivityPage(): ReactElement {
                       {/* Details row */}
                       <div className="flex items-center gap-2 flex-wrap">
                         {hasAmount && (
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#E07A5F]/8 text-[10px] font-semibold text-[#E07A5F]">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/8 text-[10px] font-semibold text-primary">
                             <Coins className="w-2.5 h-2.5" />
                             {`${activity.details!.amount}`}
                           </span>

@@ -1,0 +1,44 @@
+{
+  "name": "@temporium/gateway-v1-api",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev --port 4008",
+    "dev:local": "wrangler dev --port 4008 --local --persist",
+    "build": "tsc --noEmit",
+    "deploy": "wrangler deploy",
+    "deploy:staging": "wrangler deploy --env staging",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "wrangler d1 migrations apply temporium-db",
+    "db:migrate:local": "wrangler d1 migrations apply temporium-db --local",
+    "db:studio": "drizzle-kit studio",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint src --ext .ts --fix",
+    "format": "prettier --write src",
+    "clean": "rimraf .turbo .wrangler"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.4.2",
+    "@paralleldrive/cuid2": "^2.2.2",
+    "@remix-run/headers": "^0.17.2",
+    "@remix-run/route-pattern": "^0.15.3",
+    "@remix-run/session": "^0.4.0",
+    "drizzle-orm": "^0.38.3",
+    "hono": "^4.6.16",
+    "tempo.ts": "^0.14.0",
+    "viem": "^2.45.2",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241218.0",
+    "@temporium/eslint-config": "*",
+    "drizzle-kit": "^0.30.1",
+    "eslint": "^8.57.0",
+    "typescript": "^5.7.2",
+    "wrangler": "^3.99.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -15,6 +15,16 @@ import {
   type SwapParams,
   type AddLiquidityParams,
   type RemoveLiquidityParams,
+  type BuyTokensParams,
+  type PlaceOrderParams,
+  type CancelOrderParams,
+  type CreatePairParams,
+  type ApproveTokenParams,
+  type CreateTokenParams,
+  type MintTokenParams,
+  type BurnTokenParams,
+  type ClaimRewardsParams,
+  type DexWithdrawParams,
   type WalletConnectMessage,
   type WalletConnectResponse,
 } from './types';
@@ -1114,6 +1124,328 @@ export class WalletConnect {
         userToken,
         validatorToken,
         liquidity: liquidity.toString(),
+        feeToken: feeToken || DEFAULT_FEE_TOKEN,
+      },
+      SIGNING_TIMEOUT
+    );
+  }
+
+  /**
+   * Buy an exact amount of tokens via DEX
+   *
+   * @param params - Buy parameters
+   * @returns Transaction hash
+   */
+  async buyTokens(params: BuyTokensParams): Promise<TransactionResult> {
+    this.ensureConnected();
+
+    const { tokenIn, tokenOut, amountOut, maxAmountIn, feeToken } = params;
+
+    if (!isValidAddress(tokenIn)) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_ADDRESS, 'Invalid tokenIn address', { field: 'tokenIn', value: tokenIn });
+    }
+    if (!isValidAddress(tokenOut)) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_ADDRESS, 'Invalid tokenOut address', { field: 'tokenOut', value: tokenOut });
+    }
+    if (tokenIn === tokenOut) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_PARAMS, 'Cannot buy token with itself', { tokenIn, tokenOut });
+    }
+    if (!isValidAmount(amountOut)) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_AMOUNT, 'amountOut must be a positive number', { field: 'amountOut', value: String(amountOut) });
+    }
+    if (!isValidAmount(maxAmountIn)) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_AMOUNT, 'maxAmountIn must be a positive number', { field: 'maxAmountIn', value: String(maxAmountIn) });
+    }
+
+    return this.sendRequest<TransactionResult>(
+      '/sign',
+      'buy_tokens',
+      {
+        tokenIn,
+        tokenOut,
+        amountOut: amountOut.toString(),
+        maxAmountIn: maxAmountIn.toString(),
+        feeToken: feeToken || DEFAULT_FEE_TOKEN,
+      },
+      SIGNING_TIMEOUT
+    );
+  }
+
+  /**
+   * Place a limit order on the DEX
+   *
+   * @param params - Order parameters
+   * @returns Transaction hash
+   */
+  async placeOrder(params: PlaceOrderParams): Promise<TransactionResult> {
+    this.ensureConnected();
+
+    const { token, amount, tick, type, feeToken } = params;
+
+    if (!isValidAddress(token)) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_ADDRESS, 'Invalid token address', { field: 'token', value: token });
+    }
+    if (!isValidAmount(amount)) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_AMOUNT, 'amount must be a positive number', { field: 'amount', value: String(amount) });
+    }
+    if (typeof tick !== 'number') {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_PARAMS, 'tick must be a number', { field: 'tick', value: tick });
+    }
+    if (type !== 'buy' && type !== 'sell') {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_PARAMS, 'type must be "buy" or "sell"', { field: 'type', value: type });
+    }
+
+    return this.sendRequest<TransactionResult>(
+      '/sign',
+      'place_order',
+      {
+        token,
+        amount: amount.toString(),
+        tick,
+        type,
+        feeToken: feeToken || DEFAULT_FEE_TOKEN,
+      },
+      SIGNING_TIMEOUT
+    );
+  }
+
+  /**
+   * Cancel a limit order on the DEX
+   *
+   * @param params - Cancel order parameters
+   * @returns Transaction hash
+   */
+  async cancelOrder(params: CancelOrderParams): Promise<TransactionResult> {
+    this.ensureConnected();
+
+    const { orderId, feeToken } = params;
+
+    if (typeof orderId !== 'bigint' || orderId < 0n) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_PARAMS, 'orderId must be a non-negative bigint', { field: 'orderId', value: String(orderId) });
+    }
+
+    return this.sendRequest<TransactionResult>(
+      '/sign',
+      'cancel_order',
+      {
+        orderId: orderId.toString(),
+        feeToken: feeToken || DEFAULT_FEE_TOKEN,
+      },
+      SIGNING_TIMEOUT
+    );
+  }
+
+  /**
+   * Create a new trading pair on the DEX
+   *
+   * @param params - Create pair parameters
+   * @returns Transaction hash
+   */
+  async createPair(params: CreatePairParams): Promise<TransactionResult> {
+    this.ensureConnected();
+
+    const { base, feeToken } = params;
+
+    if (!isValidAddress(base)) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_ADDRESS, 'Invalid base token address', { field: 'base', value: base });
+    }
+
+    return this.sendRequest<TransactionResult>(
+      '/sign',
+      'create_pair',
+      {
+        base,
+        feeToken: feeToken || DEFAULT_FEE_TOKEN,
+      },
+      SIGNING_TIMEOUT
+    );
+  }
+
+  /**
+   * Approve a spender for a token
+   *
+   * @param params - Approve parameters
+   * @returns Transaction hash
+   */
+  async approveToken(params: ApproveTokenParams): Promise<TransactionResult> {
+    this.ensureConnected();
+
+    const { token, spender, amount, feeToken } = params;
+
+    if (!isValidAddress(token)) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_ADDRESS, 'Invalid token address', { field: 'token', value: token });
+    }
+    if (!isValidAddress(spender)) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_ADDRESS, 'Invalid spender address', { field: 'spender', value: spender });
+    }
+    if (!isValidAmount(amount)) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_AMOUNT, 'amount must be a positive number', { field: 'amount', value: String(amount) });
+    }
+
+    return this.sendRequest<TransactionResult>(
+      '/sign',
+      'approve_token',
+      {
+        token,
+        spender,
+        amount: amount.toString(),
+        feeToken: feeToken || DEFAULT_FEE_TOKEN,
+      },
+      SIGNING_TIMEOUT
+    );
+  }
+
+  /**
+   * Create a new TIP-20 token
+   *
+   * @param params - Token creation parameters
+   * @returns Transaction hash
+   */
+  async createToken(params: CreateTokenParams): Promise<TransactionResult> {
+    this.ensureConnected();
+
+    const { name, symbol, currency, admin, quoteToken, salt } = params;
+
+    if (!name || typeof name !== 'string') {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_PARAMS, 'name is required', { field: 'name' });
+    }
+    if (!symbol || typeof symbol !== 'string') {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_PARAMS, 'symbol is required', { field: 'symbol' });
+    }
+    if (!currency || typeof currency !== 'string') {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_PARAMS, 'currency is required', { field: 'currency' });
+    }
+    if (admin && !isValidAddress(admin)) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_ADDRESS, 'Invalid admin address', { field: 'admin', value: admin });
+    }
+    if (quoteToken && !isValidAddress(quoteToken)) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_ADDRESS, 'Invalid quoteToken address', { field: 'quoteToken', value: quoteToken });
+    }
+
+    return this.sendRequest<TransactionResult>(
+      '/sign',
+      'create_token',
+      { name, symbol, currency, admin, quoteToken, salt },
+      SIGNING_TIMEOUT
+    );
+  }
+
+  /**
+   * Mint tokens
+   *
+   * @param params - Mint parameters
+   * @returns Transaction hash
+   */
+  async mintToken(params: MintTokenParams): Promise<TransactionResult> {
+    this.ensureConnected();
+
+    const { token, to, amount, memo, feeToken } = params;
+
+    if (!isValidAddress(token)) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_ADDRESS, 'Invalid token address', { field: 'token', value: token });
+    }
+    if (!isValidAddress(to)) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_ADDRESS, 'Invalid recipient address', { field: 'to', value: to });
+    }
+    if (!isValidAmount(amount)) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_AMOUNT, 'amount must be a positive number', { field: 'amount', value: String(amount) });
+    }
+
+    return this.sendRequest<TransactionResult>(
+      '/sign',
+      'mint_token',
+      {
+        token,
+        to,
+        amount: amount.toString(),
+        memo,
+        feeToken: feeToken || DEFAULT_FEE_TOKEN,
+      },
+      SIGNING_TIMEOUT
+    );
+  }
+
+  /**
+   * Burn tokens
+   *
+   * @param params - Burn parameters
+   * @returns Transaction hash
+   */
+  async burnToken(params: BurnTokenParams): Promise<TransactionResult> {
+    this.ensureConnected();
+
+    const { token, amount, memo, feeToken } = params;
+
+    if (!isValidAddress(token)) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_ADDRESS, 'Invalid token address', { field: 'token', value: token });
+    }
+    if (!isValidAmount(amount)) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_AMOUNT, 'amount must be a positive number', { field: 'amount', value: String(amount) });
+    }
+
+    return this.sendRequest<TransactionResult>(
+      '/sign',
+      'burn_token',
+      {
+        token,
+        amount: amount.toString(),
+        memo,
+        feeToken: feeToken || DEFAULT_FEE_TOKEN,
+      },
+      SIGNING_TIMEOUT
+    );
+  }
+
+  /**
+   * Claim rewards for a token
+   *
+   * @param params - Claim rewards parameters
+   * @returns Transaction hash
+   */
+  async claimRewards(params: ClaimRewardsParams): Promise<TransactionResult> {
+    this.ensureConnected();
+
+    const { token, feeToken } = params;
+
+    if (!isValidAddress(token)) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_ADDRESS, 'Invalid token address', { field: 'token', value: token });
+    }
+
+    return this.sendRequest<TransactionResult>(
+      '/sign',
+      'claim_rewards',
+      {
+        token,
+        feeToken: feeToken || DEFAULT_FEE_TOKEN,
+      },
+      SIGNING_TIMEOUT
+    );
+  }
+
+  /**
+   * Withdraw tokens from DEX
+   *
+   * @param params - Withdraw parameters
+   * @returns Transaction hash
+   */
+  async dexWithdraw(params: DexWithdrawParams): Promise<TransactionResult> {
+    this.ensureConnected();
+
+    const { token, amount, feeToken } = params;
+
+    if (!isValidAddress(token)) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_ADDRESS, 'Invalid token address', { field: 'token', value: token });
+    }
+    if (!isValidAmount(amount)) {
+      throw new WalletConnectError(WalletConnectErrorCode.INVALID_AMOUNT, 'amount must be a positive number', { field: 'amount', value: String(amount) });
+    }
+
+    return this.sendRequest<TransactionResult>(
+      '/sign',
+      'dex_withdraw',
+      {
+        token,
+        amount: amount.toString(),
         feeToken: feeToken || DEFAULT_FEE_TOKEN,
       },
       SIGNING_TIMEOUT

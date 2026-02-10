@@ -70,6 +70,16 @@ export type {
   SwapParams,
   AddLiquidityParams,
   RemoveLiquidityParams,
+  BuyTokensParams,
+  PlaceOrderParams,
+  CancelOrderParams,
+  CreatePairParams,
+  ApproveTokenParams,
+  CreateTokenParams,
+  MintTokenParams,
+  BurnTokenParams,
+  ClaimRewardsParams,
+  DexWithdrawParams,
   AppPermission,
 } from './types';
 export { WALLET_CONNECT_VERSION, WalletConnectErrorCode, WalletConnectError } from './types';

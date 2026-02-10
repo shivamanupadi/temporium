@@ -177,6 +177,152 @@ export interface RemoveLiquidityParams {
   feeToken?: Address;
 }
 
+/**
+ * Parameters for buying tokens via DEX
+ * Compatible with tempo.ts Actions.dex.buy
+ */
+export interface BuyTokensParams {
+  /** Token to pay with */
+  tokenIn: Address;
+  /** Token to receive */
+  tokenOut: Address;
+  /** Exact amount of tokenOut to receive */
+  amountOut: bigint;
+  /** Maximum amount of tokenIn to spend */
+  maxAmountIn: bigint;
+  /** Token to pay fees with (defaults to USD) */
+  feeToken?: Address;
+}
+
+/**
+ * Parameters for placing a limit order
+ * Compatible with tempo.ts Actions.dex.place
+ */
+export interface PlaceOrderParams {
+  /** Token address */
+  token: Address;
+  /** Order amount */
+  amount: bigint;
+  /** Price tick */
+  tick: number;
+  /** Order type */
+  type: 'buy' | 'sell';
+  /** Token to pay fees with (defaults to USD) */
+  feeToken?: Address;
+}
+
+/**
+ * Parameters for cancelling a limit order
+ * Compatible with tempo.ts Actions.dex.cancel
+ */
+export interface CancelOrderParams {
+  /** Order ID to cancel */
+  orderId: bigint;
+  /** Token to pay fees with (defaults to USD) */
+  feeToken?: Address;
+}
+
+/**
+ * Parameters for creating a DEX pair
+ * Compatible with tempo.ts Actions.dex.createPair
+ */
+export interface CreatePairParams {
+  /** Base token address */
+  base: Address;
+  /** Token to pay fees with (defaults to USD) */
+  feeToken?: Address;
+}
+
+/**
+ * Parameters for approving a token spender
+ * Compatible with tempo.ts Actions.token.approve
+ */
+export interface ApproveTokenParams {
+  /** Token address */
+  token: Address;
+  /** Spender address to approve */
+  spender: Address;
+  /** Amount to approve */
+  amount: bigint;
+  /** Token to pay fees with (defaults to USD) */
+  feeToken?: Address;
+}
+
+/**
+ * Parameters for creating a new token
+ * Compatible with tempo.ts Actions.token.create
+ */
+export interface CreateTokenParams {
+  /** Token name */
+  name: string;
+  /** Token symbol */
+  symbol: string;
+  /** Currency code (e.g., 'USD') */
+  currency: string;
+  /** Admin address (defaults to sender) */
+  admin?: Address;
+  /** Quote token address for DEX pairing */
+  quoteToken?: Address;
+  /** Optional salt for deterministic address */
+  salt?: `0x${string}`;
+}
+
+/**
+ * Parameters for minting tokens
+ * Compatible with tempo.ts Actions.token.mint
+ */
+export interface MintTokenParams {
+  /** Token address */
+  token: Address;
+  /** Recipient address */
+  to: Address;
+  /** Amount to mint */
+  amount: bigint;
+  /** Optional memo */
+  memo?: `0x${string}`;
+  /** Token to pay fees with (defaults to USD) */
+  feeToken?: Address;
+}
+
+/**
+ * Parameters for burning tokens
+ * Compatible with tempo.ts Actions.token.burn
+ */
+export interface BurnTokenParams {
+  /** Token address */
+  token: Address;
+  /** Amount to burn */
+  amount: bigint;
+  /** Optional memo */
+  memo?: `0x${string}`;
+  /** Token to pay fees with (defaults to USD) */
+  feeToken?: Address;
+}
+
+/**
+ * Parameters for claiming rewards
+ * Compatible with tempo.ts Actions.reward.claim
+ */
+export interface ClaimRewardsParams {
+  /** Token address to claim rewards for */
+  token: Address;
+  /** Token to pay fees with (defaults to USD) */
+  feeToken?: Address;
+}
+
+/**
+ * Parameters for withdrawing from DEX
+ * Compatible with tempo.ts Actions.dex.withdraw
+ */
+export interface DexWithdrawParams {
+  /** Token address to withdraw */
+  token: Address;
+  /** Amount to withdraw */
+  amount: bigint;
+  /** Token to pay fees with (defaults to USD) */
+  feeToken?: Address;
+}
+
 // ============================================================================
 // Internal Protocol Types
 // ============================================================================

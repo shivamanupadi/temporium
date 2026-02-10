@@ -22,7 +22,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { AddressInput } from '@/components/AddressInput';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
 import { useTempo } from '@/hooks/useTempo';
 import { useTokensWithBalances } from '@/hooks/useTokenList';
 import { getExplorerTxUrl } from '@/lib/tempo-client';
@@ -191,8 +191,8 @@ function SendPage(): ReactElement {
         transition={{ duration: 0.3 }}
         className="flex items-center gap-3"
       >
-        <div className="w-10 h-10 rounded-xl bg-[#E07A5F]/10 flex items-center justify-center">
-          <ArrowUp className="w-5 h-5 text-[#E07A5F]" />
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+          <ArrowUp className="w-5 h-5 text-primary" />
         </div>
         <div>
           <h1 className="text-xl font-semibold text-[#2D3436]">Send</h1>
@@ -225,7 +225,7 @@ function SendPage(): ReactElement {
               <span className="tabular-nums">
                 {tokensLoading ? '-.--' : formatAmount(balance.toString(), decimals)}
               </span>
-              <span className="text-[#E07A5F] font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                 Max
               </span>
             </button>
@@ -485,7 +485,7 @@ function SendPage(): ReactElement {
 
                 {/* Header with amount hero */}
                 <div className="relative px-6 pt-8 pb-6 text-center overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-b from-[#E07A5F]/[0.04] to-transparent pointer-events-none" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.04] to-transparent pointer-events-none" />
 
                   <div className="relative">
                     <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-3">
@@ -522,15 +522,15 @@ function SendPage(): ReactElement {
                     {/* Arrow divider */}
                     <div className="relative h-0">
                       <div className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-white border border-border/40 flex items-center justify-center z-10">
-                        <ArrowUp className="w-3 h-3 text-[#E07A5F] rotate-180" />
+                        <ArrowUp className="w-3 h-3 text-primary rotate-180" />
                       </div>
                       <div className="border-t border-border/30" />
                     </div>
 
                     {/* To */}
                     <div className="flex items-center gap-3 px-4 py-3">
-                      <div className="w-8 h-8 rounded-full bg-[#E07A5F]/10 flex items-center justify-center shrink-0">
-                        <ArrowUp className="w-3.5 h-3.5 text-[#E07A5F] rotate-45" />
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                        <ArrowUp className="w-3.5 h-3.5 text-primary rotate-45" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider">
@@ -546,7 +546,7 @@ function SendPage(): ReactElement {
                   {/* Memo (if present) */}
                   {memo && (
                     <div className="mt-3 flex items-start gap-2.5 px-1">
-                      <MessageSquare className="w-3.5 h-3.5 text-[#9B72CF] shrink-0 mt-0.5" />
+                      <MessageSquare className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
                       <div>
                         <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider mb-0.5">
                           Memo
@@ -757,7 +757,7 @@ function SendPage(): ReactElement {
                         </button>
                         <button
                           onClick={() => window.open(getExplorerTxUrl(txHash), '_blank')}
-                          className="p-0.5 text-muted-foreground/40 hover:text-[#E07A5F] transition-colors"
+                          className="p-0.5 text-muted-foreground/40 hover:text-primary transition-colors"
                         >
                           <ExternalLink className="w-3 h-3" />
                         </button>

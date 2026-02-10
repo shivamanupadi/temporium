@@ -1,10 +1,24 @@
 import { type ReactElement, useState, useEffect, useCallback, useRef } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { motion } from 'framer-motion';
-import { CheckCircle, XCircle, Loader2, Fingerprint, Plus, Clock, Globe } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  CheckCircle,
+  XCircle,
+  Loader2,
+  Fingerprint,
+  Plus,
+  Clock,
+  Globe,
+  Link2,
+  PenTool,
+  Send,
+  Shield,
+  Eye,
+  Wallet,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { CreateWalletModal } from '@/components/CreateWalletModal';
+import { CreateWalletModal } from '@temporium/shared-ui';
 import { WalletSelectModal } from '@/components/WalletSelectModal';
 import { useTempo } from '@/hooks/useTempo';
 import { tempoChain } from '@/lib/tempo-client';
@@ -25,6 +39,27 @@ import { formatAddress } from '@/lib/utils';
 export const Route = createFileRoute('/connect')({
   component: ConnectPage,
 });
+
+const PERMISSIONS = [
+  {
+    icon: Eye,
+    label: 'View your wallet address',
+    color: '#5B9A6F',
+    type: 'connect' as const,
+  },
+  {
+    icon: Send,
+    label: 'Request transaction approval',
+    color: '#9B72CF',
+    type: 'send' as const,
+  },
+  {
+    icon: PenTool,
+    label: 'Request message signatures',
+    color: '#9B72CF',
+    type: 'sign' as const,
+  },
+];
 
 function ConnectPage(): ReactElement {
   const navigate = useNavigate();
@@ -101,7 +136,6 @@ function ConnectPage(): ReactElement {
         if (event.source) {
           sendResponse(origin, response, event.source as Window);
         }
-        // Give enough time for the message to be sent before closing
         setTimeout(() => window.close(), 500);
         return;
       }
@@ -203,7 +237,6 @@ function ConnectPage(): ReactElement {
     if (!pendingRequest || status !== 'waiting' || !sourceWindow || !sourceOrigin) return;
 
     const handleBeforeUnload = (): void => {
-      // Send rejection response when window is closed
       sendResponse(
         sourceOrigin,
         createErrorResponse(
@@ -300,31 +333,36 @@ function ConnectPage(): ReactElement {
     }
   };
 
-  // Status screens
+  // --- Status screens ---
+
   if (!pendingRequest) {
     return (
       <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-[360px]"
+          className="w-full max-w-[380px]"
         >
-          <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm">
-            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+          <div className="bg-white rounded-2xl border border-border/60 shadow-sm overflow-hidden">
+            <div className="px-6 py-12 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-[#5B9A6F]/8 flex items-center justify-center mx-auto mb-4">
+                <Loader2 className="w-6 h-6 text-[#5B9A6F] animate-spin" />
+              </div>
+              <h1 className="text-[16px] font-semibold text-[#2D3436] mb-1.5">
+                Waiting for Connection
+              </h1>
+              <p className="text-[13px] text-muted-foreground mb-6">
+                Waiting for an app to request connection...
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => navigate({ to: '/' })}
+                className="h-11 px-6 rounded-xl text-[13px] border-border/40"
+              >
+                <Wallet className="w-4 h-4 mr-2" />
+                Go to Wallet
+              </Button>
             </div>
-            <h1 className="text-[15px] font-semibold text-gray-900 mb-1">Waiting for Connection</h1>
-            <p className="text-[13px] text-gray-500 mb-5">
-              Waiting for an app to request connection...
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate({ to: '/' })}
-              className="w-full"
-            >
-              Go to Wallet
-            </Button>
           </div>
         </motion.div>
       </div>
@@ -335,18 +373,32 @@ function ConnectPage(): ReactElement {
     return (
       <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-[360px]"
+          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          className="w-full max-w-[380px]"
         >
-          <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-6 h-6 text-primary" />
+          <div className="bg-white rounded-2xl border border-border/60 shadow-sm overflow-hidden">
+            <div className="relative px-6 py-12 text-center">
+              <div className="absolute inset-0 bg-gradient-to-b from-[#5B9A6F]/[0.04] to-transparent pointer-events-none" />
+              <div className="relative">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.1 }}
+                  className="w-16 h-16 rounded-2xl bg-[#5B9A6F]/10 flex items-center justify-center mx-auto mb-4"
+                >
+                  <CheckCircle className="w-8 h-8 text-[#5B9A6F]" />
+                </motion.div>
+                <h1 className="text-[17px] font-semibold text-[#2D3436] mb-1.5">Connected!</h1>
+                <p className="text-[13px] text-muted-foreground">
+                  Successfully connected to{' '}
+                  <span className="font-semibold text-[#2D3436]">
+                    {pendingRequest.appInfo.name}
+                  </span>
+                </p>
+              </div>
             </div>
-            <h1 className="text-[15px] font-semibold text-gray-900 mb-1">Connected</h1>
-            <p className="text-[13px] text-gray-500">
-              Successfully connected to {pendingRequest.appInfo.name}
-            </p>
           </div>
         </motion.div>
       </div>
@@ -357,16 +409,20 @@ function ConnectPage(): ReactElement {
     return (
       <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-[360px]"
+          className="w-full max-w-[380px]"
         >
-          <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm">
-            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <XCircle className="w-6 h-6 text-gray-500" />
+          <div className="bg-white rounded-2xl border border-border/60 shadow-sm overflow-hidden">
+            <div className="px-6 py-12 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-[#F5F2ED] flex items-center justify-center mx-auto mb-4">
+                <XCircle className="w-7 h-7 text-[#9B9590]" />
+              </div>
+              <h1 className="text-[16px] font-semibold text-[#2D3436] mb-1.5">
+                Connection Declined
+              </h1>
+              <p className="text-[13px] text-muted-foreground">You declined the connection request</p>
             </div>
-            <h1 className="text-[15px] font-semibold text-gray-900 mb-1">Connection Rejected</h1>
-            <p className="text-[13px] text-gray-500">You declined to connect</p>
           </div>
         </motion.div>
       </div>
@@ -377,16 +433,20 @@ function ConnectPage(): ReactElement {
     return (
       <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-[360px]"
+          className="w-full max-w-[380px]"
         >
-          <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm">
-            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <Clock className="w-6 h-6 text-gray-500" />
+          <div className="bg-white rounded-2xl border border-border/60 shadow-sm overflow-hidden">
+            <div className="px-6 py-12 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-[#F5F2ED] flex items-center justify-center mx-auto mb-4">
+                <Clock className="w-7 h-7 text-[#9B9590]" />
+              </div>
+              <h1 className="text-[16px] font-semibold text-[#2D3436] mb-1.5">Request Expired</h1>
+              <p className="text-[13px] text-muted-foreground">
+                The connection request has timed out
+              </p>
             </div>
-            <h1 className="text-[15px] font-semibold text-gray-900 mb-1">Request Timed Out</h1>
-            <p className="text-[13px] text-gray-500">The connection request has expired</p>
           </div>
         </motion.div>
       </div>
@@ -397,23 +457,33 @@ function ConnectPage(): ReactElement {
     return (
       <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-[360px]"
+          className="w-full max-w-[380px]"
         >
-          <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm">
-            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <XCircle className="w-6 h-6 text-gray-500" />
+          <div className="bg-white rounded-2xl border border-border/60 shadow-sm overflow-hidden">
+            <div className="relative px-6 pt-10 pb-6 text-center">
+              <div className="absolute inset-0 bg-gradient-to-b from-red-500/[0.03] to-transparent pointer-events-none" />
+              <div className="relative">
+                <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4">
+                  <XCircle className="w-7 h-7 text-red-500" />
+                </div>
+                <h1 className="text-[16px] font-semibold text-[#2D3436] mb-1.5">
+                  Connection Failed
+                </h1>
+                <p className="text-[13px] text-muted-foreground">{error || 'Something went wrong'}</p>
+              </div>
             </div>
-            <h1 className="text-[15px] font-semibold text-gray-900 mb-1">Connection Failed</h1>
-            <p className="text-[13px] text-gray-500 mb-5">{error || 'Something went wrong'}</p>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1" onClick={() => window.close()}>
+            <div className="px-5 pb-5 flex items-center gap-2.5">
+              <Button
+                variant="outline"
+                className="flex-1 h-11 rounded-xl text-[13px] border-border/40"
+                onClick={() => window.close()}
+              >
                 Cancel
               </Button>
               <Button
-                size="sm"
-                className="flex-1"
+                className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-[#2D3436] hover:bg-[#3D4446] text-white"
                 onClick={() => {
                   setStatus('waiting');
                   setError(null);
@@ -428,105 +498,148 @@ function ConnectPage(): ReactElement {
     );
   }
 
-  // Main connection request UI
+  // --- Main connection request UI ---
   return (
     <>
       <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-[360px]"
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-[380px]"
         >
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            {/* Header */}
-            <div className="p-5 border-b border-gray-100">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                  {pendingRequest.appInfo.icon ? (
-                    <img src={pendingRequest.appInfo.icon} alt="" className="w-6 h-6 rounded" />
-                  ) : (
-                    <Globe className="w-5 h-5 text-gray-400" />
-                  )}
+          <div className="bg-white rounded-2xl border border-border/60 shadow-sm overflow-hidden">
+            {/* App info + title */}
+            <div className="relative px-6 pt-7 pb-5">
+              <div className="absolute inset-0 bg-gradient-to-b from-[#5B9A6F]/[0.03] to-transparent pointer-events-none" />
+
+              <div className="relative">
+                {/* App icon */}
+                <div className="flex justify-center mb-5">
+                  <div className="relative">
+                    <div className="w-16 h-16 rounded-2xl bg-[#F5F2ED] border border-border/30 flex items-center justify-center overflow-hidden">
+                      {pendingRequest.appInfo.icon ? (
+                        <img
+                          src={pendingRequest.appInfo.icon}
+                          alt=""
+                          className="w-16 h-16 rounded-2xl object-cover"
+                        />
+                      ) : (
+                        <Globe className="w-7 h-7 text-[#9B9590]" />
+                      )}
+                    </div>
+                    {/* Connection indicator */}
+                    <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-lg bg-[#5B9A6F] border-2 border-white flex items-center justify-center">
+                      <Link2 className="w-3 h-3 text-white" />
+                    </div>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-medium text-gray-900 truncate">
-                    {pendingRequest.appInfo.name}
+
+                <div className="text-center">
+                  <h1 className="text-[17px] font-semibold text-[#2D3436] mb-1">
+                    Connect to {pendingRequest.appInfo.name}
+                  </h1>
+                  <p className="text-[12px] text-[#9B9590] font-mono">
+                    {pendingRequest.appInfo.url}
                   </p>
-                  <p className="text-[12px] text-gray-500 truncate">{pendingRequest.appInfo.url}</p>
                 </div>
               </div>
-              <h1 className="text-[15px] font-semibold text-gray-900">Connect your wallet</h1>
-              <p className="text-[13px] text-gray-500 mt-1">
-                This app would like to connect to your wallet
-              </p>
             </div>
+
+            {/* Divider */}
+            <div className="mx-6 border-t border-border/40" />
 
             {/* Permissions */}
-            <div className="p-5 border-b border-gray-100">
-              <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-3">
+            <div className="px-6 py-5">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-3.5">
                 This app will be able to
               </p>
-              <div className="space-y-2">
-                {[
-                  'View your wallet address',
-                  'Request transaction approval',
-                  'Request message signatures',
-                ].map(perm => (
-                  <div key={perm} className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-primary" />
-                    <span className="text-[13px] text-gray-700">{perm}</span>
-                  </div>
-                ))}
+              <div className="space-y-2.5">
+                {PERMISSIONS.map(perm => {
+                  const PermIcon = perm.icon;
+                  return (
+                    <div key={perm.label} className="flex items-center gap-3">
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: `${perm.color}12` }}
+                      >
+                        <PermIcon className="w-4 h-4" style={{ color: perm.color }} />
+                      </div>
+                      <span className="text-[13px] text-[#2D3436] font-medium">{perm.label}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Wallet Status */}
-            <div className="p-5 border-b border-gray-100">
-              {isConnected && address ? (
-                <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <CheckCircle className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-[12px] font-medium text-gray-700">Wallet Connected</p>
-                    <p className="text-[12px] font-mono text-primary">
-                      {formatAddress(address, 6)}
+            {/* Divider */}
+            <div className="mx-6 border-t border-border/40" />
+
+            {/* Wallet status */}
+            <div className="px-6 py-5">
+              <AnimatePresence mode="wait">
+                {isConnected && address ? (
+                  <motion.div
+                    key="connected"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    className="flex items-center gap-3 px-4 py-3 bg-[#5B9A6F]/6 rounded-xl border border-[#5B9A6F]/15"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-[#5B9A6F]/12 flex items-center justify-center shrink-0">
+                      <Shield className="w-4.5 h-4.5 text-[#5B9A6F]" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[12px] font-semibold text-[#5B9A6F]">Wallet Ready</p>
+                      <p className="text-[11px] font-mono text-[#5B9A6F]/70 truncate">
+                        {formatAddress(address, 6)}
+                      </p>
+                    </div>
+                    <div className="w-2 h-2 rounded-full bg-[#5B9A6F] shrink-0" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="not-connected"
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    className="bg-[#FDFBF8] rounded-xl border border-border/40 px-4 py-4"
+                  >
+                    <p className="text-[13px] font-semibold text-[#2D3436] mb-3">
+                      Sign in to connect
                     </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <p className="text-[13px] font-medium text-gray-700 mb-3">Sign in to connect</p>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1 h-9 text-[13px]"
-                      onClick={() => setShowWalletSelectModal(true)}
-                      disabled={isConnecting}
-                    >
-                      <Fingerprint className="w-4 h-4 mr-1.5" />
-                      Sign In
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="flex-1 h-9 text-[13px]"
-                      onClick={() => setShowCreateWalletModal(true)}
-                      disabled={isConnecting}
-                    >
-                      <Plus className="w-4 h-4 mr-1.5" />
-                      Create
-                    </Button>
-                  </div>
-                </div>
-              )}
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1 h-10 rounded-xl text-[13px] border-border/40"
+                        onClick={() => setShowWalletSelectModal(true)}
+                        disabled={isConnecting}
+                      >
+                        <Fingerprint className="w-4 h-4 mr-1.5" />
+                        Sign In
+                      </Button>
+                      <Button
+                        className="flex-1 h-10 rounded-xl text-[13px] font-semibold bg-[#2D3436] hover:bg-[#3D4446] text-white"
+                        onClick={() => setShowCreateWalletModal(true)}
+                        disabled={isConnecting}
+                      >
+                        <Plus className="w-4 h-4 mr-1.5" />
+                        Create
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Timer */}
             {timeRemaining !== null && timeRemaining > 0 && (
-              <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
-                <div className="flex items-center justify-center gap-1.5 text-[12px] text-gray-500">
-                  <Clock className="w-3.5 h-3.5" />
+              <div className="mx-6 border-t border-border/40" />
+            )}
+            {timeRemaining !== null && timeRemaining > 0 && (
+              <div className="px-6 py-3">
+                <div className="flex items-center justify-center gap-1.5 text-[11px] text-[#B5B0AA]">
+                  <Clock className="w-3 h-3" />
                   <span>
                     Expires in {Math.floor(timeRemaining / 60)}:
                     {(timeRemaining % 60).toString().padStart(2, '0')}
@@ -535,36 +648,48 @@ function ConnectPage(): ReactElement {
               </div>
             )}
 
+            {/* Divider */}
+            <div className="mx-6 border-t border-border/40" />
+
             {/* Actions */}
-            <div className="p-5 flex gap-3">
+            <div className="px-5 py-5 flex items-center gap-2.5">
               <Button
                 variant="outline"
-                className="flex-1 h-10"
+                className="flex-1 h-11 rounded-xl text-[13px] border-border/40"
                 onClick={handleReject}
                 disabled={status === 'processing' || isConnecting}
               >
                 Cancel
               </Button>
               <Button
-                className="flex-1 h-10"
+                className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-[#5B9A6F] hover:bg-[#4A8A5E] text-white"
                 onClick={handleApprove}
                 isLoading={status === 'processing' || isConnecting}
               >
-                {isConnected ? 'Connect' : 'Sign In to Connect'}
+                {isConnected ? (
+                  <>
+                    <Link2 className="w-4 h-4 mr-1.5" />
+                    Connect
+                  </>
+                ) : (
+                  'Sign In to Connect'
+                )}
               </Button>
             </div>
 
             {/* Keyboard hints */}
             {isConnected && status === 'waiting' && (
-              <div className="px-5 pb-4 flex items-center justify-center gap-4 text-[11px] text-gray-400">
+              <div className="px-5 pb-4 flex items-center justify-center gap-4 text-[10px] text-[#B5B0AA]">
                 <span className="flex items-center gap-1">
-                  <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-[10px] font-mono">
+                  <kbd className="px-1.5 py-0.5 bg-[#F5F2ED] rounded text-[9px] font-mono text-[#9B9590]">
                     Enter
                   </kbd>
                   <span>connect</span>
                 </span>
                 <span className="flex items-center gap-1">
-                  <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Esc</kbd>
+                  <kbd className="px-1.5 py-0.5 bg-[#F5F2ED] rounded text-[9px] font-mono text-[#9B9590]">
+                    Esc
+                  </kbd>
                   <span>cancel</span>
                 </span>
               </div>

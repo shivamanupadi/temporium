@@ -17,7 +17,7 @@ import {
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
 import { useContacts, type Contact } from '@/hooks/useContacts';
 import { formatAddress, isValidAddress, cn } from '@/lib/utils';
 import { getExplorerAddressUrl } from '@/lib/tempo-client';
@@ -30,7 +30,7 @@ export const Route = createFileRoute('/wallet/contacts')({
 type ModalState = 'add' | 'edit' | 'delete' | null;
 
 const avatarColors = [
-  { bg: '#E07A5F', text: '#FFFFFF' },
+  { bg: '#9B72CF', text: '#FFFFFF' },
   { bg: '#9B72CF', text: '#FFFFFF' },
   { bg: '#5B9A6F', text: '#FFFFFF' },
   { bg: '#D4A574', text: '#FFFFFF' },
@@ -165,8 +165,8 @@ function ContactsPage(): ReactElement {
         className="flex items-center justify-between"
       >
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#E07A5F]/10 flex items-center justify-center">
-            <Users className="w-5 h-5 text-[#E07A5F]" />
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Users className="w-5 h-5 text-primary" />
           </div>
           <div>
             <h1 className="text-xl font-semibold text-[#2D3436]">Contacts</h1>
@@ -180,7 +180,7 @@ function ContactsPage(): ReactElement {
 
         <button
           onClick={handleOpenAdd}
-          className="w-9 h-9 rounded-xl bg-[#E07A5F] hover:bg-[#D4694F] flex items-center justify-center transition-colors shadow-sm"
+          className="w-9 h-9 rounded-xl bg-primary hover:bg-primary/85 flex items-center justify-center transition-colors shadow-sm"
         >
           <Plus className="w-4 h-4 text-white" />
         </button>
@@ -199,7 +199,7 @@ function ContactsPage(): ReactElement {
             placeholder="Search by name or address..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="pl-10 h-11 rounded-xl bg-white border-border/40 text-[13px] placeholder:text-[#B5B0AA] focus-visible:border-[#E07A5F]/40 focus-visible:ring-[#E07A5F]/10"
+            className="pl-10 h-11 rounded-xl bg-white border-border/40 text-[13px] placeholder:text-[#B5B0AA] focus-visible:border-primary/40 focus-visible:ring-primary/10"
           />
         </motion.div>
       )}
@@ -235,8 +235,8 @@ function ContactsPage(): ReactElement {
           className="bg-white border border-border/60 rounded-2xl shadow-sm"
         >
           <div className="px-6 py-14 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-[#E07A5F]/8 flex items-center justify-center mx-auto mb-4">
-              <Users className="w-7 h-7 text-[#E07A5F]" />
+            <div className="w-14 h-14 rounded-2xl bg-primary/8 flex items-center justify-center mx-auto mb-4">
+              <Users className="w-7 h-7 text-primary" />
             </div>
             <h2 className="text-[15px] font-semibold text-[#2D3436] mb-1.5">No Contacts Yet</h2>
             <p className="text-[13px] text-muted-foreground max-w-[260px] mx-auto leading-relaxed mb-5">
@@ -244,7 +244,7 @@ function ContactsPage(): ReactElement {
             </p>
             <button
               onClick={handleOpenAdd}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#E07A5F] hover:bg-[#D4694F] text-white text-[13px] font-semibold transition-colors shadow-sm"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary/85 text-white text-[13px] font-semibold transition-colors shadow-sm"
             >
               <UserPlus className="w-4 h-4" />
               Add First Contact
@@ -344,7 +344,7 @@ function ContactsPage(): ReactElement {
                       </button>
                       <button
                         onClick={() => handleOpenEdit(contact)}
-                        className="w-8 h-8 rounded-lg border border-border/30 bg-[#FDFBF8] hover:border-[#9B72CF]/30 hover:bg-[#9B72CF]/5 flex items-center justify-center transition-all"
+                        className="w-8 h-8 rounded-lg border border-border/30 bg-[#FDFBF8] hover:border-primary/30 hover:bg-primary/5 flex items-center justify-center transition-all"
                       >
                         <Pencil className="w-3.5 h-3.5 text-[#B5B0AA]" />
                       </button>
@@ -374,7 +374,7 @@ function ContactsPage(): ReactElement {
           </DialogDescription>
 
           <div className="relative px-6 pt-8 pb-2 text-center">
-            <div className="absolute inset-0 bg-gradient-to-b from-[#E07A5F]/[0.04] to-transparent pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.04] to-transparent pointer-events-none" />
 
             <div className="relative">
               <div
@@ -383,13 +383,13 @@ function ContactsPage(): ReactElement {
                   backgroundColor:
                     modalState === 'edit' && selectedContact
                       ? `${getAvatarColor(selectedContact.name).bg}14`
-                      : '#E07A5F14',
+                      : 'color-mix(in srgb, var(--primary) 8%, transparent)',
                 }}
               >
                 {modalState === 'edit' ? (
-                  <Pencil className="w-7 h-7 text-[#9B72CF]" />
+                  <Pencil className="w-7 h-7 text-primary" />
                 ) : (
-                  <UserPlus className="w-7 h-7 text-[#E07A5F]" />
+                  <UserPlus className="w-7 h-7 text-primary" />
                 )}
               </div>
               <h3 className="text-[15px] font-semibold text-[#2D3436] mb-1">
@@ -412,7 +412,7 @@ function ContactsPage(): ReactElement {
                 placeholder="e.g., Alice, Bob..."
                 value={name}
                 onChange={e => setName(e.target.value)}
-                className="h-11 rounded-xl bg-[#FDFBF8] border-border/40 text-[13px] placeholder:text-[#B5B0AA] focus-visible:border-[#E07A5F]/40 focus-visible:ring-[#E07A5F]/10"
+                className="h-11 rounded-xl bg-[#FDFBF8] border-border/40 text-[13px] placeholder:text-[#B5B0AA] focus-visible:border-primary/40 focus-visible:ring-primary/10"
               />
             </div>
             <div>
@@ -423,7 +423,7 @@ function ContactsPage(): ReactElement {
                 placeholder="0x..."
                 value={address}
                 onChange={e => setAddress(e.target.value)}
-                className="h-11 rounded-xl bg-[#FDFBF8] border-border/40 font-mono text-[12px] placeholder:text-[#B5B0AA] focus-visible:border-[#E07A5F]/40 focus-visible:ring-[#E07A5F]/10"
+                className="h-11 rounded-xl bg-[#FDFBF8] border-border/40 font-mono text-[12px] placeholder:text-[#B5B0AA] focus-visible:border-primary/40 focus-visible:ring-primary/10"
               />
             </div>
           </div>
@@ -437,7 +437,7 @@ function ContactsPage(): ReactElement {
               Cancel
             </Button>
             <Button
-              className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-[#E07A5F] hover:bg-[#D4694F] text-white"
+              className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-primary hover:bg-primary/85 text-white"
               onClick={modalState === 'add' ? handleAdd : handleEdit}
               disabled={isSubmitting || !name.trim() || !address.trim()}
             >

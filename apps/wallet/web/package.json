@@ -26,6 +26,7 @@
     "@tailwindcss/postcss": "^4.1.17",
     "@tanstack/react-query": "^5.90.12",
     "@tanstack/react-router": "^1.140.1",
+    "@temporium/shared-ui": "*",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "framer-motion": "^12.18.0",

@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useSignMessage, useWalletClient } from 'wagmi';
 import { type Address } from 'viem';
 import { Actions } from 'viem/tempo';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   CheckCircle,
   XCircle,
@@ -17,14 +17,28 @@ import {
   Globe,
   ArrowRight,
   ArrowRightLeft,
-  Droplet,
-  FileText,
-  AlertCircle,
-  LinkIcon,
+  Droplets,
+  FileSignature,
+  AlertTriangle,
+  Link2,
+  Shield,
+  Wallet,
+  Coins,
+  Send,
+  ShoppingCart,
+  ListOrdered,
+  Ban,
+  GitBranch,
+  ShieldCheck,
+  Sparkles,
+  CirclePlus,
+  Flame,
+  Gift,
+  ArrowUpFromLine,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { CreateWalletModal } from '@/components/CreateWalletModal';
+import { CreateWalletModal } from '@temporium/shared-ui';
 import { WalletSelectModal } from '@/components/WalletSelectModal';
 import { useTempo } from '@/hooks/useTempo';
 import { getExplorerTxUrl } from '@/lib/tempo-client';
@@ -60,7 +74,17 @@ type RequestType =
   | 'swap_tokens'
   | 'add_liquidity'
   | 'remove_liquidity'
-  | 'send_transaction';
+  | 'send_transaction'
+  | 'buy_tokens'
+  | 'place_order'
+  | 'cancel_order'
+  | 'create_pair'
+  | 'approve_token'
+  | 'create_token'
+  | 'mint_token'
+  | 'burn_token'
+  | 'claim_rewards'
+  | 'dex_withdraw';
 
 interface TransactionRequest {
   id: string;
@@ -122,51 +146,115 @@ function getUserFriendlyError(error: unknown): string {
   return message.length > 80 ? message.substring(0, 80) + '...' : message;
 }
 
-const REQUEST_CONFIG: Record<
-  RequestType,
-  { icon: typeof ArrowRight; color: string; bg: string; title: string }
-> = {
+interface RequestConfig {
+  icon: typeof ArrowRight;
+  color: string;
+  title: string;
+  subtitle: string;
+}
+
+const REQUEST_CONFIG: Record<RequestType, RequestConfig> = {
   sign_message: {
-    icon: FileText,
-    color: 'text-primary',
-    bg: 'bg-primary/10',
+    icon: FileSignature,
+    color: '#9B72CF',
     title: 'Sign Message',
+    subtitle: 'Review the message before signing',
   },
   send_payment: {
-    icon: ArrowRight,
-    color: 'text-primary',
-    bg: 'bg-primary/10',
+    icon: Send,
+    color: '#9B72CF',
     title: 'Send Payment',
+    subtitle: 'Confirm the payment details',
   },
   send_scheduled_payment: {
     icon: Clock,
-    color: 'text-gray-600',
-    bg: 'bg-gray-100',
+    color: '#9B72CF',
     title: 'Scheduled Payment',
+    subtitle: 'Review the scheduled transfer',
   },
   swap_tokens: {
     icon: ArrowRightLeft,
-    color: 'text-primary',
-    bg: 'bg-primary/10',
+    color: '#9B72CF',
     title: 'Swap Tokens',
+    subtitle: 'Review the token swap',
   },
   add_liquidity: {
-    icon: Droplet,
-    color: 'text-primary',
-    bg: 'bg-primary/10',
+    icon: Droplets,
+    color: '#5B9A6F',
     title: 'Add Liquidity',
+    subtitle: 'Provide liquidity to the pool',
   },
   remove_liquidity: {
-    icon: Droplet,
-    color: 'text-primary',
-    bg: 'bg-primary/10',
+    icon: Droplets,
+    color: '#5B9A6F',
     title: 'Remove Liquidity',
+    subtitle: 'Withdraw from the pool',
   },
   send_transaction: {
-    icon: ArrowRight,
-    color: 'text-gray-600',
-    bg: 'bg-gray-100',
+    icon: Coins,
+    color: '#9B72CF',
     title: 'Send Transaction',
+    subtitle: 'Review the raw transaction',
+  },
+  buy_tokens: {
+    icon: ShoppingCart,
+    color: '#9B72CF',
+    title: 'Buy Tokens',
+    subtitle: 'Review the token purchase',
+  },
+  place_order: {
+    icon: ListOrdered,
+    color: '#9B72CF',
+    title: 'Place Order',
+    subtitle: 'Review the order details',
+  },
+  cancel_order: {
+    icon: Ban,
+    color: '#9B72CF',
+    title: 'Cancel Order',
+    subtitle: 'Cancel an existing order',
+  },
+  create_pair: {
+    icon: GitBranch,
+    color: '#9B72CF',
+    title: 'Create Pair',
+    subtitle: 'Create a new trading pair',
+  },
+  approve_token: {
+    icon: ShieldCheck,
+    color: '#5B9A6F',
+    title: 'Approve Token',
+    subtitle: 'Authorize token spending',
+  },
+  create_token: {
+    icon: Sparkles,
+    color: '#5B9A6F',
+    title: 'Create Token',
+    subtitle: 'Deploy a new token',
+  },
+  mint_token: {
+    icon: CirclePlus,
+    color: '#5B9A6F',
+    title: 'Mint Tokens',
+    subtitle: 'Mint new tokens',
+  },
+  burn_token: {
+    icon: Flame,
+    color: '#9B72CF',
+    title: 'Burn Tokens',
+    subtitle: 'Permanently destroy tokens',
+  },
+  claim_rewards: {
+    icon: Gift,
+    color: '#5B9A6F',
+    title: 'Claim Rewards',
+    subtitle: 'Claim your earned rewards',
+  },
+  dex_withdraw: {
+    icon: ArrowUpFromLine,
+    color: '#9B72CF',
+    title: 'DEX Withdraw',
+    subtitle: 'Withdraw from the DEX',
   },
 };
 
@@ -216,6 +304,16 @@ function SignPage(): ReactElement {
       'add_liquidity',
       'remove_liquidity',
       'send_transaction',
+      'buy_tokens',
+      'place_order',
+      'cancel_order',
+      'create_pair',
+      'approve_token',
+      'create_token',
+      'mint_token',
+      'burn_token',
+      'claim_rewards',
+      'dex_withdraw',
     ];
 
     const handleMessage = (event: MessageEvent): void => {
@@ -228,10 +326,8 @@ function SignPage(): ReactElement {
       console.log('[Sign] Received request:', request.method, 'from:', origin);
 
       if (!isAppConnected(origin)) {
-        // Store the request and app info for processing after reconnection
         const appName = new URL(origin).hostname;
         setDisconnectedAppInfo({ name: appName, url: origin });
-        // Store the pending request so we can process it after reconnection
         setPendingRequest({
           request,
           appInfo: { name: appName, url: origin },
@@ -416,6 +512,186 @@ function SignPage(): ReactElement {
           break;
         }
 
+        case 'buy_tokens': {
+          const params = request.params as {
+            tokenIn: Address;
+            tokenOut: Address;
+            amountOut: string;
+            maxAmountIn: string;
+            feeToken?: Address;
+          };
+          if (!params.tokenIn || !params.tokenOut) throw new Error('Token addresses required');
+
+          hash = await Actions.dex.buy(walletClient, {
+            tokenIn: params.tokenIn,
+            tokenOut: params.tokenOut,
+            amountOut: safeBigInt(params.amountOut, 'Amount out'),
+            maxAmountIn: safeBigInt(params.maxAmountIn, 'Max amount in'),
+            feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+          });
+          break;
+        }
+
+        case 'place_order': {
+          const params = request.params as {
+            token: Address;
+            amount: string;
+            tick: number;
+            type: 'buy' | 'sell';
+            feeToken?: Address;
+          };
+          if (!params.token) throw new Error('Token address required');
+          if (params.tick === undefined) throw new Error('Tick required');
+          if (!params.type || !['buy', 'sell'].includes(params.type))
+            throw new Error('Order type must be buy or sell');
+
+          hash = await Actions.dex.place(walletClient, {
+            token: params.token,
+            amount: safeBigInt(params.amount, 'Amount'),
+            tick: params.tick,
+            type: params.type,
+            feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+          });
+          break;
+        }
+
+        case 'cancel_order': {
+          const params = request.params as {
+            orderId: string;
+            feeToken?: Address;
+          };
+          if (!params.orderId) throw new Error('Order ID required');
+
+          hash = await Actions.dex.cancel(walletClient, {
+            orderId: safeBigInt(params.orderId, 'Order ID'),
+            feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+          });
+          break;
+        }
+
+        case 'create_pair': {
+          const params = request.params as {
+            base: Address;
+            feeToken?: Address;
+          };
+          if (!params.base) throw new Error('Base token required');
+
+          hash = await Actions.dex.createPair(walletClient, {
+            base: params.base,
+            feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+          });
+          break;
+        }
+
+        case 'approve_token': {
+          const params = request.params as {
+            token: Address;
+            spender: Address;
+            amount: string;
+            feeToken?: Address;
+          };
+          if (!params.token || !params.spender) throw new Error('Token and spender required');
+
+          hash = await Actions.token.approve(walletClient, {
+            token: params.token,
+            spender: params.spender,
+            amount: safeBigInt(params.amount, 'Amount'),
+            feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+          });
+          break;
+        }
+
+        case 'create_token': {
+          const params = request.params as {
+            name: string;
+            symbol: string;
+            currency: string;
+            admin?: Address;
+            quoteToken?: Address;
+            salt?: `0x${string}`;
+          };
+          if (!params.name || !params.symbol || !params.currency)
+            throw new Error('Name, symbol, and currency required');
+
+          hash = await Actions.token.create(walletClient, {
+            name: params.name,
+            symbol: params.symbol,
+            currency: params.currency,
+            admin: params.admin,
+            quoteToken: params.quoteToken,
+            salt: params.salt,
+          });
+          break;
+        }
+
+        case 'mint_token': {
+          const params = request.params as {
+            token: Address;
+            to: Address;
+            amount: string;
+            memo?: `0x${string}`;
+            feeToken?: Address;
+          };
+          if (!params.token || !params.to) throw new Error('Token and recipient required');
+
+          hash = await Actions.token.mint(walletClient, {
+            token: params.token,
+            to: params.to,
+            amount: safeBigInt(params.amount, 'Amount'),
+            memo: params.memo,
+            feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+          });
+          break;
+        }
+
+        case 'burn_token': {
+          const params = request.params as {
+            token: Address;
+            amount: string;
+            memo?: `0x${string}`;
+            feeToken?: Address;
+          };
+          if (!params.token) throw new Error('Token address required');
+
+          hash = await Actions.token.burn(walletClient, {
+            token: params.token,
+            amount: safeBigInt(params.amount, 'Amount'),
+            memo: params.memo,
+            feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+          });
+          break;
+        }
+
+        case 'claim_rewards': {
+          const params = request.params as {
+            token: Address;
+            feeToken?: Address;
+          };
+          if (!params.token) throw new Error('Token address required');
+
+          hash = await Actions.reward.claim(walletClient, {
+            token: params.token,
+            feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+          });
+          break;
+        }
+
+        case 'dex_withdraw': {
+          const params = request.params as {
+            token: Address;
+            amount: string;
+            feeToken?: Address;
+          };
+          if (!params.token) throw new Error('Token address required');
+
+          hash = await Actions.dex.withdraw(walletClient, {
+            token: params.token,
+            amount: safeBigInt(params.amount, 'Amount'),
+            feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+          });
+          break;
+        }
+
         default:
           throw new Error(`Unsupported: ${request.method}`);
       }
@@ -467,7 +743,6 @@ function SignPage(): ReactElement {
   }, [pendingRequest, sourceOrigin, sourceWindow, signMessageAsync, walletClient, address]);
 
   useEffect(() => {
-    // Skip if in not_connected state - that has its own reconnection handler
     if (status === 'not_connected') return;
 
     if (
@@ -565,7 +840,6 @@ function SignPage(): ReactElement {
     if (!pendingRequest || status !== 'waiting' || !sourceWindow || !sourceOrigin) return;
 
     const handleBeforeUnload = (): void => {
-      // Send rejection response when window is closed
       sendResponse(
         sourceOrigin,
         createErrorResponse(
@@ -666,9 +940,7 @@ function SignPage(): ReactElement {
   const handleReconnect = useCallback(() => {
     if (!sourceOrigin || !disconnectedAppInfo) return;
 
-    // If user is authenticated, reconnect the app and process the original request
     if (isConnected && address && walletClient) {
-      // Save the app as connected
       saveConnectedApp({
         name: disconnectedAppInfo.name,
         url: sourceOrigin,
@@ -677,20 +949,15 @@ function SignPage(): ReactElement {
         permissions: ['connect', 'sign', 'send'],
       });
 
-      // Clear the disconnected state
       setDisconnectedAppInfo(null);
 
-      // Process the original request if we have one
       if (pendingRequest) {
-        // Reset the auth flag to prevent double execution from the other useEffect
         shouldExecuteAfterAuth.current = false;
         setPendingAction(null);
         setStatus('waiting');
         toast.success('App reconnected! Processing your request...');
-        // Give UI time to update, then execute the transaction
         setTimeout(() => executeTransaction(), 300);
       } else {
-        // No pending request, just close
         if (sourceWindow) {
           sendResponse(
             sourceOrigin,
@@ -706,9 +973,6 @@ function SignPage(): ReactElement {
         setTimeout(() => window.close(), 1500);
       }
     } else {
-      // User needs to sign in first
-      // Don't set shouldExecuteAfterAuth.current - the useEffect watching for
-      // not_connected + auth will handle reconnection and execution
       setShowWalletSelectModal(true);
     }
   }, [
@@ -733,7 +997,6 @@ function SignPage(): ReactElement {
       sourceOrigin &&
       !isConnecting
     ) {
-      // User just authenticated while in not_connected state - auto reconnect
       handleReconnect();
     }
   }, [
@@ -760,40 +1023,51 @@ function SignPage(): ReactElement {
     window.close();
   };
 
-  // Status screens - check not_connected FIRST (before pendingRequest check)
+  // Helper to get config
+  const getConfig = (): RequestConfig => REQUEST_CONFIG[requestType || 'send_transaction'];
+
+  // --- Status: Not Connected ---
   if (status === 'not_connected') {
     return (
       <>
         <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
           <motion.div
-            initial={{ opacity: 0, scale: 0.98 }}
+            initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-[360px]"
+            className="w-full max-w-[380px]"
           >
-            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl border border-border/60 shadow-sm overflow-hidden">
               {/* Header */}
-              <div className="p-6 text-center border-b border-gray-100">
-                <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-                  <LinkIcon className="w-7 h-7 text-gray-500" />
+              <div className="relative px-6 pt-8 pb-5 text-center">
+                <div className="absolute inset-0 bg-gradient-to-b from-[#D97706]/[0.03] to-transparent pointer-events-none" />
+                <div className="relative">
+                  <div className="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center mx-auto mb-4">
+                    <Link2 className="w-7 h-7 text-amber-600" />
+                  </div>
+                  <h1 className="text-[17px] font-semibold text-[#2D3436] mb-1.5">
+                    App Not Connected
+                  </h1>
+                  <p className="text-[13px] text-muted-foreground leading-relaxed">
+                    This app&apos;s connection was revoked or has expired.
+                  </p>
                 </div>
-                <h1 className="text-[17px] font-semibold text-gray-900 mb-2">App Not Connected</h1>
-                <p className="text-[13px] text-gray-500">
-                  This app&apos;s connection was revoked or has expired.
-                </p>
               </div>
+
+              {/* Divider */}
+              <div className="mx-6 border-t border-border/40" />
 
               {/* App Info */}
               {disconnectedAppInfo && (
-                <div className="px-6 py-4 bg-gray-50 border-b border-gray-100">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center">
-                      <Globe className="w-5 h-5 text-gray-400" />
+                <div className="px-6 py-4">
+                  <div className="flex items-center gap-3 px-4 py-3 bg-[#FDFBF8] rounded-xl border border-border/30">
+                    <div className="w-10 h-10 rounded-xl bg-[#F5F2ED] border border-border/30 flex items-center justify-center shrink-0">
+                      <Globe className="w-5 h-5 text-[#9B9590]" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[14px] font-medium text-gray-900 truncate">
+                      <p className="text-[13px] font-semibold text-[#2D3436] truncate">
                         {disconnectedAppInfo.name}
                       </p>
-                      <p className="text-[12px] text-gray-500 truncate">
+                      <p className="text-[11px] text-[#9B9590] truncate">
                         {disconnectedAppInfo.url}
                       </p>
                     </div>
@@ -801,48 +1075,53 @@ function SignPage(): ReactElement {
                 </div>
               )}
 
-              {/* Auth Status & Actions */}
-              <div className="p-6">
+              {/* Divider */}
+              <div className="mx-6 border-t border-border/40" />
+
+              {/* Auth & Actions */}
+              <div className="px-6 py-5">
                 {isConnected && address ? (
                   <>
-                    <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20 mb-4">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <CheckCircle className="w-4 h-4 text-primary" />
+                    <div className="flex items-center gap-3 px-4 py-3 bg-[#5B9A6F]/6 rounded-xl border border-[#5B9A6F]/15 mb-4">
+                      <div className="w-9 h-9 rounded-xl bg-[#5B9A6F]/12 flex items-center justify-center shrink-0">
+                        <Shield className="w-4 h-4 text-[#5B9A6F]" />
                       </div>
-                      <div>
-                        <p className="text-[12px] font-medium text-gray-700">Wallet Connected</p>
-                        <p className="text-[12px] font-mono text-primary">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[12px] font-semibold text-[#5B9A6F]">Wallet Ready</p>
+                        <p className="text-[11px] font-mono text-[#5B9A6F]/70 truncate">
                           {formatAddress(address, 6)}
                         </p>
                       </div>
                     </div>
-                    <p className="text-[13px] text-gray-600 text-center mb-4">
+                    <p className="text-[13px] text-muted-foreground text-center mb-4">
                       Click below to reconnect this app to your wallet.
                     </p>
-                    <div className="flex gap-3">
+                    <div className="flex gap-2.5">
                       <Button
                         variant="outline"
-                        className="flex-1 h-10"
+                        className="flex-1 h-11 rounded-xl text-[13px] border-border/40"
                         onClick={handleCancelNotConnected}
                       >
                         Cancel
                       </Button>
-                      <Button className="flex-1 h-10" onClick={handleReconnect}>
-                        <LinkIcon className="w-4 h-4 mr-2" />
-                        Reconnect App
+                      <Button
+                        className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-[#5B9A6F] hover:bg-[#4A8A5E] text-white"
+                        onClick={handleReconnect}
+                      >
+                        <Link2 className="w-4 h-4 mr-1.5" />
+                        Reconnect
                       </Button>
                     </div>
                   </>
                 ) : (
                   <>
-                    <p className="text-[13px] text-gray-600 text-center mb-4">
+                    <p className="text-[13px] text-muted-foreground text-center mb-4">
                       Sign in to your wallet to reconnect this app.
                     </p>
                     <div className="flex gap-2 mb-3">
                       <Button
-                        size="sm"
                         variant="outline"
-                        className="flex-1 h-10"
+                        className="flex-1 h-10 rounded-xl text-[13px] border-border/40"
                         onClick={() => setShowWalletSelectModal(true)}
                         disabled={isConnecting}
                       >
@@ -850,8 +1129,7 @@ function SignPage(): ReactElement {
                         Sign In
                       </Button>
                       <Button
-                        size="sm"
-                        className="flex-1 h-10"
+                        className="flex-1 h-10 rounded-xl text-[13px] font-semibold bg-[#2D3436] hover:bg-[#3D4446] text-white"
                         onClick={() => setShowCreateWalletModal(true)}
                         disabled={isConnecting}
                       >
@@ -859,14 +1137,12 @@ function SignPage(): ReactElement {
                         Create Wallet
                       </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full text-gray-500"
+                    <button
                       onClick={handleCancelNotConnected}
+                      className="w-full py-2 text-[12px] text-[#9B9590] hover:text-[#6B6560] transition-colors"
                     >
                       Cancel
-                    </Button>
+                    </button>
                   </>
                 )}
               </div>
@@ -874,7 +1150,6 @@ function SignPage(): ReactElement {
           </motion.div>
         </div>
 
-        {/* Modals must be rendered here too */}
         <CreateWalletModal
           isOpen={showCreateWalletModal}
           isLoading={isConnecting}
@@ -894,131 +1169,167 @@ function SignPage(): ReactElement {
     );
   }
 
+  // --- Status: No pending request ---
   if (!pendingRequest) {
     return (
       <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-[360px]"
+          className="w-full max-w-[380px]"
         >
-          <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm">
-            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <Loader2 className="w-5 h-5 text-gray-400 animate-spin" />
+          <div className="bg-white rounded-2xl border border-border/60 shadow-sm overflow-hidden">
+            <div className="px-6 py-12 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-primary/8 flex items-center justify-center mx-auto mb-4">
+                <Loader2 className="w-6 h-6 text-primary animate-spin" />
+              </div>
+              <h1 className="text-[16px] font-semibold text-[#2D3436] mb-1.5">
+                Waiting for Request
+              </h1>
+              <p className="text-[13px] text-muted-foreground mb-6">
+                Waiting for an app to request signing...
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => navigate({ to: '/' })}
+                className="h-11 px-6 rounded-xl text-[13px] border-border/40"
+              >
+                <Wallet className="w-4 h-4 mr-2" />
+                Go to Wallet
+              </Button>
             </div>
-            <h1 className="text-[15px] font-semibold text-gray-900 mb-1">Waiting for Request</h1>
-            <p className="text-[13px] text-gray-500 mb-5">
-              Waiting for an app to request signing...
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate({ to: '/' })}
-              className="w-full"
-            >
-              Go to Wallet
-            </Button>
           </div>
         </motion.div>
       </div>
     );
   }
 
+  // --- Status: Success ---
   if (status === 'success') {
+    const config = getConfig();
     return (
       <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-[360px]"
+          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          className="w-full max-w-[380px]"
         >
-          <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-6 h-6 text-primary" />
+          <div className="bg-white rounded-2xl border border-border/60 shadow-sm overflow-hidden">
+            <div className="relative px-6 py-10 text-center">
+              <div className="absolute inset-0 bg-gradient-to-b from-[#5B9A6F]/[0.04] to-transparent pointer-events-none" />
+              <div className="relative">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.1 }}
+                  className="w-16 h-16 rounded-2xl bg-[#5B9A6F]/10 flex items-center justify-center mx-auto mb-4"
+                >
+                  <CheckCircle className="w-8 h-8 text-[#5B9A6F]" />
+                </motion.div>
+                <h1 className="text-[17px] font-semibold text-[#2D3436] mb-1.5">
+                  {requestType === 'sign_message' ? 'Message Signed' : 'Transaction Sent'}
+                </h1>
+                <p className="text-[13px] text-muted-foreground mb-1">
+                  {requestType === 'sign_message'
+                    ? 'Signature complete'
+                    : `${config.title} submitted successfully`}
+                </p>
+                {txHash && (
+                  <a
+                    href={getExplorerTxUrl(txHash)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 mt-3 px-4 py-2 rounded-lg bg-[#5B9A6F]/8 text-[12px] font-semibold text-[#5B9A6F] hover:bg-[#5B9A6F]/12 transition-colors"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    View on Explorer
+                  </a>
+                )}
+              </div>
             </div>
-            <h1 className="text-[15px] font-semibold text-gray-900 mb-1">
-              {requestType === 'sign_message' ? 'Message Signed' : 'Transaction Sent'}
-            </h1>
-            <p className="text-[13px] text-gray-500 mb-4">
-              {requestType === 'sign_message' ? 'Signature complete' : 'Transaction submitted'}
-            </p>
-            {txHash && (
-              <a
-                href={getExplorerTxUrl(txHash)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 text-[13px] text-primary hover:text-primary/80"
-              >
-                View on Explorer <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            )}
           </div>
         </motion.div>
       </div>
     );
   }
 
+  // --- Status: Rejected ---
   if (status === 'rejected') {
     return (
       <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-[360px]"
+          className="w-full max-w-[380px]"
         >
-          <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm">
-            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <XCircle className="w-6 h-6 text-gray-500" />
+          <div className="bg-white rounded-2xl border border-border/60 shadow-sm overflow-hidden">
+            <div className="px-6 py-12 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-[#F5F2ED] flex items-center justify-center mx-auto mb-4">
+                <XCircle className="w-7 h-7 text-[#9B9590]" />
+              </div>
+              <h1 className="text-[16px] font-semibold text-[#2D3436] mb-1.5">Request Rejected</h1>
+              <p className="text-[13px] text-muted-foreground">You declined the request</p>
             </div>
-            <h1 className="text-[15px] font-semibold text-gray-900 mb-1">Request Rejected</h1>
-            <p className="text-[13px] text-gray-500">You declined the request</p>
           </div>
         </motion.div>
       </div>
     );
   }
 
+  // --- Status: Timeout ---
   if (status === 'timeout') {
     return (
       <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-[360px]"
+          className="w-full max-w-[380px]"
         >
-          <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm">
-            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <Clock className="w-6 h-6 text-gray-500" />
+          <div className="bg-white rounded-2xl border border-border/60 shadow-sm overflow-hidden">
+            <div className="px-6 py-12 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-[#F5F2ED] flex items-center justify-center mx-auto mb-4">
+                <Clock className="w-7 h-7 text-[#9B9590]" />
+              </div>
+              <h1 className="text-[16px] font-semibold text-[#2D3436] mb-1.5">Request Expired</h1>
+              <p className="text-[13px] text-muted-foreground">The signing request has timed out</p>
             </div>
-            <h1 className="text-[15px] font-semibold text-gray-900 mb-1">Request Timed Out</h1>
-            <p className="text-[13px] text-gray-500">The request has expired</p>
           </div>
         </motion.div>
       </div>
     );
   }
 
+  // --- Status: Error ---
   if (status === 'error') {
     return (
       <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
+          initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-[360px]"
+          className="w-full max-w-[380px]"
         >
-          <div className="bg-white rounded-xl border border-gray-200 p-6 text-center shadow-sm">
-            <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center mx-auto mb-4">
-              <XCircle className="w-6 h-6 text-gray-500" />
+          <div className="bg-white rounded-2xl border border-border/60 shadow-sm overflow-hidden">
+            <div className="relative px-6 pt-10 pb-6 text-center">
+              <div className="absolute inset-0 bg-gradient-to-b from-red-500/[0.03] to-transparent pointer-events-none" />
+              <div className="relative">
+                <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4">
+                  <XCircle className="w-7 h-7 text-red-500" />
+                </div>
+                <h1 className="text-[16px] font-semibold text-[#2D3436] mb-1.5">Request Failed</h1>
+                <p className="text-[13px] text-muted-foreground">{error || 'Something went wrong'}</p>
+              </div>
             </div>
-            <h1 className="text-[15px] font-semibold text-gray-900 mb-1">Request Failed</h1>
-            <p className="text-[13px] text-gray-500 mb-5">{error || 'Something went wrong'}</p>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1" onClick={() => window.close()}>
+            <div className="px-5 pb-5 flex items-center gap-2.5">
+              <Button
+                variant="outline"
+                className="flex-1 h-11 rounded-xl text-[13px] border-border/40"
+                onClick={() => window.close()}
+              >
                 Cancel
               </Button>
               <Button
-                size="sm"
-                className="flex-1"
+                className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-[#2D3436] hover:bg-[#3D4446] text-white"
                 onClick={() => {
                   setStatus('waiting');
                   setError(null);
@@ -1033,11 +1344,10 @@ function SignPage(): ReactElement {
     );
   }
 
-  // Main request UI
+  // --- Main request UI ---
   const request = pendingRequest.request as TransactionRequest;
   const params = request.params || {};
-  const configKey: RequestType = requestType || 'send_transaction';
-  const config = REQUEST_CONFIG[configKey];
+  const config = getConfig();
   const Icon = config.icon;
   const memo = decodeMemo(params.memo as string | undefined);
 
@@ -1045,75 +1355,107 @@ function SignPage(): ReactElement {
     <>
       <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-[360px]"
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-[380px]"
         >
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-            {/* Header */}
-            <div className="p-5 border-b border-gray-100">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center">
-                  {pendingRequest.appInfo.icon ? (
-                    <img src={pendingRequest.appInfo.icon} alt="" className="w-6 h-6 rounded" />
-                  ) : (
-                    <Globe className="w-5 h-5 text-gray-400" />
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-medium text-gray-900 truncate">
-                    {pendingRequest.appInfo.name}
-                  </p>
-                  <p className="text-[12px] text-gray-500 truncate">{pendingRequest.appInfo.url}</p>
-                </div>
-              </div>
+          <div className="bg-white rounded-2xl border border-border/60 shadow-sm overflow-hidden">
+            {/* Header: App info + request type */}
+            <div className="relative px-6 pt-6 pb-5">
+              <div
+                className="absolute inset-0 bg-gradient-to-b to-transparent pointer-events-none"
+                style={{ background: `linear-gradient(to bottom, ${config.color}06, transparent)` }}
+              />
 
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-10 h-10 rounded-lg ${config.bg} flex items-center justify-center`}
-                >
-                  <Icon className={`w-5 h-5 ${config.color}`} />
+              <div className="relative">
+                {/* App row */}
+                <div className="flex items-center gap-3 mb-5">
+                  <div className="w-10 h-10 rounded-xl bg-[#F5F2ED] border border-border/30 flex items-center justify-center overflow-hidden shrink-0">
+                    {pendingRequest.appInfo.icon ? (
+                      <img
+                        src={pendingRequest.appInfo.icon}
+                        alt=""
+                        className="w-10 h-10 rounded-xl object-cover"
+                      />
+                    ) : (
+                      <Globe className="w-5 h-5 text-[#9B9590]" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[13px] font-semibold text-[#2D3436] truncate">
+                      {pendingRequest.appInfo.name}
+                    </p>
+                    <p className="text-[11px] text-[#9B9590] font-mono truncate">
+                      {pendingRequest.appInfo.url}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-[15px] font-semibold text-gray-900">{config.title}</h1>
-                  <p className="text-[12px] text-gray-500">Review and confirm</p>
+
+                {/* Request type badge */}
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: `${config.color}12` }}
+                  >
+                    <Icon className="w-5.5 h-5.5" style={{ color: config.color }} />
+                  </div>
+                  <div>
+                    <h1 className="text-[16px] font-semibold text-[#2D3436]">{config.title}</h1>
+                    <p className="text-[12px] text-[#9B9590]">{config.subtitle}</p>
+                  </div>
                 </div>
               </div>
             </div>
 
+            {/* Divider */}
+            <div className="mx-6 border-t border-border/40" />
+
             {/* Request Details */}
-            <div className="p-5 border-b border-gray-100">
+            <div className="px-6 py-5">
               {requestType === 'sign_message' ? (
                 <div>
-                  <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-2">
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-2.5">
                     Message
                   </p>
-                  <div className="bg-gray-50 rounded-lg p-3 border border-gray-200 max-h-32 overflow-auto">
-                    <p className="text-[13px] font-mono text-gray-700 break-all whitespace-pre-wrap">
+                  <div className="bg-[#FDFBF8] rounded-xl px-4 py-3.5 border border-border/30 max-h-36 overflow-auto">
+                    <p className="text-[13px] font-mono text-[#2D3436] break-all whitespace-pre-wrap leading-relaxed">
                       {(params as { message?: string }).message || '(empty)'}
                     </p>
                   </div>
                 </div>
               ) : requestType === 'send_payment' || requestType === 'send_scheduled_payment' ? (
                 <div className="space-y-4">
-                  {/* Amount */}
-                  <div className={`p-4 rounded-lg ${config.bg} text-center`}>
-                    <p className={`text-[11px] font-medium ${config.color} mb-1`}>Amount</p>
-                    <p className="text-2xl font-bold text-gray-900">
+                  {/* Amount card */}
+                  <div
+                    className="rounded-xl px-5 py-5 text-center"
+                    style={{ backgroundColor: `${config.color}08` }}
+                  >
+                    <p
+                      className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest"
+                      style={{ color: config.color }}
+                    >
+                      Amount
+                    </p>
+                    <p className="text-3xl font-bold text-[#2D3436] tracking-tight">
                       {safeDisplayAmount(params.amount as string)}
                     </p>
-                    <p className={`text-[12px] ${config.color}`}>USD</p>
+                    <p className="text-[12px] font-medium mt-0.5" style={{ color: config.color }}>
+                      USD
+                    </p>
                   </div>
 
                   {/* Scheduled time */}
                   {requestType === 'send_scheduled_payment' &&
                     params.scheduledFor !== null &&
                     params.scheduledFor !== undefined && (
-                      <div className="flex items-center gap-2 p-3 bg-gray-100 rounded-lg border border-gray-200">
-                        <Clock className="w-4 h-4 text-gray-600" />
+                      <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 rounded-xl border border-amber-100">
+                        <Clock className="w-4 h-4 text-amber-600 shrink-0" />
                         <div>
-                          <p className="text-[11px] text-gray-500">Scheduled for</p>
-                          <p className="text-[13px] font-medium text-gray-900">
+                          <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-widest">
+                            Scheduled for
+                          </p>
+                          <p className="text-[13px] font-medium text-[#2D3436]">
                             {new Date((params.scheduledFor as number) * 1000).toLocaleString()}
                           </p>
                         </div>
@@ -1121,7 +1463,7 @@ function SignPage(): ReactElement {
                     )}
 
                   {/* Details */}
-                  <div className="space-y-2">
+                  <div className="space-y-0">
                     <DetailRow
                       label="To"
                       value={formatAddress(params.to as string, 8)}
@@ -1135,22 +1477,38 @@ function SignPage(): ReactElement {
                 </div>
               ) : requestType === 'swap_tokens' ? (
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div>
-                      <p className="text-[11px] text-gray-500">You pay</p>
-                      <p className="text-lg font-semibold text-gray-900">
+                  {/* Swap visual */}
+                  <div className="bg-[#FDFBF8] rounded-xl border border-border/30 overflow-hidden">
+                    <div className="px-5 py-4">
+                      <p className="text-[10px] font-semibold text-[#9B9590] uppercase tracking-widest mb-1">
+                        You pay
+                      </p>
+                      <p className="text-2xl font-bold text-[#2D3436]">
                         {safeDisplayAmount(params.amountIn as string)}
                       </p>
                     </div>
-                    <ArrowRightLeft className="w-5 h-5 text-gray-400" />
-                    <div className="text-right">
-                      <p className="text-[11px] text-gray-500">You receive (min)</p>
-                      <p className="text-lg font-semibold text-primary">
+                    <div className="relative">
+                      <div className="border-t border-border/30" />
+                      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center border-2 border-white"
+                          style={{ backgroundColor: config.color }}
+                        >
+                          <ArrowRightLeft className="w-3.5 h-3.5 text-white" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="px-5 py-4">
+                      <p className="text-[10px] font-semibold text-[#9B9590] uppercase tracking-widest mb-1">
+                        You receive (min)
+                      </p>
+                      <p className="text-2xl font-bold" style={{ color: config.color }}>
                         {safeDisplayAmount(params.minAmountOut as string)}
                       </p>
                     </div>
                   </div>
-                  <div className="space-y-2">
+
+                  <div className="space-y-0">
                     <DetailRow
                       label="Token In"
                       value={formatAddress(params.tokenIn as string, 6)}
@@ -1171,11 +1529,18 @@ function SignPage(): ReactElement {
                 </div>
               ) : requestType === 'add_liquidity' || requestType === 'remove_liquidity' ? (
                 <div className="space-y-4">
-                  <div className={`p-4 rounded-lg ${config.bg} text-center`}>
-                    <p className={`text-[11px] font-medium ${config.color} mb-1`}>
+                  {/* Amount card */}
+                  <div
+                    className="rounded-xl px-5 py-5 text-center"
+                    style={{ backgroundColor: `${config.color}08` }}
+                  >
+                    <p
+                      className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest"
+                      style={{ color: config.color }}
+                    >
                       {requestType === 'add_liquidity' ? 'Amount' : 'LP Tokens'}
                     </p>
-                    <p className="text-2xl font-bold text-gray-900">
+                    <p className="text-3xl font-bold text-[#2D3436] tracking-tight">
                       {safeDisplayAmount(
                         (requestType === 'add_liquidity'
                           ? params.validatorTokenAmount
@@ -1183,7 +1548,7 @@ function SignPage(): ReactElement {
                       )}
                     </p>
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-0">
                     <DetailRow
                       label="User Token"
                       value={formatAddress(params.userToken as string, 6)}
@@ -1202,97 +1567,400 @@ function SignPage(): ReactElement {
                     />
                   </div>
                 </div>
+              ) : requestType === 'buy_tokens' ? (
+                <div className="space-y-4">
+                  <div className="bg-[#FDFBF8] rounded-xl border border-border/30 overflow-hidden">
+                    <div className="px-5 py-4">
+                      <p className="text-[10px] font-semibold text-[#9B9590] uppercase tracking-widest mb-1">
+                        You receive
+                      </p>
+                      <p className="text-2xl font-bold" style={{ color: config.color }}>
+                        {safeDisplayAmount(params.amountOut as string)}
+                      </p>
+                    </div>
+                    <div className="relative">
+                      <div className="border-t border-border/30" />
+                      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center border-2 border-white"
+                          style={{ backgroundColor: config.color }}
+                        >
+                          <ShoppingCart className="w-3.5 h-3.5 text-white" />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="px-5 py-4">
+                      <p className="text-[10px] font-semibold text-[#9B9590] uppercase tracking-widest mb-1">
+                        Max you pay
+                      </p>
+                      <p className="text-2xl font-bold text-[#2D3436]">
+                        {safeDisplayAmount(params.maxAmountIn as string)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-0">
+                    <DetailRow
+                      label="Token In"
+                      value={formatAddress(params.tokenIn as string, 6)}
+                      copyValue={params.tokenIn as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="tokenIn"
+                    />
+                    <DetailRow
+                      label="Token Out"
+                      value={formatAddress(params.tokenOut as string, 6)}
+                      copyValue={params.tokenOut as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="tokenOut"
+                    />
+                  </div>
+                </div>
+              ) : requestType === 'place_order' ? (
+                <div className="space-y-4">
+                  <div
+                    className="rounded-xl px-5 py-5 text-center"
+                    style={{ backgroundColor: `${config.color}08` }}
+                  >
+                    <p
+                      className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest"
+                      style={{ color: config.color }}
+                    >
+                      {(params.type as string) === 'buy' ? 'Buy' : 'Sell'} Amount
+                    </p>
+                    <p className="text-3xl font-bold text-[#2D3436] tracking-tight">
+                      {safeDisplayAmount(params.amount as string)}
+                    </p>
+                  </div>
+                  <div className="space-y-0">
+                    <DetailRow label="Type" value={(params.type as string) === 'buy' ? 'Buy' : 'Sell'} />
+                    <DetailRow label="Tick" value={String(params.tick)} />
+                    <DetailRow
+                      label="Token"
+                      value={formatAddress(params.token as string, 6)}
+                      copyValue={params.token as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="token"
+                    />
+                  </div>
+                </div>
+              ) : requestType === 'cancel_order' ? (
+                <div className="space-y-4">
+                  <div
+                    className="rounded-xl px-5 py-5 text-center"
+                    style={{ backgroundColor: `${config.color}08` }}
+                  >
+                    <p
+                      className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest"
+                      style={{ color: config.color }}
+                    >
+                      Order ID
+                    </p>
+                    <p className="text-2xl font-bold text-[#2D3436] tracking-tight font-mono">
+                      #{String(params.orderId)}
+                    </p>
+                  </div>
+                </div>
+              ) : requestType === 'create_pair' ? (
+                <div className="space-y-4">
+                  <div className="space-y-0">
+                    <DetailRow
+                      label="Base Token"
+                      value={formatAddress(params.base as string, 6)}
+                      copyValue={params.base as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="base"
+                    />
+                  </div>
+                </div>
+              ) : requestType === 'approve_token' ? (
+                <div className="space-y-4">
+                  <div
+                    className="rounded-xl px-5 py-5 text-center"
+                    style={{ backgroundColor: `${config.color}08` }}
+                  >
+                    <p
+                      className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest"
+                      style={{ color: config.color }}
+                    >
+                      Approval Amount
+                    </p>
+                    <p className="text-3xl font-bold text-[#2D3436] tracking-tight">
+                      {safeDisplayAmount(params.amount as string)}
+                    </p>
+                  </div>
+                  <div className="space-y-0">
+                    <DetailRow
+                      label="Token"
+                      value={formatAddress(params.token as string, 6)}
+                      copyValue={params.token as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="token"
+                    />
+                    <DetailRow
+                      label="Spender"
+                      value={formatAddress(params.spender as string, 6)}
+                      copyValue={params.spender as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="spender"
+                    />
+                  </div>
+                </div>
+              ) : requestType === 'create_token' ? (
+                <div className="space-y-4">
+                  <div
+                    className="rounded-xl px-5 py-5 text-center"
+                    style={{ backgroundColor: `${config.color}08` }}
+                  >
+                    <p
+                      className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest"
+                      style={{ color: config.color }}
+                    >
+                      New Token
+                    </p>
+                    <p className="text-2xl font-bold text-[#2D3436] tracking-tight">
+                      {params.symbol as string}
+                    </p>
+                    <p className="text-[13px] text-[#9B9590] mt-1">{params.name as string}</p>
+                  </div>
+                  <div className="space-y-0">
+                    <DetailRow label="Currency" value={params.currency as string} />
+                    {(params.admin as string | undefined) && (
+                      <DetailRow
+                        label="Admin"
+                        value={formatAddress(params.admin as string, 6)}
+                        copyValue={params.admin as string}
+                        onCopy={handleCopy}
+                        copiedField={copiedField}
+                        fieldKey="admin"
+                      />
+                    )}
+                  </div>
+                </div>
+              ) : requestType === 'mint_token' ? (
+                <div className="space-y-4">
+                  <div
+                    className="rounded-xl px-5 py-5 text-center"
+                    style={{ backgroundColor: `${config.color}08` }}
+                  >
+                    <p
+                      className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest"
+                      style={{ color: config.color }}
+                    >
+                      Mint Amount
+                    </p>
+                    <p className="text-3xl font-bold text-[#2D3436] tracking-tight">
+                      {safeDisplayAmount(params.amount as string)}
+                    </p>
+                  </div>
+                  <div className="space-y-0">
+                    <DetailRow
+                      label="Token"
+                      value={formatAddress(params.token as string, 6)}
+                      copyValue={params.token as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="token"
+                    />
+                    <DetailRow
+                      label="To"
+                      value={formatAddress(params.to as string, 8)}
+                      copyValue={params.to as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="to"
+                    />
+                    {memo && <DetailRow label="Memo" value={memo} />}
+                  </div>
+                </div>
+              ) : requestType === 'burn_token' ? (
+                <div className="space-y-4">
+                  <div
+                    className="rounded-xl px-5 py-5 text-center"
+                    style={{ backgroundColor: `${config.color}08` }}
+                  >
+                    <p
+                      className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest"
+                      style={{ color: config.color }}
+                    >
+                      Burn Amount
+                    </p>
+                    <p className="text-3xl font-bold text-[#2D3436] tracking-tight">
+                      {safeDisplayAmount(params.amount as string)}
+                    </p>
+                  </div>
+                  <div className="space-y-0">
+                    <DetailRow
+                      label="Token"
+                      value={formatAddress(params.token as string, 6)}
+                      copyValue={params.token as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="token"
+                    />
+                    {memo && <DetailRow label="Memo" value={memo} />}
+                  </div>
+                </div>
+              ) : requestType === 'claim_rewards' ? (
+                <div className="space-y-4">
+                  <div className="space-y-0">
+                    <DetailRow
+                      label="Token"
+                      value={formatAddress(params.token as string, 6)}
+                      copyValue={params.token as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="token"
+                    />
+                  </div>
+                </div>
+              ) : requestType === 'dex_withdraw' ? (
+                <div className="space-y-4">
+                  <div
+                    className="rounded-xl px-5 py-5 text-center"
+                    style={{ backgroundColor: `${config.color}08` }}
+                  >
+                    <p
+                      className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest"
+                      style={{ color: config.color }}
+                    >
+                      Withdraw Amount
+                    </p>
+                    <p className="text-3xl font-bold text-[#2D3436] tracking-tight">
+                      {safeDisplayAmount(params.amount as string)}
+                    </p>
+                  </div>
+                  <div className="space-y-0">
+                    <DetailRow
+                      label="Token"
+                      value={formatAddress(params.token as string, 6)}
+                      copyValue={params.token as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="token"
+                    />
+                  </div>
+                </div>
               ) : (
                 <div>
-                  <p className="text-[11px] font-medium text-gray-500 uppercase tracking-wide mb-2">
+                  <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-2.5">
                     Transaction Data
                   </p>
-                  <pre className="text-[11px] font-mono bg-gray-50 rounded-lg p-3 overflow-auto max-h-32 border border-gray-200">
+                  <pre className="text-[11px] font-mono bg-[#FDFBF8] rounded-xl px-4 py-3.5 overflow-auto max-h-36 border border-border/30 text-[#6B6560]">
                     {JSON.stringify(params, null, 2)}
                   </pre>
                 </div>
               )}
             </div>
 
+            {/* Divider */}
+            <div className="mx-6 border-t border-border/40" />
+
             {/* Wallet Status */}
-            <div className="p-5 border-b border-gray-100">
-              {isConnected && address ? (
-                <div className="flex items-center gap-3 p-3 bg-primary/5 rounded-lg border border-primary/20">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                    <CheckCircle className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <p className="text-[12px] font-medium text-gray-700">Signing with</p>
-                    <p className="text-[12px] font-mono text-primary">
-                      {formatAddress(address, 6)}
+            <div className="px-6 py-4">
+              <AnimatePresence mode="wait">
+                {isConnected && address ? (
+                  <motion.div
+                    key="connected"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center gap-3 px-4 py-3 bg-[#5B9A6F]/6 rounded-xl border border-[#5B9A6F]/15"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-[#5B9A6F]/12 flex items-center justify-center shrink-0">
+                      <Shield className="w-4 h-4 text-[#5B9A6F]" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11px] font-semibold text-[#5B9A6F]">Signing with</p>
+                      <p className="text-[11px] font-mono text-[#5B9A6F]/70 truncate">
+                        {formatAddress(address, 6)}
+                      </p>
+                    </div>
+                    <div className="w-2 h-2 rounded-full bg-[#5B9A6F] shrink-0" />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="not-connected"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="bg-[#FDFBF8] rounded-xl border border-border/40 px-4 py-4"
+                  >
+                    <p className="text-[13px] font-semibold text-[#2D3436] mb-3">
+                      Sign in to continue
                     </p>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                  <p className="text-[13px] font-medium text-gray-700 mb-3">Sign in to continue</p>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="flex-1 h-9 text-[13px]"
-                      onClick={() => setShowWalletSelectModal(true)}
-                      disabled={isConnecting}
-                    >
-                      <Fingerprint className="w-4 h-4 mr-1.5" />
-                      Sign In
-                    </Button>
-                    <Button
-                      size="sm"
-                      className="flex-1 h-9 text-[13px]"
-                      onClick={() => setShowCreateWalletModal(true)}
-                      disabled={isConnecting}
-                    >
-                      <Plus className="w-4 h-4 mr-1.5" />
-                      Create
-                    </Button>
-                  </div>
-                </div>
-              )}
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1 h-9 rounded-xl text-[12px] border-border/40"
+                        onClick={() => setShowWalletSelectModal(true)}
+                        disabled={isConnecting}
+                      >
+                        <Fingerprint className="w-3.5 h-3.5 mr-1.5" />
+                        Sign In
+                      </Button>
+                      <Button
+                        className="flex-1 h-9 rounded-xl text-[12px] font-semibold bg-[#2D3436] hover:bg-[#3D4446] text-white"
+                        onClick={() => setShowCreateWalletModal(true)}
+                        disabled={isConnecting}
+                      >
+                        <Plus className="w-3.5 h-3.5 mr-1.5" />
+                        Create
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Warning */}
-            <div className="px-5 py-4 bg-gray-50 border-b border-gray-100">
+            <div className="mx-6 border-t border-border/40" />
+            <div className="px-6 py-3.5">
               <div className="flex items-start gap-2.5">
-                <AlertCircle className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
-                <p className="text-[12px] text-gray-600">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 mt-0.5 shrink-0" />
+                <p className="text-[11px] text-[#9B9590] leading-relaxed">
                   {requestType === 'sign_message'
-                    ? 'Only sign messages from trusted apps.'
-                    : 'Review carefully. Transactions cannot be reversed.'}
+                    ? 'Only sign messages from apps you trust.'
+                    : 'Review carefully. Transactions cannot be reversed once confirmed.'}
                 </p>
               </div>
             </div>
 
             {/* Timer */}
             {timeRemaining !== null && timeRemaining > 0 && (
-              <div className="px-5 py-3 bg-gray-50 border-b border-gray-100">
-                <div className="flex items-center justify-center gap-1.5 text-[12px] text-gray-500">
-                  <Clock className="w-3.5 h-3.5" />
-                  <span>
-                    Expires in {Math.floor(timeRemaining / 60)}:
-                    {(timeRemaining % 60).toString().padStart(2, '0')}
-                  </span>
+              <>
+                <div className="mx-6 border-t border-border/40" />
+                <div className="px-6 py-3">
+                  <div className="flex items-center justify-center gap-1.5 text-[11px] text-[#B5B0AA]">
+                    <Clock className="w-3 h-3" />
+                    <span>
+                      Expires in {Math.floor(timeRemaining / 60)}:
+                      {(timeRemaining % 60).toString().padStart(2, '0')}
+                    </span>
+                  </div>
                 </div>
-              </div>
+              </>
             )}
 
+            {/* Divider */}
+            <div className="mx-6 border-t border-border/40" />
+
             {/* Actions */}
-            <div className="p-5 flex gap-3">
+            <div className="px-5 py-5 flex items-center gap-2.5">
               <Button
                 variant="outline"
-                className="flex-1 h-10"
+                className="flex-1 h-11 rounded-xl text-[13px] border-border/40"
                 onClick={handleReject}
                 disabled={status === 'processing' || isConnecting}
               >
-                Cancel
+                Reject
               </Button>
               <Button
-                className="flex-1 h-10"
+                className="flex-1 h-11 rounded-xl text-[13px] font-semibold text-white"
+                style={{ backgroundColor: config.color }}
                 onClick={handleApprove}
                 isLoading={status === 'processing' || isConnecting}
               >
@@ -1306,16 +1974,18 @@ function SignPage(): ReactElement {
 
             {/* Keyboard hints */}
             {isConnected && status === 'waiting' && (
-              <div className="px-5 pb-4 flex items-center justify-center gap-4 text-[11px] text-gray-400">
+              <div className="px-5 pb-4 flex items-center justify-center gap-4 text-[10px] text-[#B5B0AA]">
                 <span className="flex items-center gap-1">
-                  <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-[10px] font-mono">
+                  <kbd className="px-1.5 py-0.5 bg-[#F5F2ED] rounded text-[9px] font-mono text-[#9B9590]">
                     Enter
                   </kbd>
                   <span>{requestType === 'sign_message' ? 'sign' : 'confirm'}</span>
                 </span>
                 <span className="flex items-center gap-1">
-                  <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-[10px] font-mono">Esc</kbd>
-                  <span>cancel</span>
+                  <kbd className="px-1.5 py-0.5 bg-[#F5F2ED] rounded text-[9px] font-mono text-[#9B9590]">
+                    Esc
+                  </kbd>
+                  <span>reject</span>
                 </span>
               </div>
             )}
@@ -1359,19 +2029,21 @@ function DetailRow({
   fieldKey?: string;
 }): ReactElement {
   return (
-    <div className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-      <span className="text-[12px] text-gray-500">{label}</span>
+    <div className="flex items-center justify-between py-2.5 border-b border-border/20 last:border-0">
+      <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-widest">
+        {label}
+      </span>
       <div className="flex items-center gap-1.5">
-        <span className="text-[13px] text-gray-900 font-mono">{value}</span>
+        <span className="text-[12px] text-[#2D3436] font-mono">{value}</span>
         {copyValue && onCopy && fieldKey && (
           <button
             onClick={() => onCopy(copyValue, fieldKey)}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
+            className="p-1 hover:bg-[#F5F2ED] rounded-md transition-colors"
           >
             {copiedField === fieldKey ? (
-              <Check className="w-3 h-3 text-primary" />
+              <Check className="w-3 h-3 text-[#5B9A6F]" />
             ) : (
-              <Copy className="w-3 h-3 text-gray-400" />
+              <Copy className="w-3 h-3 text-[#B5B0AA]" />
             )}
           </button>
         )}

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Globe, Trash2, Shield, Clock, Link2, PenTool, Send, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
 import { getConnectedApps, removeConnectedApp } from '@/lib/connected-apps';
 import { formatTimeAgo, cn } from '@/lib/utils';
 import type { ConnectedApp, AppPermission } from '@/types';
@@ -19,7 +19,7 @@ const permissionConfig: Record<
 > = {
   connect: { icon: Link2, label: 'Connect', color: '#5B9A6F' },
   sign: { icon: PenTool, label: 'Sign', color: '#9B72CF' },
-  send: { icon: Send, label: 'Send', color: '#E07A5F' },
+  send: { icon: Send, label: 'Send', color: '#9B72CF' },
 };
 
 function AppsPage(): ReactElement {
@@ -70,8 +70,8 @@ function AppsPage(): ReactElement {
         transition={{ duration: 0.3 }}
         className="flex items-center gap-3"
       >
-        <div className="w-10 h-10 rounded-xl bg-[#9B72CF]/10 flex items-center justify-center">
-          <Shield className="w-5 h-5 text-[#9B72CF]" />
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+          <Shield className="w-5 h-5 text-primary" />
         </div>
         <div>
           <h1 className="text-xl font-semibold text-[#2D3436]">Connected Apps</h1>
@@ -92,8 +92,8 @@ function AppsPage(): ReactElement {
           className="bg-white border border-border/60 rounded-2xl shadow-sm"
         >
           <div className="px-6 py-14 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-[#9B72CF]/8 flex items-center justify-center mx-auto mb-4">
-              <Shield className="w-7 h-7 text-[#9B72CF]" />
+            <div className="w-14 h-14 rounded-2xl bg-primary/8 flex items-center justify-center mx-auto mb-4">
+              <Shield className="w-7 h-7 text-primary" />
             </div>
             <h2 className="text-[15px] font-semibold text-[#2D3436] mb-1.5">No Connected Apps</h2>
             <p className="text-[13px] text-muted-foreground max-w-[260px] mx-auto leading-relaxed">

@@ -180,7 +180,7 @@ function ReceivePage(): ReactElement {
                 {/* Center logo */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="w-10 h-10 bg-white rounded-lg shadow-sm border border-border/20 flex items-center justify-center">
-                    <QrCode className="w-5 h-5 text-[#E07A5F]" />
+                    <QrCode className="w-5 h-5 text-primary" />
                   </div>
                 </div>
               </div>
@@ -255,7 +255,7 @@ function ReceivePage(): ReactElement {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
-                    className="w-8 h-8 bg-white shadow-sm border border-border/20 rounded-lg flex items-center justify-center group-hover:bg-[#E07A5F] group-hover:border-[#E07A5F] group-hover:shadow-md transition-all"
+                    className="w-8 h-8 bg-white shadow-sm border border-border/20 rounded-lg flex items-center justify-center group-hover:bg-primary group-hover:border-primary group-hover:shadow-md transition-all"
                   >
                     <Copy className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-white transition-colors" />
                   </motion.div>
@@ -273,14 +273,14 @@ function ReceivePage(): ReactElement {
           <div className="grid grid-cols-3 gap-2.5">
             <Button
               variant="outline"
-              className="h-[52px] flex-col gap-1 py-2 rounded-xl border-border/40 hover:border-[#E07A5F]/30 hover:bg-[#E07A5F]/[0.04] transition-all group"
+              className="h-[52px] flex-col gap-1 py-2 rounded-xl border-border/40 hover:border-primary/30 hover:bg-primary/[0.04] transition-all group"
               onClick={handleCopy}
             >
-              <div className="w-7 h-7 rounded-lg bg-muted/60 group-hover:bg-[#E07A5F]/10 flex items-center justify-center transition-colors">
+              <div className="w-7 h-7 rounded-lg bg-muted/60 group-hover:bg-primary/10 flex items-center justify-center transition-colors">
                 {copied ? (
                   <Check className="h-3.5 w-3.5 text-[#5B9A6F]" />
                 ) : (
-                  <Copy className="h-3.5 w-3.5 text-muted-foreground group-hover:text-[#E07A5F] transition-colors" />
+                  <Copy className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
                 )}
               </div>
               <span className="text-[11px] font-medium">{copied ? 'Copied!' : 'Copy'}</span>
@@ -288,11 +288,11 @@ function ReceivePage(): ReactElement {
 
             <Button
               variant="outline"
-              className="h-[52px] flex-col gap-1 py-2 rounded-xl border-border/40 hover:border-[#9B72CF]/30 hover:bg-[#9B72CF]/[0.04] transition-all group"
+              className="h-[52px] flex-col gap-1 py-2 rounded-xl border-border/40 hover:border-primary/30 hover:bg-primary/[0.04] transition-all group"
               onClick={handleShare}
             >
-              <div className="w-7 h-7 rounded-lg bg-muted/60 group-hover:bg-[#9B72CF]/10 flex items-center justify-center transition-colors">
-                <Share2 className="h-3.5 w-3.5 text-muted-foreground group-hover:text-[#9B72CF] transition-colors" />
+              <div className="w-7 h-7 rounded-lg bg-muted/60 group-hover:bg-primary/10 flex items-center justify-center transition-colors">
+                <Share2 className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
               </div>
               <span className="text-[11px] font-medium">Share</span>
             </Button>

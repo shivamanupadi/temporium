@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@source "../../../../../packages/shared-ui/src";
 
 /*
  * Temporium Wallet Design System
@@ -16,8 +17,8 @@
   --card-foreground: #2d3436;
   --popover: #ffffff;
   --popover-foreground: #2d3436;
-  /* Primary: Coral */
-  --primary: #e07a5f;
+  /* Primary: Lavender */
+  --primary: #9b72cf;
   --primary-foreground: #ffffff;
   --secondary: #f5f2ed;
   --secondary-foreground: #2d3436;
@@ -28,22 +29,22 @@
   --destructive: #df1b41;
   --border: #ede9e3;
   --input: #e8e4de;
-  --ring: #e07a5f;
+  --ring: #9b72cf;
   /* Chart colors */
-  --chart-1: #e07a5f;
-  --chart-2: #9b72cf;
+  --chart-1: #9b72cf;
+  --chart-2: #e07a5f;
   --chart-3: #5b9a6f;
   --chart-4: #ff9500;
   --chart-5: #df1b41;
   /* Sidebar */
   --sidebar: #ffffff;
   --sidebar-foreground: #2d3436;
-  --sidebar-primary: #e07a5f;
+  --sidebar-primary: #9b72cf;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #f5f2ed;
   --sidebar-accent-foreground: #2d3436;
   --sidebar-border: #ede9e3;
-  --sidebar-ring: #e07a5f;
+  --sidebar-ring: #9b72cf;
 
   --color-coral: #e07a5f;
   --color-lavender: #9b72cf;
@@ -211,12 +212,12 @@
 
 /* Selection */
 ::selection {
-  background: rgba(224, 122, 95, 0.18);
+  background: rgba(155, 114, 207, 0.18);
 }
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, var(--color-coral), var(--color-lavender));
+  background: linear-gradient(135deg, var(--color-lavender), var(--color-coral));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

@@ -24,56 +24,29 @@ import { formatAddress, copyToClipboard, cn } from '@/lib/utils';
 import { LINKS, TIMING } from '@/lib/constants';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
-interface NavItemProps {
-  to: string;
-  icon: React.ReactNode;
-  label: string;
-  isCollapsed: boolean;
-}
-
-function NavItem({ to, icon, label, isCollapsed }: NavItemProps): ReactElement {
-  const location = useLocation();
-  const isActive =
-    to === '/wallet'
-      ? location.pathname === '/wallet'
-      : location.pathname === to || location.pathname.startsWith(to + '/');
-
-  const linkElement = (
-    <Link
-      to={to}
-      className={cn(
-        'group flex items-center gap-2.5 h-8 rounded-md text-[14px] font-medium transition-all',
-        isCollapsed ? 'justify-center w-8 mx-auto' : 'px-2.5',
-        isActive
-          ? 'font-semibold bg-[#F5F2ED]'
-          : 'text-[#3D4446] hover:text-[#2D3436] hover:bg-[#F5F2ED]'
-      )}
-    >
-      <span
-        className={cn(
-          'flex-shrink-0 transition-transform duration-500 ease-in-out group-hover:rotate-[360deg]',
-          isActive ? 'text-[#E07A5F]' : ''
-        )}
-      >
-        {icon}
-      </span>
-      {!isCollapsed && <span className={isActive ? 'text-black' : ''}>{label}</span>}
-    </Link>
-  );
-
-  if (isCollapsed) {
-    return (
-      <Tooltip>
-        <TooltipTrigger asChild>{linkElement}</TooltipTrigger>
-        <TooltipContent side="right" sideOffset={8}>
-          {label}
-        </TooltipContent>
-      </Tooltip>
-    );
-  }
-
-  return linkElement;
-}
+const navSections = [
+  {
+    label: 'Main',
+    items: [
+      { to: '/wallet', label: 'Dashboard', icon: LayoutDashboard },
+    ],
+  },
+  {
+    label: 'Payments',
+    items: [
+      { to: '/wallet/send', label: 'Send', icon: Send },
+      { to: '/wallet/receive', label: 'Receive', icon: Download },
+    ],
+  },
+  {
+    label: 'Manage',
+    items: [
+      { to: '/wallet/activity', label: 'Activity', icon: Clock },
+      { to: '/wallet/contacts', label: 'Contacts', icon: Users },
+      { to: '/wallet/apps', label: 'Connected Apps', icon: Shield },
+    ],
+  },
+] as const;
 
 interface SidebarProps {
   isOpen: boolean;
@@ -89,15 +62,13 @@ export function Sidebar({
   onToggleCollapse,
 }: SidebarProps): ReactElement {
   const { address, disconnect } = useTempo();
+  const location = useLocation();
   const [copied, setCopied] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [showNetworkMenu, setShowNetworkMenu] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const networkDropdownRef = useRef<HTMLDivElement>(null);
   const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const iconSize = 'w-4 h-4';
-  const iconStroke = 1.75;
 
   useEffect(() => {
     return () => {
@@ -132,38 +103,9 @@ export function Sidebar({
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-white">
-      {/* Logo & Brand */}
-      <div
-        className={cn(
-          'flex items-start py-4',
-          collapsed ? 'justify-center px-2' : 'justify-between px-4'
-        )}
-      >
-        <Link to="/wallet" className="flex items-center gap-2.5">
-          <img src="/logo.png" alt="Temporium" className="w-6 h-6 rounded-md" />
-          {!collapsed && (
-            <span className="text-lg font-bold text-[#2D3436] tracking-tight">Temporium</span>
-          )}
-        </Link>
-        {!collapsed && (
-          <button
-            onClick={onToggleCollapse}
-            className="hidden md:flex h-8 w-8 items-center justify-center rounded-lg text-[#9B9590] hover:text-[#6B6560] hover:bg-[#F5F2ED] transition-colors"
-          >
-            <PanelLeftClose className="w-4 h-4" />
-          </button>
-        )}
-        <button
-          onClick={onClose}
-          className="md:hidden h-8 w-8 flex items-center justify-center rounded-lg text-[#9B9590] hover:text-[#6B6560] hover:bg-[#F5F2ED] transition-colors"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Expand button when collapsed */}
+      {/* Expand button (collapsed) */}
       {collapsed && (
-        <div className="hidden md:block px-2 pb-2">
+        <div className="hidden md:block px-2 pt-3 pb-1">
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -180,23 +122,48 @@ export function Sidebar({
         </div>
       )}
 
-      {/* Navigation */}
-      <nav className={cn('flex-1 pt-4 pb-2 overflow-y-auto', collapsed ? 'px-2' : 'px-3')}>
-        {/* Network Selector */}
-        <div ref={networkDropdownRef} className={cn('relative mb-5', collapsed ? 'px-0' : 'px-0')}>
+      {/* Logo */}
+      <div className={`flex items-start py-4 ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
+        <div className="flex items-center gap-2.5">
+          <img src="/logo.png" alt="Temporium" className="w-6 h-6 rounded-md shrink-0" />
+          {!collapsed && (
+            <div>
+              <span className="text-[15px] font-bold text-[#2D3436] tracking-tight leading-none">Temporium</span>
+              <p className="text-[10px] font-medium text-[#B5B0AA] mt-0.5 leading-none">Wallet</p>
+            </div>
+          )}
+        </div>
+        {!collapsed && (
+          <button
+            onClick={onToggleCollapse}
+            className="hidden md:flex h-7 w-7 items-center justify-center rounded-lg text-[#9B9590] hover:text-[#6B6560] hover:bg-[#F5F2ED] transition-colors"
+          >
+            <PanelLeftClose className="w-3.5 h-3.5" />
+          </button>
+        )}
+        <button
+          onClick={onClose}
+          className="md:hidden h-8 w-8 flex items-center justify-center rounded-lg text-[#9B9590] hover:text-[#6B6560] hover:bg-[#F5F2ED] transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Network Picker */}
+      <div className={`py-5 ${collapsed ? 'px-2' : 'px-3'}`}>
+        <div ref={networkDropdownRef} className="relative">
           {collapsed ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
                   onClick={() => setShowNetworkMenu(!showNetworkMenu)}
-                  className={cn(
-                    'w-9 h-9 mx-auto flex items-center justify-center rounded-xl transition-all cursor-pointer',
+                  className={`w-10 h-10 mx-auto flex items-center justify-center rounded-xl transition-all cursor-pointer ${
                     showNetworkMenu
-                      ? 'bg-[#5B9A6F]/10 ring-1 ring-[#5B9A6F]/20'
-                      : 'border border-[#EDE9E3] hover:border-[#DDD8D1] hover:shadow-sm'
-                  )}
+                      ? 'bg-[#F5F2ED] ring-1 ring-[#EDE9E3]'
+                      : 'bg-[#FDFBF8] border border-[#EDE9E3] hover:border-[#DDD8D1] hover:shadow-sm'
+                  }`}
                 >
-                  <Globe className="w-4 h-4 text-[#5B9A6F]" />
+                  <Globe className="w-4 h-4 text-[#9B9590]" />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="right" sideOffset={8}>
@@ -206,16 +173,15 @@ export function Sidebar({
           ) : (
             <button
               onClick={() => setShowNetworkMenu(!showNetworkMenu)}
-              className={cn(
-                'w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl transition-all cursor-pointer',
+              className={`w-full flex items-center justify-between gap-2 px-3 py-3 rounded-xl border bg-[#FDFBF8] transition-all cursor-pointer ${
                 showNetworkMenu
-                  ? 'bg-[#5B9A6F]/[0.06] ring-1 ring-[#5B9A6F]/15'
-                  : 'border border-[#EDE9E3] hover:border-[#DDD8D1] hover:shadow-sm'
-              )}
+                  ? 'border-[#DDD8D1]'
+                  : 'border-[#EDE9E3] hover:border-[#DDD8D1]'
+              }`}
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-6 h-6 rounded-lg bg-[#5B9A6F]/10 flex items-center justify-center">
-                  <Globe className="w-3.5 h-3.5 text-[#5B9A6F]" />
+                <div className="w-6 h-6 rounded-lg bg-[#F5F2ED] flex items-center justify-center">
+                  <Globe className="w-3.5 h-3.5 text-[#9B9590]" />
                 </div>
                 <div className="text-left">
                   <p className="text-[12px] font-semibold text-[#2D3436] leading-none">Testnet</p>
@@ -223,22 +189,20 @@ export function Sidebar({
                 </div>
               </div>
               <ChevronDown
-                className={cn(
-                  'w-3.5 h-3.5 transition-transform duration-200',
-                  showNetworkMenu ? 'rotate-180 text-[#5B9A6F]' : 'text-[#B5B0AA]'
-                )}
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                  showNetworkMenu ? 'rotate-180 text-[#6B6560]' : 'text-[#B5B0AA]'
+                }`}
               />
             </button>
           )}
 
-          {/* Network Dropdown Menu */}
+          {/* Network Dropdown */}
           {showNetworkMenu && (
             <div
               onMouseDown={e => e.stopPropagation()}
-              className={cn(
-                'absolute z-50 rounded-xl bg-white border border-[#EDE9E3] shadow-xl shadow-black/8 overflow-hidden',
-                collapsed ? 'left-full top-0 ml-2 min-w-[220px]' : 'left-0 right-0 top-full mt-2'
-              )}
+              className={`absolute z-50 top-full mt-2 rounded-xl bg-white border border-[#EDE9E3] shadow-xl shadow-black/8 overflow-hidden ${
+                collapsed ? 'left-full ml-2 top-0 mt-0 min-w-[220px]' : 'left-0 right-0'
+              }`}
             >
               <div className="px-2 pt-2.5 pb-1">
                 <p className="px-2 pb-2 text-[10px] font-semibold text-[#9B9590] uppercase tracking-wider">
@@ -281,109 +245,83 @@ export function Sidebar({
             </div>
           )}
         </div>
+      </div>
 
-        {/* Main Section */}
-        {!collapsed && (
-          <p className="px-3 py-2 text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
-            Main
-          </p>
-        )}
-        <div>
-          <NavItem
-            to="/wallet"
-            icon={<LayoutDashboard className={iconSize} strokeWidth={iconStroke} />}
-            label="Dashboard"
-            isCollapsed={collapsed}
-          />
-        </div>
-
-        {/* Payments Section */}
-        {!collapsed && (
-          <p className="px-3 pt-6 pb-2 text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
-            Payments
-          </p>
-        )}
-        {collapsed && <div className="my-3 mx-2 border-t border-[#EDE9E3]" />}
-        <div>
-          <NavItem
-            to="/wallet/send"
-            icon={<Send className={iconSize} strokeWidth={iconStroke} />}
-            label="Send"
-            isCollapsed={collapsed}
-          />
-          <NavItem
-            to="/wallet/receive"
-            icon={<Download className={iconSize} strokeWidth={iconStroke} />}
-            label="Receive"
-            isCollapsed={collapsed}
-          />
-        </div>
-
-        {/* Manage Section */}
-        {!collapsed && (
-          <p className="px-3 pt-6 pb-2 text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
-            Manage
-          </p>
-        )}
-        {collapsed && <div className="my-3 mx-2 border-t border-[#EDE9E3]" />}
-        <div>
-          <NavItem
-            to="/wallet/activity"
-            icon={<Clock className={iconSize} strokeWidth={iconStroke} />}
-            label="Activity"
-            isCollapsed={collapsed}
-          />
-          <NavItem
-            to="/wallet/contacts"
-            icon={<Users className={iconSize} strokeWidth={iconStroke} />}
-            label="Contacts"
-            isCollapsed={collapsed}
-          />
-          <NavItem
-            to="/wallet/apps"
-            icon={<Shield className={iconSize} strokeWidth={iconStroke} />}
-            label="Connected Apps"
-            isCollapsed={collapsed}
-          />
-        </div>
+      {/* Nav */}
+      <nav className={`flex-1 py-3 overflow-y-auto ${collapsed ? 'px-2' : 'px-3'}`}>
+        {navSections.map((section, sectionIdx) => (
+          <div key={section.label}>
+            {!collapsed ? (
+              <p className={`px-3 pb-1 text-[10px] font-semibold text-[#B5B0AA] uppercase tracking-wider ${sectionIdx === 0 ? 'pt-0.5' : 'pt-3'}`}>
+                {section.label}
+              </p>
+            ) : (
+              sectionIdx > 0 && <div className="my-1.5 mx-1 border-t border-[#EDE9E3]" />
+            )}
+            <div className="space-y-0.5">
+              {section.items.map(item => {
+                const isActive = item.to === '/wallet'
+                  ? location.pathname === '/wallet'
+                  : location.pathname === item.to || location.pathname.startsWith(`${item.to}/`);
+                const Icon = item.icon;
+                const linkEl = (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className={`flex items-center rounded-xl text-[13px] font-medium transition-all ${
+                      collapsed
+                        ? `justify-center py-2.5 ${isActive ? 'bg-primary/8 text-primary' : 'text-[#6B6560] hover:bg-[#F5F2ED] hover:text-[#2D3436]'}`
+                        : `gap-3 px-3 py-2.5 ${isActive ? 'bg-primary/8 text-primary' : 'text-[#6B6560] hover:bg-[#F5F2ED] hover:text-[#2D3436]'}`
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 shrink-0" />
+                    {!collapsed && item.label}
+                  </Link>
+                );
+                return collapsed ? (
+                  <Tooltip key={item.to}>
+                    <TooltipTrigger asChild>{linkEl}</TooltipTrigger>
+                    <TooltipContent side="right" sideOffset={8}>
+                      {item.label}
+                    </TooltipContent>
+                  </Tooltip>
+                ) : (
+                  linkEl
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
-      {/* Wallet Profile */}
-      <div
-        ref={dropdownRef}
-        className={cn(
-          'relative border-t border-[#EDE9E3]/80',
-          collapsed ? 'p-2 flex flex-col items-center' : 'p-3'
-        )}
-      >
+      {/* Wallet Profile Footer */}
+      <div ref={dropdownRef} className={`relative border-t border-[#EDE9E3] ${collapsed ? 'p-2' : 'p-3'}`}>
         {collapsed ? (
           <Tooltip>
             <TooltipTrigger asChild>
               <button
                 onClick={() => setShowMenu(!showMenu)}
-                className={cn(
-                  'w-9 h-9 rounded-xl flex items-center justify-center transition-all',
-                  showMenu ? 'bg-[#E07A5F]/10 ring-1 ring-[#E07A5F]/20' : 'hover:bg-[#F5F2ED]'
-                )}
+                className={`w-full flex items-center justify-center py-2 rounded-xl transition-all ${
+                  showMenu ? 'bg-[#F5F2ED] ring-1 ring-[#EDE9E3]' : 'hover:bg-[#FAF8F5]'
+                }`}
               >
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#E07A5F] to-[#9B72CF] flex items-center justify-center">
-                  <Wallet className="w-3 h-3 text-white" strokeWidth={2} />
+                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                  <Wallet className="w-3.5 h-3.5 text-white" strokeWidth={2} />
                 </div>
               </button>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={8}>
-              {address ? formatAddress(address, 6) : 'Wallet'}
+              {address ? formatAddress(address, 6) : 'My Wallet'}
             </TooltipContent>
           </Tooltip>
         ) : (
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className={cn(
-              'w-full flex items-center gap-3 px-2.5 py-2 rounded-xl transition-all text-left',
+            className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-xl transition-all text-left ${
               showMenu ? 'bg-[#F5F2ED] ring-1 ring-[#EDE9E3]' : 'hover:bg-[#FAF8F5]'
-            )}
+            }`}
           >
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#E07A5F] to-[#9B72CF] flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
               <Wallet className="w-3.5 h-3.5 text-white" strokeWidth={2} />
             </div>
             <div className="min-w-0 flex-1">
@@ -401,18 +339,17 @@ export function Sidebar({
           </button>
         )}
 
-        {/* Popover Menu */}
+        {/* Wallet Popover Menu */}
         {showMenu && (
           <div
             onMouseDown={e => e.stopPropagation()}
-            className={cn(
-              'absolute z-50 rounded-xl bg-white border border-[#EDE9E3] shadow-xl shadow-black/8 overflow-hidden min-w-[220px]',
-              collapsed ? 'left-full bottom-0 ml-2' : 'left-3 right-3 bottom-full mb-2'
-            )}
+            className={`absolute z-50 rounded-xl bg-white border border-[#EDE9E3] shadow-xl shadow-black/8 overflow-hidden ${
+              collapsed ? 'left-full bottom-0 ml-2 w-[220px]' : 'left-3 right-3 bottom-full mb-2'
+            }`}
           >
             <div className="px-3.5 py-3 bg-gradient-to-b from-[#FAF8F5] to-white border-b border-[#EDE9E3]/60">
               <div className="flex items-center gap-2.5 mb-2">
-                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#E07A5F] to-[#9B72CF] flex items-center justify-center">
+                <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center">
                   <Wallet className="w-3 h-3 text-white" strokeWidth={2} />
                 </div>
                 <p className="text-[12px] font-semibold text-[#2D3436]">My Wallet</p>
@@ -465,8 +402,8 @@ export function Sidebar({
       {/* Desktop Sidebar */}
       <aside
         className={cn(
-          'hidden md:flex flex-col fixed left-0 top-0 h-screen bg-white border-r border-[#EDE9E3]/80 z-40 transition-all duration-200 ease-out',
-          collapsed ? 'w-[68px]' : 'w-56'
+          'hidden md:flex flex-col fixed left-0 top-0 h-screen bg-white border-r border-[#EDE9E3]/80 z-40 transition-[width] duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)]',
+          collapsed ? 'w-[68px]' : 'w-[220px]'
         )}
       >
         {sidebarContent}

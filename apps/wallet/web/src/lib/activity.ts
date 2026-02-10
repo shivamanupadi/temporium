@@ -92,6 +92,26 @@ export function getActivityTypeLabel(type: ActivityType): string {
       return 'Remove Liquidity';
     case 'send_transaction':
       return 'Transaction';
+    case 'buy_tokens':
+      return 'Buy Tokens';
+    case 'place_order':
+      return 'Place Order';
+    case 'cancel_order':
+      return 'Cancel Order';
+    case 'create_pair':
+      return 'Create Pair';
+    case 'approve_token':
+      return 'Approve Token';
+    case 'create_token':
+      return 'Create Token';
+    case 'mint_token':
+      return 'Mint Token';
+    case 'burn_token':
+      return 'Burn Token';
+    case 'claim_rewards':
+      return 'Claim Rewards';
+    case 'dex_withdraw':
+      return 'DEX Withdraw';
     default:
       return 'Unknown';
   }
