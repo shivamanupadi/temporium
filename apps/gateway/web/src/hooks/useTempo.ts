@@ -3,7 +3,7 @@ import { useAccount, useConnect, useDisconnect, useWalletClient, useConnectors }
 import { getWalletClient } from '@wagmi/core';
 import { useQueryClient } from '@tanstack/react-query';
 import { type Address } from 'viem';
-import { Hooks } from 'tempo.ts/wagmi';
+import { Hooks } from 'wagmi/tempo';
 import { tempoPasskeyConnector, injectedConnector, wagmiConfig } from '@/lib/wagmi';
 import { tempoChain } from '@/lib/tempo-client';
 import { stringToBytes32, Actions } from '@/lib/tempo-client';

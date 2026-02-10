@@ -1,7 +1,8 @@
 import type { Address } from 'viem';
 import { TOKENLIST_API_URL } from './api';
+import { tempoBaseChain } from './constants';
 
-const CHAIN_ID = 42431;
+const CHAIN_ID = tempoBaseChain.id;
 
 /**
  * Pastel color scheme for tokens

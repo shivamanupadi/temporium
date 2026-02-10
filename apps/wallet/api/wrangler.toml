@@ -6,9 +6,11 @@ compatibility_flags = ["nodejs_compat"]
 # Production: Custom domain
 routes = [{ pattern = "wallet-api.temporium.xyz", custom_domain = true }]
 
-# Environment Variables
+# Environment Variables (production defaults)
 [vars]
-TEMPO_RPC_URL = "https://rpc.testnet.tempo.xyz"
+TEMPO_RPC_URL = "https://rpc.moderato.tempo.xyz"
+TEMPO_CHAIN_ID = "42431"
+TEMPO_EXPLORER_URL = "https://explore.moderato.tempo.xyz"
 PASSKEY_REGISTRY_ADDRESS = "0xba6FFf66aE28e8Fe13b8679653934f3C8Ef9Ca9e"
 ALLOWED_ORIGINS = "*"
 JWT_EXPIRATION = "24h"
@@ -16,3 +18,5 @@ JWT_EXPIRATION = "24h"
 # Secrets (set via CLI):
 # wrangler secret put JWT_SECRET
 # wrangler secret put RELAYER_PRIVATE_KEY
+#
+# For local dev, override vars in .dev.vars

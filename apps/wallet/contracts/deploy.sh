@@ -1,9 +1,11 @@
 #!/bin/bash
 set -e
 
-# Tempo Testnet configuration
-RPC_URL="https://rpc.testnet.tempo.xyz"
-CHAIN_ID=42429
+# Network configuration
+TESTNET_RPC_URL="https://rpc.moderato.tempo.xyz"
+TESTNET_CHAIN_ID=42431
+MAINNET_RPC_URL="https://rpc.tempo.xyz"
+MAINNET_CHAIN_ID=42420
 
 # File paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -13,6 +15,7 @@ WRANGLER_FILE="$WALLET_ROOT/api/wrangler.toml"
 
 # Parse flags
 UPDATE_TARGET=""
+NETWORK=""
 OP_ITEM=""
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -26,15 +29,30 @@ while [[ $# -gt 0 ]]; do
             OP_ITEM="Temporium Wallet Contract Owner Production"
             shift
             ;;
+        --testnet|-t)
+            NETWORK="testnet"
+            shift
+            ;;
+        --mainnet|-m)
+            NETWORK="mainnet"
+            shift
+            ;;
         --help|-h)
-            echo "Usage: ./deploy.sh <--dev|-d|--prod|-p>"
+            echo "Usage: ./deploy.sh <--dev|-d|--prod|-p> <--testnet|-t|--mainnet|-m>"
             echo ""
-            echo "Deploys PasskeyRegistry to Tempo Testnet and updates config files."
+            echo "Deploys PasskeyRegistry to Tempo and updates config files."
             echo ""
-            echo "Options:"
-            echo "  --dev, -d   Deploy using dev credentials, update .dev.vars"
-            echo "  --prod, -p  Deploy using prod credentials, update wrangler.toml"
-            echo "  --help, -h  Show this help message"
+            echo "Environment (required):"
+            echo "  --dev, -d       Deploy using dev credentials, update .dev.vars"
+            echo "  --prod, -p      Deploy using prod credentials, update wrangler.toml"
+            echo ""
+            echo "Network (required):"
+            echo "  --testnet, -t   Deploy to Tempo Testnet (Moderato)"
+            echo "  --mainnet, -m   Deploy to Tempo Mainnet"
+            echo ""
+            echo "Examples:"
+            echo "  ./deploy.sh --dev --testnet"
+            echo "  ./deploy.sh --prod --mainnet"
             exit 0
             ;;
         *)
@@ -45,18 +63,31 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Require --dev or --prod flag
-if [ -z "$UPDATE_TARGET" ]; then
-    echo "Error: You must specify --dev or --prod"
+# Require both flags
+if [ -z "$UPDATE_TARGET" ] || [ -z "$NETWORK" ]; then
+    echo "Error: You must specify both environment and network"
     echo ""
-    echo "Usage: ./deploy.sh <--dev|-d|--prod|-p>"
-    echo "  --dev, -d   Deploy using dev credentials, update .dev.vars"
-    echo "  --prod, -p  Deploy using prod credentials, update wrangler.toml"
+    echo "Usage: ./deploy.sh <--dev|-d|--prod|-p> <--testnet|-t|--mainnet|-m>"
+    echo ""
+    echo "Examples:"
+    echo "  ./deploy.sh --dev --testnet"
+    echo "  ./deploy.sh --prod --mainnet"
     exit 1
 fi
 
+# Set RPC URL and chain ID based on network
+if [ "$NETWORK" = "testnet" ]; then
+    RPC_URL="$TESTNET_RPC_URL"
+    CHAIN_ID="$TESTNET_CHAIN_ID"
+    NETWORK_LABEL="Testnet (Moderato)"
+else
+    RPC_URL="$MAINNET_RPC_URL"
+    CHAIN_ID="$MAINNET_CHAIN_ID"
+    NETWORK_LABEL="Mainnet"
+fi
+
 echo "=== PasskeyRegistry Deployment ==="
-echo "Network: Tempo Testnet (Chain ID: $CHAIN_ID)"
+echo "Network: $NETWORK_LABEL (Chain ID: $CHAIN_ID)"
 echo "Environment: $UPDATE_TARGET"
 echo "1Password item: $OP_ITEM"
 echo ""
@@ -85,18 +116,18 @@ BALANCE=$(cast balance "$DEPLOYER_ADDRESS" --rpc-url "$RPC_URL" 2>/dev/null || e
 echo "Balance: $BALANCE wei"
 echo ""
 
-# Deploy the contract and capture output
+# Deploy the contract using forge create (works reliably on Tempo)
 echo "Deploying PasskeyRegistry..."
-DEPLOY_OUTPUT=$(forge script script/DeployPasskeyRegistry.s.sol:DeployPasskeyRegistry \
+DEPLOY_OUTPUT=$(forge create src/PasskeyRegistry.sol:PasskeyRegistry \
     --rpc-url "$RPC_URL" \
     --private-key "$PRIVATE_KEY" \
-    --broadcast \
-    -vvvv 2>&1)
+    --legacy \
+    --broadcast 2>&1)
 
 echo "$DEPLOY_OUTPUT"
 
 # Extract contract address from output
-CONTRACT_ADDRESS=$(echo "$DEPLOY_OUTPUT" | grep -oE "PASSKEY_REGISTRY_ADDRESS=0x[a-fA-F0-9]{40}" | cut -d'=' -f2)
+CONTRACT_ADDRESS=$(echo "$DEPLOY_OUTPUT" | grep -oE "Deployed to: 0x[a-fA-F0-9]{40}" | cut -d' ' -f3)
 
 if [ -z "$CONTRACT_ADDRESS" ]; then
     echo ""

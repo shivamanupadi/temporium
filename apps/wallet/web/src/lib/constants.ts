@@ -1,31 +1,18 @@
 import type { Address } from 'viem';
+import { tempoModerato, tempo } from 'viem/chains';
 
 /**
- * Tempo Testnet Configuration
+ * Network selection (env-driven)
  */
-export const TEMPO_TESTNET = {
-  id: 42429,
-  name: 'Tempo Testnet',
-  network: 'tempo-testnet',
-  nativeCurrency: {
-    name: 'USD',
-    symbol: 'USD',
-    decimals: 6,
-  },
-  rpcUrls: {
-    default: {
-      http: ['https://rpc.testnet.tempo.xyz'],
-      webSocket: ['wss://rpc.testnet.tempo.xyz'],
-    },
-    public: {
-      http: ['https://rpc.testnet.tempo.xyz'],
-      webSocket: ['wss://rpc.testnet.tempo.xyz'],
-    },
-  },
-  blockExplorers: {
-    default: { name: 'Tempo Explorer', url: 'https://explore.tempo.xyz' },
-  },
-} as const;
+export const TEMPO_NETWORK = (import.meta.env.VITE_TEMPO_NETWORK || 'testnet') as
+  | 'testnet'
+  | 'mainnet';
+export const isTestnet = TEMPO_NETWORK !== 'mainnet';
+
+/**
+ * Selected chain from viem/chains
+ */
+export const tempoBaseChain = TEMPO_NETWORK === 'mainnet' ? tempo : tempoModerato;
 
 /**
  * Default fee token address (AlphaUSD)
@@ -37,7 +24,7 @@ export const DEFAULT_FEE_TOKEN_ADDRESS = '0x20c000000000000000000000000000000000
  */
 export const LINKS = {
   faucet: 'https://docs.tempo.xyz/quickstart/faucet',
-  explorer: 'https://explore.tempo.xyz',
+  explorer: tempoBaseChain.blockExplorers?.default.url ?? 'https://explore.moderato.tempo.xyz',
   docs: 'https://docs.tempo.xyz',
 } as const;
 

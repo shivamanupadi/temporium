@@ -4,6 +4,8 @@
 export interface Env {
   // Environment Variables
   TEMPO_RPC_URL: string;
+  TEMPO_CHAIN_ID: string;
+  TEMPO_EXPLORER_URL: string;
   PASSKEY_REGISTRY_ADDRESS: string;
   ALLOWED_ORIGINS: string;
   JWT_EXPIRATION: string;

@@ -3,47 +3,51 @@
 
 /*
  * Temporium Wallet Design System
- * Stripe-inspired - Clean, sleek, refined
+ * Warm palette - Coral, Lavender, Sage
  */
 
 /* shadcn color variables */
 :root {
   --radius: 0.5rem;
   /* Temporium custom colors */
-  --background: #fafafa;
-  --foreground: #0a2540;
+  --background: #fdfbf8;
+  --foreground: #2d3436;
   --card: #ffffff;
-  --card-foreground: #0a2540;
+  --card-foreground: #2d3436;
   --popover: #ffffff;
-  --popover-foreground: #0a2540;
-  /* Primary: Vibrant Violet */
-  --primary: #7c5cff;
+  --popover-foreground: #2d3436;
+  /* Primary: Coral */
+  --primary: #e07a5f;
   --primary-foreground: #ffffff;
-  --secondary: #f4f5f7;
-  --secondary-foreground: #0a2540;
-  --muted: #f4f5f7;
-  --muted-foreground: #526070;
-  --accent: #f4f5f7;
-  --accent-foreground: #0a2540;
+  --secondary: #f5f2ed;
+  --secondary-foreground: #2d3436;
+  --muted: #f5f2ed;
+  --muted-foreground: #6b6560;
+  --accent: #f5f2ed;
+  --accent-foreground: #2d3436;
   --destructive: #df1b41;
-  --border: #eef0f3;
-  --input: #e6e9ed;
-  --ring: #7c5cff;
+  --border: #ede9e3;
+  --input: #e8e4de;
+  --ring: #e07a5f;
   /* Chart colors */
-  --chart-1: #7c5cff;
-  --chart-2: #0073e6;
-  --chart-3: #00a67e;
+  --chart-1: #e07a5f;
+  --chart-2: #9b72cf;
+  --chart-3: #5b9a6f;
   --chart-4: #ff9500;
   --chart-5: #df1b41;
   /* Sidebar */
   --sidebar: #ffffff;
-  --sidebar-foreground: #0a2540;
-  --sidebar-primary: #7c5cff;
+  --sidebar-foreground: #2d3436;
+  --sidebar-primary: #e07a5f;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f4f5f7;
-  --sidebar-accent-foreground: #0a2540;
-  --sidebar-border: #eef0f3;
-  --sidebar-ring: #7c5cff;
+  --sidebar-accent: #f5f2ed;
+  --sidebar-accent-foreground: #2d3436;
+  --sidebar-border: #ede9e3;
+  --sidebar-ring: #e07a5f;
+
+  --color-coral: #e07a5f;
+  --color-lavender: #9b72cf;
+  --color-sage: #5b9a6f;
 }
 
 /* shadcn theme mapping */
@@ -87,20 +91,25 @@
 
 /* Custom theme extensions */
 @theme {
+  /* Brand colors */
+  --color-coral: #e07a5f;
+  --color-lavender: #9b72cf;
+  --color-sage: #5b9a6f;
+
   /* Additional accent colors */
-  --color-accent-blue: #0073e6;
-  --color-accent-green: #00a67e;
+  --color-accent-blue: #9b72cf;
+  --color-accent-green: #5b9a6f;
   --color-accent-orange: #ff9500;
 
   /* Token colors */
-  --color-token-usd: #00a67e;
-  --color-token-usdc: #2775ca;
-  --color-token-usdt: #26a17b;
+  --color-token-usd: #5b9a6f;
+  --color-token-usdc: #9b72cf;
+  --color-token-usdt: #5b9a6f;
 
   /* Semantic */
-  --color-success: #00a67e;
+  --color-success: #5b9a6f;
   --color-warning: #ff9500;
-  --color-info: #0073e6;
+  --color-info: #9b72cf;
 
   /* Shadows */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -202,12 +211,12 @@
 
 /* Selection */
 ::selection {
-  background: rgba(124, 92, 255, 0.15);
+  background: rgba(224, 122, 95, 0.18);
 }
 
 /* Gradient text */
 .gradient-text {
-  background: linear-gradient(135deg, var(--primary), var(--color-accent-blue));
+  background: linear-gradient(135deg, var(--color-coral), var(--color-lavender));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

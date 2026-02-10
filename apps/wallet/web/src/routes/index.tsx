@@ -75,12 +75,12 @@ function AuthPage(): ReactElement | null {
             </div>
 
             {/* Heading */}
-            <h1 className="text-3xl font-bold tracking-tight mb-3 text-slate-900">
+            <h1 className="text-3xl font-bold tracking-tight mb-3 text-[#2D3436]">
               Temporium Wallet
             </h1>
 
             {/* Passkey Badge */}
-            <div className="inline-flex items-center gap-2 text-[13px] text-slate-600 mb-4">
+            <div className="inline-flex items-center gap-2 text-[13px] text-[#6B6560] mb-4">
               <div className="flex items-center justify-center w-5 h-5 rounded-md bg-primary/10">
                 <Fingerprint className="h-3 w-3 text-primary" />
               </div>
@@ -88,7 +88,7 @@ function AuthPage(): ReactElement | null {
             </div>
 
             {/* Subtitle */}
-            <p className="text-[15px] text-slate-500 mb-8 leading-relaxed">
+            <p className="text-[15px] text-[#9B9590] mb-8 leading-relaxed">
               Connect your wallet to any Tempo app.
               <br />
               Your passkey works across all Temporium services.
@@ -112,20 +112,20 @@ function AuthPage(): ReactElement | null {
                 size="lg"
                 onClick={() => setShowWalletSelectModal(true)}
                 disabled={isConnecting}
-                className="group w-full h-12 text-[15px] font-semibold bg-white/80 backdrop-blur-sm border-slate-200 hover:border-slate-300 hover:bg-white transition-all duration-300"
+                className="group w-full h-12 text-[15px] font-semibold bg-white/80 backdrop-blur-sm border-[#EDE9E3] hover:border-[#DDD8D1] hover:bg-white transition-all duration-300"
               >
-                <Fingerprint className="h-4 w-4 mr-2 text-slate-500 group-hover:text-primary transition-colors" />
+                <Fingerprint className="h-4 w-4 mr-2 text-[#9B9590] group-hover:text-primary transition-colors" />
                 Sign In
               </Button>
             </div>
 
             {/* Learn More */}
-            <div className="mt-8 pt-6 border-t border-slate-200/50">
+            <div className="mt-8 pt-6 border-t border-[#EDE9E3]/50">
               <a
                 href={LINKS.docs}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-slate-400 hover:text-slate-600 flex items-center justify-center gap-1 transition-colors"
+                className="text-xs text-[#9B9590] hover:text-[#6B6560] flex items-center justify-center gap-1 transition-colors"
               >
                 Learn about passkey wallets
                 <ExternalLink className="w-3 h-3" />

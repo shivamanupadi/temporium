@@ -18,6 +18,11 @@ export const KEYS_API_URL = `${WALLET_API_URL}/keys`;
 export const AUTH_API_URL = `${WALLET_API_URL}/auth`;
 
 /**
+ * Tokenlist API URL - proxied to avoid CORS (wallet-api)
+ */
+export const TOKENLIST_API_URL = `${WALLET_API_URL}/tokenlist`;
+
+/**
  * Get the wallet API base URL
  */
 export function getWalletApiUrl(): string {

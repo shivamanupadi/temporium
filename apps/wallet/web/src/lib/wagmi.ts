@@ -1,6 +1,6 @@
 import { createConfig, http } from 'wagmi';
 import { injected } from 'wagmi/connectors';
-import { webAuthn, KeyManager } from 'tempo.ts/wagmi';
+import { webAuthn, KeyManager } from 'wagmi/tempo';
 import { tempoChain } from './tempo-client';
 import { KEYS_API_URL } from './api';
 import { saveAuthToken } from './auth-storage';
@@ -179,9 +179,9 @@ export const injectedConnector = injected({
  * Wagmi configuration for Tempo
  */
 export const wagmiConfig = createConfig({
-  chains: [tempoChain],
+  chains: [tempoChain] as const,
   connectors: [tempoPasskeyConnector, injectedConnector],
   transports: {
     [tempoChain.id]: http(tempoChain.rpcUrls.default.http[0]),
-  },
+  } as Record<number, ReturnType<typeof http>>,
 });

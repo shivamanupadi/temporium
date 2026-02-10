@@ -16,7 +16,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { Hooks } from 'tempo.ts/wagmi';
+import { Hooks } from 'wagmi/tempo';
 import { useTempo } from '@/hooks/useTempo';
 import { useTokensWithBalances } from '@/hooks/useTokenList';
 import { formatAmount, cn } from '@/lib/utils';

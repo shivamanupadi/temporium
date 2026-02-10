@@ -1,8 +1,11 @@
 <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-      <rect width="32" height="32" rx="5" fill="#7c5cff"/>
-      <g transform="translate(3.2, 3.2) scale(0.256)">
-        <path d="M 15 50 Q 30 25, 50 50 Q 70 75, 85 50" stroke="#ffffff" stroke-width="8" fill="none" stroke-linecap="round"/>
-        <path d="M 15 35 Q 30 10, 50 35 Q 70 60, 85 35" stroke="#ffffff" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.6"/>
-        <path d="M 15 65 Q 30 40, 50 65 Q 70 90, 85 65" stroke="#ffffff" stroke-width="6" fill="none" stroke-linecap="round" opacity="0.6"/>
-      </g>
-    </svg>
+  <defs>
+    <linearGradient id="bolt" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#E07A5F"/>
+      <stop offset="50%" stop-color="#9B72CF"/>
+      <stop offset="100%" stop-color="#5B9A6F"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="6" fill="#2D3436"/>
+  <path d="M18.5 5L10 18h5.5L13.5 27L22 14h-5.5L18.5 5z" fill="url(#bolt)"/>
+</svg>

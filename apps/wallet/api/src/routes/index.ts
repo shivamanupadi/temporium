@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import keysRouter from './keys';
 import authRouter from './auth';
 import contractsRouter from './contracts';
+import tokenlistRouter from './tokenlist';
 import type { Env, Variables } from '../types/env';
 
 const routes = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -10,5 +11,6 @@ const routes = new Hono<{ Bindings: Env; Variables: Variables }>();
 routes.route('/keys', keysRouter);
 routes.route('/auth', authRouter);
 routes.route('/contracts', contractsRouter);
+routes.route('/tokenlist', tokenlistRouter);
 
 export default routes;

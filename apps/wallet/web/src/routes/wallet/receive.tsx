@@ -2,7 +2,16 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useState, useRef, useEffect, useCallback, type ReactElement } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
-import { Copy, Check, ExternalLink, Share2, Download, QrCode } from 'lucide-react';
+import {
+  ArrowDown,
+  Copy,
+  Check,
+  ExternalLink,
+  Share2,
+  Download,
+  QrCode,
+  Shield,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useTempo } from '@/hooks/useTempo';
@@ -49,13 +58,11 @@ function ReceivePage(): ReactElement {
           text: `Send payments to my wallet:\n${address}`,
         });
       } catch (err) {
-        // User cancelled or share failed, fallback to copy
         if ((err as Error).name !== 'AbortError') {
           await handleCopy();
         }
       }
     } else {
-      // Fallback for browsers without share API
       await handleCopy();
     }
   }, [address, handleCopy]);
@@ -66,7 +73,6 @@ function ReceivePage(): ReactElement {
     const svg = qrRef.current.querySelector('svg');
     if (!svg) return;
 
-    // Create canvas
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -76,11 +82,9 @@ function ReceivePage(): ReactElement {
     canvas.width = size + padding * 2;
     canvas.height = size + padding * 2;
 
-    // Draw white background
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Convert SVG to data URL
     const svgData = new XMLSerializer().serializeToString(svg);
     const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
     const url = URL.createObjectURL(svgBlob);
@@ -90,7 +94,6 @@ function ReceivePage(): ReactElement {
       ctx.drawImage(img, padding, padding, size, size);
       URL.revokeObjectURL(url);
 
-      // Download
       const link = document.createElement('a');
       link.download = `temporium-wallet-${address.slice(0, 8)}.png`;
       link.href = canvas.toDataURL('image/png');
@@ -104,31 +107,47 @@ function ReceivePage(): ReactElement {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div>
-        <h1 className="text-xl font-semibold text-slate-900">Receive</h1>
-        <p className="text-sm text-muted-foreground mt-1">Share your address to receive payments</p>
-      </div>
-
-      {/* QR Card */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-white border border-border/50 rounded-2xl overflow-hidden shadow-sm"
+        transition={{ duration: 0.3 }}
+        className="flex items-center gap-3"
+      >
+        <div className="w-10 h-10 rounded-xl bg-[#5B9A6F]/10 flex items-center justify-center">
+          <ArrowDown className="w-5 h-5 text-[#5B9A6F]" />
+        </div>
+        <div>
+          <h1 className="text-xl font-semibold text-[#2D3436]">Receive</h1>
+          <p className="text-[13px] text-muted-foreground">
+            Share your address to receive payments
+          </p>
+        </div>
+      </motion.div>
+
+      {/* Main Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.05 }}
+        className="bg-white border border-border/60 rounded-2xl shadow-sm overflow-hidden"
       >
         {/* QR Code Section */}
-        <div className="relative bg-gradient-to-b from-slate-50/80 to-white px-6 pt-8 pb-6">
-          {/* Decorative background pattern */}
-          <div className="absolute inset-0 opacity-[0.03]">
+        <div className="relative px-6 pt-8 pb-7">
+          {/* Subtle gradient wash */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#5B9A6F]/[0.03] to-transparent pointer-events-none" />
+
+          {/* Decorative dot pattern */}
+          <div className="absolute inset-0 opacity-[0.025] pointer-events-none">
             <div
               className="absolute inset-0"
               style={{
-                backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 1px, transparent 1px)`,
-                backgroundSize: '24px 24px',
+                backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 0.5px, transparent 0.5px)`,
+                backgroundSize: '20px 20px',
               }}
             />
           </div>
 
-          {/* QR Code Container */}
+          {/* QR Code */}
           <motion.div
             className="relative flex justify-center"
             onHoverStart={() => setIsHoveringQR(true)}
@@ -136,42 +155,47 @@ function ReceivePage(): ReactElement {
           >
             <motion.div
               ref={qrRef}
-              animate={{ scale: isHoveringQR ? 1.02 : 1 }}
+              animate={{ scale: isHoveringQR ? 1.03 : 1 }}
               transition={{ type: 'spring', stiffness: 400, damping: 25 }}
               className="relative"
             >
-              {/* Gradient border effect */}
-              <div className="absolute -inset-3 bg-gradient-to-br from-primary/20 via-violet-500/20 to-emerald-500/20 rounded-2xl blur-xl opacity-60" />
+              {/* Glow effect */}
+              <motion.div
+                animate={{ opacity: isHoveringQR ? 0.8 : 0.4 }}
+                transition={{ duration: 0.3 }}
+                className="absolute -inset-4 bg-gradient-to-br from-[#E07A5F]/15 via-[#9B72CF]/15 to-[#5B9A6F]/15 rounded-3xl blur-2xl"
+              />
 
-              {/* QR Code Card */}
-              <div className="relative p-5 bg-white rounded-2xl shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_4px_16px_-4px_rgba(0,0,0,0.12)]">
+              {/* QR Card */}
+              <div className="relative p-5 bg-white rounded-2xl shadow-[0_0_0_1px_rgba(0,0,0,0.04),0_8px_24px_-8px_rgba(0,0,0,0.1)]">
                 <QRCodeSVG
                   value={address!}
                   size={180}
                   level="H"
                   includeMargin={false}
                   bgColor="#ffffff"
-                  fgColor="#0a0a0a"
+                  fgColor="#2D3436"
                 />
 
-                {/* Center logo overlay */}
+                {/* Center logo */}
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="w-10 h-10 bg-white rounded-lg shadow-sm flex items-center justify-center">
-                    <QrCode className="w-5 h-5 text-primary" />
+                  <div className="w-10 h-10 bg-white rounded-lg shadow-sm border border-border/20 flex items-center justify-center">
+                    <QrCode className="w-5 h-5 text-[#E07A5F]" />
                   </div>
                 </div>
               </div>
             </motion.div>
 
-            {/* Download button overlay */}
+            {/* Download overlay on hover */}
             <AnimatePresence>
               {isHoveringQR && (
                 <motion.button
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 4 }}
+                  transition={{ duration: 0.15 }}
                   onClick={handleDownloadQR}
-                  className="absolute -bottom-2 right-1/2 translate-x-1/2 flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 text-white text-xs font-medium rounded-full shadow-lg hover:bg-slate-800 transition-colors"
+                  className="absolute -bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5 px-3.5 py-1.5 bg-[#2D3436] text-white text-[11px] font-semibold rounded-full shadow-lg hover:bg-[#3D4446] transition-colors"
                 >
                   <Download className="w-3 h-3" />
                   Save QR
@@ -179,36 +203,51 @@ function ReceivePage(): ReactElement {
               )}
             </AnimatePresence>
           </motion.div>
+
+          {/* Scan prompt */}
+          <p className="text-[11px] text-muted-foreground/50 text-center mt-6 font-medium uppercase tracking-widest">
+            Scan to send payment
+          </p>
         </div>
 
-        {/* Address Section */}
-        <div className="px-6 py-5 border-t border-border/50">
-          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-3 text-center">
-            Wallet Address
-          </p>
+        {/* Divider */}
+        <div className="mx-6 border-t border-border/40" />
 
-          {/* Clickable address */}
+        {/* Address Section */}
+        <div className="px-6 py-5">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
+              Wallet Address
+            </span>
+            <div className="flex items-center gap-1 text-[10px] text-[#5B9A6F] font-medium">
+              <Shield className="w-3 h-3" />
+              Your address
+            </div>
+          </div>
+
+          {/* Clickable address card */}
           <motion.button
             onClick={handleCopy}
             whileTap={{ scale: 0.98 }}
-            className="w-full group relative bg-slate-50 hover:bg-slate-100 rounded-xl p-4 transition-colors"
+            className="w-full group relative bg-[#FDFBF8] hover:bg-[#F8F5F0] rounded-xl px-4 py-3.5 transition-colors border border-border/20 hover:border-border/40 text-left"
           >
-            <p className="font-mono text-[13px] text-slate-700 text-center break-all leading-relaxed pr-8">
+            <p className="font-mono text-[12.5px] text-[#4D5456] break-all leading-relaxed pr-10">
               {address}
             </p>
 
-            {/* Copy indicator */}
-            <div className="absolute right-4 top-1/2 -translate-y-1/2">
+            {/* Copy badge */}
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
               <AnimatePresence mode="wait">
                 {copied ? (
                   <motion.div
                     key="check"
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
+                    initial={{ scale: 0, rotate: -30 }}
+                    animate={{ scale: 1, rotate: 0 }}
                     exit={{ scale: 0 }}
-                    className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center"
+                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                    className="w-8 h-8 bg-[#5B9A6F]/12 rounded-lg flex items-center justify-center"
                   >
-                    <Check className="w-4 h-4 text-emerald-600" />
+                    <Check className="w-4 h-4 text-[#5B9A6F]" />
                   </motion.div>
                 ) : (
                   <motion.div
@@ -216,9 +255,9 @@ function ReceivePage(): ReactElement {
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     exit={{ scale: 0 }}
-                    className="w-8 h-8 bg-white shadow-sm rounded-lg flex items-center justify-center group-hover:bg-primary group-hover:shadow-md transition-all"
+                    className="w-8 h-8 bg-white shadow-sm border border-border/20 rounded-lg flex items-center justify-center group-hover:bg-[#E07A5F] group-hover:border-[#E07A5F] group-hover:shadow-md transition-all"
                   >
-                    <Copy className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors" />
+                    <Copy className="w-3.5 h-3.5 text-muted-foreground/50 group-hover:text-white transition-colors" />
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -226,29 +265,46 @@ function ReceivePage(): ReactElement {
           </motion.button>
         </div>
 
-        {/* Actions */}
-        <div className="px-6 pb-6">
-          <div className="grid grid-cols-3 gap-2">
-            <Button variant="outline" className="h-11 flex-col gap-0.5 py-2" onClick={handleCopy}>
-              {copied ? (
-                <Check className="h-4 w-4 text-emerald-500" />
-              ) : (
-                <Copy className="h-4 w-4 text-slate-500" />
-              )}
-              <span className="text-[11px] font-medium">{copied ? 'Copied' : 'Copy'}</span>
+        {/* Divider */}
+        <div className="mx-6 border-t border-border/40" />
+
+        {/* Action Buttons */}
+        <div className="px-6 py-5">
+          <div className="grid grid-cols-3 gap-2.5">
+            <Button
+              variant="outline"
+              className="h-[52px] flex-col gap-1 py-2 rounded-xl border-border/40 hover:border-[#E07A5F]/30 hover:bg-[#E07A5F]/[0.04] transition-all group"
+              onClick={handleCopy}
+            >
+              <div className="w-7 h-7 rounded-lg bg-muted/60 group-hover:bg-[#E07A5F]/10 flex items-center justify-center transition-colors">
+                {copied ? (
+                  <Check className="h-3.5 w-3.5 text-[#5B9A6F]" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5 text-muted-foreground group-hover:text-[#E07A5F] transition-colors" />
+                )}
+              </div>
+              <span className="text-[11px] font-medium">{copied ? 'Copied!' : 'Copy'}</span>
             </Button>
 
-            <Button variant="outline" className="h-11 flex-col gap-0.5 py-2" onClick={handleShare}>
-              <Share2 className="h-4 w-4 text-slate-500" />
+            <Button
+              variant="outline"
+              className="h-[52px] flex-col gap-1 py-2 rounded-xl border-border/40 hover:border-[#9B72CF]/30 hover:bg-[#9B72CF]/[0.04] transition-all group"
+              onClick={handleShare}
+            >
+              <div className="w-7 h-7 rounded-lg bg-muted/60 group-hover:bg-[#9B72CF]/10 flex items-center justify-center transition-colors">
+                <Share2 className="h-3.5 w-3.5 text-muted-foreground group-hover:text-[#9B72CF] transition-colors" />
+              </div>
               <span className="text-[11px] font-medium">Share</span>
             </Button>
 
             <Button
               variant="outline"
-              className="h-11 flex-col gap-0.5 py-2"
+              className="h-[52px] flex-col gap-1 py-2 rounded-xl border-border/40 hover:border-[#5B9A6F]/30 hover:bg-[#5B9A6F]/[0.04] transition-all group"
               onClick={() => window.open(getExplorerAddressUrl(address!), '_blank')}
             >
-              <ExternalLink className="h-4 w-4 text-slate-500" />
+              <div className="w-7 h-7 rounded-lg bg-muted/60 group-hover:bg-[#5B9A6F]/10 flex items-center justify-center transition-colors">
+                <ExternalLink className="h-3.5 w-3.5 text-muted-foreground group-hover:text-[#5B9A6F] transition-colors" />
+              </div>
               <span className="text-[11px] font-medium">Explorer</span>
             </Button>
           </div>

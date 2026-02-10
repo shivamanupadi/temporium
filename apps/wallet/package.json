@@ -4,9 +4,9 @@
   "private": true,
   "description": "Tempo Wallet - Passkey wallet service for Tempo blockchain",
   "scripts": {
-    "dev": "turbo run dev --filter=@temporium/wallet-api",
-    "build": "turbo run build --filter=@temporium/wallet-api",
-    "lint": "turbo run lint --filter=@temporium/wallet-api",
-    "clean": "turbo run clean --filter=@temporium/wallet-api"
+    "dev": "turbo run dev --filter=@temporium/wallet-api --filter=@temporium/wallet-web",
+    "build": "turbo run build --filter=@temporium/wallet-api --filter=@temporium/wallet-web",
+    "lint": "turbo run lint --filter=@temporium/wallet-api --filter=@temporium/wallet-web",
+    "clean": "turbo run clean --filter=@temporium/wallet-api --filter=@temporium/wallet-web"
   }
 }

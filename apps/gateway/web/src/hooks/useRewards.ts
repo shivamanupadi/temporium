@@ -81,7 +81,7 @@ export function useRewards({ token }: UseRewardsParams): UseRewardsReturn {
     async (params: { amount: bigint; feeToken?: Address }) => {
       if (!walletClient || !token) throw new Error('Wallet not connected');
 
-      const result = await Actions.reward.startSync(walletClient, {
+      const result = await Actions.reward.distributeSync(walletClient, {
         token,
         amount: params.amount,
         feeToken: params.feeToken ?? DEFAULT_FEE_TOKEN_ADDRESS,

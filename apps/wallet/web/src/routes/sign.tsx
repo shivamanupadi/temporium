@@ -764,7 +764,7 @@ function SignPage(): ReactElement {
   if (status === 'not_connected') {
     return (
       <>
-        <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-4">
+        <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -896,7 +896,7 @@ function SignPage(): ReactElement {
 
   if (!pendingRequest) {
     return (
-      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -926,7 +926,7 @@ function SignPage(): ReactElement {
 
   if (status === 'success') {
     return (
-      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -960,7 +960,7 @@ function SignPage(): ReactElement {
 
   if (status === 'rejected') {
     return (
-      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -980,7 +980,7 @@ function SignPage(): ReactElement {
 
   if (status === 'timeout') {
     return (
-      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -1000,7 +1000,7 @@ function SignPage(): ReactElement {
 
   if (status === 'error') {
     return (
-      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -1043,7 +1043,7 @@ function SignPage(): ReactElement {
 
   return (
     <>
-      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

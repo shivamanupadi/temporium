@@ -72,9 +72,9 @@ export function WalletSelectModal({
                 >
                   <div
                     className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ backgroundColor: '#7c5cff15' }}
+                    style={{ backgroundColor: '#E07A5F15' }}
                   >
-                    <Fingerprint className="h-5 w-5" style={{ color: '#7c5cff' }} />
+                    <Fingerprint className="h-5 w-5" style={{ color: '#E07A5F' }} />
                   </div>
                   <div className="flex-1 text-left">
                     <p className="text-[14px] font-medium text-gray-900">Continue with Passkey</p>

@@ -17,22 +17,12 @@ import {
   Trash2,
   Filter,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog';
-import {
-  getActivity,
-  clearActivity,
-  getActivityTypeLabel,
-  getActivityStatusColor,
-} from '@/lib/activity';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
+import { getActivity, clearActivity, getActivityTypeLabel } from '@/lib/activity';
 import { getExplorerTxUrl } from '@/lib/tempo-client';
-import { formatTimeAgo } from '@/lib/utils';
+import { formatTimeAgo, formatAddress, cn } from '@/lib/utils';
 import type { ActivityItem, ActivityType, ActivityStatus } from '@/types';
 
 export const Route = createFileRoute('/wallet/activity')({
@@ -41,41 +31,61 @@ export const Route = createFileRoute('/wallet/activity')({
 
 type FilterType = 'all' | ActivityType;
 
-function getActivityIcon(type: ActivityType): typeof LinkIcon {
+interface ActivityMeta {
+  icon: typeof LinkIcon;
+  color: string;
+}
+
+function getActivityMeta(type: ActivityType): ActivityMeta {
   switch (type) {
     case 'connect':
-      return LinkIcon;
+      return { icon: LinkIcon, color: '#5B9A6F' };
     case 'sign_message':
-      return FileSignature;
+      return { icon: FileSignature, color: '#9B72CF' };
     case 'send_payment':
     case 'send_scheduled_payment':
-      return Send;
+      return { icon: Send, color: '#E07A5F' };
     case 'swap_tokens':
-      return ArrowRightLeft;
+      return { icon: ArrowRightLeft, color: '#9B72CF' };
     case 'add_liquidity':
     case 'remove_liquidity':
-      return Droplets;
+      return { icon: Droplets, color: '#5B9A6F' };
     case 'send_transaction':
-      return Coins;
+      return { icon: Coins, color: '#E07A5F' };
     default:
-      return Coins;
+      return { icon: Coins, color: '#6B6560' };
   }
 }
 
-function getStatusIcon(status: ActivityStatus): typeof CheckCircle {
+interface StatusMeta {
+  icon: typeof CheckCircle;
+  color: string;
+  bg: string;
+  label: string;
+}
+
+function getStatusMeta(status: ActivityStatus): StatusMeta {
   switch (status) {
     case 'success':
-      return CheckCircle;
+      return { icon: CheckCircle, color: '#5B9A6F', bg: '#5B9A6F10', label: 'Success' };
     case 'failed':
-      return XCircle;
+      return { icon: XCircle, color: '#E5484D', bg: '#E5484D10', label: 'Failed' };
     case 'rejected':
-      return AlertTriangle;
+      return { icon: AlertTriangle, color: '#D97706', bg: '#D9770610', label: 'Rejected' };
     case 'timeout':
-      return Clock;
+      return { icon: Clock, color: '#9B9590', bg: '#9B959010', label: 'Timeout' };
     default:
-      return CheckCircle;
+      return { icon: CheckCircle, color: '#9B9590', bg: '#9B959010', label: status };
   }
 }
+
+const filterOptions: { value: FilterType; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'send_payment', label: 'Payments' },
+  { value: 'swap_tokens', label: 'Swaps' },
+  { value: 'sign_message', label: 'Signatures' },
+  { value: 'connect', label: 'Connections' },
+];
 
 function ActivityPage(): ReactElement {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
@@ -104,190 +114,242 @@ function ActivityPage(): ReactElement {
     clearActivity();
     setActivities([]);
     setShowClearDialog(false);
+    toast.success('Activity history cleared');
   };
 
   const filteredActivities =
     filter === 'all' ? activities : activities.filter(a => a.type === filter);
 
-  const filterOptions: { value: FilterType; label: string }[] = [
-    { value: 'all', label: 'All' },
-    { value: 'send_payment', label: 'Payments' },
-    { value: 'swap_tokens', label: 'Swaps' },
-    { value: 'sign_message', label: 'Signatures' },
-    { value: 'connect', label: 'Connections' },
-  ];
-
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-slate-900">Activity</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {activities.length} transaction{activities.length !== 1 ? 's' : ''}
-          </p>
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="flex items-center justify-between"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#9B72CF]/10 flex items-center justify-center">
+            <Clock className="w-5 h-5 text-[#9B72CF]" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold text-[#2D3436]">Activity</h1>
+            <p className="text-[13px] text-muted-foreground">
+              {activities.length === 0
+                ? 'No transactions yet'
+                : `${activities.length} transaction${activities.length !== 1 ? 's' : ''}`}
+            </p>
+          </div>
         </div>
+
         {activities.length > 0 && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-9 w-9 text-muted-foreground hover:text-destructive"
+          <button
             onClick={() => setShowClearDialog(true)}
+            className="w-8 h-8 rounded-lg border border-border/30 hover:border-red-200 bg-[#FDFBF8] hover:bg-red-50 flex items-center justify-center transition-all group"
           >
-            <Trash2 className="w-4 h-4" />
-          </Button>
+            <Trash2 className="w-3.5 h-3.5 text-[#B5B0AA] group-hover:text-red-500 transition-colors" />
+          </button>
         )}
-      </div>
+      </motion.div>
 
       {/* Filter tabs */}
       {activities.length > 0 && (
-        <div className="flex gap-1 overflow-x-auto py-1 scrollbar-hide">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.05 }}
+          className="flex gap-1.5 overflow-x-auto py-0.5 scrollbar-hide"
+        >
           {filterOptions.map(option => (
             <button
               key={option.value}
               onClick={() => setFilter(option.value)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-colors ${
+              className={cn(
+                'px-3.5 py-1.5 text-[11px] font-semibold rounded-lg whitespace-nowrap transition-all border',
                 filter === option.value
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted text-muted-foreground hover:bg-muted/80'
-              }`}
+                  ? 'bg-[#2D3436] text-white border-[#2D3436]'
+                  : 'bg-white text-[#6B6560] border-border/40 hover:border-border/60 hover:bg-[#FDFBF8]'
+              )}
             >
               {option.label}
             </button>
           ))}
-        </div>
+        </motion.div>
       )}
 
       {/* Content */}
       {activities.length === 0 ? (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center py-16"
+          transition={{ duration: 0.4, delay: 0.05 }}
+          className="bg-white border border-border/60 rounded-2xl shadow-sm"
         >
-          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-            <History className="w-8 h-8 text-muted-foreground" />
+          <div className="px-6 py-14 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-[#9B72CF]/8 flex items-center justify-center mx-auto mb-4">
+              <History className="w-7 h-7 text-[#9B72CF]" />
+            </div>
+            <h2 className="text-[15px] font-semibold text-[#2D3436] mb-1.5">No Activity Yet</h2>
+            <p className="text-[13px] text-muted-foreground max-w-[260px] mx-auto leading-relaxed">
+              Your transaction history will appear here after you connect to apps and sign
+              transactions.
+            </p>
           </div>
-          <h2 className="text-lg font-semibold mb-2">No Activity Yet</h2>
-          <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-            Your transaction history will appear here after you connect to apps and sign
-            transactions.
-          </p>
         </motion.div>
       ) : filteredActivities.length === 0 ? (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center py-16"
+          className="bg-white border border-border/60 rounded-2xl shadow-sm"
         >
-          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-            <Filter className="w-8 h-8 text-muted-foreground" />
+          <div className="px-6 py-14 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-[#F5F2ED] flex items-center justify-center mx-auto mb-4">
+              <Filter className="w-7 h-7 text-[#9B9590]" />
+            </div>
+            <h2 className="text-[15px] font-semibold text-[#2D3436] mb-1.5">No Results</h2>
+            <p className="text-[13px] text-muted-foreground">
+              No activity matches the selected filter.
+            </p>
           </div>
-          <h2 className="text-lg font-semibold mb-2">No Results</h2>
-          <p className="text-sm text-muted-foreground">No activity matches the selected filter.</p>
         </motion.div>
       ) : (
-        <div className="space-y-3">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="bg-white border border-border/60 rounded-2xl shadow-sm overflow-hidden"
+        >
           <AnimatePresence mode="popLayout">
-            {filteredActivities.map(activity => {
-              const Icon = getActivityIcon(activity.type);
-              const StatusIcon = getStatusIcon(activity.status);
-              const statusColor = getActivityStatusColor(activity.status);
+            {filteredActivities.map((activity, index) => {
+              const meta = getActivityMeta(activity.type);
+              const status = getStatusMeta(activity.status);
+              const Icon = meta.icon;
+              const StatusIcon = status.icon;
+              const isLast = index === filteredActivities.length - 1;
+              const hasAmount = activity.details?.amount !== undefined;
+              const hasTo = !!activity.details?.to;
 
               return (
                 <motion.div
                   key={activity.id}
                   layout
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
                   exit={{ opacity: 0, x: -20 }}
-                  className="bg-white border border-border/50 rounded-xl overflow-hidden shadow-sm"
+                  transition={{ duration: 0.3, delay: index * 0.03 }}
+                  className={cn(
+                    'px-6 py-4 hover:bg-[#FDFBF8] transition-colors',
+                    !isLast && 'border-b border-border/20'
+                  )}
                 >
-                  <div className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
-                        <Icon className="w-5 h-5 text-muted-foreground" />
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium truncate">
-                            {getActivityTypeLabel(activity.type)}
-                          </h3>
-                          <span
-                            className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs capitalize ${statusColor}`}
-                          >
-                            <StatusIcon className="w-3 h-3" />
-                            {activity.status}
-                          </span>
-                        </div>
-                        <p className="text-sm text-muted-foreground truncate">{activity.appName}</p>
-                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            {formatTimeAgo(activity.timestamp / 1000)}
-                          </span>
-                          {activity.txHash && (
-                            <a
-                              href={getExplorerTxUrl(activity.txHash)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-primary hover:underline"
-                            >
-                              View tx
-                              <ExternalLink className="w-3 h-3" />
-                            </a>
-                          )}
-                        </div>
-                      </div>
+                  <div className="flex items-start gap-3.5">
+                    {/* Activity icon */}
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: `${meta.color}12` }}
+                    >
+                      <Icon className="w-4.5 h-4.5" style={{ color: meta.color }} />
                     </div>
 
-                    {activity.details && Object.keys(activity.details).length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-border/50">
-                        <div className="flex flex-wrap gap-2">
-                          {activity.details.amount !== undefined ? (
-                            <span className="text-xs bg-muted px-2 py-1 rounded">
-                              Amount: {`${activity.details.amount}`}
-                            </span>
-                          ) : null}
-                          {activity.details.to ? (
-                            <span className="text-xs bg-muted px-2 py-1 rounded font-mono">
-                              To: {`${activity.details.to}`.slice(0, 8)}...
-                            </span>
-                          ) : null}
-                        </div>
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <h3 className="text-[14px] font-semibold text-[#2D3436] truncate">
+                          {getActivityTypeLabel(activity.type)}
+                        </h3>
+                        <span
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold shrink-0"
+                          style={{ backgroundColor: status.bg, color: status.color }}
+                        >
+                          <StatusIcon className="w-2.5 h-2.5" />
+                          {status.label}
+                        </span>
                       </div>
-                    )}
+
+                      <p className="text-[12px] text-[#9B9590] truncate mb-1.5">
+                        {activity.appName}
+                      </p>
+
+                      {/* Details row */}
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {hasAmount && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#E07A5F]/8 text-[10px] font-semibold text-[#E07A5F]">
+                            <Coins className="w-2.5 h-2.5" />
+                            {`${activity.details!.amount}`}
+                          </span>
+                        )}
+                        {hasTo && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-[#F5F2ED] text-[10px] font-mono text-[#6B6560]">
+                            {formatAddress(`${activity.details!.to}`, 4)}
+                          </span>
+                        )}
+                        {activity.txHash && (
+                          <a
+                            href={getExplorerTxUrl(activity.txHash)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-medium text-[#5B9A6F] hover:bg-[#5B9A6F]/8 transition-colors"
+                          >
+                            <ExternalLink className="w-2.5 h-2.5" />
+                            View tx
+                          </a>
+                        )}
+
+                        <span className="text-[10px] text-[#B5B0AA] flex items-center gap-1 ml-auto shrink-0">
+                          <Clock className="w-2.5 h-2.5" />
+                          {formatTimeAgo(activity.timestamp / 1000)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </motion.div>
               );
             })}
           </AnimatePresence>
-        </div>
+        </motion.div>
       )}
 
       {/* Clear Confirmation Dialog */}
       <Dialog open={showClearDialog} onOpenChange={setShowClearDialog}>
-        <DialogContent className="max-w-xs">
-          <DialogHeader className="p-6 pb-0">
-            <DialogTitle>Clear Activity</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to clear all activity history? This cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="p-6 pt-4">
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1"
-                onClick={() => setShowClearDialog(false)}
-              >
-                Cancel
-              </Button>
-              <Button variant="destructive" className="flex-1" onClick={handleClear}>
-                Clear All
-              </Button>
+        <DialogContent className="max-w-[320px] p-0 gap-0 overflow-hidden rounded-2xl">
+          <DialogTitle className="sr-only">Clear Activity</DialogTitle>
+          <DialogDescription className="sr-only">
+            Confirm clearing all activity history
+          </DialogDescription>
+
+          <div className="relative px-6 pt-8 pb-5 text-center">
+            <div className="absolute inset-0 bg-gradient-to-b from-red-500/[0.04] to-transparent pointer-events-none" />
+
+            <div className="relative">
+              <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4">
+                <Trash2 className="w-7 h-7 text-red-500" />
+              </div>
+
+              <h3 className="text-[15px] font-semibold text-[#2D3436] mb-1.5">Clear Activity?</h3>
+              <p className="text-[13px] text-muted-foreground leading-relaxed">
+                This will permanently remove all{' '}
+                <span className="font-semibold text-[#2D3436]">{activities.length}</span>{' '}
+                transaction{activities.length !== 1 ? 's' : ''} from your history.
+              </p>
             </div>
+          </div>
+
+          <div className="px-5 pb-5 flex items-center gap-2.5">
+            <Button
+              variant="outline"
+              className="flex-1 h-11 rounded-xl text-[13px] border-border/40"
+              onClick={() => setShowClearDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-red-500 hover:bg-red-600 text-white"
+              onClick={handleClear}
+            >
+              <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+              Clear All
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

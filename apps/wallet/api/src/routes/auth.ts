@@ -12,7 +12,6 @@ import type { Env, Variables } from '../types/env';
 const SIWE_DOMAIN = 'temporium.xyz';
 const SIWE_URI = 'https://temporium.xyz';
 const SIWE_VERSION = '1';
-const SIWE_CHAIN_ID = 42429; // Tempo Testnet
 const CHALLENGE_EXPIRY_MINUTES = 5;
 
 const auth = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -25,6 +24,7 @@ function buildSiweMessage(params: {
   nonce: string;
   issuedAt: string;
   expirationTime: string;
+  chainId: number;
 }): string {
   return `${SIWE_DOMAIN} wants you to sign in with your Ethereum account:
 ${params.address}
@@ -33,7 +33,7 @@ Sign this message to authenticate with Temporium.
 
 URI: ${SIWE_URI}
 Version: ${SIWE_VERSION}
-Chain ID: ${SIWE_CHAIN_ID}
+Chain ID: ${params.chainId}
 Nonce: ${params.nonce}
 Issued At: ${params.issuedAt}
 Expiration Time: ${params.expirationTime}`;
@@ -91,6 +91,7 @@ auth.post('/challenge', zValidator('json', challengeRequestSchema), async c => {
     nonce,
     issuedAt,
     expirationTime,
+    chainId: Number(c.env.TEMPO_CHAIN_ID),
   });
 
   return success(c, {

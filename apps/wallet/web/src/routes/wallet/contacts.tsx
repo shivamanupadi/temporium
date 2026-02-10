@@ -4,20 +4,22 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus,
   Search,
-  User,
+  Users,
   Copy,
   Check,
   Pencil,
   Trash2,
   ExternalLink,
   Loader2,
+  UserPlus,
+  AlertTriangle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog';
 import { useContacts, type Contact } from '@/hooks/useContacts';
-import { formatAddress, isValidAddress } from '@/lib/utils';
+import { formatAddress, isValidAddress, cn } from '@/lib/utils';
 import { getExplorerAddressUrl } from '@/lib/tempo-client';
 import type { Address } from 'viem';
 
@@ -26,6 +28,23 @@ export const Route = createFileRoute('/wallet/contacts')({
 });
 
 type ModalState = 'add' | 'edit' | 'delete' | null;
+
+const avatarColors = [
+  { bg: '#E07A5F', text: '#FFFFFF' },
+  { bg: '#9B72CF', text: '#FFFFFF' },
+  { bg: '#5B9A6F', text: '#FFFFFF' },
+  { bg: '#D4A574', text: '#FFFFFF' },
+  { bg: '#6B8EC4', text: '#FFFFFF' },
+  { bg: '#E5484D', text: '#FFFFFF' },
+];
+
+function getAvatarColor(name: string): { bg: string; text: string } {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return avatarColors[Math.abs(hash) % avatarColors.length]!;
+}
 
 function ContactsPage(): ReactElement {
   const { contacts, isLoading, addContact, editContact, removeContact } = useContacts();
@@ -139,228 +158,385 @@ function ContactsPage(): ReactElement {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-slate-900">Contacts</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {contacts.length} contact{contacts.length !== 1 ? 's' : ''}
-          </p>
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="flex items-center justify-between"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#E07A5F]/10 flex items-center justify-center">
+            <Users className="w-5 h-5 text-[#E07A5F]" />
+          </div>
+          <div>
+            <h1 className="text-xl font-semibold text-[#2D3436]">Contacts</h1>
+            <p className="text-[13px] text-muted-foreground">
+              {contacts.length === 0
+                ? 'No contacts yet'
+                : `${contacts.length} contact${contacts.length !== 1 ? 's' : ''} saved`}
+            </p>
+          </div>
         </div>
-        <Button size="sm" onClick={handleOpenAdd} className="h-8 px-3">
-          <Plus className="h-4 w-4" />
-          Add
-        </Button>
-      </div>
 
-      {/* Search */}
+        <button
+          onClick={handleOpenAdd}
+          className="w-9 h-9 rounded-xl bg-[#E07A5F] hover:bg-[#D4694F] flex items-center justify-center transition-colors shadow-sm"
+        >
+          <Plus className="w-4 h-4 text-white" />
+        </button>
+      </motion.div>
+
+      {/* Search bar */}
       {contacts.length > 0 && (
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: 0.05 }}
+          className="relative"
+        >
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#B5B0AA]" />
           <Input
-            placeholder="Search contacts..."
+            placeholder="Search by name or address..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="pl-9 h-10"
+            className="pl-10 h-11 rounded-xl bg-white border-border/40 text-[13px] placeholder:text-[#B5B0AA] focus-visible:border-[#E07A5F]/40 focus-visible:ring-[#E07A5F]/10"
           />
-        </div>
+        </motion.div>
       )}
 
-      {/* Contacts List */}
-      <div className="bg-white border border-border/50 rounded-2xl shadow-sm overflow-hidden">
-        {isLoading ? (
-          <div className="divide-y divide-border/50">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="flex items-center justify-between px-4 py-3 animate-pulse">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-muted" />
-                  <div>
-                    <div className="h-4 w-24 bg-muted rounded mb-1.5" />
-                    <div className="h-3 w-32 bg-muted rounded" />
-                  </div>
+      {/* Content */}
+      {isLoading ? (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.05 }}
+          className="bg-white border border-border/60 rounded-2xl shadow-sm overflow-hidden"
+        >
+          {[1, 2, 3].map(i => (
+            <div
+              key={i}
+              className={cn('px-6 py-4 animate-pulse', i < 3 && 'border-b border-border/20')}
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-xl bg-[#F5F2ED]" />
+                <div className="flex-1">
+                  <div className="h-4 w-24 bg-[#F5F2ED] rounded-md mb-2" />
+                  <div className="h-3 w-36 bg-[#F5F2ED] rounded-md" />
                 </div>
               </div>
-            ))}
-          </div>
-        ) : filteredContacts.length === 0 ? (
-          <div className="p-8 text-center">
-            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
-              <User className="h-6 w-6 text-muted-foreground" />
             </div>
-            <p className="text-[14px] font-medium text-foreground mb-1">
-              {searchQuery ? 'No contacts found' : 'No contacts yet'}
+          ))}
+        </motion.div>
+      ) : contacts.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.05 }}
+          className="bg-white border border-border/60 rounded-2xl shadow-sm"
+        >
+          <div className="px-6 py-14 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-[#E07A5F]/8 flex items-center justify-center mx-auto mb-4">
+              <Users className="w-7 h-7 text-[#E07A5F]" />
+            </div>
+            <h2 className="text-[15px] font-semibold text-[#2D3436] mb-1.5">No Contacts Yet</h2>
+            <p className="text-[13px] text-muted-foreground max-w-[260px] mx-auto leading-relaxed mb-5">
+              Save wallet addresses for quick and easy payments to people you transact with often.
             </p>
-            <p className="text-[13px] text-muted-foreground mb-4">
-              {searchQuery ? 'Try a different search' : 'Add contacts for quick payments'}
-            </p>
-            {!searchQuery && (
-              <Button variant="outline" size="sm" onClick={handleOpenAdd}>
-                <Plus className="h-4 w-4" />
-                Add Contact
-              </Button>
-            )}
+            <button
+              onClick={handleOpenAdd}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#E07A5F] hover:bg-[#D4694F] text-white text-[13px] font-semibold transition-colors shadow-sm"
+            >
+              <UserPlus className="w-4 h-4" />
+              Add First Contact
+            </button>
           </div>
-        ) : (
-          <AnimatePresence>
-            {filteredContacts.map((contact, index) => (
-              <motion.div
-                key={contact.id}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ delay: index * 0.03 }}
-                className={`flex items-center justify-between px-4 py-3 ${
-                  index < filteredContacts.length - 1 ? 'border-b border-border/50' : ''
-                }`}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <span className="text-[13px] font-semibold text-primary">
-                      {contact.name.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[13px] font-medium text-foreground truncate">
-                      {contact.name}
-                    </p>
-                    <div className="flex items-center gap-1">
-                      <span className="text-[11px] text-muted-foreground font-mono">
-                        {formatAddress(contact.address, 6)}
+        </motion.div>
+      ) : filteredContacts.length === 0 ? (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white border border-border/60 rounded-2xl shadow-sm"
+        >
+          <div className="px-6 py-14 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-[#F5F2ED] flex items-center justify-center mx-auto mb-4">
+              <Search className="w-7 h-7 text-[#9B9590]" />
+            </div>
+            <h2 className="text-[15px] font-semibold text-[#2D3436] mb-1.5">No Results</h2>
+            <p className="text-[13px] text-muted-foreground">
+              No contacts match &ldquo;{searchQuery}&rdquo;
+            </p>
+          </div>
+        </motion.div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+          className="bg-white border border-border/60 rounded-2xl shadow-sm overflow-hidden"
+        >
+          <AnimatePresence mode="popLayout">
+            {filteredContacts.map((contact, index) => {
+              const isLast = index === filteredContacts.length - 1;
+              const colors = getAvatarColor(contact.name);
+              const isCopied = copiedId === contact.id;
+
+              return (
+                <motion.div
+                  key={contact.id}
+                  layout
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3, delay: index * 0.03 }}
+                  className={cn(
+                    'px-6 py-4 hover:bg-[#FDFBF8] transition-colors',
+                    !isLast && 'border-b border-border/20'
+                  )}
+                >
+                  <div className="flex items-center gap-3.5">
+                    {/* Avatar */}
+                    <div
+                      className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: `${colors.bg}14` }}
+                    >
+                      <span className="text-[15px] font-bold" style={{ color: colors.bg }}>
+                        {contact.name.charAt(0).toUpperCase()}
                       </span>
+                    </div>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-[14px] font-semibold text-[#2D3436] truncate mb-0.5">
+                        {contact.name}
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] text-[#9B9590] font-mono truncate">
+                          {formatAddress(contact.address, 6)}
+                        </span>
+                        <a
+                          href={getExplorerAddressUrl(contact.address)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[10px] font-medium text-[#5B9A6F] hover:text-[#4A8A5E] transition-colors shrink-0"
+                        >
+                          <ExternalLink className="w-2.5 h-2.5" />
+                          Explorer
+                        </a>
+                      </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex items-center gap-1 shrink-0">
                       <button
-                        onClick={() =>
-                          window.open(getExplorerAddressUrl(contact.address), '_blank')
-                        }
-                        className="p-0.5 rounded hover:bg-muted transition-colors"
+                        onClick={() => handleCopy(contact)}
+                        className={cn(
+                          'w-8 h-8 rounded-lg flex items-center justify-center transition-all',
+                          isCopied
+                            ? 'bg-[#5B9A6F]/10'
+                            : 'border border-border/30 bg-[#FDFBF8] hover:border-[#5B9A6F]/30 hover:bg-[#5B9A6F]/5'
+                        )}
                       >
-                        <ExternalLink className="h-3 w-3 text-muted-foreground hover:text-primary" />
+                        {isCopied ? (
+                          <Check className="w-3.5 h-3.5 text-[#5B9A6F]" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5 text-[#B5B0AA]" />
+                        )}
+                      </button>
+                      <button
+                        onClick={() => handleOpenEdit(contact)}
+                        className="w-8 h-8 rounded-lg border border-border/30 bg-[#FDFBF8] hover:border-[#9B72CF]/30 hover:bg-[#9B72CF]/5 flex items-center justify-center transition-all"
+                      >
+                        <Pencil className="w-3.5 h-3.5 text-[#B5B0AA]" />
+                      </button>
+                      <button
+                        onClick={() => handleOpenDelete(contact)}
+                        className="w-8 h-8 rounded-lg border border-border/30 bg-[#FDFBF8] hover:border-red-200 hover:bg-red-50 flex items-center justify-center transition-all group"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-[#B5B0AA] group-hover:text-red-500 transition-colors" />
                       </button>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => handleCopy(contact)}
-                    className="p-2 rounded-md hover:bg-muted transition-colors"
-                  >
-                    {copiedId === contact.id ? (
-                      <Check className="h-3.5 w-3.5 text-emerald-500" />
-                    ) : (
-                      <Copy className="h-3.5 w-3.5 text-muted-foreground" />
-                    )}
-                  </button>
-                  <button
-                    onClick={() => handleOpenEdit(contact)}
-                    className="p-2 rounded-md hover:bg-muted transition-colors"
-                  >
-                    <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
-                  </button>
-                  <button
-                    onClick={() => handleOpenDelete(contact)}
-                    className="p-2 rounded-md hover:bg-red-50 transition-colors"
-                  >
-                    <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-red-500" />
-                  </button>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </AnimatePresence>
-        )}
-      </div>
+        </motion.div>
+      )}
 
-      {/* Add/Edit Modal */}
+      {/* Add/Edit Dialog */}
       <Dialog open={modalState === 'add' || modalState === 'edit'} onOpenChange={() => resetForm()}>
-        <DialogContent className="max-w-sm p-0 overflow-hidden">
-          <div className="p-5">
-            <DialogTitle className="text-[15px] font-semibold mb-4">
-              {modalState === 'add' ? 'Add Contact' : 'Edit Contact'}
-            </DialogTitle>
-            <DialogDescription className="sr-only">
-              {modalState === 'add' ? 'Add a new contact' : 'Edit contact details'}
-            </DialogDescription>
+        <DialogContent className="max-w-[340px] p-0 gap-0 overflow-hidden rounded-2xl">
+          <DialogTitle className="sr-only">
+            {modalState === 'add' ? 'Add Contact' : 'Edit Contact'}
+          </DialogTitle>
+          <DialogDescription className="sr-only">
+            {modalState === 'add' ? 'Add a new contact' : 'Edit contact details'}
+          </DialogDescription>
 
-            <div className="space-y-4">
-              <div>
-                <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5 block">
-                  Name
-                </label>
-                <Input
-                  placeholder="e.g., Alice, Bob..."
-                  value={name}
-                  onChange={e => setName(e.target.value)}
-                  className="h-10"
-                />
-              </div>
-              <div>
-                <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5 block">
-                  Address
-                </label>
-                <Input
-                  placeholder="0x..."
-                  value={address}
-                  onChange={e => setAddress(e.target.value)}
-                  className="h-10 font-mono text-[13px]"
-                />
-              </div>
-            </div>
+          <div className="relative px-6 pt-8 pb-2 text-center">
+            <div className="absolute inset-0 bg-gradient-to-b from-[#E07A5F]/[0.04] to-transparent pointer-events-none" />
 
-            <div className="flex gap-2 mt-6">
-              <Button variant="outline" className="flex-1 h-10" onClick={resetForm}>
-                Cancel
-              </Button>
-              <Button
-                className="flex-1 h-10"
-                onClick={modalState === 'add' ? handleAdd : handleEdit}
-                disabled={isSubmitting || !name.trim() || !address.trim()}
+            <div className="relative">
+              <div
+                className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                style={{
+                  backgroundColor:
+                    modalState === 'edit' && selectedContact
+                      ? `${getAvatarColor(selectedContact.name).bg}14`
+                      : '#E07A5F14',
+                }}
               >
-                {isSubmitting ? 'Saving...' : modalState === 'add' ? 'Add Contact' : 'Save Changes'}
-              </Button>
+                {modalState === 'edit' ? (
+                  <Pencil className="w-7 h-7 text-[#9B72CF]" />
+                ) : (
+                  <UserPlus className="w-7 h-7 text-[#E07A5F]" />
+                )}
+              </div>
+              <h3 className="text-[15px] font-semibold text-[#2D3436] mb-1">
+                {modalState === 'add' ? 'Add Contact' : 'Edit Contact'}
+              </h3>
+              <p className="text-[12px] text-muted-foreground">
+                {modalState === 'add'
+                  ? 'Save a wallet address for quick access'
+                  : 'Update contact details'}
+              </p>
             </div>
+          </div>
+
+          <div className="px-6 py-5 space-y-4">
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-2 block">
+                Name
+              </label>
+              <Input
+                placeholder="e.g., Alice, Bob..."
+                value={name}
+                onChange={e => setName(e.target.value)}
+                className="h-11 rounded-xl bg-[#FDFBF8] border-border/40 text-[13px] placeholder:text-[#B5B0AA] focus-visible:border-[#E07A5F]/40 focus-visible:ring-[#E07A5F]/10"
+              />
+            </div>
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-2 block">
+                Wallet Address
+              </label>
+              <Input
+                placeholder="0x..."
+                value={address}
+                onChange={e => setAddress(e.target.value)}
+                className="h-11 rounded-xl bg-[#FDFBF8] border-border/40 font-mono text-[12px] placeholder:text-[#B5B0AA] focus-visible:border-[#E07A5F]/40 focus-visible:ring-[#E07A5F]/10"
+              />
+            </div>
+          </div>
+
+          <div className="px-5 pb-5 flex items-center gap-2.5">
+            <Button
+              variant="outline"
+              className="flex-1 h-11 rounded-xl text-[13px] border-border/40"
+              onClick={resetForm}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-[#E07A5F] hover:bg-[#D4694F] text-white"
+              onClick={modalState === 'add' ? handleAdd : handleEdit}
+              disabled={isSubmitting || !name.trim() || !address.trim()}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                  Saving...
+                </>
+              ) : modalState === 'add' ? (
+                <>
+                  <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+                  Add Contact
+                </>
+              ) : (
+                <>
+                  <Check className="w-3.5 h-3.5 mr-1.5" />
+                  Save Changes
+                </>
+              )}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation Dialog */}
       <Dialog open={modalState === 'delete'} onOpenChange={() => resetForm()}>
-        <DialogContent className="max-w-sm p-0 overflow-hidden">
-          <div className="p-5 text-center">
-            <DialogTitle className="sr-only">Delete Contact</DialogTitle>
-            <DialogDescription className="sr-only">Confirm contact deletion</DialogDescription>
+        <DialogContent className="max-w-[320px] p-0 gap-0 overflow-hidden rounded-2xl">
+          <DialogTitle className="sr-only">Delete Contact</DialogTitle>
+          <DialogDescription className="sr-only">Confirm contact deletion</DialogDescription>
 
-            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-              <Trash2 className="h-6 w-6 text-red-500" />
+          <div className="relative px-6 pt-8 pb-5 text-center">
+            <div className="absolute inset-0 bg-gradient-to-b from-red-500/[0.04] to-transparent pointer-events-none" />
+
+            <div className="relative">
+              <div className="w-14 h-14 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle className="w-7 h-7 text-red-500" />
+              </div>
+
+              <h3 className="text-[15px] font-semibold text-[#2D3436] mb-1.5">Delete Contact?</h3>
+              <p className="text-[13px] text-muted-foreground leading-relaxed">
+                <span className="font-semibold text-[#2D3436]">{selectedContact?.name}</span> will
+                be permanently removed from your contacts.
+              </p>
             </div>
+          </div>
 
-            <p className="text-[15px] font-semibold text-foreground mb-1">Delete Contact?</p>
-            <p className="text-[13px] text-muted-foreground mb-6">
-              Are you sure you want to delete <strong>{selectedContact?.name}</strong>? This action
-              cannot be undone.
-            </p>
-
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                className="flex-1 h-10"
-                onClick={resetForm}
-                disabled={isSubmitting}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                className="flex-1 h-10"
-                onClick={handleDelete}
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Deleting
-                  </>
-                ) : (
-                  'Delete'
-                )}
-              </Button>
+          {/* Contact preview card */}
+          {selectedContact && (
+            <div className="mx-5 mb-5">
+              <div className="bg-[#FDFBF8] rounded-xl border border-border/30 px-4 py-3 flex items-center gap-3">
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                  style={{ backgroundColor: `${getAvatarColor(selectedContact.name).bg}14` }}
+                >
+                  <span
+                    className="text-[13px] font-bold"
+                    style={{ color: getAvatarColor(selectedContact.name).bg }}
+                  >
+                    {selectedContact.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-medium text-[#2D3436] truncate">
+                    {selectedContact.name}
+                  </p>
+                  <p className="text-[11px] text-[#9B9590] font-mono truncate">
+                    {formatAddress(selectedContact.address, 6)}
+                  </p>
+                </div>
+              </div>
             </div>
+          )}
+
+          <div className="px-5 pb-5 flex items-center gap-2.5">
+            <Button
+              variant="outline"
+              className="flex-1 h-11 rounded-xl text-[13px] border-border/40"
+              onClick={resetForm}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-red-500 hover:bg-red-600 text-white"
+              onClick={handleDelete}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                  Delete
+                </>
+              )}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

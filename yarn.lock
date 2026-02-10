@@ -3138,15 +3138,15 @@
     "@types/babel__core" "^7.20.5"
     react-refresh "^0.18.0"
 
-"@wagmi/connectors@7.0.5":
-  version "7.0.5"
-  resolved "https://registry.yarnpkg.com/@wagmi/connectors/-/connectors-7.0.5.tgz#43e685d968224877c4774ba613989e0033b37a7f"
-  integrity sha512-2Ot4IK9CnqiR1RV8NZo6ls4puYckHx1vzzj/NcfJhMsumjz1GLZ6zHDFzdXVZ8xztsik4AQoBXp0/cJqMqStKQ==
+"@wagmi/connectors@7.1.6":
+  version "7.1.6"
+  resolved "https://registry.yarnpkg.com/@wagmi/connectors/-/connectors-7.1.6.tgz#ef2ea5c3652d8c91548d119fc100c25997a39e9a"
+  integrity sha512-TKBTxSmiUh17tHdD7X1TQLtNIA4exuodPCwC0YuSaIRw8co1EivrUHjsHVsrJ7XKEsQhfp97ZRAVEssGcA4DPA==
 
-"@wagmi/core@3.0.1":
-  version "3.0.1"
-  resolved "https://registry.yarnpkg.com/@wagmi/core/-/core-3.0.1.tgz#6004f55f24fae4b480220479dc5c9d8a8ecab506"
-  integrity sha512-i+wNyvPPxJbaaDeIDflqJyCymrMuelcZr/XvVNC2/aj7tJkEQmsAYguaozpImr39RpMLt8NFQBW6pW/n3WDZ1A==
+"@wagmi/core@3.3.2", "@wagmi/core@^3.2.0":
+  version "3.3.2"
+  resolved "https://registry.yarnpkg.com/@wagmi/core/-/core-3.3.2.tgz#dde30b336aaf5620bb1c09fb2b54d52a9efd831f"
+  integrity sha512-e4aefdzEki657u7P6miuBijp0WKmtSsuY2/NT9e3zfJxr+QX5Edr5EcFF0Cg5OMMQ1y32x+g8ogMDppD9aX3kw==
   dependencies:
     eventemitter3 "5.0.1"
     mipd "0.0.7"
@@ -7086,10 +7086,24 @@ own-keys@^1.0.1:
     object-keys "^1.1.1"
     safe-push-apply "^1.0.0"
 
-ox@0.11.1, ox@~0.11.1:
+ox@0.11.1:
   version "0.11.1"
   resolved "https://registry.yarnpkg.com/ox/-/ox-0.11.1.tgz#ee1d1b88e794533db244e90bf7fb3863293169f3"
   integrity sha512-1l1gOLAqg0S0xiN1dH5nkPna8PucrZgrIJOfS49MLNiMevxu07Iz4ZjuJS9N+xifvT+PsZyIptS7WHM8nC+0+A==
+  dependencies:
+    "@adraffy/ens-normalize" "^1.11.0"
+    "@noble/ciphers" "^1.3.0"
+    "@noble/curves" "1.9.1"
+    "@noble/hashes" "^1.8.0"
+    "@scure/bip32" "^1.7.0"
+    "@scure/bip39" "^1.6.0"
+    abitype "^1.2.3"
+    eventemitter3 "5.0.1"
+
+ox@0.11.3, ox@~0.11.1:
+  version "0.11.3"
+  resolved "https://registry.yarnpkg.com/ox/-/ox-0.11.3.tgz#f50be1cae88822f5111b1e3f4a324c4c07eed422"
+  integrity sha512-1bWYGk/xZel3xro3l8WGg6eq4YEKlaqvyMtVhfMFpbJzK2F6rj4EDRtqDCWVEJMkzcmEi9uW2QxsqELokOlarw==
   dependencies:
     "@adraffy/ens-normalize" "^1.11.0"
     "@noble/ciphers" "^1.3.0"
@@ -8604,6 +8618,14 @@ tempo.ts@^0.12.1:
     idb-keyval "^6.2.2"
     ox "~0.11.1"
 
+tempo.ts@^0.14.0:
+  version "0.14.0"
+  resolved "https://registry.yarnpkg.com/tempo.ts/-/tempo.ts-0.14.0.tgz#da26e51efa3a6c87addd762cb38fc676bae2378c"
+  integrity sha512-tyNg6pomYGqXpiRm0PDLwzOcifd//C9J+B+4rvbIHIwvwqxE1jres1YuaVSayo0JE0hzmXi/HZjJOsbSRdu+kg==
+  dependencies:
+    "@remix-run/fetch-router" "~0.12.0"
+    ox "~0.11.1"
+
 terser-webpack-plugin@^5.3.11:
   version "5.3.16"
   resolved "https://registry.yarnpkg.com/terser-webpack-plugin/-/terser-webpack-plugin-5.3.16.tgz#741e448cc3f93d8026ebe4f7ef9e4afacfd56330"
@@ -9120,6 +9142,20 @@ viem@^2.43.3:
     ox "0.11.1"
     ws "8.18.3"
 
+viem@^2.45.2:
+  version "2.45.2"
+  resolved "https://registry.yarnpkg.com/viem/-/viem-2.45.2.tgz#b609caf50d3ad1b6151fc9eebabe3f7953d6e47f"
+  integrity sha512-GXPMmj0ukqFNL87sgpsZBy4CjGvsFQk42/EUdsn8dv3ZWtL4ukDXNCM0nME2hU0IcuS29CuUbrwbZN6iWxAipw==
+  dependencies:
+    "@noble/curves" "1.9.1"
+    "@noble/hashes" "1.8.0"
+    "@scure/bip32" "1.7.0"
+    "@scure/bip39" "1.6.0"
+    abitype "1.2.3"
+    isows "1.0.7"
+    ox "0.11.3"
+    ws "8.18.3"
+
 vite-plugin-node-polyfills@^0.24.0:
   version "0.24.0"
   resolved "https://registry.yarnpkg.com/vite-plugin-node-polyfills/-/vite-plugin-node-polyfills-0.24.0.tgz#4a2e984bba134017fc88cace0149cf8afdb50b54"
@@ -9147,13 +9183,13 @@ vm-browserify@^1.0.1:
   resolved "https://registry.yarnpkg.com/vm-browserify/-/vm-browserify-1.1.2.tgz#78641c488b8e6ca91a75f511e7a3b32a86e5dda0"
   integrity sha512-2ham8XPWTONajOR0ohOKOHXkm3+gaBmGut3SRuu75xLd/RRaY6vqgh8NBYYk7+RW3u5AtzPQZG8F10LHkl0lAQ==
 
-wagmi@^3.1.0:
-  version "3.1.3"
-  resolved "https://registry.yarnpkg.com/wagmi/-/wagmi-3.1.3.tgz#cffd1ab6d7e64131134a3aa8ddb2aa0588fc0357"
-  integrity sha512-8qZmT3VFr3EJr9cIaAJKzBY3kAMSW7DX3P3FIWDmE2Y7/K+SZPtkF73JATYrcqAa6L6QsBaQEnGzjBYnIHw2dA==
+wagmi@^3.2.0:
+  version "3.4.2"
+  resolved "https://registry.yarnpkg.com/wagmi/-/wagmi-3.4.2.tgz#c2eab25307e6ac30300608a5e0fd36e60c0f86e7"
+  integrity sha512-ZPZUquVh75NCHvb0qI+SBegUzcFHGIGtIKCL6gtHLcYHMcEMllqZGXtkIpc98IUq5Vq7Qey4FSG4ohTtMfQ/Yw==
   dependencies:
-    "@wagmi/connectors" "7.0.5"
-    "@wagmi/core" "3.0.1"
+    "@wagmi/connectors" "7.1.6"
+    "@wagmi/core" "3.3.2"
     use-sync-external-store "1.4.0"
 
 watchpack@^2.4.4:

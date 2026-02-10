@@ -34,9 +34,9 @@ interface NavItemProps {
 function NavItem({ to, icon, label, isCollapsed }: NavItemProps): ReactElement {
   const location = useLocation();
   const isActive =
-    location.pathname === to ||
-    location.pathname.startsWith(to + '/') ||
-    (to === '/wallet' && location.pathname === '/wallet');
+    to === '/wallet'
+      ? location.pathname === '/wallet'
+      : location.pathname === to || location.pathname.startsWith(to + '/');
 
   const linkElement = (
     <Link
@@ -45,14 +45,14 @@ function NavItem({ to, icon, label, isCollapsed }: NavItemProps): ReactElement {
         'group flex items-center gap-2.5 h-8 rounded-md text-[14px] font-medium transition-all',
         isCollapsed ? 'justify-center w-8 mx-auto' : 'px-2.5',
         isActive
-          ? 'font-semibold bg-[#f2f2f2]'
-          : 'text-slate-800 hover:text-slate-900 hover:bg-slate-100'
+          ? 'font-semibold bg-[#F5F2ED]'
+          : 'text-[#3D4446] hover:text-[#2D3436] hover:bg-[#F5F2ED]'
       )}
     >
       <span
         className={cn(
           'flex-shrink-0 transition-transform duration-500 ease-in-out group-hover:rotate-[360deg]',
-          isActive ? 'text-[#6b4dee]' : ''
+          isActive ? 'text-[#E07A5F]' : ''
         )}
       >
         {icon}
@@ -142,20 +142,20 @@ export function Sidebar({
         <Link to="/wallet" className="flex items-center gap-2.5">
           <img src="/logo.png" alt="Temporium" className="w-6 h-6 rounded-md" />
           {!collapsed && (
-            <span className="text-lg font-bold text-slate-900 tracking-tight">Temporium</span>
+            <span className="text-lg font-bold text-[#2D3436] tracking-tight">Temporium</span>
           )}
         </Link>
         {!collapsed && (
           <button
             onClick={onToggleCollapse}
-            className="hidden md:flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            className="hidden md:flex h-8 w-8 items-center justify-center rounded-lg text-[#9B9590] hover:text-[#6B6560] hover:bg-[#F5F2ED] transition-colors"
           >
             <PanelLeftClose className="w-4 h-4" />
           </button>
         )}
         <button
           onClick={onClose}
-          className="md:hidden h-8 w-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+          className="md:hidden h-8 w-8 flex items-center justify-center rounded-lg text-[#9B9590] hover:text-[#6B6560] hover:bg-[#F5F2ED] transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
@@ -168,7 +168,7 @@ export function Sidebar({
             <TooltipTrigger asChild>
               <button
                 onClick={onToggleCollapse}
-                className="h-8 w-full flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                className="h-8 w-full flex items-center justify-center rounded-lg text-[#9B9590] hover:text-[#6B6560] hover:bg-[#F5F2ED] transition-colors"
               >
                 <PanelLeft className="w-4 h-4" />
               </button>
@@ -189,28 +189,43 @@ export function Sidebar({
               <TooltipTrigger asChild>
                 <button
                   onClick={() => setShowNetworkMenu(!showNetworkMenu)}
-                  className="w-9 h-9 mx-auto flex items-center justify-center rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer"
+                  className={cn(
+                    'w-9 h-9 mx-auto flex items-center justify-center rounded-xl transition-all cursor-pointer',
+                    showNetworkMenu
+                      ? 'bg-[#5B9A6F]/10 ring-1 ring-[#5B9A6F]/20'
+                      : 'border border-[#EDE9E3] hover:border-[#DDD8D1] hover:shadow-sm'
+                  )}
                 >
-                  <Globe className="w-4 h-4 text-emerald-500" />
+                  <Globe className="w-4 h-4 text-[#5B9A6F]" />
                 </button>
               </TooltipTrigger>
               <TooltipContent side="right" sideOffset={8}>
-                Testnet
+                Tempo Testnet
               </TooltipContent>
             </Tooltip>
           ) : (
             <button
               onClick={() => setShowNetworkMenu(!showNetworkMenu)}
-              className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl border border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm transition-all cursor-pointer"
+              className={cn(
+                'w-full flex items-center justify-between gap-2 px-3 py-2 rounded-xl transition-all cursor-pointer',
+                showNetworkMenu
+                  ? 'bg-[#5B9A6F]/[0.06] ring-1 ring-[#5B9A6F]/15'
+                  : 'border border-[#EDE9E3] hover:border-[#DDD8D1] hover:shadow-sm'
+              )}
             >
               <div className="flex items-center gap-2.5">
-                <Globe className="w-4 h-4 text-emerald-500" />
-                <span className="text-[13px] font-medium text-slate-700">Testnet</span>
+                <div className="w-6 h-6 rounded-lg bg-[#5B9A6F]/10 flex items-center justify-center">
+                  <Globe className="w-3.5 h-3.5 text-[#5B9A6F]" />
+                </div>
+                <div className="text-left">
+                  <p className="text-[12px] font-semibold text-[#2D3436] leading-none">Testnet</p>
+                  <p className="text-[10px] text-[#9B9590] mt-0.5 leading-none">Moderato</p>
+                </div>
               </div>
               <ChevronDown
                 className={cn(
-                  'w-4 h-4 text-slate-400 transition-transform duration-200',
-                  showNetworkMenu && 'rotate-180'
+                  'w-3.5 h-3.5 transition-transform duration-200',
+                  showNetworkMenu ? 'rotate-180 text-[#5B9A6F]' : 'text-[#B5B0AA]'
                 )}
               />
             </button>
@@ -221,31 +236,44 @@ export function Sidebar({
             <div
               onMouseDown={e => e.stopPropagation()}
               className={cn(
-                'absolute z-50 rounded-xl bg-white border border-slate-200 shadow-xl overflow-hidden',
-                collapsed ? 'left-full top-0 ml-2 min-w-[200px]' : 'left-0 right-0 top-full mt-2'
+                'absolute z-50 rounded-xl bg-white border border-[#EDE9E3] shadow-xl shadow-black/8 overflow-hidden',
+                collapsed ? 'left-full top-0 ml-2 min-w-[220px]' : 'left-0 right-0 top-full mt-2'
               )}
             >
-              <div className="px-2 pt-2 pb-1.5">
-                <p className="px-2 pb-2 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                  Select Network
+              <div className="px-2 pt-2.5 pb-1">
+                <p className="px-2 pb-2 text-[10px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                  Network
                 </p>
                 <button
                   onClick={() => setShowNetworkMenu(false)}
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] bg-slate-50 rounded-lg border border-slate-100 cursor-pointer"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] bg-[#5B9A6F]/[0.06] rounded-lg ring-1 ring-[#5B9A6F]/15 cursor-pointer"
                 >
-                  <Globe className="w-4 h-4 text-emerald-500" />
-                  <span className="font-medium text-slate-800">Testnet</span>
-                  <Check className="w-4 h-4 text-emerald-500 ml-auto" />
+                  <div className="w-7 h-7 rounded-lg bg-[#5B9A6F]/10 flex items-center justify-center flex-shrink-0">
+                    <Globe className="w-3.5 h-3.5 text-[#5B9A6F]" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-[12px] font-semibold text-[#2D3436] leading-none">Testnet</p>
+                    <p className="text-[10px] text-[#9B9590] mt-1 leading-none">Moderato</p>
+                  </div>
+                  <div className="w-5 h-5 rounded-full bg-[#5B9A6F]/10 flex items-center justify-center flex-shrink-0">
+                    <Check className="w-3 h-3 text-[#5B9A6F]" strokeWidth={2.5} />
+                  </div>
                 </button>
               </div>
-              <div className="px-2 pb-2">
+              <div className="mx-2 border-t border-[#EDE9E3]/60" />
+              <div className="px-2 py-1.5">
                 <button
                   disabled
-                  className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] text-slate-400 rounded-lg cursor-not-allowed opacity-60"
+                  className="w-full flex items-center gap-3 px-3 py-2.5 text-[13px] rounded-lg cursor-not-allowed opacity-50"
                 >
-                  <Globe className="w-4 h-4 text-slate-300" />
-                  <span>Mainnet</span>
-                  <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-amber-50 text-amber-600 font-medium">
+                  <div className="w-7 h-7 rounded-lg bg-[#EDE9E3]/60 flex items-center justify-center flex-shrink-0">
+                    <Globe className="w-3.5 h-3.5 text-[#B5B0AA]" />
+                  </div>
+                  <div className="flex-1 text-left">
+                    <p className="text-[12px] font-medium text-[#6B6560] leading-none">Mainnet</p>
+                    <p className="text-[10px] text-[#9B9590] mt-1 leading-none">Coming soon</p>
+                  </div>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-600 font-semibold uppercase tracking-wide flex-shrink-0">
                     Soon
                   </span>
                 </button>
@@ -256,7 +284,7 @@ export function Sidebar({
 
         {/* Main Section */}
         {!collapsed && (
-          <p className="px-3 py-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+          <p className="px-3 py-2 text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
             Main
           </p>
         )}
@@ -271,11 +299,11 @@ export function Sidebar({
 
         {/* Payments Section */}
         {!collapsed && (
-          <p className="px-3 pt-6 pb-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+          <p className="px-3 pt-6 pb-2 text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
             Payments
           </p>
         )}
-        {collapsed && <div className="my-3 mx-2 border-t border-slate-100" />}
+        {collapsed && <div className="my-3 mx-2 border-t border-[#EDE9E3]" />}
         <div>
           <NavItem
             to="/wallet/send"
@@ -293,11 +321,11 @@ export function Sidebar({
 
         {/* Manage Section */}
         {!collapsed && (
-          <p className="px-3 pt-6 pb-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+          <p className="px-3 pt-6 pb-2 text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
             Manage
           </p>
         )}
-        {collapsed && <div className="my-3 mx-2 border-t border-slate-100" />}
+        {collapsed && <div className="my-3 mx-2 border-t border-[#EDE9E3]" />}
         <div>
           <NavItem
             to="/wallet/activity"
@@ -324,8 +352,8 @@ export function Sidebar({
       <div
         ref={dropdownRef}
         className={cn(
-          'relative p-3 border-t border-slate-200/80',
-          collapsed && 'flex flex-col items-center'
+          'relative border-t border-[#EDE9E3]/80',
+          collapsed ? 'p-2 flex flex-col items-center' : 'p-3'
         )}
       >
         {collapsed ? (
@@ -333,27 +361,43 @@ export function Sidebar({
             <TooltipTrigger asChild>
               <button
                 onClick={() => setShowMenu(!showMenu)}
-                className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                className={cn(
+                  'w-9 h-9 rounded-xl flex items-center justify-center transition-all',
+                  showMenu ? 'bg-[#E07A5F]/10 ring-1 ring-[#E07A5F]/20' : 'hover:bg-[#F5F2ED]'
+                )}
               >
-                <Wallet className="w-5 h-5 text-slate-600" />
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#E07A5F] to-[#9B72CF] flex items-center justify-center">
+                  <Wallet className="w-3 h-3 text-white" strokeWidth={2} />
+                </div>
               </button>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={8}>
-              Wallet
+              {address ? formatAddress(address, 6) : 'Wallet'}
             </TooltipContent>
           </Tooltip>
         ) : (
           <button
             onClick={() => setShowMenu(!showMenu)}
-            className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-slate-50 transition-colors text-left"
+            className={cn(
+              'w-full flex items-center gap-3 px-2.5 py-2 rounded-xl transition-all text-left',
+              showMenu ? 'bg-[#F5F2ED] ring-1 ring-[#EDE9E3]' : 'hover:bg-[#FAF8F5]'
+            )}
           >
-            <Wallet className="w-5 h-5 text-slate-600 flex-shrink-0" />
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#E07A5F] to-[#9B72CF] flex items-center justify-center flex-shrink-0">
+              <Wallet className="w-3.5 h-3.5 text-white" strokeWidth={2} />
+            </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[13px] font-medium text-slate-900 truncate">
+              <p className="text-[12px] font-semibold text-[#2D3436] truncate">My Wallet</p>
+              <p className="text-[11px] font-mono text-[#9B9590] truncate">
                 {address ? formatAddress(address, 6) : 'Not connected'}
               </p>
             </div>
-            <ChevronsUpDown className="w-4 h-4 text-slate-400 flex-shrink-0" />
+            <ChevronsUpDown
+              className={cn(
+                'w-3.5 h-3.5 flex-shrink-0 transition-colors',
+                showMenu ? 'text-[#6B6560]' : 'text-[#B5B0AA]'
+              )}
+            />
           </button>
         )}
 
@@ -362,27 +406,30 @@ export function Sidebar({
           <div
             onMouseDown={e => e.stopPropagation()}
             className={cn(
-              'absolute z-50 rounded-md bg-white border border-slate-200 shadow-md overflow-hidden min-w-[200px]',
+              'absolute z-50 rounded-xl bg-white border border-[#EDE9E3] shadow-xl shadow-black/8 overflow-hidden min-w-[220px]',
               collapsed ? 'left-full bottom-0 ml-2' : 'left-3 right-3 bottom-full mb-2'
             )}
           >
-            <div className="px-3 py-2.5 bg-slate-50/80 border-b border-slate-100">
-              <p className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-1">
-                Wallet
-              </p>
-              <p className="text-[11px] font-mono text-slate-400 break-all leading-relaxed">
+            <div className="px-3.5 py-3 bg-gradient-to-b from-[#FAF8F5] to-white border-b border-[#EDE9E3]/60">
+              <div className="flex items-center gap-2.5 mb-2">
+                <div className="w-6 h-6 rounded-full bg-gradient-to-br from-[#E07A5F] to-[#9B72CF] flex items-center justify-center">
+                  <Wallet className="w-3 h-3 text-white" strokeWidth={2} />
+                </div>
+                <p className="text-[12px] font-semibold text-[#2D3436]">My Wallet</p>
+              </div>
+              <p className="text-[10.5px] font-mono text-[#9B9590] break-all leading-relaxed bg-[#F5F2ED]/60 rounded-lg px-2.5 py-1.5">
                 {address}
               </p>
             </div>
-            <div className="p-1">
+            <div className="p-1.5">
               <button
                 onClick={handleCopy}
-                className="w-full flex items-center gap-2 px-2.5 py-2 text-[13px] text-slate-600 hover:bg-slate-50 rounded transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-[#4D5456] hover:bg-[#FAF8F5] rounded-lg transition-colors"
               >
                 {copied ? (
-                  <Check className="w-4 h-4 text-emerald-500" />
+                  <Check className="w-4 h-4 text-[#5B9A6F]" />
                 ) : (
-                  <Copy className="w-4 h-4 text-slate-400" />
+                  <Copy className="w-4 h-4 text-[#9B9590]" />
                 )}
                 {copied ? 'Copied!' : 'Copy address'}
               </button>
@@ -390,18 +437,18 @@ export function Sidebar({
                 href={`${LINKS.explorer}/address/${address}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full flex items-center gap-2 px-2.5 py-2 text-[13px] text-slate-600 hover:bg-slate-50 rounded transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-[#4D5456] hover:bg-[#FAF8F5] rounded-lg transition-colors"
               >
-                <ExternalLink className="w-4 h-4 text-slate-400" />
+                <ExternalLink className="w-4 h-4 text-[#9B9590]" />
                 View on Explorer
               </a>
-              <div className="my-1 border-t border-slate-100" />
+              <div className="my-1 mx-2 border-t border-[#EDE9E3]/60" />
               <button
                 onClick={() => {
                   disconnect();
                   setShowMenu(false);
                 }}
-                className="w-full flex items-center gap-2 px-2.5 py-2 text-[13px] text-red-600 hover:bg-red-50 rounded transition-colors"
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-[13px] text-red-500 hover:bg-red-50 rounded-lg transition-colors"
               >
                 <LogOut className="w-4 h-4" />
                 Disconnect
@@ -418,7 +465,7 @@ export function Sidebar({
       {/* Desktop Sidebar */}
       <aside
         className={cn(
-          'hidden md:flex flex-col fixed left-0 top-0 h-screen bg-white border-r border-slate-200/80 z-40 transition-all duration-200 ease-out',
+          'hidden md:flex flex-col fixed left-0 top-0 h-screen bg-white border-r border-[#EDE9E3]/80 z-40 transition-all duration-200 ease-out',
           collapsed ? 'w-[68px]' : 'w-56'
         )}
       >

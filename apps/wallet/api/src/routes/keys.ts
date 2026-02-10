@@ -2,12 +2,12 @@ import { Hono } from 'hono';
 import { Handler, Kv } from 'tempo.ts/server';
 import { keccak256 } from 'viem';
 import {
+  createTempoChain,
   createTempoPublicClient,
   createTempoWalletClient,
   hashCredentialId,
   validateAndNormalizePublicKey,
   normalizePublicKey,
-  tempoTestnet,
   type Address,
   type Hex,
   type PublicClient,
@@ -70,13 +70,19 @@ class KeysService implements Kv.Kv {
   private publicClient: PublicClient;
   private walletClient: WalletClient | null = null;
   private registryAddress: Address;
+  private chain: ReturnType<typeof createTempoChain>;
 
   constructor(private env: Env) {
     this.registryAddress = env.PASSKEY_REGISTRY_ADDRESS as Address;
-    this.publicClient = createTempoPublicClient(env.TEMPO_RPC_URL);
+    this.chain = createTempoChain(Number(env.TEMPO_CHAIN_ID), env.TEMPO_RPC_URL);
+    this.publicClient = createTempoPublicClient(env.TEMPO_RPC_URL, this.chain);
 
     if (env.RELAYER_PRIVATE_KEY) {
-      this.walletClient = createTempoWalletClient(env.TEMPO_RPC_URL, env.RELAYER_PRIVATE_KEY);
+      this.walletClient = createTempoWalletClient(
+        env.TEMPO_RPC_URL,
+        env.RELAYER_PRIVATE_KEY,
+        this.chain
+      );
     }
   }
 
@@ -184,7 +190,7 @@ class KeysService implements Kv.Kv {
       console.log(`Registering passkey on-chain for credentialId: ${credentialId}`);
 
       const hash = await this.walletClient.writeContract({
-        chain: tempoTestnet,
+        chain: this.chain,
         account: this.walletClient.account!,
         address: this.registryAddress,
         abi: PasskeyRegistryABI,
