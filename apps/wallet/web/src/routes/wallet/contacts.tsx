@@ -164,18 +164,11 @@ function ContactsPage(): ReactElement {
         transition={{ duration: 0.3 }}
         className="flex items-center justify-between"
       >
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <Users className="w-5 h-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-xl font-semibold text-[#2D3436]">Contacts</h1>
-            <p className="text-[13px] text-muted-foreground">
-              {contacts.length === 0
-                ? 'No contacts yet'
-                : `${contacts.length} contact${contacts.length !== 1 ? 's' : ''} saved`}
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold text-[#2D3436] tracking-tight">Contacts</h1>
+          <p className="text-[14px] text-[#6B6560] mt-1">
+            Manage your saved addresses for quick transfers.
+          </p>
         </div>
 
         <button

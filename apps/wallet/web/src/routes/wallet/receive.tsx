@@ -3,7 +3,6 @@ import { useState, useRef, useEffect, useCallback, type ReactElement } from 'rea
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import {
-  ArrowDown,
   Copy,
   Check,
   ExternalLink,
@@ -111,17 +110,11 @@ function ReceivePage(): ReactElement {
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex items-center gap-3"
       >
-        <div className="w-10 h-10 rounded-xl bg-[#5B9A6F]/10 flex items-center justify-center">
-          <ArrowDown className="w-5 h-5 text-[#5B9A6F]" />
-        </div>
-        <div>
-          <h1 className="text-xl font-semibold text-[#2D3436]">Receive</h1>
-          <p className="text-[13px] text-muted-foreground">
-            Share your address to receive payments
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold text-[#2D3436] tracking-tight">Receive</h1>
+        <p className="text-[14px] text-[#6B6560] mt-1">
+          Share your address or QR code to receive payments.
+        </p>
       </motion.div>
 
       {/* Main Card */}

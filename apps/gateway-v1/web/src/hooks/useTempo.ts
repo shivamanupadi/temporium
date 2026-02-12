@@ -1,16 +1,33 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useAccount, useConnect, useDisconnect, useWalletClient, useConnectors } from 'wagmi';
 import { getWalletClient } from '@wagmi/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { type Address } from 'viem';
+import { type Address, encodeFunctionData } from 'viem';
 import { tempoPasskeyConnector, injectedConnector, wagmiConfig } from '@/lib/wagmi';
-import { tempoChain } from '@/lib/tempo-client';
+import { tempoChain, tempoPublicClient } from '@/lib/tempo-client';
 import { stringToBytes32, Actions, getTokenBalance } from '@/lib/tempo-client';
 import { DEFAULT_FEE_TOKEN_ADDRESS, MAX_SCHEDULE_SECONDS, TIMING } from '@/lib/constants';
 import { clearAuthTokens } from '@/lib/auth-storage';
 import { signInWithEthereum } from '@/lib/siwe-auth';
-import { getWalletConnect, destroyWalletConnect } from '@/lib/wallet-connect-client';
 import type { WalletType } from '@/types';
+import type {
+  SendPaymentParams,
+  SendScheduledPaymentParams,
+  SwapParams,
+  AddLiquidityParams,
+  RemoveLiquidityParams,
+  BuyTokensParams,
+  PlaceOrderParams,
+  CancelOrderParams,
+  CreatePairParams,
+  ApproveTokenParams,
+  CreateTokenParams,
+  MintTokenParams,
+  BurnTokenParams,
+  ClaimRewardsParams,
+  DexWithdrawParams,
+  AmmSwapParams,
+} from '@temporium/gateway-connect';
 
 /**
  * Encode a memo string to bytes
@@ -31,108 +48,6 @@ export function decodeMemo(hex: `0x${string}`): string {
   return new TextDecoder().decode(bytes).replace(/\0+$/, '');
 }
 
-export interface SendPaymentParams {
-  to: Address;
-  amount: bigint;
-  token?: Address;
-  feeToken?: Address;
-  memo?: string;
-}
-
-export interface SendScheduledPaymentParams extends SendPaymentParams {
-  scheduledFor: number;
-}
-
-export interface SwapParams {
-  tokenIn: Address;
-  tokenOut: Address;
-  amountIn: bigint;
-  minAmountOut: bigint;
-  feeToken?: Address;
-}
-
-export interface AddLiquidityParams {
-  userToken: Address;
-  validatorToken: Address;
-  validatorTokenAmount: bigint;
-  feeToken?: Address;
-}
-
-export interface RemoveLiquidityParams {
-  userToken: Address;
-  validatorToken: Address;
-  liquidity: bigint;
-  feeToken?: Address;
-}
-
-export interface BuyTokensParams {
-  tokenIn: Address;
-  tokenOut: Address;
-  amountOut: bigint;
-  maxAmountIn: bigint;
-  feeToken?: Address;
-}
-
-export interface PlaceOrderParams {
-  token: Address;
-  amount: bigint;
-  tick: number;
-  type: 'buy' | 'sell';
-  feeToken?: Address;
-}
-
-export interface CancelOrderParams {
-  orderId: bigint;
-  feeToken?: Address;
-}
-
-export interface CreatePairParams {
-  base: Address;
-  feeToken?: Address;
-}
-
-export interface ApproveTokenParams {
-  token: Address;
-  spender: Address;
-  amount: bigint;
-  feeToken?: Address;
-}
-
-export interface CreateTokenParams {
-  name: string;
-  symbol: string;
-  currency: string;
-  admin?: Address;
-  quoteToken?: Address;
-  salt?: `0x${string}`;
-}
-
-export interface MintTokenParams {
-  token: Address;
-  to: Address;
-  amount: bigint;
-  memo?: `0x${string}`;
-  feeToken?: Address;
-}
-
-export interface BurnTokenParams {
-  token: Address;
-  amount: bigint;
-  memo?: `0x${string}`;
-  feeToken?: Address;
-}
-
-export interface ClaimRewardsParams {
-  token: Address;
-  feeToken?: Address;
-}
-
-export interface DexWithdrawParams {
-  token: Address;
-  amount: bigint;
-  feeToken?: Address;
-}
-
 interface UseTempoReturn {
   isConnected: boolean;
   isConnecting: boolean;
@@ -144,11 +59,11 @@ interface UseTempoReturn {
   signUp: (label?: string) => Promise<void>;
   signIn: () => Promise<void>;
   connectInjected: () => Promise<void>;
-  connectWallet: () => Promise<void>;
   disconnect: () => Promise<void>;
   // Transactions
   sendPayment: (params: SendPaymentParams) => Promise<string>;
-  sendScheduledPayment: (params: SendScheduledPaymentParams) => Promise<string>;
+  signScheduledPayment: (params: SendScheduledPaymentParams) => Promise<{ serializedTransaction: string; scheduledFor: number }>;
+  submitSignedTransaction: (serializedTransaction: string) => Promise<string>;
   swapTokens: (params: SwapParams) => Promise<string>;
   addLiquidity: (params: AddLiquidityParams) => Promise<string>;
   removeLiquidity: (params: RemoveLiquidityParams) => Promise<string>;
@@ -156,8 +71,9 @@ interface UseTempoReturn {
   placeOrder: (params: PlaceOrderParams) => Promise<string>;
   cancelOrder: (params: CancelOrderParams) => Promise<string>;
   createPair: (params: CreatePairParams) => Promise<string>;
+  ammSwap: (params: AmmSwapParams) => Promise<string>;
   approveToken: (params: ApproveTokenParams) => Promise<string>;
-  createToken: (params: CreateTokenParams) => Promise<string>;
+  createToken: (params: CreateTokenParams) => Promise<{ hash: string; tokenAddress: Address }>;
   mintToken: (params: MintTokenParams) => Promise<string>;
   burnToken: (params: BurnTokenParams) => Promise<string>;
   claimRewards: (params: ClaimRewardsParams) => Promise<string>;
@@ -168,22 +84,16 @@ interface UseTempoReturn {
 }
 
 /**
- * Main hook — wraps all wallet types (passkey, injected, wallet-connect)
+ * Main hook — wraps passkey and injected wallet types
  *
- * For passkey/injected: uses wagmi walletClient → Actions.* calls
- * For wallet-connect: uses @temporium/wallet-connect SDK → popup wallet
+ * Uses wagmi walletClient → Actions.* calls
  */
 export function useTempo(): UseTempoReturn {
   const [isConnecting, setIsConnecting] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // WalletConnect state (separate from wagmi)
-  const [wcConnected, setWcConnected] = useState(false);
-  const [wcAddress, setWcAddress] = useState<Address | null>(null);
-  const walletTypeRef = useRef<WalletType>(null);
-
   // Wagmi hooks
-  const { address: wagmiAddress, isConnected: wagmiConnected, connector } = useAccount();
+  const { address, isConnected, connector } = useAccount();
   const { connectAsync } = useConnect();
   const { disconnectAsync } = useDisconnect();
   const { data: walletClient } = useWalletClient();
@@ -192,31 +102,12 @@ export function useTempo(): UseTempoReturn {
 
   const hasInjectedWallet = connectors.some(c => c.type === 'injected');
 
-  // Restore WalletConnect state on mount
-  useEffect(() => {
-    const wc = getWalletConnect();
-    if (wc.isConnected() && wc.getAddress()) {
-      setWcConnected(true);
-      setWcAddress(wc.getAddress());
-      walletTypeRef.current = 'wallet-connect';
-    }
-  }, []);
-
-  // Determine effective connection state
-  const isConnected = wagmiConnected || wcConnected;
-  const address = wagmiConnected ? wagmiAddress : wcAddress || undefined;
-
   // Determine wallet type
-  const walletType: WalletType = wagmiConnected
+  const walletType: WalletType = isConnected
     ? connector?.type === 'injected'
       ? 'injected'
       : 'passkey'
-    : wcConnected
-      ? 'wallet-connect'
-      : null;
-
-  // Keep ref in sync
-  walletTypeRef.current = walletType;
+    : null;
 
   const signUp = useCallback(
     async (label?: string) => {
@@ -280,241 +171,206 @@ export function useTempo(): UseTempoReturn {
     }
   }, [connectAsync, disconnectAsync]);
 
-  const connectWallet = useCallback(async () => {
-    setIsConnecting(true);
-    setError(null);
-    try {
-      const wc = getWalletConnect();
-      const result = await wc.connect({ force: true });
-      setWcConnected(true);
-      setWcAddress(result.address);
-    } catch (err) {
-      setError(err as Error);
-      throw err;
-    } finally {
-      setIsConnecting(false);
-    }
-  }, []);
-
   const disconnect = useCallback(async () => {
     clearAuthTokens();
     queryClient.clear();
-
-    if (wcConnected) {
-      const wc = getWalletConnect();
-      wc.disconnect();
-      destroyWalletConnect();
-      setWcConnected(false);
-      setWcAddress(null);
-    }
-
-    if (wagmiConnected) {
+    if (isConnected) {
       await disconnectAsync();
     }
-  }, [disconnectAsync, queryClient, wcConnected, wagmiConnected]);
+  }, [disconnectAsync, queryClient, isConnected]);
 
   // ============================================================================
-  // Transaction helpers — route to wagmi or WalletConnect based on wallet type
+  // Transaction helpers
   // ============================================================================
+
+  const ensureClient = useCallback(() => {
+    if (!walletClient || !address) throw new Error('Not connected');
+    return { walletClient, address };
+  }, [walletClient, address]);
+
+  // ---------- Token ----------
 
   const sendPayment = useCallback(
-    async ({ to, amount, token = DEFAULT_FEE_TOKEN_ADDRESS, feeToken = DEFAULT_FEE_TOKEN_ADDRESS, memo }: SendPaymentParams) => {
-      if (walletTypeRef.current === 'wallet-connect') {
-        const wc = getWalletConnect();
-        const result = await wc.sendPayment({ to, amount, token, feeToken, memo });
-        return result.hash;
-      }
-      if (!walletClient || !address) throw new Error('Not connected');
-      const memoHex = memo ? stringToBytes32(memo) : undefined;
-      return Actions.token.transfer(walletClient, { token, to, amount, memo: memoHex, feeToken });
+    async (params: SendPaymentParams) => {
+      const { walletClient: client } = ensureClient();
+      return Actions.token.transfer(client, { token: params.token, to: params.to, amount: params.amount, memo: params.memo, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
     },
-    [walletClient, address]
+    [ensureClient],
   );
 
-  const sendScheduledPayment = useCallback(
-    async ({ to, amount, token = DEFAULT_FEE_TOKEN_ADDRESS, feeToken = DEFAULT_FEE_TOKEN_ADDRESS, memo, scheduledFor }: SendScheduledPaymentParams) => {
-      if (walletTypeRef.current === 'wallet-connect') {
-        const wc = getWalletConnect();
-        const result = await wc.sendScheduledPayment({ to, amount, token, feeToken, memo, scheduledFor });
-        return result.hash;
-      }
-      if (!walletClient || !address) throw new Error('Not connected');
+  const signScheduledPayment = useCallback(
+    async (params: SendScheduledPaymentParams) => {
       const now = Math.floor(Date.now() / 1000);
-      if (scheduledFor <= now) throw new Error('Scheduled time must be in the future');
-      if (scheduledFor > now + MAX_SCHEDULE_SECONDS) throw new Error('Cannot schedule more than 60 minutes in advance on testnet');
-      const memoHex = memo ? stringToBytes32(memo) : undefined;
-      return Actions.token.transfer(walletClient, { token, to, amount, memo: memoHex, feeToken, validAfter: scheduledFor });
+      if (params.scheduledFor <= now) throw new Error('Scheduled time must be in the future');
+      if (params.scheduledFor > now + MAX_SCHEDULE_SECONDS) throw new Error('Cannot schedule more than 60 minutes in advance on testnet');
+      const { walletClient: client } = ensureClient();
+
+      // Build the call data using the SDK helper
+      const call = Actions.token.transfer.call({
+        token: params.token,
+        to: params.to,
+        amount: params.amount,
+        memo: params.memo,
+      });
+
+      const data = encodeFunctionData({
+        abi: call.abi,
+        functionName: call.functionName,
+        args: call.args,
+      });
+
+      // Tempo uses a 2D nonce system (nonceKey + nonce). By assigning a random
+      // nonceKey we place this scheduled tx in its own nonce lane (nonce=0) so it
+      // never conflicts with any other transaction the user sends.
+      const randomBytes = crypto.getRandomValues(new Uint8Array(6));
+      const nonceKey = BigInt(
+        '0x' + Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join(''),
+      );
+
+      // Prepare the request first to fill in gas, maxFeePerGas, etc.
+      const prepared = await client.prepareTransactionRequest({
+        to: call.address,
+        data,
+        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+        validAfter: params.scheduledFor,
+        nonceKey,
+        nonce: 0,
+      } as any);
+
+      // Sign the prepared transaction — does NOT submit to the network.
+      const serializedTransaction = await client.signTransaction(prepared as any);
+
+      return { serializedTransaction, scheduledFor: params.scheduledFor };
     },
-    [walletClient, address]
+    [ensureClient],
   );
 
-  const swapTokens = useCallback(
-    async ({ tokenIn, tokenOut, amountIn, minAmountOut, feeToken = DEFAULT_FEE_TOKEN_ADDRESS }: SwapParams) => {
-      if (walletTypeRef.current === 'wallet-connect') {
-        const wc = getWalletConnect();
-        const result = await wc.swapTokens({ tokenIn, tokenOut, amountIn, minAmountOut, feeToken });
-        return result.hash;
-      }
-      if (!walletClient || !address) throw new Error('Not connected');
-      return Actions.dex.sell(walletClient, { tokenIn, tokenOut, amountIn, minAmountOut, feeToken });
+  const submitSignedTransaction = useCallback(
+    async (serializedTransaction: string) => {
+      return tempoPublicClient.sendRawTransaction({
+        serializedTransaction: serializedTransaction as `0x${string}`,
+      });
     },
-    [walletClient, address]
-  );
-
-  const addLiquidity = useCallback(
-    async ({ userToken, validatorToken, validatorTokenAmount, feeToken = DEFAULT_FEE_TOKEN_ADDRESS }: AddLiquidityParams) => {
-      if (walletTypeRef.current === 'wallet-connect') {
-        const wc = getWalletConnect();
-        const result = await wc.addLiquidity({ userToken, validatorToken, validatorTokenAmount, feeToken });
-        return result.hash;
-      }
-      if (!walletClient || !address) throw new Error('Not connected');
-      return Actions.amm.mint(walletClient, { userTokenAddress: userToken, validatorTokenAddress: validatorToken, validatorTokenAmount, to: address, feeToken });
-    },
-    [walletClient, address]
-  );
-
-  const removeLiquidity = useCallback(
-    async ({ userToken, validatorToken, liquidity, feeToken = DEFAULT_FEE_TOKEN_ADDRESS }: RemoveLiquidityParams) => {
-      if (walletTypeRef.current === 'wallet-connect') {
-        const wc = getWalletConnect();
-        const result = await wc.removeLiquidity({ userToken, validatorToken, liquidity, feeToken });
-        return result.hash;
-      }
-      if (!walletClient || !address) throw new Error('Not connected');
-      return Actions.amm.burn(walletClient, { userToken, validatorToken, liquidity, to: address, feeToken });
-    },
-    [walletClient, address]
-  );
-
-  const buyTokens = useCallback(
-    async ({ tokenIn, tokenOut, amountOut, maxAmountIn, feeToken = DEFAULT_FEE_TOKEN_ADDRESS }: BuyTokensParams) => {
-      if (walletTypeRef.current === 'wallet-connect') {
-        const wc = getWalletConnect();
-        const result = await wc.buyTokens({ tokenIn, tokenOut, amountOut, maxAmountIn, feeToken });
-        return result.hash;
-      }
-      if (!walletClient || !address) throw new Error('Not connected');
-      return Actions.dex.buy(walletClient, { tokenIn, tokenOut, amountOut, maxAmountIn, feeToken });
-    },
-    [walletClient, address]
-  );
-
-  const placeOrder = useCallback(
-    async ({ token, amount, tick, type, feeToken = DEFAULT_FEE_TOKEN_ADDRESS }: PlaceOrderParams) => {
-      if (walletTypeRef.current === 'wallet-connect') {
-        const wc = getWalletConnect();
-        const result = await wc.placeOrder({ token, amount, tick, type, feeToken });
-        return result.hash;
-      }
-      if (!walletClient || !address) throw new Error('Not connected');
-      return Actions.dex.place(walletClient, { token, amount, tick, type, feeToken });
-    },
-    [walletClient, address]
-  );
-
-  const cancelOrder = useCallback(
-    async ({ orderId, feeToken = DEFAULT_FEE_TOKEN_ADDRESS }: CancelOrderParams) => {
-      if (walletTypeRef.current === 'wallet-connect') {
-        const wc = getWalletConnect();
-        const result = await wc.cancelOrder({ orderId, feeToken });
-        return result.hash;
-      }
-      if (!walletClient || !address) throw new Error('Not connected');
-      return Actions.dex.cancel(walletClient, { orderId, feeToken });
-    },
-    [walletClient, address]
-  );
-
-  const createPair = useCallback(
-    async ({ base, feeToken = DEFAULT_FEE_TOKEN_ADDRESS }: CreatePairParams) => {
-      if (walletTypeRef.current === 'wallet-connect') {
-        const wc = getWalletConnect();
-        const result = await wc.createPair({ base, feeToken });
-        return result.hash;
-      }
-      if (!walletClient || !address) throw new Error('Not connected');
-      return Actions.dex.createPair(walletClient, { base, feeToken });
-    },
-    [walletClient, address]
+    [],
   );
 
   const approveToken = useCallback(
-    async ({ token, spender, amount, feeToken = DEFAULT_FEE_TOKEN_ADDRESS }: ApproveTokenParams) => {
-      if (walletTypeRef.current === 'wallet-connect') {
-        const wc = getWalletConnect();
-        const result = await wc.approveToken({ token, spender, amount, feeToken });
-        return result.hash;
-      }
-      if (!walletClient || !address) throw new Error('Not connected');
-      return Actions.token.approve(walletClient, { token, spender, amount, feeToken });
+    async (params: ApproveTokenParams) => {
+      const { walletClient: client } = ensureClient();
+      return Actions.token.approve(client, { token: params.token, spender: params.spender, amount: params.amount, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
     },
-    [walletClient, address]
+    [ensureClient],
   );
 
   const createToken = useCallback(
-    async ({ name, symbol, currency, admin, quoteToken, salt }: CreateTokenParams) => {
-      if (walletTypeRef.current === 'wallet-connect') {
-        const wc = getWalletConnect();
-        const result = await wc.createToken({ name, symbol, currency, admin, quoteToken, salt });
-        return result.hash;
-      }
-      if (!walletClient || !address) throw new Error('Not connected');
-      return Actions.token.create(walletClient, { name, symbol, currency, admin, quoteToken, salt });
+    async (params: CreateTokenParams) => {
+      const { walletClient: client } = ensureClient();
+      const result = await Actions.token.createSync(client, { name: params.name, symbol: params.symbol, currency: params.currency, admin: params.admin, quoteToken: params.quoteToken, salt: params.salt });
+      return { hash: result.receipt.transactionHash, tokenAddress: result.token as Address };
     },
-    [walletClient, address]
+    [ensureClient],
   );
 
   const mintToken = useCallback(
-    async ({ token, to, amount, memo, feeToken = DEFAULT_FEE_TOKEN_ADDRESS }: MintTokenParams) => {
-      if (walletTypeRef.current === 'wallet-connect') {
-        const wc = getWalletConnect();
-        const result = await wc.mintToken({ token, to, amount, memo, feeToken });
-        return result.hash;
-      }
-      if (!walletClient || !address) throw new Error('Not connected');
-      return Actions.token.mint(walletClient, { token, to, amount, memo, feeToken });
+    async (params: MintTokenParams) => {
+      const { walletClient: client } = ensureClient();
+      return Actions.token.mint(client, { token: params.token, to: params.to, amount: params.amount, memo: params.memo, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
     },
-    [walletClient, address]
+    [ensureClient],
   );
 
   const burnToken = useCallback(
-    async ({ token, amount, memo, feeToken = DEFAULT_FEE_TOKEN_ADDRESS }: BurnTokenParams) => {
-      if (walletTypeRef.current === 'wallet-connect') {
-        const wc = getWalletConnect();
-        const result = await wc.burnToken({ token, amount, memo, feeToken });
-        return result.hash;
-      }
-      if (!walletClient || !address) throw new Error('Not connected');
-      return Actions.token.burn(walletClient, { token, amount, memo, feeToken });
+    async (params: BurnTokenParams) => {
+      const { walletClient: client } = ensureClient();
+      return Actions.token.burn(client, { token: params.token, amount: params.amount, memo: params.memo, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
     },
-    [walletClient, address]
+    [ensureClient],
   );
 
-  const claimRewards = useCallback(
-    async ({ token, feeToken = DEFAULT_FEE_TOKEN_ADDRESS }: ClaimRewardsParams) => {
-      if (walletTypeRef.current === 'wallet-connect') {
-        const wc = getWalletConnect();
-        const result = await wc.claimRewards({ token, feeToken });
-        return result.hash;
-      }
-      if (!walletClient || !address) throw new Error('Not connected');
-      return Actions.reward.claim(walletClient, { token, feeToken });
+  // ---------- DEX ----------
+
+  const swapTokens = useCallback(
+    async (params: SwapParams) => {
+      const { walletClient: client } = ensureClient();
+      return Actions.dex.sell(client, { tokenIn: params.tokenIn, tokenOut: params.tokenOut, amountIn: params.amountIn, minAmountOut: params.minAmountOut, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
     },
-    [walletClient, address]
+    [ensureClient],
+  );
+
+  const buyTokens = useCallback(
+    async (params: BuyTokensParams) => {
+      const { walletClient: client } = ensureClient();
+      return Actions.dex.buy(client, { tokenIn: params.tokenIn, tokenOut: params.tokenOut, amountOut: params.amountOut, maxAmountIn: params.maxAmountIn, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+    },
+    [ensureClient],
+  );
+
+  const placeOrder = useCallback(
+    async (params: PlaceOrderParams) => {
+      const { walletClient: client } = ensureClient();
+      return Actions.dex.place(client, { token: params.token, amount: params.amount, tick: params.tick, type: params.type, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+    },
+    [ensureClient],
+  );
+
+  const cancelOrder = useCallback(
+    async (params: CancelOrderParams) => {
+      const { walletClient: client } = ensureClient();
+      return Actions.dex.cancel(client, { orderId: params.orderId, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+    },
+    [ensureClient],
+  );
+
+  const createPair = useCallback(
+    async (params: CreatePairParams) => {
+      const { walletClient: client } = ensureClient();
+      return Actions.dex.createPair(client, { base: params.base, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+    },
+    [ensureClient],
   );
 
   const dexWithdraw = useCallback(
-    async ({ token, amount, feeToken = DEFAULT_FEE_TOKEN_ADDRESS }: DexWithdrawParams) => {
-      if (walletTypeRef.current === 'wallet-connect') {
-        const wc = getWalletConnect();
-        const result = await wc.dexWithdraw({ token, amount, feeToken });
-        return result.hash;
-      }
-      if (!walletClient || !address) throw new Error('Not connected');
-      return Actions.dex.withdraw(walletClient, { token, amount, feeToken });
+    async (params: DexWithdrawParams) => {
+      const { walletClient: client } = ensureClient();
+      return Actions.dex.withdraw(client, { token: params.token, amount: params.amount, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
     },
-    [walletClient, address]
+    [ensureClient],
+  );
+
+  // ---------- AMM ----------
+
+  const ammSwap = useCallback(
+    async (params: AmmSwapParams) => {
+      const { walletClient: client, address: sender } = ensureClient();
+      return Actions.amm.rebalanceSwap(client, { userToken: params.userToken, validatorToken: params.validatorToken, amountOut: params.amountOut, to: sender, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+    },
+    [ensureClient],
+  );
+
+  const addLiquidity = useCallback(
+    async (params: AddLiquidityParams) => {
+      const { walletClient: client, address: sender } = ensureClient();
+      return Actions.amm.mint(client, { userTokenAddress: params.userTokenAddress, validatorTokenAddress: params.validatorTokenAddress, validatorTokenAmount: params.validatorTokenAmount, to: sender, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+    },
+    [ensureClient],
+  );
+
+  const removeLiquidity = useCallback(
+    async (params: RemoveLiquidityParams) => {
+      const { walletClient: client, address: sender } = ensureClient();
+      return Actions.amm.burn(client, { userToken: params.userTokenAddress, validatorToken: params.validatorTokenAddress, liquidity: params.liquidity, to: sender, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+    },
+    [ensureClient],
+  );
+
+  // ---------- Rewards ----------
+
+  const claimRewards = useCallback(
+    async (params: ClaimRewardsParams) => {
+      const { walletClient: client } = ensureClient();
+      return Actions.reward.claim(client, { token: params.token, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+    },
+    [ensureClient],
   );
 
   return {
@@ -527,10 +383,10 @@ export function useTempo(): UseTempoReturn {
     signUp,
     signIn,
     connectInjected,
-    connectWallet,
     disconnect,
     sendPayment,
-    sendScheduledPayment,
+    signScheduledPayment,
+    submitSignedTransaction,
     swapTokens,
     addLiquidity,
     removeLiquidity,
@@ -538,6 +394,7 @@ export function useTempo(): UseTempoReturn {
     placeOrder,
     cancelOrder,
     createPair,
+    ammSwap,
     approveToken,
     createToken,
     mintToken,

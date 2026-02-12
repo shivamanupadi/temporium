@@ -2,7 +2,7 @@ import { createConfig, http } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import { webAuthn, KeyManager } from 'wagmi/tempo';
 import { tempoChain } from './tempo-client';
-import { KEYS_API_URL } from './api';
+import { KEYS_API_URL, TEMPO_NETWORK } from './api';
 import { saveAuthToken } from './auth-storage';
 
 function getRpId(): string {
@@ -72,13 +72,17 @@ interface KeysApiResponse {
 
 const keyManager = KeyManager.from({
   async getChallenge() {
-    const response = await fetch(`${KEYS_API_URL}/challenge`);
+    const response = await fetch(`${KEYS_API_URL}/challenge`, {
+      headers: { 'X-Tempo-Network': TEMPO_NETWORK },
+    });
     if (!response.ok) throw new Error('Failed to get challenge');
     return response.json();
   },
 
   async getPublicKey(parameters) {
-    const response = await fetch(`${KEYS_API_URL}/${parameters.credential.id}`);
+    const response = await fetch(`${KEYS_API_URL}/${parameters.credential.id}`, {
+      headers: { 'X-Tempo-Network': TEMPO_NETWORK },
+    });
     if (!response.ok) throw new Error('publicKey not found.');
     const data: KeysApiResponse = await response.json();
 
@@ -94,7 +98,7 @@ const keyManager = KeyManager.from({
 
     const response = await fetch(`${KEYS_API_URL}/${parameters.credential.id}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Tempo-Network': TEMPO_NETWORK },
       body: JSON.stringify({ credential: serialized, publicKey: parameters.publicKey }),
     });
 

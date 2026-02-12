@@ -1,5 +1,5 @@
 import type { Address } from 'viem';
-import { TOKENLIST_API_URL } from './api';
+import { TOKENLIST_API_URL, TEMPO_NETWORK } from './api';
 import { tempoBaseChain } from './constants';
 
 const CHAIN_ID = tempoBaseChain.id;
@@ -54,7 +54,9 @@ async function fetchTokenList(): Promise<TokenList> {
     return cachedTokenList;
   }
 
-  const response = await fetch(`${TOKENLIST_API_URL}/list/${CHAIN_ID}`);
+  const response = await fetch(`${TOKENLIST_API_URL}/list/${CHAIN_ID}`, {
+    headers: { 'X-Tempo-Network': TEMPO_NETWORK },
+  });
   if (!response.ok) {
     throw new Error(`Failed to fetch tokenlist: ${response.status}`);
   }

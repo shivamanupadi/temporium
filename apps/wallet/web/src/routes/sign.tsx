@@ -395,14 +395,14 @@ function SignPage(): ReactElement {
           const params = request.params as {
             to: Address;
             amount: string;
-            token?: Address;
+            token: Address;
             feeToken?: Address;
             memo?: `0x${string}`;
           };
           if (!params.to) throw new Error('Recipient required');
 
           hash = await Actions.token.transfer(walletClient, {
-            token: params.token || DEFAULT_FEE_TOKEN_ADDRESS,
+            token: params.token,
             to: params.to,
             amount: safeBigInt(params.amount, 'Amount'),
             memo: params.memo,
@@ -415,7 +415,7 @@ function SignPage(): ReactElement {
           const params = request.params as {
             to: Address;
             amount: string;
-            token?: Address;
+            token: Address;
             feeToken?: Address;
             memo?: `0x${string}`;
             scheduledFor: number;
@@ -423,7 +423,7 @@ function SignPage(): ReactElement {
           if (!params.to || !params.scheduledFor) throw new Error('Missing required fields');
 
           hash = await Actions.token.transfer(walletClient, {
-            token: params.token || DEFAULT_FEE_TOKEN_ADDRESS,
+            token: params.token,
             to: params.to,
             amount: safeBigInt(params.amount, 'Amount'),
             memo: params.memo,
@@ -455,17 +455,17 @@ function SignPage(): ReactElement {
 
         case 'add_liquidity': {
           const params = request.params as {
-            userToken: Address;
-            validatorToken: Address;
+            userTokenAddress: Address;
+            validatorTokenAddress: Address;
             validatorTokenAmount: string;
             feeToken?: Address;
           };
-          if (!params.userToken || !params.validatorToken)
+          if (!params.userTokenAddress || !params.validatorTokenAddress)
             throw new Error('Token addresses required');
 
           hash = await Actions.amm.mint(walletClient, {
-            userTokenAddress: params.userToken,
-            validatorTokenAddress: params.validatorToken,
+            userTokenAddress: params.userTokenAddress,
+            validatorTokenAddress: params.validatorTokenAddress,
             validatorTokenAmount: safeBigInt(params.validatorTokenAmount, 'Amount'),
             to: address,
             feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
@@ -475,17 +475,17 @@ function SignPage(): ReactElement {
 
         case 'remove_liquidity': {
           const params = request.params as {
-            userToken: Address;
-            validatorToken: Address;
+            userTokenAddress: Address;
+            validatorTokenAddress: Address;
             liquidity: string;
             feeToken?: Address;
           };
-          if (!params.userToken || !params.validatorToken)
+          if (!params.userTokenAddress || !params.validatorTokenAddress)
             throw new Error('Token addresses required');
 
           hash = await Actions.amm.burn(walletClient, {
-            userToken: params.userToken,
-            validatorToken: params.validatorToken,
+            userToken: params.userTokenAddress,
+            validatorToken: params.validatorTokenAddress,
             liquidity: safeBigInt(params.liquidity, 'Liquidity'),
             to: address,
             feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
@@ -1551,19 +1551,19 @@ function SignPage(): ReactElement {
                   <div className="space-y-0">
                     <DetailRow
                       label="User Token"
-                      value={formatAddress(params.userToken as string, 6)}
-                      copyValue={params.userToken as string}
+                      value={formatAddress(params.userTokenAddress as string, 6)}
+                      copyValue={params.userTokenAddress as string}
                       onCopy={handleCopy}
                       copiedField={copiedField}
-                      fieldKey="userToken"
+                      fieldKey="userTokenAddress"
                     />
                     <DetailRow
                       label="Validator Token"
-                      value={formatAddress(params.validatorToken as string, 6)}
-                      copyValue={params.validatorToken as string}
+                      value={formatAddress(params.validatorTokenAddress as string, 6)}
+                      copyValue={params.validatorTokenAddress as string}
                       onCopy={handleCopy}
                       copiedField={copiedField}
-                      fieldKey="validatorToken"
+                      fieldKey="validatorTokenAddress"
                     />
                   </div>
                 </div>

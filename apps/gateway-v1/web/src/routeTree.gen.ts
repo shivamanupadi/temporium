@@ -9,7 +9,9 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignRouteImport } from './routes/sign'
 import { Route as PortalRouteImport } from './routes/portal'
+import { Route as ConnectRouteImport } from './routes/connect'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PortalTip403FactoryRouteImport } from './routes/portal/tip403-factory'
 import { Route as PortalTip20StudioRouteImport } from './routes/portal/tip20-studio'
@@ -17,14 +19,35 @@ import { Route as PortalSwapRouteImport } from './routes/portal/swap'
 import { Route as PortalSendRouteImport } from './routes/portal/send'
 import { Route as PortalScheduledRouteImport } from './routes/portal/scheduled'
 import { Route as PortalReceiveRouteImport } from './routes/portal/receive'
+import { Route as PortalPoolSwapRouteImport } from './routes/portal/pool-swap'
+import { Route as PortalOrderbookRouteImport } from './routes/portal/orderbook'
 import { Route as PortalLiquidityRouteImport } from './routes/portal/liquidity'
+import { Route as PortalExchangeBalanceRouteImport } from './routes/portal/exchange-balance'
 import { Route as PortalDashboardRouteImport } from './routes/portal/dashboard'
 import { Route as PortalContactsRouteImport } from './routes/portal/contacts'
+import { Route as PortalConnectedAppsRouteImport } from './routes/portal/connected-apps'
 import { Route as PortalAccessKeysRouteImport } from './routes/portal/access-keys'
+import { Route as PortalTip403FactoryIndexRouteImport } from './routes/portal/tip403-factory.index'
+import { Route as PortalTip20StudioIndexRouteImport } from './routes/portal/tip20-studio.index'
+import { Route as PortalTip403FactoryPolicyIdRouteImport } from './routes/portal/tip403-factory.$policyId'
+import { Route as PortalTip20StudioAddressRouteImport } from './routes/portal/tip20-studio.$address'
+import { Route as PortalTip403FactoryPolicyIdOverviewRouteImport } from './routes/portal/tip403-factory.$policyId.overview'
+import { Route as PortalTip20StudioAddressRewardsRouteImport } from './routes/portal/tip20-studio.$address.rewards'
+import { Route as PortalTip20StudioAddressOverviewRouteImport } from './routes/portal/tip20-studio.$address.overview'
 
+const SignRoute = SignRouteImport.update({
+  id: '/sign',
+  path: '/sign',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PortalRoute = PortalRouteImport.update({
   id: '/portal',
   path: '/portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConnectRoute = ConnectRouteImport.update({
+  id: '/connect',
+  path: '/connect',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -62,9 +85,24 @@ const PortalReceiveRoute = PortalReceiveRouteImport.update({
   path: '/receive',
   getParentRoute: () => PortalRoute,
 } as any)
+const PortalPoolSwapRoute = PortalPoolSwapRouteImport.update({
+  id: '/pool-swap',
+  path: '/pool-swap',
+  getParentRoute: () => PortalRoute,
+} as any)
+const PortalOrderbookRoute = PortalOrderbookRouteImport.update({
+  id: '/orderbook',
+  path: '/orderbook',
+  getParentRoute: () => PortalRoute,
+} as any)
 const PortalLiquidityRoute = PortalLiquidityRouteImport.update({
   id: '/liquidity',
   path: '/liquidity',
+  getParentRoute: () => PortalRoute,
+} as any)
+const PortalExchangeBalanceRoute = PortalExchangeBalanceRouteImport.update({
+  id: '/exchange-balance',
+  path: '/exchange-balance',
   getParentRoute: () => PortalRoute,
 } as any)
 const PortalDashboardRoute = PortalDashboardRouteImport.update({
@@ -77,112 +115,248 @@ const PortalContactsRoute = PortalContactsRouteImport.update({
   path: '/contacts',
   getParentRoute: () => PortalRoute,
 } as any)
+const PortalConnectedAppsRoute = PortalConnectedAppsRouteImport.update({
+  id: '/connected-apps',
+  path: '/connected-apps',
+  getParentRoute: () => PortalRoute,
+} as any)
 const PortalAccessKeysRoute = PortalAccessKeysRouteImport.update({
   id: '/access-keys',
   path: '/access-keys',
   getParentRoute: () => PortalRoute,
 } as any)
+const PortalTip403FactoryIndexRoute =
+  PortalTip403FactoryIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => PortalTip403FactoryRoute,
+  } as any)
+const PortalTip20StudioIndexRoute = PortalTip20StudioIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PortalTip20StudioRoute,
+} as any)
+const PortalTip403FactoryPolicyIdRoute =
+  PortalTip403FactoryPolicyIdRouteImport.update({
+    id: '/$policyId',
+    path: '/$policyId',
+    getParentRoute: () => PortalTip403FactoryRoute,
+  } as any)
+const PortalTip20StudioAddressRoute =
+  PortalTip20StudioAddressRouteImport.update({
+    id: '/$address',
+    path: '/$address',
+    getParentRoute: () => PortalTip20StudioRoute,
+  } as any)
+const PortalTip403FactoryPolicyIdOverviewRoute =
+  PortalTip403FactoryPolicyIdOverviewRouteImport.update({
+    id: '/overview',
+    path: '/overview',
+    getParentRoute: () => PortalTip403FactoryPolicyIdRoute,
+  } as any)
+const PortalTip20StudioAddressRewardsRoute =
+  PortalTip20StudioAddressRewardsRouteImport.update({
+    id: '/rewards',
+    path: '/rewards',
+    getParentRoute: () => PortalTip20StudioAddressRoute,
+  } as any)
+const PortalTip20StudioAddressOverviewRoute =
+  PortalTip20StudioAddressOverviewRouteImport.update({
+    id: '/overview',
+    path: '/overview',
+    getParentRoute: () => PortalTip20StudioAddressRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/connect': typeof ConnectRoute
   '/portal': typeof PortalRouteWithChildren
+  '/sign': typeof SignRoute
   '/portal/access-keys': typeof PortalAccessKeysRoute
+  '/portal/connected-apps': typeof PortalConnectedAppsRoute
   '/portal/contacts': typeof PortalContactsRoute
   '/portal/dashboard': typeof PortalDashboardRoute
+  '/portal/exchange-balance': typeof PortalExchangeBalanceRoute
   '/portal/liquidity': typeof PortalLiquidityRoute
+  '/portal/orderbook': typeof PortalOrderbookRoute
+  '/portal/pool-swap': typeof PortalPoolSwapRoute
   '/portal/receive': typeof PortalReceiveRoute
   '/portal/scheduled': typeof PortalScheduledRoute
   '/portal/send': typeof PortalSendRoute
   '/portal/swap': typeof PortalSwapRoute
-  '/portal/tip20-studio': typeof PortalTip20StudioRoute
-  '/portal/tip403-factory': typeof PortalTip403FactoryRoute
+  '/portal/tip20-studio': typeof PortalTip20StudioRouteWithChildren
+  '/portal/tip403-factory': typeof PortalTip403FactoryRouteWithChildren
+  '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRouteWithChildren
+  '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRouteWithChildren
+  '/portal/tip20-studio/': typeof PortalTip20StudioIndexRoute
+  '/portal/tip403-factory/': typeof PortalTip403FactoryIndexRoute
+  '/portal/tip20-studio/$address/overview': typeof PortalTip20StudioAddressOverviewRoute
+  '/portal/tip20-studio/$address/rewards': typeof PortalTip20StudioAddressRewardsRoute
+  '/portal/tip403-factory/$policyId/overview': typeof PortalTip403FactoryPolicyIdOverviewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/connect': typeof ConnectRoute
   '/portal': typeof PortalRouteWithChildren
+  '/sign': typeof SignRoute
   '/portal/access-keys': typeof PortalAccessKeysRoute
+  '/portal/connected-apps': typeof PortalConnectedAppsRoute
   '/portal/contacts': typeof PortalContactsRoute
   '/portal/dashboard': typeof PortalDashboardRoute
+  '/portal/exchange-balance': typeof PortalExchangeBalanceRoute
   '/portal/liquidity': typeof PortalLiquidityRoute
+  '/portal/orderbook': typeof PortalOrderbookRoute
+  '/portal/pool-swap': typeof PortalPoolSwapRoute
   '/portal/receive': typeof PortalReceiveRoute
   '/portal/scheduled': typeof PortalScheduledRoute
   '/portal/send': typeof PortalSendRoute
   '/portal/swap': typeof PortalSwapRoute
-  '/portal/tip20-studio': typeof PortalTip20StudioRoute
-  '/portal/tip403-factory': typeof PortalTip403FactoryRoute
+  '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRouteWithChildren
+  '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRouteWithChildren
+  '/portal/tip20-studio': typeof PortalTip20StudioIndexRoute
+  '/portal/tip403-factory': typeof PortalTip403FactoryIndexRoute
+  '/portal/tip20-studio/$address/overview': typeof PortalTip20StudioAddressOverviewRoute
+  '/portal/tip20-studio/$address/rewards': typeof PortalTip20StudioAddressRewardsRoute
+  '/portal/tip403-factory/$policyId/overview': typeof PortalTip403FactoryPolicyIdOverviewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/connect': typeof ConnectRoute
   '/portal': typeof PortalRouteWithChildren
+  '/sign': typeof SignRoute
   '/portal/access-keys': typeof PortalAccessKeysRoute
+  '/portal/connected-apps': typeof PortalConnectedAppsRoute
   '/portal/contacts': typeof PortalContactsRoute
   '/portal/dashboard': typeof PortalDashboardRoute
+  '/portal/exchange-balance': typeof PortalExchangeBalanceRoute
   '/portal/liquidity': typeof PortalLiquidityRoute
+  '/portal/orderbook': typeof PortalOrderbookRoute
+  '/portal/pool-swap': typeof PortalPoolSwapRoute
   '/portal/receive': typeof PortalReceiveRoute
   '/portal/scheduled': typeof PortalScheduledRoute
   '/portal/send': typeof PortalSendRoute
   '/portal/swap': typeof PortalSwapRoute
-  '/portal/tip20-studio': typeof PortalTip20StudioRoute
-  '/portal/tip403-factory': typeof PortalTip403FactoryRoute
+  '/portal/tip20-studio': typeof PortalTip20StudioRouteWithChildren
+  '/portal/tip403-factory': typeof PortalTip403FactoryRouteWithChildren
+  '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRouteWithChildren
+  '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRouteWithChildren
+  '/portal/tip20-studio/': typeof PortalTip20StudioIndexRoute
+  '/portal/tip403-factory/': typeof PortalTip403FactoryIndexRoute
+  '/portal/tip20-studio/$address/overview': typeof PortalTip20StudioAddressOverviewRoute
+  '/portal/tip20-studio/$address/rewards': typeof PortalTip20StudioAddressRewardsRoute
+  '/portal/tip403-factory/$policyId/overview': typeof PortalTip403FactoryPolicyIdOverviewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/connect'
     | '/portal'
+    | '/sign'
     | '/portal/access-keys'
+    | '/portal/connected-apps'
     | '/portal/contacts'
     | '/portal/dashboard'
+    | '/portal/exchange-balance'
     | '/portal/liquidity'
+    | '/portal/orderbook'
+    | '/portal/pool-swap'
     | '/portal/receive'
     | '/portal/scheduled'
     | '/portal/send'
     | '/portal/swap'
     | '/portal/tip20-studio'
     | '/portal/tip403-factory'
+    | '/portal/tip20-studio/$address'
+    | '/portal/tip403-factory/$policyId'
+    | '/portal/tip20-studio/'
+    | '/portal/tip403-factory/'
+    | '/portal/tip20-studio/$address/overview'
+    | '/portal/tip20-studio/$address/rewards'
+    | '/portal/tip403-factory/$policyId/overview'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/connect'
     | '/portal'
+    | '/sign'
     | '/portal/access-keys'
+    | '/portal/connected-apps'
     | '/portal/contacts'
     | '/portal/dashboard'
+    | '/portal/exchange-balance'
     | '/portal/liquidity'
+    | '/portal/orderbook'
+    | '/portal/pool-swap'
     | '/portal/receive'
     | '/portal/scheduled'
     | '/portal/send'
     | '/portal/swap'
+    | '/portal/tip20-studio/$address'
+    | '/portal/tip403-factory/$policyId'
     | '/portal/tip20-studio'
     | '/portal/tip403-factory'
+    | '/portal/tip20-studio/$address/overview'
+    | '/portal/tip20-studio/$address/rewards'
+    | '/portal/tip403-factory/$policyId/overview'
   id:
     | '__root__'
     | '/'
+    | '/connect'
     | '/portal'
+    | '/sign'
     | '/portal/access-keys'
+    | '/portal/connected-apps'
     | '/portal/contacts'
     | '/portal/dashboard'
+    | '/portal/exchange-balance'
     | '/portal/liquidity'
+    | '/portal/orderbook'
+    | '/portal/pool-swap'
     | '/portal/receive'
     | '/portal/scheduled'
     | '/portal/send'
     | '/portal/swap'
     | '/portal/tip20-studio'
     | '/portal/tip403-factory'
+    | '/portal/tip20-studio/$address'
+    | '/portal/tip403-factory/$policyId'
+    | '/portal/tip20-studio/'
+    | '/portal/tip403-factory/'
+    | '/portal/tip20-studio/$address/overview'
+    | '/portal/tip20-studio/$address/rewards'
+    | '/portal/tip403-factory/$policyId/overview'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ConnectRoute: typeof ConnectRoute
   PortalRoute: typeof PortalRouteWithChildren
+  SignRoute: typeof SignRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sign': {
+      id: '/sign'
+      path: '/sign'
+      fullPath: '/sign'
+      preLoaderRoute: typeof SignRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/portal': {
       id: '/portal'
       path: '/portal'
       fullPath: '/portal'
       preLoaderRoute: typeof PortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/connect': {
+      id: '/connect'
+      path: '/connect'
+      fullPath: '/connect'
+      preLoaderRoute: typeof ConnectRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -234,11 +408,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalReceiveRouteImport
       parentRoute: typeof PortalRoute
     }
+    '/portal/pool-swap': {
+      id: '/portal/pool-swap'
+      path: '/pool-swap'
+      fullPath: '/portal/pool-swap'
+      preLoaderRoute: typeof PortalPoolSwapRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/portal/orderbook': {
+      id: '/portal/orderbook'
+      path: '/orderbook'
+      fullPath: '/portal/orderbook'
+      preLoaderRoute: typeof PortalOrderbookRouteImport
+      parentRoute: typeof PortalRoute
+    }
     '/portal/liquidity': {
       id: '/portal/liquidity'
       path: '/liquidity'
       fullPath: '/portal/liquidity'
       preLoaderRoute: typeof PortalLiquidityRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/portal/exchange-balance': {
+      id: '/portal/exchange-balance'
+      path: '/exchange-balance'
+      fullPath: '/portal/exchange-balance'
+      preLoaderRoute: typeof PortalExchangeBalanceRouteImport
       parentRoute: typeof PortalRoute
     }
     '/portal/dashboard': {
@@ -255,6 +450,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalContactsRouteImport
       parentRoute: typeof PortalRoute
     }
+    '/portal/connected-apps': {
+      id: '/portal/connected-apps'
+      path: '/connected-apps'
+      fullPath: '/portal/connected-apps'
+      preLoaderRoute: typeof PortalConnectedAppsRouteImport
+      parentRoute: typeof PortalRoute
+    }
     '/portal/access-keys': {
       id: '/portal/access-keys'
       path: '/access-keys'
@@ -262,33 +464,149 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalAccessKeysRouteImport
       parentRoute: typeof PortalRoute
     }
+    '/portal/tip403-factory/': {
+      id: '/portal/tip403-factory/'
+      path: '/'
+      fullPath: '/portal/tip403-factory/'
+      preLoaderRoute: typeof PortalTip403FactoryIndexRouteImport
+      parentRoute: typeof PortalTip403FactoryRoute
+    }
+    '/portal/tip20-studio/': {
+      id: '/portal/tip20-studio/'
+      path: '/'
+      fullPath: '/portal/tip20-studio/'
+      preLoaderRoute: typeof PortalTip20StudioIndexRouteImport
+      parentRoute: typeof PortalTip20StudioRoute
+    }
+    '/portal/tip403-factory/$policyId': {
+      id: '/portal/tip403-factory/$policyId'
+      path: '/$policyId'
+      fullPath: '/portal/tip403-factory/$policyId'
+      preLoaderRoute: typeof PortalTip403FactoryPolicyIdRouteImport
+      parentRoute: typeof PortalTip403FactoryRoute
+    }
+    '/portal/tip20-studio/$address': {
+      id: '/portal/tip20-studio/$address'
+      path: '/$address'
+      fullPath: '/portal/tip20-studio/$address'
+      preLoaderRoute: typeof PortalTip20StudioAddressRouteImport
+      parentRoute: typeof PortalTip20StudioRoute
+    }
+    '/portal/tip403-factory/$policyId/overview': {
+      id: '/portal/tip403-factory/$policyId/overview'
+      path: '/overview'
+      fullPath: '/portal/tip403-factory/$policyId/overview'
+      preLoaderRoute: typeof PortalTip403FactoryPolicyIdOverviewRouteImport
+      parentRoute: typeof PortalTip403FactoryPolicyIdRoute
+    }
+    '/portal/tip20-studio/$address/rewards': {
+      id: '/portal/tip20-studio/$address/rewards'
+      path: '/rewards'
+      fullPath: '/portal/tip20-studio/$address/rewards'
+      preLoaderRoute: typeof PortalTip20StudioAddressRewardsRouteImport
+      parentRoute: typeof PortalTip20StudioAddressRoute
+    }
+    '/portal/tip20-studio/$address/overview': {
+      id: '/portal/tip20-studio/$address/overview'
+      path: '/overview'
+      fullPath: '/portal/tip20-studio/$address/overview'
+      preLoaderRoute: typeof PortalTip20StudioAddressOverviewRouteImport
+      parentRoute: typeof PortalTip20StudioAddressRoute
+    }
   }
 }
 
+interface PortalTip20StudioAddressRouteChildren {
+  PortalTip20StudioAddressOverviewRoute: typeof PortalTip20StudioAddressOverviewRoute
+  PortalTip20StudioAddressRewardsRoute: typeof PortalTip20StudioAddressRewardsRoute
+}
+
+const PortalTip20StudioAddressRouteChildren: PortalTip20StudioAddressRouteChildren =
+  {
+    PortalTip20StudioAddressOverviewRoute:
+      PortalTip20StudioAddressOverviewRoute,
+    PortalTip20StudioAddressRewardsRoute: PortalTip20StudioAddressRewardsRoute,
+  }
+
+const PortalTip20StudioAddressRouteWithChildren =
+  PortalTip20StudioAddressRoute._addFileChildren(
+    PortalTip20StudioAddressRouteChildren,
+  )
+
+interface PortalTip20StudioRouteChildren {
+  PortalTip20StudioAddressRoute: typeof PortalTip20StudioAddressRouteWithChildren
+  PortalTip20StudioIndexRoute: typeof PortalTip20StudioIndexRoute
+}
+
+const PortalTip20StudioRouteChildren: PortalTip20StudioRouteChildren = {
+  PortalTip20StudioAddressRoute: PortalTip20StudioAddressRouteWithChildren,
+  PortalTip20StudioIndexRoute: PortalTip20StudioIndexRoute,
+}
+
+const PortalTip20StudioRouteWithChildren =
+  PortalTip20StudioRoute._addFileChildren(PortalTip20StudioRouteChildren)
+
+interface PortalTip403FactoryPolicyIdRouteChildren {
+  PortalTip403FactoryPolicyIdOverviewRoute: typeof PortalTip403FactoryPolicyIdOverviewRoute
+}
+
+const PortalTip403FactoryPolicyIdRouteChildren: PortalTip403FactoryPolicyIdRouteChildren =
+  {
+    PortalTip403FactoryPolicyIdOverviewRoute:
+      PortalTip403FactoryPolicyIdOverviewRoute,
+  }
+
+const PortalTip403FactoryPolicyIdRouteWithChildren =
+  PortalTip403FactoryPolicyIdRoute._addFileChildren(
+    PortalTip403FactoryPolicyIdRouteChildren,
+  )
+
+interface PortalTip403FactoryRouteChildren {
+  PortalTip403FactoryPolicyIdRoute: typeof PortalTip403FactoryPolicyIdRouteWithChildren
+  PortalTip403FactoryIndexRoute: typeof PortalTip403FactoryIndexRoute
+}
+
+const PortalTip403FactoryRouteChildren: PortalTip403FactoryRouteChildren = {
+  PortalTip403FactoryPolicyIdRoute:
+    PortalTip403FactoryPolicyIdRouteWithChildren,
+  PortalTip403FactoryIndexRoute: PortalTip403FactoryIndexRoute,
+}
+
+const PortalTip403FactoryRouteWithChildren =
+  PortalTip403FactoryRoute._addFileChildren(PortalTip403FactoryRouteChildren)
+
 interface PortalRouteChildren {
   PortalAccessKeysRoute: typeof PortalAccessKeysRoute
+  PortalConnectedAppsRoute: typeof PortalConnectedAppsRoute
   PortalContactsRoute: typeof PortalContactsRoute
   PortalDashboardRoute: typeof PortalDashboardRoute
+  PortalExchangeBalanceRoute: typeof PortalExchangeBalanceRoute
   PortalLiquidityRoute: typeof PortalLiquidityRoute
+  PortalOrderbookRoute: typeof PortalOrderbookRoute
+  PortalPoolSwapRoute: typeof PortalPoolSwapRoute
   PortalReceiveRoute: typeof PortalReceiveRoute
   PortalScheduledRoute: typeof PortalScheduledRoute
   PortalSendRoute: typeof PortalSendRoute
   PortalSwapRoute: typeof PortalSwapRoute
-  PortalTip20StudioRoute: typeof PortalTip20StudioRoute
-  PortalTip403FactoryRoute: typeof PortalTip403FactoryRoute
+  PortalTip20StudioRoute: typeof PortalTip20StudioRouteWithChildren
+  PortalTip403FactoryRoute: typeof PortalTip403FactoryRouteWithChildren
 }
 
 const PortalRouteChildren: PortalRouteChildren = {
   PortalAccessKeysRoute: PortalAccessKeysRoute,
+  PortalConnectedAppsRoute: PortalConnectedAppsRoute,
   PortalContactsRoute: PortalContactsRoute,
   PortalDashboardRoute: PortalDashboardRoute,
+  PortalExchangeBalanceRoute: PortalExchangeBalanceRoute,
   PortalLiquidityRoute: PortalLiquidityRoute,
+  PortalOrderbookRoute: PortalOrderbookRoute,
+  PortalPoolSwapRoute: PortalPoolSwapRoute,
   PortalReceiveRoute: PortalReceiveRoute,
   PortalScheduledRoute: PortalScheduledRoute,
   PortalSendRoute: PortalSendRoute,
   PortalSwapRoute: PortalSwapRoute,
-  PortalTip20StudioRoute: PortalTip20StudioRoute,
-  PortalTip403FactoryRoute: PortalTip403FactoryRoute,
+  PortalTip20StudioRoute: PortalTip20StudioRouteWithChildren,
+  PortalTip403FactoryRoute: PortalTip403FactoryRouteWithChildren,
 }
 
 const PortalRouteWithChildren =
@@ -296,7 +614,9 @@ const PortalRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ConnectRoute: ConnectRoute,
   PortalRoute: PortalRouteWithChildren,
+  SignRoute: SignRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

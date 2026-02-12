@@ -113,12 +113,12 @@ export interface SendPaymentParams {
   to: Address;
   /** Amount in smallest units (e.g., 1000000 = 1 USD with 6 decimals) */
   amount: bigint;
-  /** Token address to send (defaults to USD) */
-  token?: Address;
+  /** Token address to send */
+  token: Address;
   /** Token to pay fees with (defaults to USD) */
   feeToken?: Address;
-  /** Optional memo (up to 32 bytes) */
-  memo?: string;
+  /** Optional memo (hex-encoded, up to 32 bytes) */
+  memo?: `0x${string}`;
 }
 
 /**
@@ -153,9 +153,9 @@ export interface SwapParams {
  */
 export interface AddLiquidityParams {
   /** User token address */
-  userToken: Address;
+  userTokenAddress: Address;
   /** Validator token address */
-  validatorToken: Address;
+  validatorTokenAddress: Address;
   /** Amount of validator tokens to add */
   validatorTokenAmount: bigint;
   /** Token to pay fees with (defaults to USD) */
@@ -168,9 +168,9 @@ export interface AddLiquidityParams {
  */
 export interface RemoveLiquidityParams {
   /** User token address */
-  userToken: Address;
+  userTokenAddress: Address;
   /** Validator token address */
-  validatorToken: Address;
+  validatorTokenAddress: Address;
   /** Amount of LP tokens to burn */
   liquidity: bigint;
   /** Token to pay fees with (defaults to USD) */

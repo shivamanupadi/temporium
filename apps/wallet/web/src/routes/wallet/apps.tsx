@@ -68,19 +68,13 @@ function AppsPage(): ReactElement {
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex items-center gap-3"
       >
-        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-          <Shield className="w-5 h-5 text-primary" />
-        </div>
-        <div>
-          <h1 className="text-xl font-semibold text-[#2D3436]">Connected Apps</h1>
-          <p className="text-[13px] text-muted-foreground">
-            {apps.length === 0
-              ? 'No apps connected'
-              : `${apps.length} app${apps.length !== 1 ? 's' : ''} connected`}
-          </p>
-        </div>
+        <h1 className="text-2xl font-bold text-[#2D3436] tracking-tight">Connected Apps</h1>
+        <p className="text-[14px] text-[#6B6560] mt-1">
+          {apps.length === 0
+            ? 'No apps connected'
+            : `${apps.length} app${apps.length !== 1 ? 's' : ''} connected`}
+        </p>
       </motion.div>
 
       {/* Content */}

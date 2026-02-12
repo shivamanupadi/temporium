@@ -16,11 +16,11 @@
  * // Connect to wallet
  * const { address, chainId } = await wallet.connect();
  *
- * // Send a payment (same params as useTempo().sendPayment)
+ * // Send a payment (same params as Actions.token.transfer)
  * const { hash } = await wallet.sendPayment({
  *   to: '0x...',
  *   amount: 1000000n, // 1 USD
- *   memo: 'Coffee payment',
+ *   token: '0x20c0000000000000000000000000000000000001',
  * });
  *
  * // Swap tokens (same params as useTempo().swapTokens)
@@ -42,13 +42,14 @@
  * const { hash } = await wallet.sendPayment({
  *   to: '0x...',
  *   amount: 1000000n,
+ *   token: USD_ADDRESS,
  * });
  *
- * // After (with useTempo hook directly)
- * const { sendPayment } = useTempo();
- * const hash = await sendPayment({
+ * // After (with Actions SDK directly)
+ * const hash = await Actions.token.transfer(walletClient, {
  *   to: '0x...',
  *   amount: 1000000n,
+ *   token: USD_ADDRESS,
  * });
  * ```
  *

@@ -73,20 +73,6 @@ function generateRequestId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
 }
 
-/**
- * Convert a string memo to bytes32 hex
- */
-function stringToBytes32(str: string): `0x${string}` {
-  const encoder = new TextEncoder();
-  const bytes = encoder.encode(str);
-  const truncated = bytes.slice(0, 32);
-  const padded = new Uint8Array(32);
-  padded.set(truncated);
-
-  return `0x${Array.from(padded)
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('')}` as `0x${string}`;
-}
 
 /**
  * Temporium Wallet Connect Client
@@ -119,7 +105,7 @@ function stringToBytes32(str: string): `0x${string}` {
  * const { hash } = await wallet.sendPayment({
  *   to: '0x...',
  *   amount: 1000000n,
- *   memo: 'Coffee payment',
+ *   token: '0x20c0000000000000000000000000000000000001',
  * });
  * ```
  */
@@ -844,8 +830,8 @@ export class WalletConnect {
       );
     }
 
-    // Validate optional token addresses
-    if (token && !isValidAddress(token)) {
+    // Validate token addresses
+    if (!isValidAddress(token)) {
       throw new WalletConnectError(
         WalletConnectErrorCode.INVALID_ADDRESS,
         'Invalid token address',
@@ -867,9 +853,9 @@ export class WalletConnect {
       {
         to,
         amount: amount.toString(),
-        token: token || DEFAULT_FEE_TOKEN,
+        token,
         feeToken: feeToken || DEFAULT_FEE_TOKEN,
-        memo: memo ? stringToBytes32(memo) : undefined,
+        memo,
       },
       SIGNING_TIMEOUT
     );
@@ -932,9 +918,9 @@ export class WalletConnect {
       {
         to,
         amount: amount.toString(),
-        token: token || DEFAULT_FEE_TOKEN,
+        token,
         feeToken: feeToken || DEFAULT_FEE_TOKEN,
-        memo: memo ? stringToBytes32(memo) : undefined,
+        memo,
         scheduledFor,
       },
       SIGNING_TIMEOUT
@@ -1035,22 +1021,22 @@ export class WalletConnect {
     // Validate connection
     this.ensureConnected();
 
-    const { userToken, validatorToken, validatorTokenAmount, feeToken } = params;
+    const { userTokenAddress, validatorTokenAddress, validatorTokenAmount, feeToken } = params;
 
     // Validate token addresses
-    if (!isValidAddress(userToken)) {
+    if (!isValidAddress(userTokenAddress)) {
       throw new WalletConnectError(
         WalletConnectErrorCode.INVALID_ADDRESS,
-        'Invalid userToken address',
-        { field: 'userToken', value: userToken }
+        'Invalid userTokenAddress',
+        { field: 'userTokenAddress', value: userTokenAddress }
       );
     }
 
-    if (!isValidAddress(validatorToken)) {
+    if (!isValidAddress(validatorTokenAddress)) {
       throw new WalletConnectError(
         WalletConnectErrorCode.INVALID_ADDRESS,
-        'Invalid validatorToken address',
-        { field: 'validatorToken', value: validatorToken }
+        'Invalid validatorTokenAddress',
+        { field: 'validatorTokenAddress', value: validatorTokenAddress }
       );
     }
 
@@ -1067,8 +1053,8 @@ export class WalletConnect {
       '/sign',
       'add_liquidity',
       {
-        userToken,
-        validatorToken,
+        userTokenAddress,
+        validatorTokenAddress,
         validatorTokenAmount: validatorTokenAmount.toString(),
         feeToken: feeToken || DEFAULT_FEE_TOKEN,
       },
@@ -1089,22 +1075,22 @@ export class WalletConnect {
     // Validate connection
     this.ensureConnected();
 
-    const { userToken, validatorToken, liquidity, feeToken } = params;
+    const { userTokenAddress, validatorTokenAddress, liquidity, feeToken } = params;
 
     // Validate token addresses
-    if (!isValidAddress(userToken)) {
+    if (!isValidAddress(userTokenAddress)) {
       throw new WalletConnectError(
         WalletConnectErrorCode.INVALID_ADDRESS,
-        'Invalid userToken address',
-        { field: 'userToken', value: userToken }
+        'Invalid userTokenAddress',
+        { field: 'userTokenAddress', value: userTokenAddress }
       );
     }
 
-    if (!isValidAddress(validatorToken)) {
+    if (!isValidAddress(validatorTokenAddress)) {
       throw new WalletConnectError(
         WalletConnectErrorCode.INVALID_ADDRESS,
-        'Invalid validatorToken address',
-        { field: 'validatorToken', value: validatorToken }
+        'Invalid validatorTokenAddress',
+        { field: 'validatorTokenAddress', value: validatorTokenAddress }
       );
     }
 
@@ -1121,8 +1107,8 @@ export class WalletConnect {
       '/sign',
       'remove_liquidity',
       {
-        userToken,
-        validatorToken,
+        userTokenAddress,
+        validatorTokenAddress,
         liquidity: liquidity.toString(),
         feeToken: feeToken || DEFAULT_FEE_TOKEN,
       },

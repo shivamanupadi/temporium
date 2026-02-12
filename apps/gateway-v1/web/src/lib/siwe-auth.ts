@@ -1,5 +1,5 @@
 import type { WalletClient } from 'viem';
-import { AUTH_API_URL } from './api';
+import { AUTH_API_URL, TEMPO_NETWORK } from './api';
 import { saveAuthToken, type AuthToken } from './auth-storage';
 
 interface ChallengeResponse {
@@ -20,7 +20,7 @@ export async function signInWithEthereum(walletClient: WalletClient): Promise<Au
 
   const challengeResponse = await fetch(`${AUTH_API_URL}/challenge`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-Tempo-Network': TEMPO_NETWORK },
     body: JSON.stringify({ address }),
   });
 
@@ -36,7 +36,7 @@ export async function signInWithEthereum(walletClient: WalletClient): Promise<Au
 
   const verifyResponse = await fetch(`${AUTH_API_URL}/verify`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-Tempo-Network': TEMPO_NETWORK },
     body: JSON.stringify({ message, signature, address }),
   });
 

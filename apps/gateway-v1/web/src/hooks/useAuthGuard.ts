@@ -7,16 +7,12 @@ const CHECK_INTERVAL_MS = 30_000;
 
 /**
  * Monitors JWT token expiration and auto-logouts.
- * Applies to injected and passkey wallets (which use JWT).
- * WalletConnect manages its own session.
  */
 export function useAuthGuard(): void {
   const navigate = useNavigate();
   const { disconnect, walletType } = useTempo();
 
   const handleExpiredToken = useCallback(async () => {
-    // Only check for wallet types that use JWT
-    if (walletType === 'wallet-connect') return;
     if (!walletType) return;
 
     const token = getAuthToken();
@@ -34,7 +30,7 @@ export function useAuthGuard(): void {
   }, [handleExpiredToken]);
 
   useEffect(() => {
-    if (walletType === 'wallet-connect' || !walletType) return;
+    if (!walletType) return;
 
     const interval = setInterval(() => {
       handleExpiredToken();

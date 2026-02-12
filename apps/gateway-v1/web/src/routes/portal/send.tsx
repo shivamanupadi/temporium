@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { useState, useCallback, useEffect, useRef, type ReactElement } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -11,6 +11,7 @@ import {
   Copy,
   Check,
   AlertTriangle,
+  CalendarCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Address } from 'viem';
@@ -23,9 +24,14 @@ import {
   DialogDescription,
 } from '@temporium/shared-ui';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { useTempo, useTokenBalance } from '@/hooks/useTempo';
+import { TokenPicker } from '@/components/TokenPicker';
+import { FeeTokenPicker } from '@/components/FeeTokenPicker';
+import { ContactPicker } from '@/components/ContactPicker';
+import { useTempo, useTokenBalance, encodeMemo } from '@/hooks/useTempo';
+import { useTokenList } from '@/hooks/useTokenList';
+import { createScheduledTransaction } from '@/lib/scheduled-transactions';
+import type { Token } from '@/lib/tokenlist';
 import {
-  DEFAULT_FEE_TOKEN_ADDRESS,
   SCHEDULE_PRESETS,
   MAX_SCHEDULE_SECONDS,
 } from '@/lib/constants';
@@ -34,14 +40,20 @@ import {
   parseAmount,
   formatAddress,
   isValidAddress,
-  formatCountdown,
   copyToClipboard,
   cn,
 } from '@/lib/utils';
 import { getExplorerTxUrl } from '@/lib/tempo-client';
 
+interface SendSearchParams {
+  mode?: SendMode;
+}
+
 export const Route = createFileRoute('/portal/send')({
   component: SendPage,
+  validateSearch: (search: Record<string, unknown>): SendSearchParams => ({
+    mode: search.mode === 'scheduled' ? 'scheduled' : undefined,
+  }),
 });
 
 // ---------------------------------------------------------------------------
@@ -64,12 +76,25 @@ const EMPTY_FORM: FormState = { recipient: '', amount: '', memo: '' };
 // ---------------------------------------------------------------------------
 
 function SendPage(): ReactElement | null {
-  const { address, isConnected, sendPayment, sendScheduledPayment } = useTempo();
-  const balance = useTokenBalance(DEFAULT_FEE_TOKEN_ADDRESS, address);
+  const { mode: initialMode } = Route.useSearch();
+  const { address, isConnected, sendPayment, signScheduledPayment } = useTempo();
+  const { tokens } = useTokenList();
+
+  // Token selection state
+  const [selectedToken, setSelectedToken] = useState<Token | null>(null);
+  const [feeToken, setFeeToken] = useState<Token | null>(null);
+
+  // Default to first token when tokens load
+  useEffect(() => {
+    if (tokens.length > 0 && !selectedToken) setSelectedToken(tokens[0]);
+    if (tokens.length > 0 && !feeToken) setFeeToken(tokens[0]);
+  }, [tokens, selectedToken, feeToken]);
+
+  const balance = useTokenBalance(selectedToken?.address, address);
 
   // Form state
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
-  const [mode, setMode] = useState<SendMode>('instant');
+  const [mode, setMode] = useState<SendMode>(initialMode ?? 'instant');
   const [scheduleSeconds, setScheduleSeconds] = useState<number>(
     SCHEDULE_PRESETS[0].seconds,
   );
@@ -80,19 +105,10 @@ function SendPage(): ReactElement | null {
   const [copied, setCopied] = useState(false);
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Countdown for scheduled preview
-  const [countdownTarget, setCountdownTarget] = useState<number | null>(null);
-  const [countdownLabel, setCountdownLabel] = useState('');
+  // Scheduled payment state
+  const [scheduledForTime, setScheduledForTime] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (countdownTarget === null) return;
-    const tick = (): void => { setCountdownLabel(formatCountdown(countdownTarget)); };
-    tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [countdownTarget]);
-
-  // Cleanup copy timeout on unmount
+  // Cleanup timers on unmount
   useEffect(() => {
     return () => {
       if (copyTimeoutRef.current) clearTimeout(copyTimeoutRef.current);
@@ -103,7 +119,8 @@ function SendPage(): ReactElement | null {
   // Derived values
   // ---------------------------------------------------------------------------
 
-  const parsedAmount = parseAmount(form.amount);
+  const tokenDecimals = selectedToken?.decimals ?? 6;
+  const parsedAmount = parseAmount(form.amount, tokenDecimals);
   const hasValidRecipient = isValidAddress(form.recipient);
   const hasValidAmount = parsedAmount > 0n;
   const hasSufficientBalance =
@@ -141,9 +158,9 @@ function SendPage(): ReactElement | null {
 
   const handleMaxAmount = useCallback(() => {
     if (!balance.isLoading && balance.data.value > 0n) {
-      updateField('amount', formatAmount(balance.data.value, 6, 6));
+      updateField('amount', formatAmount(balance.data.value, tokenDecimals, tokenDecimals));
     }
-  }, [balance, updateField]);
+  }, [balance, updateField, tokenDecimals]);
 
   const handleReview = useCallback(() => {
     if (!isFormValid) return;
@@ -151,12 +168,10 @@ function SendPage(): ReactElement | null {
   }, [isFormValid]);
 
   const handleConfirmSend = useCallback(async () => {
-    if (!isFormValid || !address) return;
+    if (!isFormValid || !address || !selectedToken || !feeToken) return;
     setStep('sending');
 
     try {
-      let hash: string;
-
       if (mode === 'scheduled') {
         const scheduledFor = Math.floor(Date.now() / 1000) + scheduleSeconds;
 
@@ -164,31 +179,52 @@ function SendPage(): ReactElement | null {
           throw new Error('Cannot schedule more than 60 minutes in advance');
         }
 
-        hash = await sendScheduledPayment({
+        // Sign the transaction now
+        const { serializedTransaction } = await signScheduledPayment({
           to: form.recipient as Address,
           amount: parsedAmount,
-          token: DEFAULT_FEE_TOKEN_ADDRESS,
-          feeToken: DEFAULT_FEE_TOKEN_ADDRESS,
-          memo: form.memo || undefined,
+          token: selectedToken.address,
+          feeToken: feeToken.address,
+          memo: form.memo ? encodeMemo(form.memo) : undefined,
           scheduledFor,
         });
 
-        setCountdownTarget(scheduledFor);
+        // POST to worker API — the cron will submit it when the time comes
+        const scheduledForISO = new Date(scheduledFor * 1000).toISOString();
+        await createScheduledTransaction({
+          serializedTx: serializedTransaction,
+          from: address,
+          to: form.recipient,
+          amount: parsedAmount.toString(),
+          token: selectedToken.address,
+          tokenSymbol: selectedToken.symbol,
+          tokenDecimals: selectedToken.decimals,
+          feeToken: feeToken.address,
+          memo: form.memo || undefined,
+          scheduledFor: scheduledForISO,
+        });
+
+        setScheduledForTime(
+          new Date(scheduledFor * 1000).toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        );
+        setStep('success');
+        toast.success('Payment scheduled successfully');
       } else {
-        hash = await sendPayment({
+        const hash = await sendPayment({
           to: form.recipient as Address,
           amount: parsedAmount,
-          token: DEFAULT_FEE_TOKEN_ADDRESS,
-          feeToken: DEFAULT_FEE_TOKEN_ADDRESS,
-          memo: form.memo || undefined,
+          token: selectedToken.address,
+          feeToken: feeToken.address,
+          memo: form.memo ? encodeMemo(form.memo) : undefined,
         });
-      }
 
-      setTxHash(hash);
-      setStep('success');
-      toast.success(
-        mode === 'scheduled' ? 'Payment scheduled' : 'Payment sent',
-      );
+        setTxHash(hash);
+        setStep('success');
+        toast.success('Payment sent');
+      }
     } catch (err) {
       console.error('Send failed:', err);
       const message =
@@ -199,9 +235,11 @@ function SendPage(): ReactElement | null {
   }, [
     isFormValid,
     address,
+    selectedToken,
+    feeToken,
     mode,
     scheduleSeconds,
-    sendScheduledPayment,
+    signScheduledPayment,
     sendPayment,
     form,
     parsedAmount,
@@ -224,7 +262,7 @@ function SendPage(): ReactElement | null {
     setStep('form');
     setTxHash(null);
     setCopied(false);
-    setCountdownTarget(null);
+    setScheduledForTime(null);
   }, []);
 
   const handleDialogClose = useCallback(() => {
@@ -240,7 +278,7 @@ function SendPage(): ReactElement | null {
   // Guard
   // ---------------------------------------------------------------------------
 
-  if (!isConnected || !address) return null;
+  if (!isConnected || !address || !selectedToken || !feeToken) return null;
 
   // ---------------------------------------------------------------------------
   // Render helpers
@@ -248,19 +286,19 @@ function SendPage(): ReactElement | null {
 
   const balanceDisplay = balance.isLoading
     ? '...'
-    : formatAmount(balance.data.value, 6, 2);
+    : formatAmount(balance.data.value, tokenDecimals, 2);
 
   const formattedParsedAmount =
-    parsedAmount > 0n ? formatAmount(parsedAmount, 6, 2) : '0.00';
+    parsedAmount > 0n ? formatAmount(parsedAmount, tokenDecimals, 2) : '0.00';
 
   return (
     <div className="max-w-lg">
       {/* Page header */}
       <div className="mb-6">
-        <h1 className="text-xl font-bold text-[#2D3436] tracking-tight">
+        <h1 className="text-2xl font-bold text-[#2D3436] tracking-tight">
           Send Payment
         </h1>
-        <p className="text-[13px] text-[#9B9590] mt-1">
+        <p className="text-[14px] text-[#6B6560] mt-1">
           Transfer tokens instantly or schedule for later
         </p>
       </div>
@@ -304,30 +342,10 @@ function SendPage(): ReactElement | null {
 
         <div className="p-5 space-y-5">
           {/* Recipient address */}
-          <div>
-            <label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2 block">
-              Recipient Address
-            </label>
-            <Input
-              placeholder="0x..."
-              value={form.recipient}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('recipient', e.target.value.trim())}
-              className={cn(
-                'font-mono text-[13px] h-11 rounded-xl border-[#EDE9E3] bg-[#FDFBF8] focus:border-[#E07A5F] focus:ring-1 focus:ring-[#E07A5F]/20 transition-all',
-                form.recipient && !hasValidRecipient && 'border-red-300 bg-red-50/30',
-              )}
-            />
-            {form.recipient && !hasValidRecipient && (
-              <motion.p
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-[11px] text-red-500 mt-1.5 flex items-center gap-1"
-              >
-                <AlertTriangle className="w-3 h-3" />
-                Invalid address format
-              </motion.p>
-            )}
-          </div>
+          <ContactPicker
+            value={form.recipient}
+            onChange={(v) => updateField('recipient', v)}
+          />
 
           {/* Amount */}
           <div>
@@ -340,24 +358,29 @@ function SendPage(): ReactElement | null {
                 onClick={handleMaxAmount}
                 className="text-[11px] font-medium text-[#E07A5F] hover:text-[#E07A5F]/80 transition-colors"
               >
-                Balance: {balanceDisplay} USD
+                Balance: {balanceDisplay} {selectedToken.symbol}
               </button>
             </div>
-            <div className="relative">
-              <Input
-                type="text"
-                inputMode="decimal"
-                placeholder="0.00"
-                value={form.amount}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleAmountChange(e.target.value)}
-                className={cn(
-                  'text-[18px] font-semibold h-12 rounded-xl border-[#EDE9E3] bg-[#FDFBF8] pr-16 focus:border-[#E07A5F] focus:ring-1 focus:ring-[#E07A5F]/20 transition-all',
-                  form.amount && hasValidAmount && !hasSufficientBalance && 'border-red-300 bg-red-50/30',
-                )}
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="0.00"
+                  value={form.amount}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleAmountChange(e.target.value)}
+                  className={cn(
+                    'text-[18px] font-semibold h-12 rounded-xl border-[#EDE9E3] bg-[#FDFBF8] focus:border-[#E07A5F] focus:ring-1 focus:ring-[#E07A5F]/20 transition-all',
+                    form.amount && hasValidAmount && !hasSufficientBalance && 'border-red-300 bg-red-50/30',
+                  )}
+                />
+              </div>
+              <TokenPicker
+                token={selectedToken}
+                tokens={tokens}
+                onChange={setSelectedToken}
+                accentColor="#E07A5F"
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[13px] font-semibold text-[#9B9590]">
-                USD
-              </span>
             </div>
             {form.amount && hasValidAmount && !hasSufficientBalance && (
               <motion.p
@@ -387,6 +410,13 @@ function SendPage(): ReactElement | null {
               className="text-[13px] h-10 rounded-xl border-[#EDE9E3] bg-[#FDFBF8] focus:border-[#E07A5F] focus:ring-1 focus:ring-[#E07A5F]/20 transition-all"
             />
           </div>
+
+          {/* Fee token */}
+          <FeeTokenPicker
+            value={feeToken}
+            tokens={tokens}
+            onChange={setFeeToken}
+          />
 
           {/* Schedule presets (visible only in scheduled mode) */}
           <AnimatePresence mode="wait">
@@ -429,8 +459,9 @@ function SendPage(): ReactElement | null {
                   <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50/80 border border-amber-200/60">
                     <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
                     <p className="text-[12px] text-amber-700 leading-relaxed">
-                      Scheduled payments cannot be cancelled once submitted. The
-                      transaction will execute automatically after the delay.
+                      The transaction will be signed now and submitted
+                      automatically after the delay. You can cancel pending
+                      payments from the Scheduled page.
                     </p>
                   </div>
                 </div>
@@ -501,7 +532,7 @@ function SendPage(): ReactElement | null {
                     <p className="text-2xl font-bold text-[#2D3436]">
                       {formattedParsedAmount}{' '}
                       <span className="text-[15px] font-semibold text-[#9B9590]">
-                        USD
+                        {selectedToken.symbol}
                       </span>
                     </p>
                   </div>
@@ -699,7 +730,7 @@ function SendPage(): ReactElement | null {
                     <p className="text-3xl font-bold text-[#2D3436] tracking-tight">
                       {formattedParsedAmount}
                       <span className="text-lg font-semibold text-[#9B9590] ml-2">
-                        USD
+                        {selectedToken.symbol}
                       </span>
                     </p>
                   </motion.div>
@@ -719,7 +750,7 @@ function SendPage(): ReactElement | null {
             )}
 
             {/* ─── Success Step ──────────────────────────────────── */}
-            {step === 'success' && txHash && (
+            {step === 'success' && (mode === 'scheduled' || txHash) && (
               <motion.div
                 key="success"
                 initial={{ opacity: 0, scale: 0.96 }}
@@ -729,10 +760,12 @@ function SendPage(): ReactElement | null {
                 className="relative overflow-hidden"
               >
                 <DialogTitle className="sr-only">
-                  Payment Successful
+                  {mode === 'instant' ? 'Payment Successful' : 'Payment Scheduled'}
                 </DialogTitle>
                 <DialogDescription className="sr-only">
-                  Your payment has been completed
+                  {mode === 'instant'
+                    ? 'Your payment has been completed'
+                    : 'Your payment has been scheduled and will execute automatically'}
                 </DialogDescription>
 
                 <div className="px-6 pt-10 pb-6 text-center">
@@ -747,12 +780,7 @@ function SendPage(): ReactElement | null {
                     }}
                     className="inline-flex items-center justify-center mb-6"
                   >
-                    <div
-                      className={cn(
-                        'w-16 h-16 rounded-full flex items-center justify-center',
-                        mode === 'instant' ? 'bg-[#5B9A6F]' : 'bg-[#9B72CF]',
-                      )}
-                    >
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center bg-[#5B9A6F]">
                       <svg
                         width="32"
                         height="32"
@@ -801,7 +829,7 @@ function SendPage(): ReactElement | null {
                       {formattedParsedAmount}
                     </span>
                     <span className="text-lg text-[#9B9590] ml-1.5 font-semibold">
-                      USD
+                      {selectedToken.symbol}
                     </span>
                   </motion.div>
 
@@ -834,42 +862,44 @@ function SendPage(): ReactElement | null {
                       </div>
                     )}
 
-                    {/* Scheduled delivery */}
-                    {mode === 'scheduled' && countdownTarget && (
+                    {/* Scheduled delivery time */}
+                    {mode === 'scheduled' && scheduledForTime && (
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
-                          Executes in
+                          Will execute at
                         </span>
                         <span className="text-[12px] font-medium text-[#9B72CF] flex items-center gap-1">
                           <Clock className="w-3 h-3" />
-                          {countdownLabel}
+                          {scheduledForTime}
                         </span>
                       </div>
                     )}
 
-                    {/* Tx hash */}
-                    <div className="flex items-center justify-between pt-2 border-t border-[#EDE9E3]">
-                      <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
-                        Tx Hash
-                      </span>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-mono text-[12px] text-[#2D3436]">
-                          {txHash.slice(0, 10)}...{txHash.slice(-4)}
+                    {/* Tx hash (instant only) */}
+                    {txHash && (
+                      <div className="flex items-center justify-between pt-2 border-t border-[#EDE9E3]">
+                        <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                          Tx Hash
                         </span>
-                        <button
-                          type="button"
-                          onClick={handleCopyTxHash}
-                          className="p-1 rounded-md hover:bg-[#F5F2ED] transition-colors"
-                          title="Copy transaction hash"
-                        >
-                          {copied ? (
-                            <Check className="w-3 h-3 text-[#5B9A6F]" />
-                          ) : (
-                            <Copy className="w-3 h-3 text-[#9B9590]" />
-                          )}
-                        </button>
+                        <div className="flex items-center gap-1.5">
+                          <span className="font-mono text-[12px] text-[#2D3436]">
+                            {txHash.slice(0, 10)}...{txHash.slice(-4)}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={handleCopyTxHash}
+                            className="p-1 rounded-md hover:bg-[#F5F2ED] transition-colors"
+                            title="Copy transaction hash"
+                          >
+                            {copied ? (
+                              <Check className="w-3 h-3 text-[#5B9A6F]" />
+                            ) : (
+                              <Copy className="w-3 h-3 text-[#9B9590]" />
+                            )}
+                          </button>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </motion.div>
                 </div>
 
@@ -880,24 +910,31 @@ function SendPage(): ReactElement | null {
                   transition={{ delay: 0.65 }}
                   className="px-6 pb-6 flex gap-3"
                 >
-                  <Button
-                    variant="outline"
-                    onClick={() =>
-                      window.open(getExplorerTxUrl(txHash), '_blank')
-                    }
-                    className="flex-1 h-11 rounded-xl border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
-                    Explorer
-                  </Button>
+                  {mode === 'instant' && txHash ? (
+                    <Button
+                      variant="outline"
+                      onClick={() =>
+                        window.open(getExplorerTxUrl(txHash), '_blank')
+                      }
+                      className="flex-1 h-11 rounded-xl border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5 mr-1.5" />
+                      Explorer
+                    </Button>
+                  ) : (
+                    <Link to="/portal/scheduled" className="flex-1">
+                      <Button
+                        variant="outline"
+                        className="w-full h-11 rounded-xl border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
+                      >
+                        <CalendarCheck className="w-3.5 h-3.5 mr-1.5" />
+                        View Scheduled
+                      </Button>
+                    </Link>
+                  )}
                   <Button
                     onClick={resetForm}
-                    className={cn(
-                      'flex-1 h-11 rounded-xl font-semibold',
-                      mode === 'instant'
-                        ? 'bg-[#E07A5F] hover:bg-[#D4694F] text-white'
-                        : 'bg-[#9B72CF] hover:bg-[#8A62BE] text-white',
-                    )}
+                    className="flex-1 h-11 rounded-xl font-semibold bg-[var(--color-sage)] hover:bg-[var(--color-sage)]/80 text-white"
                   >
                     <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
                     Done

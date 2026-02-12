@@ -5,6 +5,7 @@ import { secureHeaders } from 'hono/secure-headers';
 import { createCorsMiddleware } from './middleware/cors';
 import { requestId } from './middleware/request-id';
 import { errorHandler } from './middleware/error';
+import { networkMiddleware } from './middleware/network';
 import routes from './routes';
 import type { Env, Variables } from './types/env';
 
@@ -33,6 +34,9 @@ export function createApp() {
     const corsMiddleware = createCorsMiddleware(c.env.ALLOWED_ORIGINS || '*');
     return corsMiddleware(c, next);
   });
+
+  // Network resolution from X-Tempo-Network header
+  app.use('*', networkMiddleware);
 
   // Health check endpoints
   app.get('/', c => {

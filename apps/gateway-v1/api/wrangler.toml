@@ -3,29 +3,30 @@ main = "src/index.ts"
 compatibility_date = "2024-12-26"
 compatibility_flags = ["nodejs_compat"]
 
-# Production: Custom domain
-routes = [{ pattern = "gateway-v1-api.temporium.xyz", custom_domain = true }]
-
-# D1 Database
+# D1 Database (default: local dev)
 [[d1_databases]]
 binding = "DB"
 database_name = "temporium-gateway-v1-db"
 database_id = "placeholder-gateway-v1-db-id"
 
-# Environment Variables
+# Durable Objects
+[durable_objects]
+bindings = [
+  { name = "SCHEDULED_TX", class_name = "ScheduledTransactionDO" },
+]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["ScheduledTransactionDO"]
+
+# Single worker serving both testnet and mainnet via X-Tempo-Network header
 [vars]
 ALLOWED_ORIGINS = "*"
-TEMPO_CHAIN_ID = "1559"
-TEMPO_EXPLORER_URL = "https://explorer.temporium.xyz"
+JWT_EXPIRATION = "24h"
+TESTNET_PASSKEY_REGISTRY_ADDRESS = "0xba6FFf66aE28e8Fe13b8679653934f3C8Ef9Ca9e"
+MAINNET_PASSKEY_REGISTRY_ADDRESS = "0x0000000000000000000000000000000000000000"
 
-# Secrets (set via CLI):
+# Secrets:
 # wrangler secret put JWT_SECRET
-
-# Staging Environment
-[env.staging]
-name = "temporium-gateway-v1-api-staging"
-
-[[env.staging.d1_databases]]
-binding = "DB"
-database_name = "temporium-gateway-v1-db-staging"
-database_id = "placeholder-staging-db-id"
+# wrangler secret put TESTNET_RELAYER_PRIVATE_KEY
+# wrangler secret put MAINNET_RELAYER_PRIVATE_KEY

@@ -106,7 +106,7 @@ export type CreatePolicyRequest = z.infer<typeof createPolicySchema>;
 export const transactionStatusSchema = z.enum(transactionStatusValues);
 
 export const createScheduledTxSchema = z.object({
-  txHash: transactionHash,
+  serializedTx: hexString.refine(val => val.length > 10, 'Serialized transaction is too short'),
   from: ethereumAddress,
   to: ethereumAddress,
   amount: z
@@ -139,6 +139,16 @@ export const updateScheduledTxSchema = z.object({
 
 export type CreateScheduledTxRequest = z.infer<typeof createScheduledTxSchema>;
 export type UpdateScheduledTxRequest = z.infer<typeof updateScheduledTxSchema>;
+
+// ============ Pagination Schemas ============
+
+export const scheduledTxQuerySchema = z.object({
+  status: transactionStatusSchema.optional(),
+  cursor: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+
+export type ScheduledTxQuery = z.infer<typeof scheduledTxQuerySchema>;
 
 // ============ Path Param Schemas ============
 

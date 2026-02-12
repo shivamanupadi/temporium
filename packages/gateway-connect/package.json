@@ -1,0 +1,37 @@
+{
+  "name": "@temporium/gateway-connect",
+  "version": "0.0.1",
+  "description": "SDK for connecting to Temporium Gateway from Tempo apps",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "type-check": "tsc --noEmit",
+    "clean": "rimraf dist node_modules .turbo"
+  },
+  "dependencies": {
+    "viem": "^2.43.3"
+  },
+  "devDependencies": {
+    "@temporium/typescript-config": "*",
+    "rimraf": "^5.0.1",
+    "tsup": "^8.4.0",
+    "typescript": "~5.9.3"
+  },
+  "peerDependencies": {
+    "viem": "^2.0.0"
+  }
+}

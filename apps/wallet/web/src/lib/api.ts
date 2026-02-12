@@ -8,6 +8,11 @@
 const WALLET_API_URL = import.meta.env.VITE_WALLET_API_URL || 'https://wallet-api.temporium.xyz';
 
 /**
+ * Gateway-v1 API base URL (contacts, scheduled txs, etc.)
+ */
+const GATEWAY_API_URL = import.meta.env.VITE_GATEWAY_V1_API_URL || 'https://gateway-v1-api.temporium.xyz';
+
+/**
  * Keys API URL - for passkey storage (wallet-api)
  */
 export const KEYS_API_URL = `${WALLET_API_URL}/keys`;
@@ -27,4 +32,11 @@ export const TOKENLIST_API_URL = `${WALLET_API_URL}/tokenlist`;
  */
 export function getWalletApiUrl(): string {
   return WALLET_API_URL;
+}
+
+/**
+ * Get the gateway-v1 API base URL
+ */
+export function getGatewayApiUrl(): string {
+  return GATEWAY_API_URL;
 }

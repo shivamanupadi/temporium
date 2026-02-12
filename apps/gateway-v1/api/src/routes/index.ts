@@ -6,8 +6,16 @@ import tip20Router from './tip20-studio';
 import policiesRouter from './policies';
 import scheduledTxsRouter from './scheduled-txs';
 import tokenlistRouter from './tokenlist';
+import authRouter from './auth';
+import keysRouter from './keys';
+import contractsRouter from './contracts';
 
 const routes = new Hono<{ Bindings: Env; Variables: Variables }>();
+
+// Wallet API routes (merged from wallet worker)
+routes.route('/auth', authRouter);
+routes.route('/keys', keysRouter);
+routes.route('/contracts', contractsRouter);
 
 // API v1 routes
 routes.route('/v1/contacts', contactsRouter);

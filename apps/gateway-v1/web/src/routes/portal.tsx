@@ -7,11 +7,14 @@ import {
   QrCode,
   ArrowRightLeft,
   Droplets,
-  Coins,
+  CircleDollarSign,
   Shield,
   Key,
   Users,
   Clock,
+  Link2,
+  BarChart3,
+  Repeat,
   LogOut,
   Menu,
   X,
@@ -51,16 +54,24 @@ const navSections = [
     ],
   },
   {
-    label: 'DeFi',
+    label: 'Stablecoin DEX',
     items: [
       { to: '/portal/swap', label: 'Swap', icon: ArrowRightLeft },
+      { to: '/portal/orderbook', label: 'Orderbook', icon: BarChart3 },
+      { to: '/portal/exchange-balance', label: 'DEX Balance', icon: Wallet },
+    ],
+  },
+  {
+    label: 'AMM',
+    items: [
+      { to: '/portal/pool-swap', label: 'Pool Swap', icon: Repeat },
       { to: '/portal/liquidity', label: 'Liquidity', icon: Droplets },
     ],
   },
   {
     label: 'Tools',
     items: [
-      { to: '/portal/tip20-studio', label: 'TIP20 Studio', icon: Coins },
+      { to: '/portal/tip20-studio', label: 'TIP20 Studio', icon: CircleDollarSign },
       { to: '/portal/tip403-factory', label: 'TIP403 Factory', icon: Shield },
     ],
   },
@@ -70,6 +81,7 @@ const navSections = [
       { to: '/portal/scheduled', label: 'Scheduled', icon: Clock },
       { to: '/portal/access-keys', label: 'Access Keys', icon: Key },
       { to: '/portal/contacts', label: 'Contacts', icon: Users },
+      { to: '/portal/connected-apps', label: 'Connected Apps', icon: Link2 },
     ],
   },
 ] as const;
@@ -134,11 +146,11 @@ function PortalLayout(): ReactElement | null {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#FDFBF8]">
+    <div className="flex h-screen bg-[#FDFBF8]">
       {/* Desktop Sidebar */}
       <aside
         className={`hidden lg:flex flex-col border-r border-[#EDE9E3] bg-white transition-[width] duration-200 ease-[cubic-bezier(0.25,0.1,0.25,1)] ${
-          collapsed ? 'w-[68px]' : 'w-[220px]'
+          collapsed ? 'w-[68px]' : 'w-[248px]'
         }`}
       >
         {/* Expand button (collapsed) */}
@@ -182,17 +194,17 @@ function PortalLayout(): ReactElement | null {
         </div>
 
         {/* Network Picker */}
-        <div className={`py-5 ${collapsed ? 'px-2' : 'px-3'}`}>
+        <div className={`pb-1 ${collapsed ? 'px-2' : 'px-3'}`}>
           <div ref={networkDropdownRef} className="relative">
             {collapsed ? (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => setShowNetworkMenu(!showNetworkMenu)}
-                    className={`w-10 h-10 mx-auto flex items-center justify-center rounded-xl transition-all cursor-pointer ${
+                    className={`w-10 h-10 mx-auto flex items-center justify-center rounded-lg transition-all cursor-pointer bg-[#5B9A6F]/[0.06] ${
                       showNetworkMenu
-                        ? 'bg-[#F5F2ED] ring-1 ring-[#EDE9E3]'
-                        : 'bg-[#FDFBF8] border border-[#EDE9E3] hover:border-[#DDD8D1] hover:shadow-sm'
+                        ? 'ring-1 ring-[#5B9A6F]/15 bg-[#5B9A6F]/10'
+                        : 'hover:bg-[#5B9A6F]/10'
                     }`}
                   >
                     <Globe className="w-4 h-4 text-[#9B9590]" />
@@ -205,26 +217,22 @@ function PortalLayout(): ReactElement | null {
             ) : (
             <button
               onClick={() => setShowNetworkMenu(!showNetworkMenu)}
-              className={`w-full flex items-center justify-between gap-2 px-3 py-3 rounded-xl border bg-[#FDFBF8] transition-all cursor-pointer ${
+              className={`w-full flex items-center justify-between gap-2 px-2.5 py-2.5 rounded-lg transition-all cursor-pointer bg-[#5B9A6F]/[0.06] ${
                 showNetworkMenu
-                  ? 'border-[#DDD8D1]'
-                  : 'border-[#EDE9E3] hover:border-[#DDD8D1]'
+                  ? 'ring-1 ring-[#5B9A6F]/15 bg-[#5B9A6F]/10'
+                  : 'hover:bg-[#5B9A6F]/10'
               }`}
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-6 h-6 rounded-lg bg-[#F5F2ED] flex items-center justify-center">
-                  <Globe className="w-3.5 h-3.5 text-[#9B9590]" />
+                <div className="w-7 h-7 rounded-lg bg-[#5B9A6F]/10 flex items-center justify-center">
+                  <Globe className="w-3.5 h-3.5 text-[#5B9A6F]" />
                 </div>
                 <div className="text-left">
-                  <p className="text-[12px] font-semibold text-[#2D3436] leading-none">Testnet</p>
-                  <p className="text-[10px] text-[#9B9590] mt-0.5 leading-none">Moderato</p>
+                  <p className="text-[13px] font-semibold text-[#2D3436] leading-none">Testnet</p>
+                  <p className="text-[11px] text-[#9B9590] mt-0.5 leading-none">Moderato</p>
                 </div>
               </div>
-              <ChevronDown
-                className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                  showNetworkMenu ? 'rotate-180 text-[#6B6560]' : 'text-[#B5B0AA]'
-                }`}
-              />
+              <ChevronsUpDown className="w-3 h-3 text-[#B5B0AA]" />
             </button>
             )}
 
@@ -331,8 +339,8 @@ function PortalLayout(): ReactElement | null {
               <TooltipTrigger asChild>
                 <button
                   onClick={() => setShowWalletMenu(!showWalletMenu)}
-                  className={`w-full flex items-center justify-center py-2 rounded-xl transition-all ${
-                    showWalletMenu ? 'bg-[#F5F2ED] ring-1 ring-[#EDE9E3]' : 'hover:bg-[#FAF8F5]'
+                  className={`w-full flex items-center justify-center py-2 rounded-xl transition-all bg-[#FAF8F5] ${
+                    showWalletMenu ? 'ring-1 ring-[#EDE9E3] bg-[#F5F2ED]' : 'hover:bg-[#F5F2ED]'
                   }`}
                 >
                   <div className="w-8 h-8 rounded-full bg-[#E07A5F] flex items-center justify-center">
@@ -347,8 +355,8 @@ function PortalLayout(): ReactElement | null {
           ) : (
           <button
             onClick={() => setShowWalletMenu(!showWalletMenu)}
-            className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-xl transition-all text-left ${
-              showWalletMenu ? 'bg-[#F5F2ED] ring-1 ring-[#EDE9E3]' : 'hover:bg-[#FAF8F5]'
+            className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-xl transition-all text-left bg-[#FAF8F5] ${
+              showWalletMenu ? 'ring-1 ring-[#EDE9E3] bg-[#F5F2ED]' : 'hover:bg-[#F5F2ED]'
             }`}
           >
             <div className="w-8 h-8 rounded-full bg-[#E07A5F] flex items-center justify-center flex-shrink-0">
@@ -426,7 +434,7 @@ function PortalLayout(): ReactElement | null {
       </aside>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile header */}
         <header className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-[#EDE9E3] bg-white">
           <div className="flex items-center gap-2.5">
@@ -505,8 +513,10 @@ function PortalLayout(): ReactElement | null {
         </AnimatePresence>
 
         {/* Page content */}
-        <main className="flex-1 p-4 md:p-6 lg:p-8 max-w-5xl mx-auto w-full">
-          <Outlet />
+        <main className="flex-1 overflow-y-auto">
+          <div className="p-4 md:p-6 lg:p-8 max-w-5xl mx-auto w-full">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

@@ -18,8 +18,7 @@
     "apps/node-manager/home",
     "apps/playground",
     "apps/playground/*",
-    "packages/*",
-    "packages/wallet-connect/example"
+    "packages/*"
   ],
   "scripts": {
     "dev": "turbo run dev",
@@ -37,7 +36,7 @@
     "build:gateway": "turbo run build --filter=@temporium/gateway",
     "build:wallet": "turbo run build --filter=@temporium/wallet",
     "build:node-manager": "turbo run build --filter=@temporium/node-manager",
-    "dev:gateway-v1": "turbo run dev --filter=@temporium/gateway-v1-api --filter=@temporium/gateway-v1-web --filter=@temporium/wallet",
+    "dev:gateway-v1": "turbo run dev --filter=@temporium/gateway-v1-api --filter=@temporium/gateway-v1-web",
     "build:gateway-v1": "turbo run build --filter=@temporium/gateway-v1-api --filter=@temporium/gateway-v1-web",
     "dev:playground": "turbo run dev --filter=@temporium/playground --filter=@temporium/wallet",
     "build:playground": "turbo run build --filter=@temporium/playground",

@@ -23,6 +23,8 @@ export const DEFAULT_FEE_TOKEN_ADDRESS = '0x20c000000000000000000000000000000000
  * Scheduling presets (in seconds)
  */
 export const SCHEDULE_PRESETS = [
+  { label: '10 sec', seconds: 10 },
+  { label: '30 sec', seconds: 30 },
   { label: '5 min', seconds: 5 * 60 },
   { label: '15 min', seconds: 15 * 60 },
   { label: '30 min', seconds: 30 * 60 },
@@ -77,6 +79,8 @@ export const TIMING = {
   POOL_REFRESH_MS: 15000,
   SCHEDULED_TX_CHECK_MS: 30000,
   COUNTDOWN_INTERVAL_MS: 1000,
+  CONNECTION_TIMEOUT_MS: 60000,
+  SIGNING_TIMEOUT_MS: 120000,
 } as const;
 
 /**
@@ -85,6 +89,19 @@ export const TIMING = {
 export const ACCOUNT_KEYCHAIN_ADDRESS = '0xaAAAaaAA00000000000000000000000000000000' as Address;
 
 /**
- * Wallet URL for WalletConnect popup
+ * Gateway Connect Protocol Version
  */
-export const WALLET_URL = import.meta.env.VITE_WALLET_URL || 'http://localhost:4004';
+export const GATEWAY_CONNECT_VERSION = '1.0.0';
+
+/**
+ * Storage keys
+ */
+export const STORAGE_KEYS = {
+  CONNECTED_APPS: 'temporium_connected_apps',
+  PENDING_REQUESTS: 'temporium_pending_requests',
+} as const;
+
+/**
+ * Wallet URL for GatewayConnect popup (self-host popups)
+ */
+export const WALLET_URL = import.meta.env.VITE_WALLET_URL || window.location.origin;

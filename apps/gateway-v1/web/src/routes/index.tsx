@@ -4,7 +4,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Fingerprint,
   Wallet,
-  Globe,
   ArrowRight,
   Loader2,
   LayoutDashboard,
@@ -12,7 +11,7 @@ import {
   QrCode,
   ArrowRightLeft,
   Droplets,
-  Coins,
+  CircleDollarSign,
   Clock,
   Shield,
   Key,
@@ -28,7 +27,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 import { CreateWalletModal } from '@temporium/shared-ui';
 import { useTempo } from '@/hooks/useTempo';
-import { getWalletApiUrl } from '@/lib/api';
+import { getWalletApiUrl, TEMPO_NETWORK } from '@/lib/api';
 import { copyToClipboard } from '@/lib/utils';
 
 export const Route = createFileRoute('/')({
@@ -41,7 +40,7 @@ const features = [
   { icon: QrCode, label: 'Receive', desc: 'Generate payment QR codes', color: '#5B9A6F' },
   { icon: ArrowRightLeft, label: 'Swap', desc: 'Exchange tokens seamlessly', color: '#D4A574' },
   { icon: Droplets, label: 'Liquidity', desc: 'Provide LP & earn fees', color: '#6BA3BE' },
-  { icon: Coins, label: 'TIP20 Studio', desc: 'Create & manage tokens', color: '#E07A5F' },
+  { icon: CircleDollarSign, label: 'TIP20 Studio', desc: 'Create & manage tokens', color: '#E07A5F' },
   { icon: Clock, label: 'Scheduled', desc: 'Recurring & timed payments', color: '#C27BA0' },
   { icon: Shield, label: 'TIP403 Factory', desc: 'Deploy access-controlled tokens', color: '#9B72CF' },
   { icon: Key, label: 'Access Keys', desc: 'Manage signing permissions', color: '#D4A574' },
@@ -50,7 +49,7 @@ const features = [
 
 function LandingPage(): ReactElement {
   const navigate = useNavigate();
-  const { isConnected, isConnecting, hasInjectedWallet, signUp, signIn, connectInjected, connectWallet } = useTempo();
+  const { isConnected, isConnecting, hasInjectedWallet, signUp, signIn, connectInjected } = useTempo();
 
   const [showSignIn, setShowSignIn] = useState(false);
   const [showCreateWallet, setShowCreateWallet] = useState(false);
@@ -66,7 +65,9 @@ function LandingPage(): ReactElement {
   }, [isConnected, navigate]);
 
   useEffect(() => {
-    fetch(`${getWalletApiUrl()}/contracts`)
+    fetch(`${getWalletApiUrl()}/contracts`, {
+      headers: { 'X-Tempo-Network': TEMPO_NETWORK },
+    })
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -111,18 +112,6 @@ function LandingPage(): ReactElement {
     setShowSignIn(false);
     try {
       await connectInjected();
-    } catch (err) {
-      toast.error('Connection failed', { description: (err as Error).message });
-    } finally {
-      setConnectingType(null);
-    }
-  };
-
-  const handleConnectWallet = async (): Promise<void> => {
-    setConnectingType('wallet-connect');
-    setShowSignIn(false);
-    try {
-      await connectWallet();
     } catch (err) {
       toast.error('Connection failed', { description: (err as Error).message });
     } finally {
@@ -498,26 +487,6 @@ function LandingPage(): ReactElement {
                 <Loader2 className="w-4 h-4 animate-spin text-[#9B72CF]" />
               ) : (
                 <ArrowRight className="w-4 h-4 text-[#B5B0AA] group-hover:text-[#9B72CF] transition-colors" />
-              )}
-            </button>
-
-            {/* Temporium Wallet */}
-            <button
-              onClick={handleConnectWallet}
-              disabled={!!connectingType}
-              className="flex items-center gap-3.5 w-full p-3.5 rounded-xl border border-[#EDE9E3] hover:border-[#5B9A6F]/30 hover:bg-[#5B9A6F]/4 transition-all text-left group cursor-pointer"
-            >
-              <div className="w-10 h-10 rounded-xl bg-[#5B9A6F]/10 flex items-center justify-center shrink-0">
-                <Globe className="w-5 h-5 text-[#5B9A6F]" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-semibold text-[#2D3436]">Temporium Wallet</p>
-                <p className="text-[12px] text-[#9B9590]">Connect via Temporium Wallet popup</p>
-              </div>
-              {connectingType === 'wallet-connect' ? (
-                <Loader2 className="w-4 h-4 animate-spin text-[#5B9A6F]" />
-              ) : (
-                <ArrowRight className="w-4 h-4 text-[#B5B0AA] group-hover:text-[#5B9A6F] transition-colors" />
               )}
             </button>
 

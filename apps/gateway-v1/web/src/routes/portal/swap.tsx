@@ -1,8 +1,7 @@
-import { type ReactElement, useState, useEffect, useCallback, useRef } from 'react';
+import { type ReactElement, useState, useEffect, useCallback } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowRightLeft,
   ArrowDown,
   Loader2,
   CheckCircle,
@@ -11,43 +10,19 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import type { Address } from 'viem';
 import { Button } from '@/components/ui/button';
+import { TokenPicker } from '@/components/TokenPicker';
+import { FeeTokenPicker } from '@/components/FeeTokenPicker';
 import { useTempo, useTokenBalance } from '@/hooks/useTempo';
-import { DEFAULT_FEE_TOKEN_ADDRESS, TIMING } from '@/lib/constants';
+import { useTokenList } from '@/hooks/useTokenList';
+import type { Token } from '@/lib/tokenlist';
+import { TIMING } from '@/lib/constants';
 import { formatAmount, parseAmount } from '@/lib/utils';
 import { getSwapQuote, getExplorerTxUrl } from '@/lib/tempo-client';
 
 export const Route = createFileRoute('/portal/swap')({
   component: SwapPage,
 });
-
-// ---------------------------------------------------------------------------
-// Token definitions (hardcoded for testnet)
-// ---------------------------------------------------------------------------
-
-interface TokenDef {
-  address: Address;
-  symbol: string;
-  name: string;
-  decimals: number;
-}
-
-const TOKEN_USD: TokenDef = {
-  address: '0x20c0000000000000000000000000000000000001' as Address,
-  symbol: 'AlphaUSD',
-  name: 'Alpha USD',
-  decimals: 6,
-};
-
-const TOKEN_EUR: TokenDef = {
-  address: '0x20c0000000000000000000000000000000000002' as Address,
-  symbol: 'AlphaEUR',
-  name: 'Alpha EUR',
-  decimals: 6,
-};
-
-const TOKENS: TokenDef[] = [TOKEN_USD, TOKEN_EUR];
 
 // ---------------------------------------------------------------------------
 // Swap status
@@ -87,103 +62,25 @@ function computeImpliedPrice(
 }
 
 // ---------------------------------------------------------------------------
-// Token Selector Button
-// ---------------------------------------------------------------------------
-
-interface TokenSelectorProps {
-  token: TokenDef;
-  tokens: TokenDef[];
-  disabledAddress?: Address;
-  onChange: (t: TokenDef) => void;
-}
-
-function TokenSelector({ token, tokens, disabledAddress, onChange }: TokenSelectorProps): ReactElement {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  // Close on outside click
-  useEffect(() => {
-    if (!open) return;
-    const handler = (e: MouseEvent): void => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [open]);
-
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        type="button"
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 h-10 px-3.5 rounded-xl bg-white border border-[#EDE9E3] hover:border-[#D5D0CA] transition-colors min-w-[130px]"
-      >
-        <div className="w-6 h-6 rounded-full bg-[#9B72CF]/12 flex items-center justify-center">
-          <ArrowRightLeft className="w-3 h-3 text-[#9B72CF]" />
-        </div>
-        <span className="text-[13px] font-semibold text-[#2D3436]">{token.symbol}</span>
-        <svg className="w-3 h-3 ml-auto text-[#9B9590]" viewBox="0 0 12 12" fill="none">
-          <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.12 }}
-            className="absolute right-0 top-full mt-1.5 z-50 min-w-[160px] rounded-xl border border-[#EDE9E3] bg-white shadow-lg shadow-black/[0.04] overflow-hidden"
-          >
-            {tokens.map((t) => {
-              const isDisabled = t.address === disabledAddress;
-              const isActive = t.address === token.address;
-              return (
-                <button
-                  key={t.address}
-                  disabled={isDisabled}
-                  onClick={() => {
-                    onChange(t);
-                    setOpen(false);
-                  }}
-                  className={`flex items-center gap-2.5 w-full px-3.5 py-2.5 text-left text-[13px] transition-colors ${
-                    isActive
-                      ? 'bg-[#9B72CF]/8 text-[#9B72CF] font-semibold'
-                      : isDisabled
-                        ? 'opacity-40 cursor-not-allowed text-[#9B9590]'
-                        : 'text-[#2D3436] hover:bg-[#F5F2ED]'
-                  }`}
-                >
-                  <div className="w-5 h-5 rounded-full bg-[#9B72CF]/10 flex items-center justify-center">
-                    <ArrowRightLeft className="w-2.5 h-2.5 text-[#9B72CF]" />
-                  </div>
-                  <span>{t.symbol}</span>
-                  {isActive && (
-                    <CheckCircle className="w-3.5 h-3.5 ml-auto text-[#9B72CF]" />
-                  )}
-                </button>
-              );
-            })}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------------------------
 // Swap Page
 // ---------------------------------------------------------------------------
 
 function SwapPage(): ReactElement | null {
   const { address, swapTokens } = useTempo();
+  const { tokens } = useTokenList();
+
+  // Token selection state (default to first two tokens from tokenlist)
+  const [tokenIn, setTokenIn] = useState<Token | null>(null);
+  const [tokenOut, setTokenOut] = useState<Token | null>(null);
+  const [feeToken, setFeeToken] = useState<Token | null>(null);
+
+  useEffect(() => {
+    if (tokens.length > 0 && !tokenIn) setTokenIn(tokens[0]);
+    if (tokens.length > 1 && !tokenOut) setTokenOut(tokens[1]);
+    if (tokens.length > 0 && !feeToken) setFeeToken(tokens[0]);
+  }, [tokens, tokenIn, tokenOut, feeToken]);
 
   // Form state
-  const [tokenIn, setTokenIn] = useState<TokenDef>(TOKEN_USD);
-  const [tokenOut, setTokenOut] = useState<TokenDef>(TOKEN_EUR);
   const [amountIn, setAmountIn] = useState('');
   const [quoteOut, setQuoteOut] = useState('');
   const [isQuoting, setIsQuoting] = useState(false);
@@ -193,17 +90,22 @@ function SwapPage(): ReactElement | null {
   const [slippage] = useState(0.5);
 
   // Balances
-  const { data: balanceInData, isLoading: isBalanceInLoading } = useTokenBalance(tokenIn.address, address);
-  const { data: balanceOutData, isLoading: isBalanceOutLoading } = useTokenBalance(tokenOut.address, address);
+  const { data: balanceInData, isLoading: isBalanceInLoading } = useTokenBalance(tokenIn?.address, address);
+  const { data: balanceOutData, isLoading: isBalanceOutLoading } = useTokenBalance(tokenOut?.address, address);
 
   // Parsed amounts
-  const parsedAmountIn = parseAmount(amountIn, tokenIn.decimals);
-  const parsedQuoteOut = parseAmount(quoteOut, tokenOut.decimals);
+  const tokenInDecimals = tokenIn?.decimals ?? 6;
+  const tokenOutDecimals = tokenOut?.decimals ?? 6;
+  const parsedAmountIn = parseAmount(amountIn, tokenInDecimals);
+  const parsedQuoteOut = parseAmount(quoteOut, tokenOutDecimals);
   const minAmountOut = parsedQuoteOut - (parsedQuoteOut * BigInt(Math.floor(slippage * 100))) / 10000n;
   const hasBalance = balanceInData.value >= parsedAmountIn;
   const noLiquidity = amountIn !== '' && parsedAmountIn > 0n && !isQuoting && quoteOut === '0.00';
 
   const isValidForm =
+    !!tokenIn &&
+    !!tokenOut &&
+    !!feeToken &&
     parsedAmountIn > 0n &&
     parsedQuoteOut > 0n &&
     hasBalance &&
@@ -219,7 +121,7 @@ function SwapPage(): ReactElement | null {
   useEffect(() => {
     setQuoteError(null);
 
-    if (!amountIn || parsedAmountIn === 0n) {
+    if (!amountIn || parsedAmountIn === 0n || !tokenIn || !tokenOut) {
       setQuoteOut('');
       return;
     }
@@ -231,13 +133,22 @@ function SwapPage(): ReactElement | null {
       try {
         const quote = await getSwapQuote(tokenIn.address, tokenOut.address, parsedAmountIn);
         if (!cancelled) {
-          setQuoteOut(formatAmount(quote.toString(), tokenOut.decimals));
+          setQuoteOut(formatAmount(quote.toString(), tokenOutDecimals));
         }
       } catch (err) {
         console.error('Quote fetch failed:', err);
         if (!cancelled) {
           setQuoteOut('');
-          setQuoteError('Unable to fetch quote for this pair');
+          const msg = err instanceof Error ? err.message : String(err);
+          if (msg.includes('0xaa4bc69a')) {
+            setQuoteError('Trading pair not created — no orderbook exists');
+          } else if (msg.includes('0x13be252b') || msg.includes('InsufficientLiquidity')) {
+            setQuoteError('No liquidity available for this pair');
+          } else if (msg.includes('revert') || msg.includes('execution reverted')) {
+            setQuoteError('This trading pair is not available');
+          } else {
+            setQuoteError('Unable to fetch quote — check your connection');
+          }
         }
       } finally {
         if (!cancelled) {
@@ -250,7 +161,7 @@ function SwapPage(): ReactElement | null {
       cancelled = true;
       clearTimeout(timeout);
     };
-  }, [amountIn, tokenIn.address, tokenOut.address, parsedAmountIn, tokenOut.decimals]);
+  }, [amountIn, tokenIn, tokenOut, parsedAmountIn, tokenOutDecimals]);
 
   // -------------------------------------------------------------------------
   // Handlers
@@ -265,9 +176,9 @@ function SwapPage(): ReactElement | null {
 
   const handleSetMax = useCallback((): void => {
     if (balanceInData.value > 0n) {
-      setAmountIn(formatAmount(balanceInData.value, tokenIn.decimals, tokenIn.decimals));
+      setAmountIn(formatAmount(balanceInData.value, tokenInDecimals, tokenInDecimals));
     }
-  }, [balanceInData.value, tokenIn.decimals]);
+  }, [balanceInData.value, tokenInDecimals]);
 
   const handleFlipTokens = useCallback((): void => {
     const prevIn = tokenIn;
@@ -280,9 +191,8 @@ function SwapPage(): ReactElement | null {
   }, [tokenIn, tokenOut, quoteOut]);
 
   const handleTokenInChange = useCallback(
-    (t: TokenDef): void => {
-      if (t.address === tokenOut.address) {
-        // swap them
+    (t: Token): void => {
+      if (tokenOut && t.address === tokenOut.address) {
         setTokenOut(tokenIn);
       }
       setTokenIn(t);
@@ -292,8 +202,8 @@ function SwapPage(): ReactElement | null {
   );
 
   const handleTokenOutChange = useCallback(
-    (t: TokenDef): void => {
-      if (t.address === tokenIn.address) {
+    (t: Token): void => {
+      if (tokenIn && t.address === tokenIn.address) {
         setTokenIn(tokenOut);
       }
       setTokenOut(t);
@@ -303,7 +213,7 @@ function SwapPage(): ReactElement | null {
   );
 
   const handleSwap = useCallback(async (): Promise<void> => {
-    if (!isValidForm) return;
+    if (!isValidForm || !tokenIn || !tokenOut || !feeToken) return;
 
     setStatus('pending');
     try {
@@ -312,16 +222,16 @@ function SwapPage(): ReactElement | null {
         tokenOut: tokenOut.address,
         amountIn: parsedAmountIn,
         minAmountOut,
-        feeToken: DEFAULT_FEE_TOKEN_ADDRESS,
+        feeToken: feeToken.address,
       });
       setTxHash(hash);
       setStatus('success');
     } catch (err) {
       console.error('Swap failed:', err);
       const message = err instanceof Error ? err.message : String(err);
-      if (message.includes('0x13be252b') || message.includes('InsufficientLiquidity')) {
+      if (message.includes('0xaa4bc69a') || message.includes('0x13be252b') || message.includes('InsufficientLiquidity')) {
         toast.error('No liquidity available', {
-          description: 'This trading pair has no liquidity on testnet.',
+          description: 'This trading pair has no orders on testnet. Place limit orders first.',
         });
       } else {
         toast.error('Swap failed', {
@@ -330,7 +240,7 @@ function SwapPage(): ReactElement | null {
       }
       setStatus('idle');
     }
-  }, [isValidForm, swapTokens, tokenIn, tokenOut, parsedAmountIn, minAmountOut]);
+  }, [isValidForm, swapTokens, tokenIn, tokenOut, feeToken, parsedAmountIn, minAmountOut]);
 
   const handleReset = useCallback((): void => {
     setAmountIn('');
@@ -340,7 +250,7 @@ function SwapPage(): ReactElement | null {
     setQuoteError(null);
   }, []);
 
-  if (!address) return null;
+  if (!address || !tokenIn || !tokenOut || !feeToken) return null;
 
   // -------------------------------------------------------------------------
   // Render
@@ -355,15 +265,8 @@ function SwapPage(): ReactElement | null {
     >
       {/* Header */}
       <motion.div variants={itemVariants} className="mb-6">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#9B72CF]/10 flex items-center justify-center">
-            <ArrowRightLeft className="w-5 h-5 text-[#9B72CF]" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold text-[#2D3436] tracking-tight">Swap</h1>
-            <p className="text-[13px] text-[#6B6560]">Exchange tokens instantly</p>
-          </div>
-        </div>
+        <h1 className="text-2xl font-bold text-[#2D3436] tracking-tight">Swap</h1>
+        <p className="text-[14px] text-[#6B6560] mt-1">Exchange tokens instantly</p>
       </motion.div>
 
       {/* Success State */}
@@ -477,7 +380,7 @@ function SwapPage(): ReactElement | null {
                     Balance:{' '}
                     {isBalanceInLoading
                       ? '...'
-                      : formatAmount(balanceInData.value, tokenIn.decimals)}
+                      : formatAmount(balanceInData.value, tokenInDecimals)}
                   </button>
                 </div>
 
@@ -491,10 +394,10 @@ function SwapPage(): ReactElement | null {
                     disabled={status === 'pending'}
                     className="flex-1 text-[28px] font-bold text-[#2D3436] bg-transparent border-none outline-none placeholder:text-[#D5D0CA] min-w-0"
                   />
-                  <TokenSelector
+                  <TokenPicker
                     token={tokenIn}
-                    tokens={TOKENS}
-                    disabledAddress={tokenOut.address}
+                    tokens={tokens}
+                    disabledAddresses={[tokenOut.address]}
                     onChange={handleTokenInChange}
                   />
                 </div>
@@ -536,7 +439,7 @@ function SwapPage(): ReactElement | null {
                     Balance:{' '}
                     {isBalanceOutLoading
                       ? '...'
-                      : formatAmount(balanceOutData.value, tokenOut.decimals)}
+                      : formatAmount(balanceOutData.value, tokenOutDecimals)}
                   </span>
                 </div>
 
@@ -559,10 +462,10 @@ function SwapPage(): ReactElement | null {
                       </span>
                     )}
                   </div>
-                  <TokenSelector
+                  <TokenPicker
                     token={tokenOut}
-                    tokens={TOKENS}
-                    disabledAddress={tokenIn.address}
+                    tokens={tokens}
+                    disabledAddresses={[tokenIn.address]}
                     onChange={handleTokenOutChange}
                   />
                 </div>
@@ -617,13 +520,14 @@ function SwapPage(): ReactElement | null {
                     <div className="flex items-center justify-between">
                       <span className="text-[12px] text-[#9B9590]">Minimum Received</span>
                       <span className="text-[12px] font-medium text-[#2D3436]">
-                        {formatAmount(minAmountOut, tokenOut.decimals)} {tokenOut.symbol}
+                        {formatAmount(minAmountOut, tokenOutDecimals)} {tokenOut.symbol}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[12px] text-[#9B9590]">Fee Token</span>
-                      <span className="text-[12px] font-medium text-[#2D3436]">AlphaUSD</span>
-                    </div>
+                    <FeeTokenPicker
+                      value={feeToken}
+                      tokens={tokens}
+                      onChange={setFeeToken}
+                    />
                   </div>
                 </motion.div>
               )}
@@ -676,7 +580,7 @@ function SwapPage(): ReactElement | null {
                       <span className="text-[#6B6560]">{tokenOut.symbol}</span>
                     </div>
                     <p className="text-[11px] text-[#9B9590] mt-2">
-                      Min. received: {formatAmount(minAmountOut, tokenOut.decimals)} {tokenOut.symbol} (slippage: {slippage}%)
+                      Min. received: {formatAmount(minAmountOut, tokenOutDecimals)} {tokenOut.symbol} (slippage: {slippage}%)
                     </p>
                   </div>
 

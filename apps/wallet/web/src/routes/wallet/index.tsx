@@ -16,7 +16,6 @@ import {
   Loader2,
   DollarSign,
   ChevronRight,
-  Wallet,
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
@@ -148,15 +147,9 @@ function DashboardPage(): ReactElement {
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex items-center gap-3"
       >
-        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-          <Wallet className="w-5 h-5 text-primary" />
-        </div>
-        <div>
-          <h1 className="text-xl font-semibold text-[#2D3436]">Dashboard</h1>
-          <p className="text-[13px] text-muted-foreground">Overview of your wallet</p>
-        </div>
+        <h1 className="text-2xl font-bold text-[#2D3436] tracking-tight">Dashboard</h1>
+        <p className="text-[14px] text-[#6B6560] mt-1">Welcome back. Here is your wallet overview.</p>
       </motion.div>
 
       {/* Balance Card */}

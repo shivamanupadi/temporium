@@ -1,16 +1,17 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { eq, and, asc } from 'drizzle-orm';
+import { eq, and, asc, desc, lt, or } from 'drizzle-orm';
 import { jwtAuth, getWalletAddress } from '../middleware/auth';
 import { NotFoundError, BadRequestError } from '../middleware/error';
 import { createDb, scheduledTransactions } from '../db';
 import {
   createScheduledTxSchema,
   updateScheduledTxSchema,
+  scheduledTxQuerySchema,
   idParamSchema,
   statusParamSchema,
 } from '../lib/validation';
-import { success, noContent } from '../lib/response';
+import { success, paginated, noContent } from '../lib/response';
 import type { Env, Variables } from '../types/env';
 
 const scheduledTxsRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -20,19 +21,66 @@ scheduledTxsRouter.use('/*', jwtAuth);
 
 /**
  * GET /v1/scheduled-transactions
- * List all scheduled transactions for the authenticated user
+ * List scheduled transactions with cursor-based pagination and status filter
+ *
+ * Query params:
+ *   status  - filter by status (pending | executed | failed)
+ *   cursor  - opaque cursor from previous response (base64 of createdAt:id)
+ *   limit   - page size (1-50, default 20)
  */
-scheduledTxsRouter.get('/', async c => {
+scheduledTxsRouter.get('/', zValidator('query', scheduledTxQuerySchema), async c => {
   const db = createDb(c.env.DB);
   const owner = getWalletAddress(c);
+  const { status, cursor, limit } = c.req.valid('query');
 
+  // Build WHERE conditions
+  const conditions = [eq(scheduledTransactions.owner, owner)];
+
+  if (status) {
+    conditions.push(eq(scheduledTransactions.status, status));
+  }
+
+  // Decode cursor (base64 of "timestamp:id")
+  if (cursor) {
+    try {
+      const decoded = atob(cursor);
+      const sepIdx = decoded.indexOf(':');
+      const cursorTs = parseInt(decoded.slice(0, sepIdx), 10);
+      const cursorId = decoded.slice(sepIdx + 1);
+      // createdAt DESC, id DESC — fetch rows older than cursor
+      conditions.push(
+        or(
+          lt(scheduledTransactions.createdAt, new Date(cursorTs)),
+          and(
+            eq(scheduledTransactions.createdAt, new Date(cursorTs)),
+            lt(scheduledTransactions.id, cursorId),
+          ),
+        )!,
+      );
+    } catch {
+      throw new BadRequestError('Invalid cursor');
+    }
+  }
+
+  // Fetch limit+1 to know if there's a next page
   const result = await db
     .select()
     .from(scheduledTransactions)
-    .where(eq(scheduledTransactions.owner, owner))
-    .orderBy(asc(scheduledTransactions.scheduledFor));
+    .where(and(...conditions))
+    .orderBy(desc(scheduledTransactions.createdAt), desc(scheduledTransactions.id))
+    .limit(limit + 1);
 
-  return success(c, result);
+  const hasMore = result.length > limit;
+  const data = hasMore ? result.slice(0, limit) : result;
+
+  let nextCursor: string | null = null;
+  if (hasMore && data.length > 0) {
+    const last = data[data.length - 1];
+    const ts = last.createdAt instanceof Date ? last.createdAt.getTime() : 0;
+    nextCursor = btoa(`${ts}:${last.id}`);
+  }
+
+  return paginated(c, data, nextCursor);
 });
 
 /**
@@ -100,12 +148,15 @@ scheduledTxsRouter.post('/', zValidator('json', createScheduledTxSchema), async 
   const db = createDb(c.env.DB);
   const owner = getWalletAddress(c);
   const data = c.req.valid('json');
+  const network = c.get('networkConfig').network;
 
+  // 1. Save metadata to D1 (for listing/UI)
   const result = await db
     .insert(scheduledTransactions)
     .values({
       owner,
-      txHash: data.txHash,
+      serializedTx: data.serializedTx,
+      network,
       from: data.from,
       to: data.to,
       amount: data.amount,
@@ -118,7 +169,23 @@ scheduledTxsRouter.post('/', zValidator('json', createScheduledTxSchema), async 
     })
     .returning();
 
-  return success(c, result[0], 201);
+  const txRecord = result[0];
+
+  // 2. Create a Durable Object to handle execution at the scheduled time
+  const doId = c.env.SCHEDULED_TX.idFromName(txRecord.id);
+  const doStub = c.env.SCHEDULED_TX.get(doId);
+
+  await doStub.fetch(new Request('http://do/schedule', {
+    method: 'POST',
+    body: JSON.stringify({
+      txId: txRecord.id,
+      serializedTx: data.serializedTx,
+      network,
+      scheduledFor: new Date(data.scheduledFor).getTime(),
+    }),
+  }));
+
+  return success(c, txRecord, 201);
 });
 
 /**
@@ -192,10 +259,12 @@ scheduledTxsRouter.post('/:id/execute', zValidator('param', idParamSchema), asyn
     throw new BadRequestError(`Cannot execute transaction with status '${existing[0].status}'`);
   }
 
+  const body = await c.req.json().catch(() => ({}));
   const result = await db
     .update(scheduledTransactions)
     .set({
       status: 'executed',
+      txHash: body.txHash ?? null,
       executedAt: new Date(),
     })
     .where(eq(scheduledTransactions.id, id))
@@ -230,9 +299,13 @@ scheduledTxsRouter.post('/:id/fail', zValidator('param', idParamSchema), async c
     );
   }
 
+  const body = await c.req.json().catch(() => ({}));
   const result = await db
     .update(scheduledTransactions)
-    .set({ status: 'failed' })
+    .set({
+      status: 'failed',
+      failReason: body.reason ?? 'Unknown error',
+    })
     .where(eq(scheduledTransactions.id, id))
     .returning();
 
@@ -257,6 +330,19 @@ scheduledTxsRouter.delete('/:id', zValidator('param', idParamSchema), async c =>
 
   if (existing.length === 0) {
     throw new NotFoundError('Scheduled transaction not found');
+  }
+
+  if (existing[0].status !== 'pending') {
+    throw new BadRequestError(`Cannot cancel transaction with status '${existing[0].status}'`);
+  }
+
+  // Cancel the DO alarm before deleting
+  try {
+    const doId = c.env.SCHEDULED_TX.idFromName(id);
+    const doStub = c.env.SCHEDULED_TX.get(doId);
+    await doStub.fetch(new Request('http://do/cancel', { method: 'POST' }));
+  } catch {
+    // DO may not exist if it already fired — that's fine
   }
 
   await db.delete(scheduledTransactions).where(eq(scheduledTransactions.id, id));

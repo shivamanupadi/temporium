@@ -1,5 +1,5 @@
 import { getAccessToken, isAccessTokenExpired, clearAuthToken } from './auth-storage';
-import { getGatewayApiUrl } from './api';
+import { getGatewayApiUrl, TEMPO_NETWORK } from './api';
 
 export class ApiClientError extends Error {
   status: number;
@@ -29,6 +29,7 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
     ...options,
     headers: {
       'Content-Type': 'application/json',
+      'X-Tempo-Network': TEMPO_NETWORK,
       ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       ...options.headers,
     },
@@ -42,6 +43,11 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
   if (!response.ok) {
     const text = await response.text();
     throw new ApiClientError(text || `Request failed (${response.status})`, response.status);
+  }
+
+  // 204 No Content (e.g. DELETE)
+  if (response.status === 204) {
+    return undefined as T;
   }
 
   const result = (await response.json()) as ApiResponse<T>;

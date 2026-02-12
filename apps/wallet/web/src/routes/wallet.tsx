@@ -58,10 +58,8 @@ function WalletLayout(): ReactElement | null {
         <MobileHeader onMenuClick={() => setSidebarOpen(true)} />
 
         {/* Page Content */}
-        <div className="p-4 sm:p-6">
-          <div className="mx-auto max-w-2xl">
-            <Outlet />
-          </div>
+        <div className="flex-1 p-4 md:p-6 lg:p-8 max-w-5xl mx-auto w-full">
+          <Outlet />
         </div>
       </main>
     </div>

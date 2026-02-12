@@ -1,150 +1,95 @@
 import type { Address } from 'viem';
-
-const STORAGE_KEY = 'temporium_wallet_contacts';
+import { getGatewayApiUrl } from './api';
 
 export interface Contact {
   id: string;
   name: string;
   address: Address;
-  createdAt: number;
-  updatedAt: number;
+  owner: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-/**
- * Get all contacts from localStorage
- */
-export function getContacts(): Contact[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (!stored) return [];
-    return JSON.parse(stored) as Contact[];
-  } catch {
-    return [];
-  }
+interface ApiResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
 }
 
-/**
- * Save contacts to localStorage
- */
-function saveContacts(contacts: Contact[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(contacts));
-}
+async function apiRequest<T>(
+  path: string,
+  accessToken: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const url = `${getGatewayApiUrl()}${path}`;
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+      ...options.headers,
+    },
+  });
 
-/**
- * Add a new contact
- */
-export function addContact(name: string, address: Address): Contact {
-  const contacts = getContacts();
+  if (response.status === 204) return undefined as T;
 
-  // Check for duplicate address
-  const existingAddress = contacts.find(c => c.address.toLowerCase() === address.toLowerCase());
-  if (existingAddress) {
-    throw new Error('Contact with this address already exists');
-  }
-
-  // Check for duplicate name
-  const existingName = contacts.find(c => c.name.toLowerCase() === name.toLowerCase());
-  if (existingName) {
-    throw new Error('Contact with this name already exists');
+  if (!response.ok) {
+    const text = await response.text();
+    let message = `Request failed (${response.status})`;
+    try {
+      const parsed = JSON.parse(text) as ApiResponse<T>;
+      if (parsed.error) message = parsed.error;
+    } catch {
+      if (text) message = text;
+    }
+    throw new Error(message);
   }
 
-  const contact: Contact = {
-    id: crypto.randomUUID(),
-    name: name.trim(),
-    address: address.toLowerCase() as Address,
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-  };
-
-  contacts.push(contact);
-  saveContacts(contacts);
-
-  return contact;
+  const result = (await response.json()) as ApiResponse<T>;
+  if (!result.success) throw new Error(result.error || 'Request failed');
+  return result.data as T;
 }
 
-/**
- * Update an existing contact
- */
+export function getContacts(accessToken: string): Promise<Contact[]> {
+  return apiRequest<Contact[]>('/v1/contacts', accessToken);
+}
+
+export function addContact(
+  accessToken: string,
+  name: string,
+  address: Address
+): Promise<Contact> {
+  return apiRequest<Contact>('/v1/contacts', accessToken, {
+    method: 'POST',
+    body: JSON.stringify({ name, address }),
+  });
+}
+
 export function updateContact(
+  accessToken: string,
   id: string,
   updates: { name?: string; address?: Address }
-): Contact | null {
-  const contacts = getContacts();
-  const index = contacts.findIndex(c => c.id === id);
-
-  if (index === -1) return null;
-
-  const contact = contacts[index];
-
-  // Check for duplicate address (excluding current contact)
-  if (updates.address) {
-    const existingAddress = contacts.find(
-      c => c.id !== id && c.address.toLowerCase() === updates.address!.toLowerCase()
-    );
-    if (existingAddress) {
-      throw new Error('Contact with this address already exists');
-    }
-  }
-
-  // Check for duplicate name (excluding current contact)
-  if (updates.name) {
-    const existingName = contacts.find(
-      c => c.id !== id && c.name.toLowerCase() === updates.name!.toLowerCase()
-    );
-    if (existingName) {
-      throw new Error('Contact with this name already exists');
-    }
-  }
-
-  const updated: Contact = {
-    ...contact,
-    ...(updates.name && { name: updates.name.trim() }),
-    ...(updates.address && { address: updates.address.toLowerCase() as Address }),
-    updatedAt: Date.now(),
-  };
-
-  contacts[index] = updated;
-  saveContacts(contacts);
-
-  return updated;
+): Promise<Contact> {
+  return apiRequest<Contact>(`/v1/contacts/${id}`, accessToken, {
+    method: 'PATCH',
+    body: JSON.stringify(updates),
+  });
 }
 
-/**
- * Delete a contact
- */
-export function deleteContact(id: string): boolean {
-  const contacts = getContacts();
-  const filtered = contacts.filter(c => c.id !== id);
-
-  if (filtered.length === contacts.length) return false;
-
-  saveContacts(filtered);
-  return true;
+export function deleteContact(accessToken: string, id: string): Promise<void> {
+  return apiRequest<void>(`/v1/contacts/${id}`, accessToken, {
+    method: 'DELETE',
+  });
 }
 
-/**
- * Find a contact by address
- */
-export function findContactByAddress(address: Address): Contact | null {
-  const contacts = getContacts();
+export function findContactByAddress(contacts: Contact[], address: Address): Contact | null {
   return contacts.find(c => c.address.toLowerCase() === address.toLowerCase()) || null;
 }
 
-/**
- * Search contacts by name or address
- */
-export function searchContacts(query: string): Contact[] {
-  const contacts = getContacts();
-  const lowerQuery = query.toLowerCase();
-
+export function searchContacts(contacts: Contact[], query: string): Contact[] {
+  if (!query.trim()) return contacts;
+  const lq = query.toLowerCase();
   return contacts.filter(
-    c => c.name.toLowerCase().includes(lowerQuery) || c.address.toLowerCase().includes(lowerQuery)
+    c => c.name.toLowerCase().includes(lq) || c.address.toLowerCase().includes(lq)
   );
-}
-
-/**
- * Clear all contacts
- */
-export function clearContacts(): void {
-  localStorage.removeItem(STORAGE_KEY);
 }

@@ -12,6 +12,14 @@ import {
   DollarSign,
   Loader2,
   Wallet,
+  BarChart3,
+  Repeat,
+  CircleDollarSign,
+  Shield,
+  Clock,
+  Key,
+  Users,
+  Link2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -61,6 +69,76 @@ const quickActions = [
     icon: ArrowRightLeft,
     color: '#9B72CF',
     description: 'Exchange tokens',
+  },
+  {
+    to: '/portal/orderbook',
+    label: 'Orderbook',
+    icon: BarChart3,
+    color: '#9B72CF',
+    description: 'Limit orders',
+  },
+  {
+    to: '/portal/exchange-balance',
+    label: 'DEX Balance',
+    icon: Wallet,
+    color: '#9B72CF',
+    description: 'Manage DEX funds',
+  },
+  {
+    to: '/portal/pool-swap',
+    label: 'Pool Swap',
+    icon: Repeat,
+    color: '#6B8EAD',
+    description: 'AMM swap',
+  },
+  {
+    to: '/portal/liquidity',
+    label: 'Liquidity',
+    icon: Droplets,
+    color: '#6B8EAD',
+    description: 'Provide liquidity',
+  },
+  {
+    to: '/portal/tip20-studio',
+    label: 'TIP20 Studio',
+    icon: CircleDollarSign,
+    color: '#E07A5F',
+    description: 'Manage stablecoins',
+  },
+  {
+    to: '/portal/tip403-factory',
+    label: 'TIP403',
+    icon: Shield,
+    color: '#E07A5F',
+    description: 'Transfer policies',
+  },
+  {
+    to: '/portal/scheduled',
+    label: 'Scheduled',
+    icon: Clock,
+    color: '#D4A574',
+    description: 'Scheduled payments',
+  },
+  {
+    to: '/portal/access-keys',
+    label: 'Access Keys',
+    icon: Key,
+    color: '#D4A574',
+    description: 'Manage keys',
+  },
+  {
+    to: '/portal/contacts',
+    label: 'Contacts',
+    icon: Users,
+    color: '#5B9A6F',
+    description: 'Address book',
+  },
+  {
+    to: '/portal/connected-apps',
+    label: 'Apps',
+    icon: Link2,
+    color: '#5B9A6F',
+    description: 'Connected apps',
   },
 ] as const;
 
@@ -122,7 +200,7 @@ function DashboardPage(): ReactElement {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column */}
         <div className="space-y-6">
-          {/* Balance Card */}
+          {/* Balance & Address Card */}
           <motion.div
             variants={itemVariants}
             className="rounded-2xl border border-[#EDE9E3] bg-white p-6"
@@ -154,90 +232,47 @@ function DashboardPage(): ReactElement {
                 </p>
               </div>
             )}
-          </motion.div>
 
-          {/* Address Card */}
-          <motion.div
-            variants={itemVariants}
-            className="rounded-2xl border border-[#EDE9E3] bg-white p-5"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-[#9B72CF]/10 flex items-center justify-center shrink-0">
-                  <Wallet className="w-5 h-5 text-[#9B72CF]" />
+            <div className="border-t border-[#EDE9E3]/60 mt-5 pt-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-[#9B72CF]/10 flex items-center justify-center shrink-0">
+                    <Wallet className="w-5 h-5 text-[#9B72CF]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                      Connected Address
+                    </p>
+                    <p className="text-[14px] font-mono font-medium text-[#2D3436] truncate">
+                      {address ? formatAddress(address, 8) : '--'}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
-                    Connected Address
-                  </p>
-                  <p className="text-[14px] font-mono font-medium text-[#2D3436] truncate">
-                    {address ? formatAddress(address, 8) : '--'}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleCopyAddress}
-                  className="w-9 h-9 rounded-lg text-[#9B9590] hover:text-[#2D3436] hover:bg-[#F5F2ED]"
-                >
-                  {copied ? (
-                    <Check className="w-4 h-4 text-[#5B9A6F]" />
-                  ) : (
-                    <Copy className="w-4 h-4" />
-                  )}
-                </Button>
-                {explorerUrl && (
-                  <a
-                    href={explorerUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-9 h-9 rounded-lg flex items-center justify-center text-[#9B9590] hover:text-[#2D3436] hover:bg-[#F5F2ED] transition-colors"
+                <div className="flex items-center gap-2 shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleCopyAddress}
+                    className="w-9 h-9 rounded-lg text-[#9B9590] hover:text-[#2D3436] hover:bg-[#F5F2ED]"
                   >
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
-                )}
-              </div>
-            </div>
-          </motion.div>
-
-          {/* Quick Actions */}
-          <motion.div variants={itemVariants}>
-            <p className="text-[12px] font-semibold text-[#9B9590] uppercase tracking-wider mb-3">
-              Quick Actions
-            </p>
-            <div className="grid grid-cols-3 gap-3">
-              {quickActions.map((action) => (
-                <Link
-                  key={action.to}
-                  to={action.to}
-                  className="group"
-                >
-                  <motion.div
-                    whileHover={{ y: -2 }}
-                    whileTap={{ scale: 0.97 }}
-                    transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
-                    className="rounded-2xl border border-[#EDE9E3] bg-white p-4 text-center hover:shadow-sm transition-shadow"
-                  >
-                    <div
-                      className="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-2.5"
-                      style={{ backgroundColor: `${action.color}12` }}
+                    {copied ? (
+                      <Check className="w-4 h-4 text-[#5B9A6F]" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                  </Button>
+                  {explorerUrl && (
+                    <a
+                      href={explorerUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-9 h-9 rounded-lg flex items-center justify-center text-[#9B9590] hover:text-[#2D3436] hover:bg-[#F5F2ED] transition-colors"
                     >
-                      <action.icon
-                        className="w-5 h-5"
-                        style={{ color: action.color }}
-                      />
-                    </div>
-                    <p className="text-[14px] font-semibold text-[#2D3436]">
-                      {action.label}
-                    </p>
-                    <p className="text-[11px] text-[#9B9590] mt-0.5">
-                      {action.description}
-                    </p>
-                  </motion.div>
-                </Link>
-              ))}
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
+                </div>
+              </div>
             </div>
           </motion.div>
 
@@ -274,10 +309,7 @@ function DashboardPage(): ReactElement {
               </Button>
             </div>
           </motion.div>
-        </div>
 
-        {/* Right Column */}
-        <div>
           {/* Assets */}
           <motion.div
             variants={itemVariants}
@@ -374,6 +406,45 @@ function DashboardPage(): ReactElement {
                   );
                 })
               )}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Right Column */}
+        <div>
+          {/* Quick Actions */}
+          <motion.div variants={itemVariants}>
+            <div className="grid grid-cols-3 gap-3">
+              {quickActions.map((action) => (
+                <Link
+                  key={action.to}
+                  to={action.to}
+                  className="group"
+                >
+                  <motion.div
+                    whileHover={{ y: -2 }}
+                    whileTap={{ scale: 0.97 }}
+                    transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+                    className="rounded-2xl border border-dashed border-[#EDE9E3] bg-transparent p-4 text-center hover:shadow-sm transition-shadow"
+                  >
+                    <div
+                      className="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-2.5"
+                      style={{ backgroundColor: `${action.color}12` }}
+                    >
+                      <action.icon
+                        className="w-5 h-5"
+                        style={{ color: action.color }}
+                      />
+                    </div>
+                    <p className="text-[14px] font-semibold text-[#2D3436]">
+                      {action.label}
+                    </p>
+                    <p className="text-[11px] text-[#9B9590] mt-0.5">
+                      {action.description}
+                    </p>
+                  </motion.div>
+                </Link>
+              ))}
             </div>
           </motion.div>
         </div>
