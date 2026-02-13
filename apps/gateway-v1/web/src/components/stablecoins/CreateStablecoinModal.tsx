@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, type ReactElement } from 'react';
 import { Loader2, Lock, Plus } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import confetti from 'canvas-confetti';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
@@ -173,11 +173,7 @@ export function CreateStablecoinModal({
                 </div>
 
                 {feeToken && tokens.length > 0 && (
-                  <FeeTokenPicker
-                    value={feeToken}
-                    tokens={tokens}
-                    onChange={setFeeToken}
-                  />
+                  <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
                 )}
               </div>
             </div>
@@ -204,9 +200,7 @@ export function CreateStablecoinModal({
         {modalState === 'confirm' && (
           <>
             <div className="px-6 pt-6 pb-5 pr-14">
-              <DialogTitle className="text-lg font-bold text-[#2D3436]">
-                Confirm Token
-              </DialogTitle>
+              <DialogTitle className="text-lg font-bold text-[#2D3436]">Confirm Token</DialogTitle>
               <DialogDescription className="text-[13px] font-light text-[#9B9590]">
                 Review the details before creating
               </DialogDescription>
@@ -218,10 +212,7 @@ export function CreateStablecoinModal({
                   Token
                 </p>
                 <p className="text-lg font-bold text-[#2D3436]">
-                  {name}{' '}
-                  <span className="text-[14px] font-semibold text-[#9B9590]">
-                    {symbol}
-                  </span>
+                  {name} <span className="text-[14px] font-semibold text-[#9B9590]">{symbol}</span>
                 </p>
               </div>
 
@@ -243,7 +234,9 @@ export function CreateStablecoinModal({
                     <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
                       Fee Token
                     </span>
-                    <span className="text-[13px] font-medium text-[#2D3436]">{feeToken.symbol}</span>
+                    <span className="text-[13px] font-medium text-[#2D3436]">
+                      {feeToken.symbol}
+                    </span>
                   </div>
                 )}
               </div>

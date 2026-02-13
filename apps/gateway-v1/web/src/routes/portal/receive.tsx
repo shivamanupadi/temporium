@@ -3,7 +3,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { QrCode, Copy, Check, ExternalLink } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { useTempo } from '@/hooks/useTempo';
 import { formatAddress, copyToClipboard } from '@/lib/utils';

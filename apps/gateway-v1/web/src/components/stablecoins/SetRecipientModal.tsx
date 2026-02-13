@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, type ReactElement } from 'react';
 import { Loader2, ExternalLink, UserCheck, UserX } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
@@ -108,13 +108,21 @@ export function SetRecipientModal({
           <>
             <DialogTitle className="sr-only">{successTitle}</DialogTitle>
             <DialogDescription className="sr-only">
-              {isOptIn ? 'You are now receiving reward distributions' : 'You have opted out of reward distributions'}
+              {isOptIn
+                ? 'You are now receiving reward distributions'
+                : 'You have opted out of reward distributions'}
             </DialogDescription>
 
             <div className="px-6 pt-10 pb-6 text-center">
               {/* Sage checkmark */}
               <div className="w-16 h-16 rounded-full bg-[var(--color-sage)] flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <svg
+                  className="w-8 h-8 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
@@ -124,7 +132,9 @@ export function SetRecipientModal({
 
               {/* Hero value */}
               <div className="mb-6">
-                <span className={`text-3xl font-bold ${isOptIn ? 'text-[var(--color-sage)]' : 'text-coral'}`}>
+                <span
+                  className={`text-3xl font-bold ${isOptIn ? 'text-[var(--color-sage)]' : 'text-coral'}`}
+                >
                   {isOptIn ? 'Opted In' : 'Opted Out'}
                 </span>
               </div>
@@ -141,7 +151,9 @@ export function SetRecipientModal({
                     </span>
                   </div>
                 )}
-                <div className={`flex items-center justify-between ${isOptIn ? 'pt-2 border-t border-[#EDE9E3]' : ''}`}>
+                <div
+                  className={`flex items-center justify-between ${isOptIn ? 'pt-2 border-t border-[#EDE9E3]' : ''}`}
+                >
                   <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
                     Transaction
                   </span>
@@ -180,9 +192,7 @@ export function SetRecipientModal({
           <>
             {/* Header */}
             <div className="px-6 pt-6 pb-5 pr-14">
-              <DialogTitle className="text-lg font-bold text-[#2D3436]">
-                {title}
-              </DialogTitle>
+              <DialogTitle className="text-lg font-bold text-[#2D3436]">{title}</DialogTitle>
               <DialogDescription className="text-[13px] font-light text-[#9B9590] mt-1">
                 {description}
               </DialogDescription>

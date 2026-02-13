@@ -24,10 +24,13 @@ export function success<T>(c: Context, data: T, status: 200 | 201 = 200) {
  * The `data` envelope is { items, nextCursor } so the existing apiRequest<T> unwrapper works.
  */
 export function paginated<T>(c: Context, items: T[], nextCursor: string | null) {
-  return c.json({
-    success: true,
-    data: { items, nextCursor },
-  }, 200);
+  return c.json(
+    {
+      success: true,
+      data: { items, nextCursor },
+    },
+    200
+  );
 }
 
 /**

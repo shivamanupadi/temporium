@@ -1,5 +1,5 @@
-import { createFileRoute, Link } from '@tanstack/react-router';
-import { useState, useCallback, useEffect, useRef, type ReactElement } from 'react';
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router';
+import { useState, useCallback, useEffect, useRef, useMemo, type ReactElement } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Send,
@@ -12,17 +12,17 @@ import {
   Check,
   AlertTriangle,
   CalendarCheck,
+  CalendarIcon,
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
+import { format } from 'date-fns';
 import type { Address } from 'viem';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from '@temporium/shared-ui';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { TimePicker } from '@/components/ui/time-picker';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { TokenPicker } from '@/components/TokenPicker';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
@@ -31,10 +31,7 @@ import { useTempo, useTokenBalance, encodeMemo } from '@/hooks/useTempo';
 import { useTokenList } from '@/hooks/useTokenList';
 import { createScheduledTransaction } from '@/lib/scheduled-transactions';
 import type { Token } from '@/lib/tokenlist';
-import {
-  SCHEDULE_PRESETS,
-  MAX_SCHEDULE_SECONDS,
-} from '@/lib/constants';
+import { SCHEDULE_PRESETS } from '@/lib/constants';
 import {
   formatAmount,
   parseAmount,
@@ -52,7 +49,8 @@ interface SendSearchParams {
 export const Route = createFileRoute('/portal/send')({
   component: SendPage,
   validateSearch: (search: Record<string, unknown>): SendSearchParams => ({
-    mode: search.mode === 'scheduled' ? 'scheduled' : undefined,
+    mode:
+      search.mode === 'scheduled' ? 'scheduled' : search.mode === 'instant' ? 'instant' : undefined,
   }),
 });
 
@@ -71,12 +69,33 @@ interface FormState {
 
 const EMPTY_FORM: FormState = { recipient: '', amount: '', memo: '' };
 
+function formatDuration(seconds: number): string {
+  const units: [string, number][] = [
+    ['d', 86400],
+    ['hr', 3600],
+    ['min', 60],
+    ['sec', 1],
+  ];
+  const parts: string[] = [];
+  let remaining = seconds;
+  for (const [label, size] of units) {
+    if (remaining >= size) {
+      const count = Math.floor(remaining / size);
+      parts.push(`${count} ${label}`);
+      remaining -= count * size;
+    }
+    if (parts.length === 2) break;
+  }
+  return parts.length > 0 ? parts.join(' ') : '0 sec';
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
 function SendPage(): ReactElement | null {
-  const { mode: initialMode } = Route.useSearch();
+  const { mode: searchMode } = Route.useSearch();
+  const navigate = useNavigate();
   const { address, isConnected, sendPayment, signScheduledPayment } = useTempo();
   const { tokens } = useTokenList();
 
@@ -94,10 +113,24 @@ function SendPage(): ReactElement | null {
 
   // Form state
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
-  const [mode, setMode] = useState<SendMode>(initialMode ?? 'instant');
-  const [scheduleSeconds, setScheduleSeconds] = useState<number>(
-    SCHEDULE_PRESETS[0].seconds,
+  const mode: SendMode = searchMode ?? 'instant';
+  const setMode = useCallback(
+    (next: SendMode) => {
+      navigate({
+        to: '/portal/send',
+        search: { mode: next === 'instant' ? undefined : next },
+        replace: true,
+      } as any);
+    },
+    [navigate]
   );
+  const [scheduleSeconds, setScheduleSeconds] = useState<number | null>(
+    SCHEDULE_PRESETS[0].seconds
+  );
+
+  // Custom date/time picker state
+  const [customDate, setCustomDate] = useState<Date | undefined>(undefined);
+  const [customTimeDate, setCustomTimeDate] = useState<Date | undefined>(undefined);
 
   // Flow state
   const [step, setStep] = useState<FlowStep>('form');
@@ -123,25 +156,33 @@ function SendPage(): ReactElement | null {
   const parsedAmount = parseAmount(form.amount, tokenDecimals);
   const hasValidRecipient = isValidAddress(form.recipient);
   const hasValidAmount = parsedAmount > 0n;
-  const hasSufficientBalance =
-    !balance.isLoading && balance.data.value >= parsedAmount;
-  const isFormValid = hasValidRecipient && hasValidAmount && hasSufficientBalance;
+  const hasSufficientBalance = !balance.isLoading && balance.data.value >= parsedAmount;
 
-  const _scheduledTimestamp =
-    mode === 'scheduled'
-      ? Math.floor(Date.now() / 1000) + scheduleSeconds
-      : null;
+  // Compute the custom datetime timestamp (if user picked a custom date/time)
+  const customTimestamp = useMemo(() => {
+    if (!customDate || !customTimeDate) return null;
+    const dt = new Date(customDate);
+    dt.setHours(customTimeDate.getHours(), customTimeDate.getMinutes(), 0, 0);
+    const ts = Math.floor(dt.getTime() / 1000);
+    return ts > Math.floor(Date.now() / 1000) ? ts : null;
+  }, [customDate, customTimeDate]);
+
+  const isCustomMode = scheduleSeconds === null;
+  const hasValidSchedule = isCustomMode ? customTimestamp !== null : scheduleSeconds !== null;
+
+  const isFormValid =
+    hasValidRecipient &&
+    hasValidAmount &&
+    hasSufficientBalance &&
+    (mode === 'instant' || hasValidSchedule);
 
   // ---------------------------------------------------------------------------
   // Handlers
   // ---------------------------------------------------------------------------
 
-  const updateField = useCallback(
-    <K extends keyof FormState>(key: K, value: FormState[K]) => {
-      setForm(prev => ({ ...prev, [key]: value }));
-    },
-    [],
-  );
+  const updateField = useCallback(<K extends keyof FormState>(key: K, value: FormState[K]) => {
+    setForm(prev => ({ ...prev, [key]: value }));
+  }, []);
 
   const handleAmountChange = useCallback(
     (raw: string) => {
@@ -153,7 +194,7 @@ function SendPage(): ReactElement | null {
       if (parts[1] && parts[1].length > 6) return;
       updateField('amount', cleaned);
     },
-    [updateField],
+    [updateField]
   );
 
   const handleMaxAmount = useCallback(() => {
@@ -173,10 +214,12 @@ function SendPage(): ReactElement | null {
 
     try {
       if (mode === 'scheduled') {
-        const scheduledFor = Math.floor(Date.now() / 1000) + scheduleSeconds;
+        const scheduledFor = isCustomMode
+          ? customTimestamp!
+          : Math.floor(Date.now() / 1000) + scheduleSeconds!;
 
-        if (scheduledFor > Math.floor(Date.now() / 1000) + MAX_SCHEDULE_SECONDS) {
-          throw new Error('Cannot schedule more than 60 minutes in advance');
+        if (scheduledFor <= Math.floor(Date.now() / 1000)) {
+          throw new Error('Scheduled time must be in the future');
         }
 
         // Sign the transaction now
@@ -208,7 +251,7 @@ function SendPage(): ReactElement | null {
           new Date(scheduledFor * 1000).toLocaleTimeString([], {
             hour: '2-digit',
             minute: '2-digit',
-          }),
+          })
         );
         setStep('success');
         toast.success('Payment scheduled successfully');
@@ -227,8 +270,7 @@ function SendPage(): ReactElement | null {
       }
     } catch (err) {
       console.error('Send failed:', err);
-      const message =
-        err instanceof Error ? err.message : 'Transaction failed';
+      const message = err instanceof Error ? err.message : 'Transaction failed';
       toast.error(message);
       setStep('confirm');
     }
@@ -239,6 +281,8 @@ function SendPage(): ReactElement | null {
     feeToken,
     mode,
     scheduleSeconds,
+    isCustomMode,
+    customTimestamp,
     signScheduledPayment,
     sendPayment,
     form,
@@ -259,11 +303,13 @@ function SendPage(): ReactElement | null {
     setForm(EMPTY_FORM);
     setMode('instant');
     setScheduleSeconds(SCHEDULE_PRESETS[0].seconds);
+    setCustomDate(undefined);
+    setCustomTimeDate(undefined);
     setStep('form');
     setTxHash(null);
     setCopied(false);
     setScheduledForTime(null);
-  }, []);
+  }, [setMode]);
 
   const handleDialogClose = useCallback(() => {
     if (step === 'sending') return; // prevent closing during tx
@@ -295,9 +341,7 @@ function SendPage(): ReactElement | null {
     <div className="max-w-lg">
       {/* Page header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#2D3436] tracking-tight">
-          Send Payment
-        </h1>
+        <h1 className="text-2xl font-bold text-[#2D3436] tracking-tight">Send Payment</h1>
         <p className="text-[14px] text-[#6B6560] mt-1">
           Transfer tokens instantly or schedule for later
         </p>
@@ -342,10 +386,7 @@ function SendPage(): ReactElement | null {
 
         <div className="p-5 space-y-5">
           {/* Recipient address */}
-          <ContactPicker
-            value={form.recipient}
-            onChange={(v) => updateField('recipient', v)}
-          />
+          <ContactPicker value={form.recipient} onChange={v => updateField('recipient', v)} />
 
           {/* Amount */}
           <div>
@@ -368,10 +409,15 @@ function SendPage(): ReactElement | null {
                   inputMode="decimal"
                   placeholder="0.00"
                   value={form.amount}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleAmountChange(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                    handleAmountChange(e.target.value)
+                  }
                   className={cn(
                     'text-[18px] font-semibold h-12 rounded-xl border-[#EDE9E3] bg-[#FDFBF8] focus:border-[#E07A5F] focus:ring-1 focus:ring-[#E07A5F]/20 transition-all',
-                    form.amount && hasValidAmount && !hasSufficientBalance && 'border-red-300 bg-red-50/30',
+                    form.amount &&
+                      hasValidAmount &&
+                      !hasSufficientBalance &&
+                      'border-red-300 bg-red-50/30'
                   )}
                 />
               </div>
@@ -405,18 +451,16 @@ function SendPage(): ReactElement | null {
             <Input
               placeholder="What's this for?"
               value={form.memo}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('memo', e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                updateField('memo', e.target.value)
+              }
               maxLength={32}
               className="text-[13px] h-10 rounded-xl border-[#EDE9E3] bg-[#FDFBF8] focus:border-[#E07A5F] focus:ring-1 focus:ring-[#E07A5F]/20 transition-all"
             />
           </div>
 
           {/* Fee token */}
-          <FeeTokenPicker
-            value={feeToken}
-            tokens={tokens}
-            onChange={setFeeToken}
-          />
+          <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
 
           {/* Schedule presets (visible only in scheduled mode) */}
           <AnimatePresence mode="wait">
@@ -429,39 +473,138 @@ function SendPage(): ReactElement | null {
                 transition={{ duration: 0.2 }}
                 className="overflow-hidden"
               >
-                <div className="space-y-3">
-                  <label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider block">
-                    Deliver in
-                  </label>
-                  <div className="flex gap-2 flex-wrap">
-                    {SCHEDULE_PRESETS.map((preset: { readonly label: string; readonly seconds: number }) => {
-                      const isActive = scheduleSeconds === preset.seconds;
-                      return (
-                        <button
-                          key={preset.seconds}
-                          type="button"
-                          onClick={() => setScheduleSeconds(preset.seconds)}
-                          className={cn(
-                            'px-4 py-2 rounded-xl text-[13px] font-medium transition-all border',
-                            isActive
-                              ? 'bg-[#9B72CF] text-white border-[#9B72CF] shadow-sm'
-                              : 'bg-[#FDFBF8] text-[#6B6560] border-[#EDE9E3] hover:border-[#9B72CF]/40 hover:bg-[#9B72CF]/5',
-                          )}
-                        >
-                          <Clock className="w-3 h-3 inline-block mr-1 -mt-0.5" />
-                          {preset.label}
-                        </button>
-                      );
-                    })}
+                <div className="space-y-4">
+                  {/* Quick presets */}
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider block">
+                      Quick delay
+                    </label>
+                    <div className="flex gap-2 flex-wrap">
+                      {SCHEDULE_PRESETS.map(
+                        (preset: { readonly label: string; readonly seconds: number }) => {
+                          const isActive = scheduleSeconds === preset.seconds;
+                          return (
+                            <button
+                              key={preset.seconds}
+                              type="button"
+                              onClick={() => {
+                                setScheduleSeconds(preset.seconds);
+                                const target = new Date(Date.now() + preset.seconds * 1000);
+                                setCustomDate(target);
+                                setCustomTimeDate(new Date(target));
+                              }}
+                              className={cn(
+                                'px-4 py-2 rounded-xl text-[13px] font-medium transition-all border',
+                                isActive
+                                  ? 'bg-[#9B72CF] text-white border-[#9B72CF] shadow-sm'
+                                  : 'bg-[#FDFBF8] text-[#6B6560] border-[#EDE9E3] hover:border-[#9B72CF]/40 hover:bg-[#9B72CF]/5'
+                              )}
+                            >
+                              <Clock className="w-3 h-3 inline-block mr-1 -mt-0.5" />
+                              {preset.label}
+                            </button>
+                          );
+                        }
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 border-t border-[#EDE9E3]" />
+                    <span className="text-[11px] font-medium text-[#B5B0AA] uppercase">or</span>
+                    <div className="flex-1 border-t border-[#EDE9E3]" />
+                  </div>
+
+                  {/* Custom date & time picker */}
+                  <div className="space-y-2">
+                    <label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider block">
+                      Pick a date & time
+                    </label>
+                    <div className="flex gap-2">
+                      {/* Date picker */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className={cn(
+                              'flex-1 h-10 justify-start text-left font-normal rounded-xl border-[#EDE9E3] bg-[#FDFBF8] hover:bg-[#F5F2ED]',
+                              isCustomMode && customDate && 'border-[#9B72CF] bg-[#9B72CF]/5',
+                              !customDate && 'text-[#B5B0AA]'
+                            )}
+                          >
+                            <CalendarIcon className="w-3.5 h-3.5 mr-2 shrink-0" />
+                            <span className="text-[13px]">
+                              {customDate ? format(customDate, 'MMM d, yyyy') : 'Select date'}
+                            </span>
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            captionLayout="dropdown"
+                            selected={customDate}
+                            onSelect={date => {
+                              setCustomDate(date);
+                              setScheduleSeconds(null);
+                              if (!customTimeDate) {
+                                // Default to next hour
+                                const now = new Date();
+                                now.setHours(now.getHours() + 1, 0, 0, 0);
+                                setCustomTimeDate(now);
+                              }
+                            }}
+                            disabled={date => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                          />
+                        </PopoverContent>
+                      </Popover>
+
+                      {/* Time picker */}
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            className={cn(
+                              'w-[130px] h-10 justify-start text-left font-normal rounded-xl border-[#EDE9E3] bg-[#FDFBF8] hover:bg-[#F5F2ED]',
+                              isCustomMode && customTimeDate && 'border-[#9B72CF] bg-[#9B72CF]/5',
+                              !customTimeDate && 'text-[#B5B0AA]'
+                            )}
+                          >
+                            <Clock className="w-3.5 h-3.5 mr-2 shrink-0" />
+                            <span className="text-[13px]">
+                              {customTimeDate ? format(customTimeDate, 'hh:mm aa') : 'Time'}
+                            </span>
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-fit p-0" align="start">
+                          <TimePicker
+                            date={customTimeDate}
+                            setDate={d => {
+                              setCustomTimeDate(d);
+                              if (customDate) setScheduleSeconds(null);
+                            }}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                    {isCustomMode && customTimestamp && (
+                      <p className="text-[12px] text-[#9B72CF] font-medium">
+                        {format(new Date(customTimestamp * 1000), "EEEE, MMM d 'at' h:mm a")}
+                      </p>
+                    )}
+                    {isCustomMode && customDate && customTimeDate && !customTimestamp && (
+                      <p className="text-[12px] text-coral/70">Selected time is in the past</p>
+                    )}
                   </div>
 
                   {/* Warning banner */}
-                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-amber-50/80 border border-amber-200/60">
-                    <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
-                    <p className="text-[12px] text-amber-700 leading-relaxed">
-                      The transaction will be signed now and submitted
-                      automatically after the delay. You can cancel pending
-                      payments from the Scheduled page.
+                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-coral/[0.04] border border-coral/15">
+                    <AlertTriangle className="w-4 h-4 text-coral/60 mt-0.5 shrink-0" />
+                    <p className="text-[12px] text-coral/70 leading-relaxed">
+                      The transaction will be signed now and submitted automatically at the
+                      scheduled time. You can cancel pending payments from the Scheduled page.
                     </p>
                   </div>
                 </div>
@@ -480,7 +623,7 @@ function SendPage(): ReactElement | null {
               'w-full h-12 rounded-xl text-[14px] font-semibold transition-all',
               mode === 'instant'
                 ? 'bg-[#E07A5F] hover:bg-[#D4694F] text-white'
-                : 'bg-[#9B72CF] hover:bg-[#8A62BE] text-white',
+                : 'bg-[#9B72CF] hover:bg-[#8A62BE] text-white'
             )}
           >
             {mode === 'instant' ? 'Review Payment' : 'Review Scheduled Payment'}
@@ -514,9 +657,7 @@ function SendPage(): ReactElement | null {
               >
                 <div className="px-6 pt-6 pb-4">
                   <DialogTitle className="text-lg font-bold text-[#2D3436]">
-                    {mode === 'instant'
-                      ? 'Confirm Payment'
-                      : 'Confirm Scheduled Payment'}
+                    {mode === 'instant' ? 'Confirm Payment' : 'Confirm Scheduled Payment'}
                   </DialogTitle>
                   <DialogDescription className="text-[13px] text-[#9B9590] mt-1">
                     Review the details before sending
@@ -553,9 +694,7 @@ function SendPage(): ReactElement | null {
                       <p className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-1">
                         Memo
                       </p>
-                      <p className="text-[13px] text-[#2D3436] break-words">
-                        {form.memo}
-                      </p>
+                      <p className="text-[13px] text-[#2D3436] break-words">{form.memo}</p>
                     </div>
                   )}
 
@@ -563,23 +702,30 @@ function SendPage(): ReactElement | null {
                   {mode === 'scheduled' && (
                     <div className="bg-[#9B72CF]/5 rounded-xl p-4 border border-[#9B72CF]/15">
                       <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-[#9B72CF]" />
+                        {isCustomMode ? (
+                          <CalendarIcon className="w-4 h-4 text-[#9B72CF]" />
+                        ) : (
+                          <Clock className="w-4 h-4 text-[#9B72CF]" />
+                        )}
                         <div>
                           <p className="text-[11px] font-semibold text-[#9B72CF] uppercase tracking-wider">
                             Scheduled Delivery
                           </p>
                           <p className="text-[13px] font-medium text-[#2D3436] mt-0.5">
-                            In{' '}
-                            {SCHEDULE_PRESETS.find(
-                              (p: { readonly label: string; readonly seconds: number }) => p.seconds === scheduleSeconds,
-                            )?.label ?? `${scheduleSeconds}s`}{' '}
-                            &middot;{' '}
-                            {new Date(
-                              Date.now() + scheduleSeconds * 1000,
-                            ).toLocaleTimeString([], {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
+                            {isCustomMode && customTimestamp ? (
+                              format(new Date(customTimestamp * 1000), "EEEE, MMM d 'at' h:mm a")
+                            ) : (
+                              <>
+                                In {formatDuration(scheduleSeconds!)} &middot;{' '}
+                                {new Date(Date.now() + scheduleSeconds! * 1000).toLocaleTimeString(
+                                  [],
+                                  {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  }
+                                )}
+                              </>
+                            )}
                           </p>
                         </div>
                       </div>
@@ -602,7 +748,7 @@ function SendPage(): ReactElement | null {
                       'flex-1 h-11 rounded-xl font-semibold',
                       mode === 'instant'
                         ? 'bg-[#E07A5F] hover:bg-[#D4694F] text-white'
-                        : 'bg-[#9B72CF] hover:bg-[#8A62BE] text-white',
+                        : 'bg-[#9B72CF] hover:bg-[#8A62BE] text-white'
                     )}
                   >
                     {mode === 'instant' ? 'Send Now' : 'Schedule Payment'}
@@ -686,9 +832,7 @@ function SendPage(): ReactElement | null {
                           r="30"
                           fill="none"
                           stroke={
-                            mode === 'instant'
-                              ? 'rgba(224,122,95,0.5)'
-                              : 'rgba(155,114,207,0.5)'
+                            mode === 'instant' ? 'rgba(224,122,95,0.5)' : 'rgba(155,114,207,0.5)'
                           }
                           strokeWidth="1.5"
                           strokeDasharray="50 140"
@@ -705,13 +849,13 @@ function SendPage(): ReactElement | null {
                       }}
                       className={cn(
                         'w-12 h-12 rounded-full flex items-center justify-center',
-                        mode === 'instant' ? 'bg-[#E07A5F]/10' : 'bg-[#9B72CF]/10',
+                        mode === 'instant' ? 'bg-[#E07A5F]/10' : 'bg-[#9B72CF]/10'
                       )}
                     >
                       <Loader2
                         className={cn(
                           'w-5 h-5 animate-spin',
-                          mode === 'instant' ? 'text-[#E07A5F]' : 'text-[#9B72CF]',
+                          mode === 'instant' ? 'text-[#E07A5F]' : 'text-[#9B72CF]'
                         )}
                       />
                     </motion.div>
@@ -723,9 +867,7 @@ function SendPage(): ReactElement | null {
                     transition={{ delay: 0.1 }}
                   >
                     <p className="text-[12px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2">
-                      {mode === 'instant'
-                        ? 'Sending Payment'
-                        : 'Scheduling Payment'}
+                      {mode === 'instant' ? 'Sending Payment' : 'Scheduling Payment'}
                     </p>
                     <p className="text-3xl font-bold text-[#2D3436] tracking-tight">
                       {formattedParsedAmount}
@@ -813,9 +955,7 @@ function SendPage(): ReactElement | null {
                     transition={{ delay: 0.35 }}
                     className="text-[15px] font-bold text-[#2D3436] mb-1"
                   >
-                    {mode === 'instant'
-                      ? 'Payment Sent'
-                      : 'Payment Scheduled'}
+                    {mode === 'instant' ? 'Payment Sent' : 'Payment Scheduled'}
                   </motion.p>
 
                   {/* Amount */}
@@ -913,9 +1053,7 @@ function SendPage(): ReactElement | null {
                   {mode === 'instant' && txHash ? (
                     <Button
                       variant="outline"
-                      onClick={() =>
-                        window.open(getExplorerTxUrl(txHash), '_blank')
-                      }
+                      onClick={() => window.open(getExplorerTxUrl(txHash), '_blank')}
                       className="flex-1 h-11 rounded-xl border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
                     >
                       <ExternalLink className="w-3.5 h-3.5 mr-1.5" />

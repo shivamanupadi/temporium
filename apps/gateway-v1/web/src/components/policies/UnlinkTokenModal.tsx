@@ -1,12 +1,11 @@
 import { useState, useEffect, useCallback, useRef, type ReactElement } from 'react';
 import { Loader2, ExternalLink, AlertCircle, ShieldOff, ShieldCheck, ShieldX } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { isAddress, type Address } from 'viem';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
 import { Actions, tempoPublicClient, getExplorerTxUrl } from '@/lib/tempo-client';
-import { formatAddress } from '@/lib/utils';
 import { usePolicies } from '@/hooks/usePolicies';
 import { useTokenList } from '@/hooks/useTokenList';
 import type { Token } from '@/lib/tokenlist';
@@ -145,7 +144,9 @@ export function UnlinkTokenModal({
         {modalState === 'input' && (
           <>
             <div className="px-6 pt-6 pb-5 pr-14">
-              <DialogTitle className="text-lg font-bold text-[#2D3436]">Unlink from Token</DialogTitle>
+              <DialogTitle className="text-lg font-bold text-[#2D3436]">
+                Unlink from Token
+              </DialogTitle>
               <DialogDescription className="text-[13px] font-light text-[#9B9590]">
                 Remove this policy from a TIP20 token
               </DialogDescription>
@@ -228,20 +229,26 @@ export function UnlinkTokenModal({
               {/* Details Card */}
               <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3] space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Current Policy</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Current Policy
+                  </span>
                   <span className="flex items-center gap-1.5">
                     {isWhitelist ? (
                       <ShieldCheck className="h-3.5 w-3.5 text-[var(--color-sage)]" />
                     ) : (
                       <ShieldX className="h-3.5 w-3.5 text-coral" />
                     )}
-                    <span className={`text-[13px] font-medium ${isWhitelist ? 'text-[var(--color-sage)]' : 'text-coral'}`}>
+                    <span
+                      className={`text-[13px] font-medium ${isWhitelist ? 'text-[var(--color-sage)]' : 'text-coral'}`}
+                    >
                       {isWhitelist ? 'Whitelist' : 'Blacklist'} #{policyId.toString()}
                     </span>
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">After Unlink</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    After Unlink
+                  </span>
                   <span className="text-[13px] font-medium text-[#9B9590]">No restrictions</span>
                 </div>
               </div>
@@ -289,14 +296,28 @@ export function UnlinkTokenModal({
         {modalState === 'success' && tokenMetadata && (
           <>
             <DialogTitle className="sr-only">Policy Removed!</DialogTitle>
-            <DialogDescription className="sr-only">Transfer policy removed successfully</DialogDescription>
+            <DialogDescription className="sr-only">
+              Transfer policy removed successfully
+            </DialogDescription>
 
             <div className="px-6 pt-10 pb-6 text-center">
               {/* Success icon */}
               <div className="inline-flex items-center justify-center mb-6">
                 <div className="w-16 h-16 rounded-full bg-[var(--color-sage)] flex items-center justify-center">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-white">
-                    <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="text-white"
+                  >
+                    <path
+                      d="M5 13l4 4L19 7"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </div>
               </div>
@@ -312,24 +333,34 @@ export function UnlinkTokenModal({
               {/* Details card */}
               <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3] space-y-3 text-left">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Token</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Token
+                  </span>
                   <span className="text-[13px] font-medium text-[#2D3436]">
                     {tokenMetadata.name} ({tokenMetadata.symbol})
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Previous Policy</span>
-                  <span className={`text-[13px] font-medium ${isWhitelist ? 'text-[var(--color-sage)]' : 'text-coral'}`}>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Previous Policy
+                  </span>
+                  <span
+                    className={`text-[13px] font-medium ${isWhitelist ? 'text-[var(--color-sage)]' : 'text-coral'}`}
+                  >
                     {isWhitelist ? 'Whitelist' : 'Blacklist'} #{policyId.toString()}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">New Policy</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    New Policy
+                  </span>
                   <span className="text-[13px] font-medium text-[#9B9590]">No Restrictions</span>
                 </div>
                 {txHash && (
                   <div className="flex items-center justify-between pt-2 border-t border-[#EDE9E3]">
-                    <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Transaction</span>
+                    <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                      Transaction
+                    </span>
                     <span className="font-mono text-[12px] text-[#2D3436]">
                       {txHash.slice(0, 10)}...{txHash.slice(-4)}
                     </span>

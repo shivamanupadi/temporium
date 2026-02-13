@@ -8,107 +8,107 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as WalletRouteImport } from './routes/wallet'
-import { Route as SignRouteImport } from './routes/sign'
-import { Route as ConnectRouteImport } from './routes/connect'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as WalletIndexRouteImport } from './routes/wallet/index'
-import { Route as WalletSendRouteImport } from './routes/wallet/send'
-import { Route as WalletReceiveRouteImport } from './routes/wallet/receive'
-import { Route as WalletContactsRouteImport } from './routes/wallet/contacts'
-import { Route as WalletAppsRouteImport } from './routes/wallet/apps'
-import { Route as WalletActivityRouteImport } from './routes/wallet/activity'
+import { Route as rootRouteImport } from './routes/__root';
+import { Route as WalletRouteImport } from './routes/wallet';
+import { Route as SignRouteImport } from './routes/sign';
+import { Route as ConnectRouteImport } from './routes/connect';
+import { Route as IndexRouteImport } from './routes/index';
+import { Route as WalletIndexRouteImport } from './routes/wallet/index';
+import { Route as WalletSendRouteImport } from './routes/wallet/send';
+import { Route as WalletReceiveRouteImport } from './routes/wallet/receive';
+import { Route as WalletContactsRouteImport } from './routes/wallet/contacts';
+import { Route as WalletAppsRouteImport } from './routes/wallet/apps';
+import { Route as WalletActivityRouteImport } from './routes/wallet/activity';
 
 const WalletRoute = WalletRouteImport.update({
   id: '/wallet',
   path: '/wallet',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const SignRoute = SignRouteImport.update({
   id: '/sign',
   path: '/sign',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const ConnectRoute = ConnectRouteImport.update({
   id: '/connect',
   path: '/connect',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const WalletIndexRoute = WalletIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => WalletRoute,
-} as any)
+} as any);
 const WalletSendRoute = WalletSendRouteImport.update({
   id: '/send',
   path: '/send',
   getParentRoute: () => WalletRoute,
-} as any)
+} as any);
 const WalletReceiveRoute = WalletReceiveRouteImport.update({
   id: '/receive',
   path: '/receive',
   getParentRoute: () => WalletRoute,
-} as any)
+} as any);
 const WalletContactsRoute = WalletContactsRouteImport.update({
   id: '/contacts',
   path: '/contacts',
   getParentRoute: () => WalletRoute,
-} as any)
+} as any);
 const WalletAppsRoute = WalletAppsRouteImport.update({
   id: '/apps',
   path: '/apps',
   getParentRoute: () => WalletRoute,
-} as any)
+} as any);
 const WalletActivityRoute = WalletActivityRouteImport.update({
   id: '/activity',
   path: '/activity',
   getParentRoute: () => WalletRoute,
-} as any)
+} as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/connect': typeof ConnectRoute
-  '/sign': typeof SignRoute
-  '/wallet': typeof WalletRouteWithChildren
-  '/wallet/activity': typeof WalletActivityRoute
-  '/wallet/apps': typeof WalletAppsRoute
-  '/wallet/contacts': typeof WalletContactsRoute
-  '/wallet/receive': typeof WalletReceiveRoute
-  '/wallet/send': typeof WalletSendRoute
-  '/wallet/': typeof WalletIndexRoute
+  '/': typeof IndexRoute;
+  '/connect': typeof ConnectRoute;
+  '/sign': typeof SignRoute;
+  '/wallet': typeof WalletRouteWithChildren;
+  '/wallet/activity': typeof WalletActivityRoute;
+  '/wallet/apps': typeof WalletAppsRoute;
+  '/wallet/contacts': typeof WalletContactsRoute;
+  '/wallet/receive': typeof WalletReceiveRoute;
+  '/wallet/send': typeof WalletSendRoute;
+  '/wallet/': typeof WalletIndexRoute;
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/connect': typeof ConnectRoute
-  '/sign': typeof SignRoute
-  '/wallet/activity': typeof WalletActivityRoute
-  '/wallet/apps': typeof WalletAppsRoute
-  '/wallet/contacts': typeof WalletContactsRoute
-  '/wallet/receive': typeof WalletReceiveRoute
-  '/wallet/send': typeof WalletSendRoute
-  '/wallet': typeof WalletIndexRoute
+  '/': typeof IndexRoute;
+  '/connect': typeof ConnectRoute;
+  '/sign': typeof SignRoute;
+  '/wallet/activity': typeof WalletActivityRoute;
+  '/wallet/apps': typeof WalletAppsRoute;
+  '/wallet/contacts': typeof WalletContactsRoute;
+  '/wallet/receive': typeof WalletReceiveRoute;
+  '/wallet/send': typeof WalletSendRoute;
+  '/wallet': typeof WalletIndexRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/connect': typeof ConnectRoute
-  '/sign': typeof SignRoute
-  '/wallet': typeof WalletRouteWithChildren
-  '/wallet/activity': typeof WalletActivityRoute
-  '/wallet/apps': typeof WalletAppsRoute
-  '/wallet/contacts': typeof WalletContactsRoute
-  '/wallet/receive': typeof WalletReceiveRoute
-  '/wallet/send': typeof WalletSendRoute
-  '/wallet/': typeof WalletIndexRoute
+  __root__: typeof rootRouteImport;
+  '/': typeof IndexRoute;
+  '/connect': typeof ConnectRoute;
+  '/sign': typeof SignRoute;
+  '/wallet': typeof WalletRouteWithChildren;
+  '/wallet/activity': typeof WalletActivityRoute;
+  '/wallet/apps': typeof WalletAppsRoute;
+  '/wallet/contacts': typeof WalletContactsRoute;
+  '/wallet/receive': typeof WalletReceiveRoute;
+  '/wallet/send': typeof WalletSendRoute;
+  '/wallet/': typeof WalletIndexRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
+  fileRoutesByFullPath: FileRoutesByFullPath;
   fullPaths:
     | '/'
     | '/connect'
@@ -119,8 +119,8 @@ export interface FileRouteTypes {
     | '/wallet/contacts'
     | '/wallet/receive'
     | '/wallet/send'
-    | '/wallet/'
-  fileRoutesByTo: FileRoutesByTo
+    | '/wallet/';
+  fileRoutesByTo: FileRoutesByTo;
   to:
     | '/'
     | '/connect'
@@ -130,7 +130,7 @@ export interface FileRouteTypes {
     | '/wallet/contacts'
     | '/wallet/receive'
     | '/wallet/send'
-    | '/wallet'
+    | '/wallet';
   id:
     | '__root__'
     | '/'
@@ -142,98 +142,98 @@ export interface FileRouteTypes {
     | '/wallet/contacts'
     | '/wallet/receive'
     | '/wallet/send'
-    | '/wallet/'
-  fileRoutesById: FileRoutesById
+    | '/wallet/';
+  fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  IndexRoute: typeof IndexRoute
-  ConnectRoute: typeof ConnectRoute
-  SignRoute: typeof SignRoute
-  WalletRoute: typeof WalletRouteWithChildren
+  IndexRoute: typeof IndexRoute;
+  ConnectRoute: typeof ConnectRoute;
+  SignRoute: typeof SignRoute;
+  WalletRoute: typeof WalletRouteWithChildren;
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
     '/wallet': {
-      id: '/wallet'
-      path: '/wallet'
-      fullPath: '/wallet'
-      preLoaderRoute: typeof WalletRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/wallet';
+      path: '/wallet';
+      fullPath: '/wallet';
+      preLoaderRoute: typeof WalletRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/sign': {
-      id: '/sign'
-      path: '/sign'
-      fullPath: '/sign'
-      preLoaderRoute: typeof SignRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/sign';
+      path: '/sign';
+      fullPath: '/sign';
+      preLoaderRoute: typeof SignRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/connect': {
-      id: '/connect'
-      path: '/connect'
-      fullPath: '/connect'
-      preLoaderRoute: typeof ConnectRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/connect';
+      path: '/connect';
+      fullPath: '/connect';
+      preLoaderRoute: typeof ConnectRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/';
+      path: '/';
+      fullPath: '/';
+      preLoaderRoute: typeof IndexRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/wallet/': {
-      id: '/wallet/'
-      path: '/'
-      fullPath: '/wallet/'
-      preLoaderRoute: typeof WalletIndexRouteImport
-      parentRoute: typeof WalletRoute
-    }
+      id: '/wallet/';
+      path: '/';
+      fullPath: '/wallet/';
+      preLoaderRoute: typeof WalletIndexRouteImport;
+      parentRoute: typeof WalletRoute;
+    };
     '/wallet/send': {
-      id: '/wallet/send'
-      path: '/send'
-      fullPath: '/wallet/send'
-      preLoaderRoute: typeof WalletSendRouteImport
-      parentRoute: typeof WalletRoute
-    }
+      id: '/wallet/send';
+      path: '/send';
+      fullPath: '/wallet/send';
+      preLoaderRoute: typeof WalletSendRouteImport;
+      parentRoute: typeof WalletRoute;
+    };
     '/wallet/receive': {
-      id: '/wallet/receive'
-      path: '/receive'
-      fullPath: '/wallet/receive'
-      preLoaderRoute: typeof WalletReceiveRouteImport
-      parentRoute: typeof WalletRoute
-    }
+      id: '/wallet/receive';
+      path: '/receive';
+      fullPath: '/wallet/receive';
+      preLoaderRoute: typeof WalletReceiveRouteImport;
+      parentRoute: typeof WalletRoute;
+    };
     '/wallet/contacts': {
-      id: '/wallet/contacts'
-      path: '/contacts'
-      fullPath: '/wallet/contacts'
-      preLoaderRoute: typeof WalletContactsRouteImport
-      parentRoute: typeof WalletRoute
-    }
+      id: '/wallet/contacts';
+      path: '/contacts';
+      fullPath: '/wallet/contacts';
+      preLoaderRoute: typeof WalletContactsRouteImport;
+      parentRoute: typeof WalletRoute;
+    };
     '/wallet/apps': {
-      id: '/wallet/apps'
-      path: '/apps'
-      fullPath: '/wallet/apps'
-      preLoaderRoute: typeof WalletAppsRouteImport
-      parentRoute: typeof WalletRoute
-    }
+      id: '/wallet/apps';
+      path: '/apps';
+      fullPath: '/wallet/apps';
+      preLoaderRoute: typeof WalletAppsRouteImport;
+      parentRoute: typeof WalletRoute;
+    };
     '/wallet/activity': {
-      id: '/wallet/activity'
-      path: '/activity'
-      fullPath: '/wallet/activity'
-      preLoaderRoute: typeof WalletActivityRouteImport
-      parentRoute: typeof WalletRoute
-    }
+      id: '/wallet/activity';
+      path: '/activity';
+      fullPath: '/wallet/activity';
+      preLoaderRoute: typeof WalletActivityRouteImport;
+      parentRoute: typeof WalletRoute;
+    };
   }
 }
 
 interface WalletRouteChildren {
-  WalletActivityRoute: typeof WalletActivityRoute
-  WalletAppsRoute: typeof WalletAppsRoute
-  WalletContactsRoute: typeof WalletContactsRoute
-  WalletReceiveRoute: typeof WalletReceiveRoute
-  WalletSendRoute: typeof WalletSendRoute
-  WalletIndexRoute: typeof WalletIndexRoute
+  WalletActivityRoute: typeof WalletActivityRoute;
+  WalletAppsRoute: typeof WalletAppsRoute;
+  WalletContactsRoute: typeof WalletContactsRoute;
+  WalletReceiveRoute: typeof WalletReceiveRoute;
+  WalletSendRoute: typeof WalletSendRoute;
+  WalletIndexRoute: typeof WalletIndexRoute;
 }
 
 const WalletRouteChildren: WalletRouteChildren = {
@@ -243,17 +243,16 @@ const WalletRouteChildren: WalletRouteChildren = {
   WalletReceiveRoute: WalletReceiveRoute,
   WalletSendRoute: WalletSendRoute,
   WalletIndexRoute: WalletIndexRoute,
-}
+};
 
-const WalletRouteWithChildren =
-  WalletRoute._addFileChildren(WalletRouteChildren)
+const WalletRouteWithChildren = WalletRoute._addFileChildren(WalletRouteChildren);
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConnectRoute: ConnectRoute,
   SignRoute: SignRoute,
   WalletRoute: WalletRouteWithChildren,
-}
+};
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+  ._addFileTypes<FileRouteTypes>();

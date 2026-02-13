@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback, useRef, type ReactElement } from 'react';
 import { Loader2, AlertCircle, Download } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { isAddress, type Address } from 'viem';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
+import { TokenAddressPicker } from '@/components/TokenAddressPicker';
 import { Actions, tempoPublicClient } from '@/lib/tempo-client';
 import { useStablecoins } from '@/hooks/useStablecoins';
 import { formatAddress } from '@/lib/utils';
@@ -106,15 +107,6 @@ export function ImportStablecoinModal({
     }
   }, [tokenAddress, tokenMetadata, importStablecoin, onSuccess, onClose]);
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent): void => {
-      if (e.key === 'Enter' && !isValidating && modalState === 'input') {
-        handleValidate();
-      }
-    },
-    [isValidating, modalState, handleValidate]
-  );
-
   const handleClose = useCallback((): void => {
     if (!isValidating && !isImporting && !isProcessingRef.current) {
       onClose();
@@ -127,37 +119,28 @@ export function ImportStablecoinModal({
         {modalState === 'input' && (
           <>
             <div className="px-6 pt-6 pb-5 pr-14">
-              <DialogTitle className="text-lg font-bold text-[#2D3436]">
-                Import Token
-              </DialogTitle>
+              <DialogTitle className="text-lg font-bold text-[#2D3436]">Import Token</DialogTitle>
               <DialogDescription className="text-[13px] font-light text-[#9B9590]">
                 Enter the TIP-20 token contract address
               </DialogDescription>
             </div>
 
             <div className="px-6 pb-4">
-              <div>
-                <label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2 block">
-                  Token Address
-                </label>
-                <input
-                  type="text"
-                  placeholder="0x..."
-                  value={tokenAddress}
-                  onChange={e => {
-                    setTokenAddress(e.target.value);
-                    setError(null);
-                  }}
-                  onKeyDown={handleKeyDown}
-                  className="w-full px-4 py-3 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] font-mono placeholder:text-[#B5B0AA] focus:border-lavender/40 focus:outline-none transition-colors"
-                />
-                {error && (
-                  <div className="flex items-center gap-1.5 mt-2 text-coral">
-                    <AlertCircle className="h-3.5 w-3.5" />
-                    <span className="text-[12px]">{error}</span>
-                  </div>
-                )}
-              </div>
+              <TokenAddressPicker
+                value={tokenAddress}
+                onChange={val => {
+                  setTokenAddress(val);
+                  setError(null);
+                }}
+                label="Token Address"
+                showValidation={false}
+              />
+              {error && (
+                <div className="flex items-center gap-1.5 mt-2 text-coral">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  <span className="text-[12px]">{error}</span>
+                </div>
+              )}
             </div>
 
             <div className="px-6 pb-6 flex gap-3">
@@ -173,9 +156,7 @@ export function ImportStablecoinModal({
                 onClick={handleValidate}
                 disabled={isValidating || !tokenAddress.trim()}
               >
-                {isValidating ? (
-                  <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
-                ) : null}
+                {isValidating ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : null}
                 {isValidating ? 'Validating...' : 'Validate'}
               </Button>
             </div>
@@ -185,9 +166,7 @@ export function ImportStablecoinModal({
         {modalState === 'confirm' && tokenMetadata && (
           <>
             <div className="px-6 pt-6 pb-5 pr-14">
-              <DialogTitle className="text-lg font-bold text-[#2D3436]">
-                Confirm Import
-              </DialogTitle>
+              <DialogTitle className="text-lg font-bold text-[#2D3436]">Confirm Import</DialogTitle>
               <DialogDescription className="text-[13px] font-light text-[#9B9590]">
                 Review the token details before importing
               </DialogDescription>
@@ -211,19 +190,25 @@ export function ImportStablecoinModal({
                   <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
                     Currency
                   </span>
-                  <span className="text-[13px] font-medium text-[#2D3436]">{tokenMetadata.currency}</span>
+                  <span className="text-[13px] font-medium text-[#2D3436]">
+                    {tokenMetadata.currency}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
                     Decimals
                   </span>
-                  <span className="text-[13px] font-medium text-[#2D3436]">{tokenMetadata.decimals}</span>
+                  <span className="text-[13px] font-medium text-[#2D3436]">
+                    {tokenMetadata.decimals}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
                     Address
                   </span>
-                  <span className="text-[13px] font-mono text-[#2D3436]">{formatAddress(tokenAddress, 6)}</span>
+                  <span className="text-[13px] font-mono text-[#2D3436]">
+                    {formatAddress(tokenAddress, 6)}
+                  </span>
                 </div>
               </div>
             </div>

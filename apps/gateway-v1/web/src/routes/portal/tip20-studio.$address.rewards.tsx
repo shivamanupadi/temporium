@@ -228,9 +228,7 @@ function Tip20StudioRewards(): ReactElement {
             rewardInfo?.rewardRecipient &&
             rewardInfo.rewardRecipient !== ZERO_ADDRESS && (
               <div className="bg-card rounded-xl p-4 shadow-xs border border-border mb-6">
-                <h3 className="text-[13px] font-semibold text-foreground mb-3">
-                  Reward Recipient
-                </h3>
+                <h3 className="text-[13px] font-semibold text-foreground mb-3">Reward Recipient</h3>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-lg bg-[var(--color-sage)]/15 flex items-center justify-center">
@@ -240,9 +238,7 @@ function Tip20StudioRewards(): ReactElement {
                       <p className="text-[13px] font-medium text-foreground font-mono">
                         {formatAddress(rewardInfo.rewardRecipient, 8)}
                       </p>
-                      <p className="text-[11px] text-muted-foreground">
-                        Rewards will be sent here
-                      </p>
+                      <p className="text-[11px] text-muted-foreground">Rewards will be sent here</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-1">

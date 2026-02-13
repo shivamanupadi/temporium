@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, type ReactElement } from 'react';
 import { Loader2, ExternalLink } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
@@ -88,14 +88,28 @@ export function SupplyCapModal({
         {txHash ? (
           <>
             <DialogTitle className="sr-only">Supply Cap Updated!</DialogTitle>
-            <DialogDescription className="sr-only">Transaction completed successfully</DialogDescription>
+            <DialogDescription className="sr-only">
+              Transaction completed successfully
+            </DialogDescription>
 
             <div className="px-6 pt-10 pb-6 text-center">
               {/* Success icon */}
               <div className="inline-flex items-center justify-center mb-6">
                 <div className="w-16 h-16 rounded-full bg-[var(--color-sage)] flex items-center justify-center">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-white">
-                    <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="text-white"
+                  >
+                    <path
+                      d="M5 13l4 4L19 7"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </div>
               </div>
@@ -106,14 +120,20 @@ export function SupplyCapModal({
               {/* Hero value */}
               <div className="mb-6">
                 <span className="text-3xl font-bold text-[#2D3436]">{supplyCapInput}</span>
-                <span className="text-lg text-[#9B9590] ml-1.5 font-semibold">{selectedCoin?.symbol}</span>
+                <span className="text-lg text-[#9B9590] ml-1.5 font-semibold">
+                  {selectedCoin?.symbol}
+                </span>
               </div>
 
               {/* Details card */}
               <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3] text-left">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Transaction</span>
-                  <span className="font-mono text-[12px] text-[#2D3436]">{txHash.slice(0, 10)}...{txHash.slice(-4)}</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Transaction
+                  </span>
+                  <span className="font-mono text-[12px] text-[#2D3436]">
+                    {txHash.slice(0, 10)}...{txHash.slice(-4)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -140,7 +160,9 @@ export function SupplyCapModal({
           <>
             <div className="px-6 pt-6 pb-5 pr-14">
               <DialogTitle className="text-lg font-bold text-[#2D3436]">Set Supply Cap</DialogTitle>
-              <DialogDescription className="text-[13px] font-light text-[#9B9590]">Set the maximum total supply for this token</DialogDescription>
+              <DialogDescription className="text-[13px] font-light text-[#9B9590]">
+                Set the maximum total supply for this token
+              </DialogDescription>
             </div>
             <div className="px-6 pb-4">
               <div className="space-y-3">

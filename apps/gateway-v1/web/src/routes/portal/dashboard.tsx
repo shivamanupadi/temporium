@@ -21,7 +21,7 @@ import {
   Users,
   Link2,
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { useTempo } from '@/hooks/useTempo';
 import { useTokensWithBalances } from '@/hooks/useTokenList';
@@ -144,7 +144,12 @@ const quickActions = [
 
 function DashboardPage(): ReactElement {
   const { address } = useTempo();
-  const { tokens, totalBalance, isLoading: isBalanceLoading, refetch } = useTokensWithBalances(address);
+  const {
+    tokens,
+    totalBalance,
+    isLoading: isBalanceLoading,
+    refetch,
+  } = useTokensWithBalances(address);
 
   const [copied, setCopied] = useState(false);
   const [isFaucetLoading, setIsFaucetLoading] = useState(false);
@@ -244,7 +249,7 @@ function DashboardPage(): ReactElement {
                       Connected Address
                     </p>
                     <p className="text-[14px] font-mono font-medium text-[#2D3436] truncate">
-                      {address ? formatAddress(address, 8) : '--'}
+                      {address ? formatAddress(address, 8) : '–'}
                     </p>
                   </div>
                 </div>
@@ -279,7 +284,7 @@ function DashboardPage(): ReactElement {
           {/* Testnet Faucet */}
           <motion.div
             variants={itemVariants}
-            className="rounded-2xl border border-dashed border-[#EDE9E3] bg-[#FDFBF8] p-5"
+            className="rounded-2xl border border-[#EDE9E3] bg-white p-5"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -415,12 +420,8 @@ function DashboardPage(): ReactElement {
           {/* Quick Actions */}
           <motion.div variants={itemVariants}>
             <div className="grid grid-cols-3 gap-3">
-              {quickActions.map((action) => (
-                <Link
-                  key={action.to}
-                  to={action.to}
-                  className="group"
-                >
+              {quickActions.map(action => (
+                <Link key={action.to} to={action.to} className="group">
                   <motion.div
                     whileHover={{ y: -2 }}
                     whileTap={{ scale: 0.97 }}
@@ -431,17 +432,10 @@ function DashboardPage(): ReactElement {
                       className="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-2.5"
                       style={{ backgroundColor: `${action.color}12` }}
                     >
-                      <action.icon
-                        className="w-5 h-5"
-                        style={{ color: action.color }}
-                      />
+                      <action.icon className="w-5 h-5" style={{ color: action.color }} />
                     </div>
-                    <p className="text-[14px] font-semibold text-[#2D3436]">
-                      {action.label}
-                    </p>
-                    <p className="text-[11px] text-[#9B9590] mt-0.5">
-                      {action.description}
-                    </p>
+                    <p className="text-[14px] font-semibold text-[#2D3436]">{action.label}</p>
+                    <p className="text-[11px] text-[#9B9590] mt-0.5">{action.description}</p>
                   </motion.div>
                 </Link>
               ))}

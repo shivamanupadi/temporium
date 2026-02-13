@@ -8,22 +8,22 @@ interface StablecoinEmptyStateProps {
 
 export function StablecoinEmptyState({ onCreate }: StablecoinEmptyStateProps): ReactElement {
   return (
-    <div className="px-6 py-14 text-center">
-      <div className="w-14 h-14 rounded-2xl bg-lavender/8 flex items-center justify-center mx-auto mb-4">
-        <CircleDollarSign className="h-7 w-7 text-lavender" />
+    <>
+      <div className="w-14 h-14 rounded-2xl bg-[#F5F2ED] flex items-center justify-center mx-auto mb-4">
+        <CircleDollarSign className="w-7 h-7 text-[#B5B0AA]" />
       </div>
-      <h2 className="text-[15px] font-semibold text-[#2D3436] mb-1.5">No Tokens Yet</h2>
-      <p className="text-[13px] text-[#6B6560] max-w-[280px] mx-auto leading-relaxed mb-4">
+      <h3 className="text-[16px] font-semibold text-[#2D3436]">No Tokens Yet</h3>
+      <p className="text-[13px] text-[#9B9590] mt-1.5 max-w-sm mx-auto leading-relaxed">
         Create your first TIP-20 stablecoin or import an existing one to get started.
       </p>
       <Button
         onClick={onCreate}
         variant="outline"
-        className="h-9 px-4 rounded-xl text-[13px] font-semibold border-[#EDE9E3]"
+        className="mt-5 h-10 px-6 rounded-xl text-[13px] font-semibold border-[#EDE9E3] gap-2"
       >
-        <Plus className="w-3.5 h-3.5 mr-1.5" />
+        <Plus className="w-4 h-4" />
         Create Token
       </Button>
-    </div>
+    </>
   );
 }

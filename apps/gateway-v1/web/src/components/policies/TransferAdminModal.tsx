@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, type ReactElement } from 'react';
 import { Loader2, ExternalLink, AlertTriangle } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { isAddress, type Address } from 'viem';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
@@ -111,9 +111,7 @@ export function TransferAdminModal({
         {modalState === 'form' && (
           <>
             <div className="px-6 pt-6 pb-5 pr-14">
-              <DialogTitle className="text-lg font-bold text-[#2D3436]">
-                Transfer Admin
-              </DialogTitle>
+              <DialogTitle className="text-lg font-bold text-[#2D3436]">Transfer Admin</DialogTitle>
               <DialogDescription className="text-[13px] font-light text-[#9B9590]">
                 Transfer policy admin to another address
               </DialogDescription>
@@ -131,11 +129,7 @@ export function TransferAdminModal({
                   </p>
                 </div>
 
-                <ContactPicker
-                  value={newAdmin}
-                  onChange={setNewAdmin}
-                  label="New Admin Address"
-                />
+                <ContactPicker value={newAdmin} onChange={setNewAdmin} label="New Admin Address" />
               </div>
             </div>
 
@@ -190,19 +184,25 @@ export function TransferAdminModal({
               {/* Details Card */}
               <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3] space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Policy</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Policy
+                  </span>
                   <span className="text-[13px] font-medium text-[#2D3436] font-mono">
                     #{policyId.toString()}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">From</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    From
+                  </span>
                   <span className="text-[13px] font-medium text-[#2D3436] font-mono">
                     {formatAddress(currentAdmin, 6)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">To</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    To
+                  </span>
                   <span className="text-[13px] font-medium text-[#2D3436] font-mono">
                     {formatAddress(newAdmin.trim(), 6)}
                   </span>
@@ -235,14 +235,28 @@ export function TransferAdminModal({
         {modalState === 'success' && (
           <>
             <DialogTitle className="sr-only">Admin Transferred!</DialogTitle>
-            <DialogDescription className="sr-only">Policy admin has been transferred</DialogDescription>
+            <DialogDescription className="sr-only">
+              Policy admin has been transferred
+            </DialogDescription>
 
             <div className="px-6 pt-10 pb-6 text-center">
               {/* Success icon */}
               <div className="inline-flex items-center justify-center mb-6">
                 <div className="w-16 h-16 rounded-full bg-[var(--color-sage)] flex items-center justify-center">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-white">
-                    <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="text-white"
+                  >
+                    <path
+                      d="M5 13l4 4L19 7"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </div>
               </div>
@@ -258,20 +272,26 @@ export function TransferAdminModal({
               {/* Details card */}
               <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3] space-y-3 text-left">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">From</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    From
+                  </span>
                   <span className="text-[13px] font-medium text-[#2D3436] font-mono">
                     {formatAddress(currentAdmin, 6)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">To</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    To
+                  </span>
                   <span className="text-[13px] font-medium text-[#2D3436] font-mono">
                     {formatAddress(newAdmin.trim(), 6)}
                   </span>
                 </div>
                 {txHash && (
                   <div className="flex items-center justify-between pt-2 border-t border-[#EDE9E3]">
-                    <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Transaction</span>
+                    <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                      Transaction
+                    </span>
                     <span className="font-mono text-[12px] text-[#2D3436]">
                       {txHash.slice(0, 10)}...{txHash.slice(-4)}
                     </span>

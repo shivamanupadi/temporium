@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, type ReactElement } from 'react';
 import { Loader2, ShieldCheck, ShieldX } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { isAddress, type Address } from 'viem';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
@@ -115,11 +115,7 @@ export function CheckAuthorizationModal({
             </div>
 
             <div className="px-6 pb-4">
-              <ContactPicker
-                value={address}
-                onChange={setAddress}
-                label="Address"
-              />
+              <ContactPicker value={address} onChange={setAddress} label="Address" />
             </div>
 
             <div className="px-6 pb-6 flex gap-3">
@@ -169,27 +165,35 @@ export function CheckAuthorizationModal({
               <p className="text-[15px] font-bold text-[#2D3436] mb-1">{resultTitle}</p>
 
               {/* Description */}
-              <p className="text-[13px] font-light text-[#9B9590] mb-6 px-4">
-                {resultDescription}
-              </p>
+              <p className="text-[13px] font-light text-[#9B9590] mb-6 px-4">{resultDescription}</p>
 
               {/* Details card */}
               <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3] space-y-3 text-left">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Address</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Address
+                  </span>
                   <span className="text-[13px] font-medium text-[#2D3436] font-mono">
                     {formatAddress(address.trim(), 8)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Policy</span>
-                  <span className={`text-[13px] font-medium ${isWhitelist ? 'text-[var(--color-sage)]' : 'text-coral'}`}>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Policy
+                  </span>
+                  <span
+                    className={`text-[13px] font-medium ${isWhitelist ? 'text-[var(--color-sage)]' : 'text-coral'}`}
+                  >
                     {isWhitelist ? 'Whitelist' : 'Blacklist'} #{policyId.toString()}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Status</span>
-                  <span className={`text-[13px] font-medium ${isAuthorized ? 'text-[var(--color-sage)]' : 'text-coral'}`}>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Status
+                  </span>
+                  <span
+                    className={`text-[13px] font-medium ${isAuthorized ? 'text-[var(--color-sage)]' : 'text-coral'}`}
+                  >
                     {isAuthorized ? 'Authorized' : 'Not Authorized'}
                   </span>
                 </div>

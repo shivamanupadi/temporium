@@ -55,9 +55,9 @@ export const scheduledTransactions = sqliteTable(
       .primaryKey()
       .$defaultFn(() => createId()),
     owner: text('owner').notNull(), // Wallet address that owns this record
-    txHash: text('tx_hash'),                              // null until executed
-    serializedTx: text('serialized_tx').notNull(),         // signed raw tx hex
-    network: text('network').notNull(),                    // 'testnet' | 'mainnet'
+    txHash: text('tx_hash'), // null until executed
+    serializedTx: text('serialized_tx').notNull(), // signed raw tx hex
+    network: text('network').notNull(), // 'testnet' | 'mainnet'
     from: text('from').notNull(),
     to: text('to').notNull(),
     amount: text('amount').notNull(),
@@ -71,7 +71,7 @@ export const scheduledTransactions = sqliteTable(
     status: text('status').$type<TransactionStatus>().default('pending').notNull(),
     attempts: integer('attempts').default(0).notNull(),
     executedAt: integer('executed_at', { mode: 'timestamp' }),
-    failReason: text('fail_reason'),                       // error message on failure
+    failReason: text('fail_reason'), // error message on failure
   },
   table => [
     index('scheduled_tx_owner_idx').on(table.owner),

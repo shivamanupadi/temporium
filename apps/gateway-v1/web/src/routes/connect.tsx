@@ -15,7 +15,7 @@ import {
   Eye,
   Wallet,
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { CreateWalletModal } from '@temporium/shared-ui';
 import { WalletSelectModal } from '@/components/WalletSelectModal';
@@ -436,9 +436,7 @@ function ConnectPage(): ReactElement {
                 <Clock className="w-7 h-7 text-[#9B9590]" />
               </div>
               <h1 className="text-[16px] font-semibold text-[#2D3436] mb-1.5">Request Expired</h1>
-              <p className="text-[13px] text-[#9B9590]">
-                The connection request has timed out
-              </p>
+              <p className="text-[13px] text-[#9B9590]">The connection request has timed out</p>
             </div>
           </div>
         </motion.div>

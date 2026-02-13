@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, type ReactElement } from 'react';
 import { Loader2, ExternalLink, AlertTriangle, Check } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
@@ -36,7 +36,7 @@ export function PauseTokenModal({
 
   const isPause = mode === 'pause';
   const title = isPause ? 'Pause Token' : 'Unpause Token';
-  const actionLabel = isPause ? 'Pause' : 'Unpause';
+  const _actionLabel = isPause ? 'Pause' : 'Unpause';
 
   useEffect(() => {
     if (isOpen) {
@@ -93,8 +93,20 @@ export function PauseTokenModal({
               {/* Success icon */}
               <div className="inline-flex items-center justify-center mb-6">
                 <div className="w-16 h-16 rounded-full bg-[var(--color-sage)] flex items-center justify-center">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-white">
-                    <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="text-white"
+                  >
+                    <path
+                      d="M5 13l4 4L19 7"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </div>
               </div>
@@ -106,21 +118,33 @@ export function PauseTokenModal({
 
               {/* Hero value */}
               <div className="mb-6">
-                <span className="text-3xl font-bold text-[#2D3436]">{selectedCoin?.metadata?.name ?? selectedCoin?.symbol}</span>
-                <span className="text-lg text-[#9B9590] ml-1.5 font-semibold">{selectedCoin?.symbol}</span>
+                <span className="text-3xl font-bold text-[#2D3436]">
+                  {selectedCoin?.metadata?.name ?? selectedCoin?.symbol}
+                </span>
+                <span className="text-lg text-[#9B9590] ml-1.5 font-semibold">
+                  {selectedCoin?.symbol}
+                </span>
               </div>
 
               {/* Details card */}
               <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3] space-y-3 text-left">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Status</span>
-                  <span className={`text-[12px] font-medium ${actionTaken === 'pause' ? 'text-[var(--color-coral)]' : 'text-[var(--color-sage)]'}`}>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Status
+                  </span>
+                  <span
+                    className={`text-[12px] font-medium ${actionTaken === 'pause' ? 'text-[var(--color-coral)]' : 'text-[var(--color-sage)]'}`}
+                  >
                     {actionTaken === 'pause' ? 'Paused' : 'Active'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-[#EDE9E3]">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Transaction</span>
-                  <span className="font-mono text-[12px] text-[#2D3436]">{txHash.slice(0, 10)}...{txHash.slice(-4)}</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Transaction
+                  </span>
+                  <span className="font-mono text-[12px] text-[#2D3436]">
+                    {txHash.slice(0, 10)}...{txHash.slice(-4)}
+                  </span>
                 </div>
               </div>
             </div>

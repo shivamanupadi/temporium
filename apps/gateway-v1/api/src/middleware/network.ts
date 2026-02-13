@@ -36,9 +36,7 @@ export async function networkMiddleware(
       : c.env.TESTNET_PASSKEY_REGISTRY_ADDRESS;
 
   const relayerPrivateKey =
-    network === 'mainnet'
-      ? c.env.MAINNET_RELAYER_PRIVATE_KEY
-      : c.env.TESTNET_RELAYER_PRIVATE_KEY;
+    network === 'mainnet' ? c.env.MAINNET_RELAYER_PRIVATE_KEY : c.env.TESTNET_RELAYER_PRIVATE_KEY;
 
   const networkConfig: NetworkConfig = {
     network,

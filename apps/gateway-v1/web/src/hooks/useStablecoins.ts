@@ -5,12 +5,7 @@ import { apiGet, apiPost, apiDelete } from '@/lib/api-client';
 import { Actions, tempoPublicClient } from '@/lib/tempo-client';
 import { DEFAULT_FEE_TOKEN_ADDRESS } from '@/lib/constants';
 import type { Address } from 'viem';
-import type {
-  Tip20Contract,
-  TokenRole,
-  TokenMetadata,
-  StablecoinWithMetadata,
-} from '@/types';
+import type { Tip20Contract, TokenRole, TokenMetadata, StablecoinWithMetadata } from '@/types';
 
 export const STABLECOINS_QUERY_KEY = 'stablecoins';
 

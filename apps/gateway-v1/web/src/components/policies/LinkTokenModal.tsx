@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, type ReactElement } from 'react';
 import { Loader2, ExternalLink, AlertCircle, Link2, ShieldCheck, ShieldX } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { isAddress, type Address } from 'viem';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
@@ -215,27 +215,35 @@ export function LinkTokenModal({
               {/* Details Card */}
               <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3] space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Token Address</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Token Address
+                  </span>
                   <span className="text-[13px] font-medium text-[#2D3436] font-mono">
                     {formatAddress(tokenAddress.trim(), 6)}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Policy ID</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Policy ID
+                  </span>
                   <span className="text-[13px] font-medium text-[#2D3436] font-mono">
                     {policyId.toString()}
                   </span>
                 </div>
                 {policyType && (
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Type</span>
+                    <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                      Type
+                    </span>
                     <span className="flex items-center gap-1.5">
                       {isWhitelist ? (
                         <ShieldCheck className="h-3.5 w-3.5 text-[var(--color-sage)]" />
                       ) : (
                         <ShieldX className="h-3.5 w-3.5 text-coral" />
                       )}
-                      <span className={`text-[13px] font-medium ${isWhitelist ? 'text-[var(--color-sage)]' : 'text-coral'}`}>
+                      <span
+                        className={`text-[13px] font-medium ${isWhitelist ? 'text-[var(--color-sage)]' : 'text-coral'}`}
+                      >
                         {isWhitelist ? 'Whitelist' : 'Blacklist'}
                       </span>
                     </span>
@@ -243,7 +251,9 @@ export function LinkTokenModal({
                 )}
                 {policyAdmin && (
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Admin</span>
+                    <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                      Admin
+                    </span>
                     <span className="text-[13px] font-medium text-[#2D3436] font-mono">
                       {formatAddress(policyAdmin, 6)}
                     </span>
@@ -295,14 +305,28 @@ export function LinkTokenModal({
         {modalState === 'success' && tokenMetadata && (
           <>
             <DialogTitle className="sr-only">Policy Applied!</DialogTitle>
-            <DialogDescription className="sr-only">Transfer policy applied successfully</DialogDescription>
+            <DialogDescription className="sr-only">
+              Transfer policy applied successfully
+            </DialogDescription>
 
             <div className="px-6 pt-10 pb-6 text-center">
               {/* Success icon */}
               <div className="inline-flex items-center justify-center mb-6">
                 <div className="w-16 h-16 rounded-full bg-[var(--color-sage)] flex items-center justify-center">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-white">
-                    <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="text-white"
+                  >
+                    <path
+                      d="M5 13l4 4L19 7"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </div>
               </div>
@@ -318,20 +342,28 @@ export function LinkTokenModal({
               {/* Details card */}
               <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3] space-y-3 text-left">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Token</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Token
+                  </span>
                   <span className="text-[13px] font-medium text-[#2D3436]">
                     {tokenMetadata.name} ({tokenMetadata.symbol})
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Policy</span>
-                  <span className={`text-[13px] font-medium ${isWhitelist ? 'text-[var(--color-sage)]' : 'text-coral'}`}>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Policy
+                  </span>
+                  <span
+                    className={`text-[13px] font-medium ${isWhitelist ? 'text-[var(--color-sage)]' : 'text-coral'}`}
+                  >
                     {isWhitelist ? 'Whitelist' : 'Blacklist'} #{policyId.toString()}
                   </span>
                 </div>
                 {txHash && (
                   <div className="flex items-center justify-between pt-2 border-t border-[#EDE9E3]">
-                    <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Transaction</span>
+                    <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                      Transaction
+                    </span>
                     <span className="font-mono text-[12px] text-[#2D3436]">
                       {txHash.slice(0, 10)}...{txHash.slice(-4)}
                     </span>

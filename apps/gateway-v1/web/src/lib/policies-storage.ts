@@ -22,14 +22,10 @@ export async function savePolicy(policy: {
 
 export async function getPoliciesByOwner(): Promise<Policy[]> {
   const response = await apiGet<Policy[]>('/v1/policies');
-  return response.sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+  return response.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 }
 
-export async function getPolicyByPolicyId(
-  policyId: string
-): Promise<Policy | null> {
+export async function getPolicyByPolicyId(policyId: string): Promise<Policy | null> {
   const policies = await getPoliciesByOwner();
   return policies.find(p => p.policyId === policyId) ?? null;
 }

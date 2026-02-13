@@ -37,9 +37,7 @@ export function PolicyCard({ policy }: PolicyCardProps): ReactElement {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <p className="text-[14px] font-semibold text-[#2D3436]">
-                Policy #{policy.policyId}
-              </p>
+              <p className="text-[14px] font-semibold text-[#2D3436]">Policy #{policy.policyId}</p>
               <span
                 className={`text-[11px] font-medium px-1.5 py-0.5 rounded ${
                   isWhitelist
@@ -50,7 +48,9 @@ export function PolicyCard({ policy }: PolicyCardProps): ReactElement {
                 {isWhitelist ? 'Whitelist' : 'Blacklist'}
               </span>
               {policy.isAdmin && (
-                <span className={`text-[11px] font-medium px-1.5 py-0.5 rounded ${isWhitelist ? 'text-[var(--color-sage)] bg-[var(--color-sage)]/10' : 'text-coral bg-coral/10'}`}>
+                <span
+                  className={`text-[11px] font-medium px-1.5 py-0.5 rounded ${isWhitelist ? 'text-[var(--color-sage)] bg-[var(--color-sage)]/10' : 'text-coral bg-coral/10'}`}
+                >
                   Admin
                 </span>
               )}

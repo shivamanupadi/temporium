@@ -21,7 +21,6 @@ import {
   Wallet,
   Globe,
   ChevronRight,
-  ChevronDown,
   Check,
   Copy,
   ExternalLink,
@@ -42,15 +41,20 @@ export const Route = createFileRoute('/portal')({
 const navSections = [
   {
     label: 'Main',
-    items: [
-      { to: '/portal/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    ],
+    items: [{ to: '/portal/dashboard', label: 'Dashboard', icon: LayoutDashboard }],
   },
   {
     label: 'Payments',
     items: [
       { to: '/portal/send', label: 'Send', icon: Send },
       { to: '/portal/receive', label: 'Receive', icon: QrCode },
+    ],
+  },
+  {
+    label: 'Tools',
+    items: [
+      { to: '/portal/tip20-studio', label: 'TIP20 Studio', icon: CircleDollarSign },
+      { to: '/portal/tip403-factory', label: 'TIP403 Factory', icon: Shield },
     ],
   },
   {
@@ -66,13 +70,6 @@ const navSections = [
     items: [
       { to: '/portal/pool-swap', label: 'Pool Swap', icon: Repeat },
       { to: '/portal/liquidity', label: 'Liquidity', icon: Droplets },
-    ],
-  },
-  {
-    label: 'Tools',
-    items: [
-      { to: '/portal/tip20-studio', label: 'TIP20 Studio', icon: CircleDollarSign },
-      { to: '/portal/tip403-factory', label: 'TIP403 Factory', icon: Shield },
     ],
   },
   {
@@ -121,14 +118,18 @@ function PortalLayout(): ReactElement | null {
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent): void {
-      if (networkDropdownRef.current && !networkDropdownRef.current.contains(event.target as Node)) {
+      if (
+        networkDropdownRef.current &&
+        !networkDropdownRef.current.contains(event.target as Node)
+      ) {
         setShowNetworkMenu(false);
       }
       if (walletDropdownRef.current && !walletDropdownRef.current.contains(event.target as Node)) {
         setShowWalletMenu(false);
       }
     }
-    if (showNetworkMenu || showWalletMenu) document.addEventListener('mousedown', handleClickOutside);
+    if (showNetworkMenu || showWalletMenu)
+      document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showNetworkMenu, showWalletMenu]);
 
@@ -173,13 +174,19 @@ function PortalLayout(): ReactElement | null {
         )}
 
         {/* Logo */}
-        <div className={`flex items-start py-4 ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
+        <div
+          className={`flex items-start py-4 ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}
+        >
           <div className="flex items-center gap-2.5">
             <img src="/logo-dark.png" alt="Temporium" className="w-6 h-6 shrink-0" />
             {!collapsed && (
               <div>
-                <span className="text-[15px] font-bold text-[#2D3436] tracking-tight leading-none">Temporium</span>
-                <p className="text-[10px] font-medium text-[#B5B0AA] mt-0.5 leading-none">Gateway</p>
+                <span className="text-[15px] font-bold text-[#2D3436] tracking-tight leading-none">
+                  Temporium
+                </span>
+                <p className="text-[10px] font-medium text-[#B5B0AA] mt-0.5 leading-none">
+                  Gateway
+                </p>
               </div>
             )}
           </div>
@@ -201,10 +208,8 @@ function PortalLayout(): ReactElement | null {
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => setShowNetworkMenu(!showNetworkMenu)}
-                    className={`w-10 h-10 mx-auto flex items-center justify-center rounded-lg transition-all cursor-pointer bg-[#5B9A6F]/[0.06] ${
-                      showNetworkMenu
-                        ? 'ring-1 ring-[#5B9A6F]/15 bg-[#5B9A6F]/10'
-                        : 'hover:bg-[#5B9A6F]/10'
+                    className={`w-10 h-10 mx-auto flex items-center justify-center rounded-lg transition-all cursor-pointer bg-[#F5F2ED]/60 ${
+                      showNetworkMenu ? 'ring-1 ring-[#EDE9E3] bg-[#F5F2ED]' : 'hover:bg-[#F5F2ED]'
                     }`}
                   >
                     <Globe className="w-4 h-4 text-[#9B9590]" />
@@ -215,25 +220,23 @@ function PortalLayout(): ReactElement | null {
                 </TooltipContent>
               </Tooltip>
             ) : (
-            <button
-              onClick={() => setShowNetworkMenu(!showNetworkMenu)}
-              className={`w-full flex items-center justify-between gap-2 px-2.5 py-2.5 rounded-lg transition-all cursor-pointer bg-[#5B9A6F]/[0.06] ${
-                showNetworkMenu
-                  ? 'ring-1 ring-[#5B9A6F]/15 bg-[#5B9A6F]/10'
-                  : 'hover:bg-[#5B9A6F]/10'
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-[#5B9A6F]/10 flex items-center justify-center">
-                  <Globe className="w-3.5 h-3.5 text-[#5B9A6F]" />
+              <button
+                onClick={() => setShowNetworkMenu(!showNetworkMenu)}
+                className={`w-full flex items-center justify-between gap-2 px-2.5 py-2.5 rounded-lg transition-all cursor-pointer bg-[#F5F2ED]/60 ${
+                  showNetworkMenu ? 'ring-1 ring-[#EDE9E3] bg-[#F5F2ED]' : 'hover:bg-[#F5F2ED]'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className="w-7 h-7 rounded-lg bg-[#F5F2ED] flex items-center justify-center">
+                    <Globe className="w-3.5 h-3.5 text-[#9B9590]" />
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[13px] font-semibold text-[#2D3436] leading-none">Testnet</p>
+                    <p className="text-[11px] text-[#9B9590] mt-0.5 leading-none">Moderato</p>
+                  </div>
                 </div>
-                <div className="text-left">
-                  <p className="text-[13px] font-semibold text-[#2D3436] leading-none">Testnet</p>
-                  <p className="text-[11px] text-[#9B9590] mt-0.5 leading-none">Moderato</p>
-                </div>
-              </div>
-              <ChevronsUpDown className="w-3 h-3 text-[#B5B0AA]" />
-            </button>
+                <ChevronsUpDown className="w-3 h-3 text-[#B5B0AA]" />
+              </button>
             )}
 
             {/* Network Dropdown */}
@@ -256,7 +259,9 @@ function PortalLayout(): ReactElement | null {
                       <Globe className="w-3.5 h-3.5 text-[#5B9A6F]" />
                     </div>
                     <div className="flex-1 text-left">
-                      <p className="text-[12px] font-semibold text-[#2D3436] leading-none">Testnet</p>
+                      <p className="text-[12px] font-semibold text-[#2D3436] leading-none">
+                        Testnet
+                      </p>
                       <p className="text-[10px] text-[#9B9590] mt-1 leading-none">Moderato</p>
                     </div>
                     <div className="w-5 h-5 rounded-full bg-[#5B9A6F]/10 flex items-center justify-center flex-shrink-0">
@@ -292,7 +297,9 @@ function PortalLayout(): ReactElement | null {
           {navSections.map((section, sectionIdx) => (
             <div key={section.label}>
               {!collapsed ? (
-                <p className={`px-3 pb-1 text-[10px] font-semibold text-[#B5B0AA] uppercase tracking-wider ${sectionIdx === 0 ? 'pt-0.5' : 'pt-3'}`}>
+                <p
+                  className={`px-3 pb-1 text-[10px] font-semibold text-[#B5B0AA] uppercase tracking-wider ${sectionIdx === 0 ? 'pt-0.5' : 'pt-3'}`}
+                >
                   {section.label}
                 </p>
               ) : (
@@ -300,7 +307,8 @@ function PortalLayout(): ReactElement | null {
               )}
               <div className="space-y-0.5">
                 {section.items.map(item => {
-                  const isActive = location.pathname === item.to || location.pathname.startsWith(`${item.to}/`);
+                  const isActive =
+                    location.pathname === item.to || location.pathname.startsWith(`${item.to}/`);
                   const Icon = item.icon;
                   const linkEl = (
                     <Link
@@ -333,7 +341,10 @@ function PortalLayout(): ReactElement | null {
         </nav>
 
         {/* Wallet Profile Footer */}
-        <div ref={walletDropdownRef} className={`relative border-t border-[#EDE9E3] ${collapsed ? 'p-2' : 'p-3'}`}>
+        <div
+          ref={walletDropdownRef}
+          className={`relative border-t border-[#EDE9E3] ${collapsed ? 'p-2' : 'p-3'}`}
+        >
           {collapsed ? (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -353,27 +364,27 @@ function PortalLayout(): ReactElement | null {
               </TooltipContent>
             </Tooltip>
           ) : (
-          <button
-            onClick={() => setShowWalletMenu(!showWalletMenu)}
-            className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-xl transition-all text-left bg-[#FAF8F5] ${
-              showWalletMenu ? 'ring-1 ring-[#EDE9E3] bg-[#F5F2ED]' : 'hover:bg-[#F5F2ED]'
-            }`}
-          >
-            <div className="w-8 h-8 rounded-full bg-[#E07A5F] flex items-center justify-center flex-shrink-0">
-              <Wallet className="w-3.5 h-3.5 text-white" strokeWidth={2} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[12px] font-semibold text-[#2D3436] truncate">My Wallet</p>
-              <p className="text-[11px] font-mono text-[#9B9590] truncate">
-                {address ? formatAddress(address, 6) : 'Not connected'}
-              </p>
-            </div>
-            <ChevronsUpDown
-              className={`w-3.5 h-3.5 flex-shrink-0 transition-colors ${
-                showWalletMenu ? 'text-[#6B6560]' : 'text-[#B5B0AA]'
+            <button
+              onClick={() => setShowWalletMenu(!showWalletMenu)}
+              className={`w-full flex items-center gap-3 px-2.5 py-2 rounded-xl transition-all text-left bg-[#FAF8F5] ${
+                showWalletMenu ? 'ring-1 ring-[#EDE9E3] bg-[#F5F2ED]' : 'hover:bg-[#F5F2ED]'
               }`}
-            />
-          </button>
+            >
+              <div className="w-8 h-8 rounded-full bg-[#E07A5F] flex items-center justify-center flex-shrink-0">
+                <Wallet className="w-3.5 h-3.5 text-white" strokeWidth={2} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[12px] font-semibold text-[#2D3436] truncate">My Wallet</p>
+                <p className="text-[11px] font-mono text-[#9B9590] truncate">
+                  {address ? formatAddress(address, 6) : 'Not connected'}
+                </p>
+              </div>
+              <ChevronsUpDown
+                className={`w-3.5 h-3.5 flex-shrink-0 transition-colors ${
+                  showWalletMenu ? 'text-[#6B6560]' : 'text-[#B5B0AA]'
+                }`}
+              />
+            </button>
           )}
 
           {/* Wallet Popover Menu */}
@@ -473,7 +484,9 @@ function PortalLayout(): ReactElement | null {
 
                 {navSections.map((section, sectionIdx) => (
                   <div key={section.label}>
-                    <p className={`px-3 pb-1 text-[10px] font-semibold text-[#B5B0AA] uppercase tracking-wider ${sectionIdx === 0 ? 'pt-1' : 'pt-4'}`}>
+                    <p
+                      className={`px-3 pb-1 text-[10px] font-semibold text-[#B5B0AA] uppercase tracking-wider ${sectionIdx === 0 ? 'pt-1' : 'pt-4'}`}
+                    >
                       {section.label}
                     </p>
                     {section.items.map(item => {
@@ -501,7 +514,11 @@ function PortalLayout(): ReactElement | null {
                   </div>
                 ))}
                 <button
-                  onClick={async () => { setMobileMenuOpen(false); await disconnect(); navigate({ to: '/' }); }}
+                  onClick={async () => {
+                    setMobileMenuOpen(false);
+                    await disconnect();
+                    navigate({ to: '/' });
+                  }}
                   className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[13px] font-medium text-red-500 hover:bg-red-50 transition-all mt-2"
                 >
                   <LogOut className="w-4 h-4" />
@@ -513,8 +530,8 @@ function PortalLayout(): ReactElement | null {
         </AnimatePresence>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-4 md:p-6 lg:p-8 max-w-5xl mx-auto w-full">
+        <main className="flex-1 min-h-0 overflow-y-auto">
+          <div className="flex flex-col p-4 md:p-6 lg:p-8 max-w-5xl mx-auto w-full">
             <Outlet />
           </div>
         </main>

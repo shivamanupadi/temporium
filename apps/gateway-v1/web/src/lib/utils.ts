@@ -60,17 +60,26 @@ export function formatTimeAgo(timestamp: number): string {
 
 export function formatCountdown(targetTimestamp: number): string {
   const now = Math.floor(Date.now() / 1000);
-  const diff = targetTimestamp - now;
+  let remaining = targetTimestamp - now;
 
-  if (diff <= 0) return 'Now';
+  if (remaining <= 0) return 'Now';
 
-  const hours = Math.floor(diff / 3600);
-  const minutes = Math.floor((diff % 3600) / 60);
-  const seconds = diff % 60;
-
-  if (hours > 0) return `${hours}h ${minutes}m`;
-  if (minutes > 0) return `${minutes}m ${seconds}s`;
-  return `${seconds}s`;
+  const units: [string, number][] = [
+    ['d', 86400],
+    ['h', 3600],
+    ['m', 60],
+    ['s', 1],
+  ];
+  const parts: string[] = [];
+  for (const [label, size] of units) {
+    if (remaining >= size) {
+      const count = Math.floor(remaining / size);
+      parts.push(`${count}${label}`);
+      remaining -= count * size;
+    }
+    if (parts.length === 2) break;
+  }
+  return parts.join(' ') || '0s';
 }
 
 export function isValidAddress(address: string): boolean {

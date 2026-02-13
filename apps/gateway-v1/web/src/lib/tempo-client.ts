@@ -94,7 +94,11 @@ export async function getPoolInfo(
       validatorToken,
     });
     // Solidity returns zero-initialized structs for non-existent pools
-    if (pool.totalSupply === 0n && pool.reserveUserToken === 0n && pool.reserveValidatorToken === 0n) {
+    if (
+      pool.totalSupply === 0n &&
+      pool.reserveUserToken === 0n &&
+      pool.reserveValidatorToken === 0n
+    ) {
       return null;
     }
     return pool;
@@ -127,19 +131,13 @@ export async function getLiquidityBalance(
  * pool reserves and constant-product formula.  This is an approximation —
  * the contract may apply its own fee.
  */
-export function estimateAmmCost(
-  pool: PoolInfo,
-  amountOut: bigint,
-): bigint | null {
+export function estimateAmmCost(pool: PoolInfo, amountOut: bigint): bigint | null {
   if (amountOut <= 0n || amountOut >= pool.reserveUserToken) return null;
   // constant product: dx = (Rv * dy) / (Ru - dy)
   return (pool.reserveValidatorToken * amountOut) / (pool.reserveUserToken - amountOut);
 }
 
-export async function getDexBalance(
-  token: Address,
-  account: Address
-): Promise<bigint> {
+export async function getDexBalance(token: Address, account: Address): Promise<bigint> {
   try {
     const balance = await Actions.dex.getBalance(tempoPublicClient, {
       token,
@@ -192,7 +190,7 @@ const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 export async function getOrderbookInfo(
   base: Address,
-  quote: Address,
+  quote: Address
 ): Promise<OrderbookInfo | null> {
   try {
     const book = await Actions.dex.getOrderbook(tempoPublicClient, { base, quote });

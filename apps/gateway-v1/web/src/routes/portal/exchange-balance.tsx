@@ -11,8 +11,7 @@ import {
   Info,
   RefreshCw,
 } from 'lucide-react';
-import type { Address } from 'viem';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { TokenPicker } from '@/components/TokenPicker';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
@@ -81,10 +80,10 @@ function ExchangeBalancePage(): ReactElement | null {
     setIsLoadingBalances(true);
     try {
       const results = await Promise.all(
-        tokens.map(async (token) => {
+        tokens.map(async token => {
           const dexBalance = await getDexBalance(token.address, address);
           return { token, dexBalance, isLoading: false };
-        }),
+        })
       );
       setDexBalances(results);
     } catch {
@@ -118,11 +117,7 @@ function ExchangeBalancePage(): ReactElement | null {
   const hasNonZeroDexBalance = dexBalances.some(b => b.dexBalance > 0n);
 
   const canWithdraw =
-    selectedToken &&
-    feeToken &&
-    parsedWithdrawAmount > 0n &&
-    hasEnoughDexBalance &&
-    !isWithdrawing;
+    selectedToken && feeToken && parsedWithdrawAmount > 0n && hasEnoughDexBalance && !isWithdrawing;
 
   // ---------------------------------------------------------------------------
   // Handlers
@@ -136,7 +131,9 @@ function ExchangeBalancePage(): ReactElement | null {
 
   const handleSetMax = useCallback(() => {
     if (selectedDexBalance > 0n && selectedToken) {
-      setWithdrawAmount(formatAmount(selectedDexBalance, selectedToken.decimals, selectedToken.decimals));
+      setWithdrawAmount(
+        formatAmount(selectedDexBalance, selectedToken.decimals, selectedToken.decimals)
+      );
     }
   }, [selectedDexBalance, selectedToken]);
 
@@ -165,7 +162,15 @@ function ExchangeBalancePage(): ReactElement | null {
     } finally {
       setIsWithdrawing(false);
     }
-  }, [canWithdraw, selectedToken, feeToken, parsedWithdrawAmount, tokenDecimals, dexWithdraw, fetchDexBalances]);
+  }, [
+    canWithdraw,
+    selectedToken,
+    feeToken,
+    parsedWithdrawAmount,
+    tokenDecimals,
+    dexWithdraw,
+    fetchDexBalances,
+  ]);
 
   if (!address) return null;
 
@@ -220,9 +225,7 @@ function ExchangeBalancePage(): ReactElement | null {
               <span className="text-[13px] text-[#9B9590]">Loading DEX balances...</span>
             </div>
           ) : tokens.length === 0 ? (
-            <div className="text-center py-8 text-[13px] text-[#9B9590]">
-              No tokens available
-            </div>
+            <div className="text-center py-8 text-[13px] text-[#9B9590]">No tokens available</div>
           ) : !hasNonZeroDexBalance && dexBalances.length > 0 ? (
             <div className="text-center py-6">
               <div className="w-12 h-12 rounded-2xl bg-[#F5F2ED] flex items-center justify-center mx-auto mb-3">
@@ -230,7 +233,8 @@ function ExchangeBalancePage(): ReactElement | null {
               </div>
               <p className="text-[14px] font-medium text-[#6B6560]">No DEX balances</p>
               <p className="text-[12px] text-[#9B9590] mt-1 max-w-xs mx-auto">
-                Tokens appear here when you have filled orders or unclaimed balances on the exchange.
+                Tokens appear here when you have filled orders or unclaimed balances on the
+                exchange.
               </p>
             </div>
           ) : (
@@ -245,19 +249,17 @@ function ExchangeBalancePage(): ReactElement | null {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-[13px] font-semibold text-[#2D3436]">
-                      {token.symbol}
-                    </span>
+                    <span className="text-[13px] font-semibold text-[#2D3436]">{token.symbol}</span>
                   </div>
                   <div className="text-right">
-                    <p className={`text-[14px] font-bold ${
-                      dexBalance > 0n ? 'text-[#9B72CF]' : 'text-[#B5B0AA]'
-                    }`}>
+                    <p
+                      className={`text-[14px] font-bold ${
+                        dexBalance > 0n ? 'text-[#9B72CF]' : 'text-[#B5B0AA]'
+                      }`}
+                    >
                       {formatAmount(dexBalance, token.decimals)}
                     </p>
-                    {dexBalance > 0n && (
-                      <p className="text-[11px] text-[#9B9590]">on exchange</p>
-                    )}
+                    {dexBalance > 0n && <p className="text-[11px] text-[#9B9590]">on exchange</p>}
                   </div>
                 </div>
               ))}
@@ -279,7 +281,9 @@ function ExchangeBalancePage(): ReactElement | null {
               </div>
               <div>
                 <h2 className="text-[15px] font-semibold text-[#2D3436]">Withdraw to Wallet</h2>
-                <p className="text-[12px] text-[#9B9590]">Move tokens from the exchange to your wallet</p>
+                <p className="text-[12px] text-[#9B9590]">
+                  Move tokens from the exchange to your wallet
+                </p>
               </div>
             </div>
           </div>
@@ -293,7 +297,7 @@ function ExchangeBalancePage(): ReactElement | null {
               <TokenPicker
                 token={selectedToken}
                 tokens={tokens}
-                onChange={(t) => {
+                onChange={t => {
                   setSelectedToken(t);
                   setWithdrawAmount('');
                   setTxHash(null);
@@ -306,7 +310,9 @@ function ExchangeBalancePage(): ReactElement | null {
             <div className="rounded-xl bg-[#FDFBF8] border border-[#EDE9E3] p-3.5 space-y-2">
               <div className="flex justify-between text-[12px]">
                 <span className="text-[#9B9590]">DEX Balance</span>
-                <span className={`font-semibold ${selectedDexBalance > 0n ? 'text-[#9B72CF]' : 'text-[#B5B0AA]'}`}>
+                <span
+                  className={`font-semibold ${selectedDexBalance > 0n ? 'text-[#9B72CF]' : 'text-[#B5B0AA]'}`}
+                >
                   {formatAmount(selectedDexBalance, tokenDecimals)} {selectedToken.symbol}
                 </span>
               </div>
@@ -338,7 +344,7 @@ function ExchangeBalancePage(): ReactElement | null {
                   inputMode="decimal"
                   placeholder="0.00"
                   value={withdrawAmount}
-                  onChange={(e) => handleAmountChange(e.target.value)}
+                  onChange={e => handleAmountChange(e.target.value)}
                   disabled={isWithdrawing || selectedDexBalance === 0n}
                   className="flex-1 text-[24px] font-bold text-[#2D3436] bg-transparent border-none outline-none placeholder:text-[#D5D0CA] min-w-0 disabled:opacity-50"
                 />
@@ -363,17 +369,14 @@ function ExchangeBalancePage(): ReactElement | null {
             <div className="flex items-start gap-2.5 p-3.5 rounded-xl bg-[#FDFBF8] border border-[#EDE9E3]">
               <Info className="w-4 h-4 text-[#9B9590] shrink-0 mt-0.5" />
               <p className="text-[12px] text-[#6B6560] leading-relaxed">
-                Tokens on the exchange come from filled limit orders or cancelled orders. Withdraw them to use in your wallet.
+                Tokens on the exchange come from filled limit orders or cancelled orders. Withdraw
+                them to use in your wallet.
               </p>
             </div>
 
             {/* Fee token */}
             <div className="rounded-xl bg-[#FDFBF8] border border-[#EDE9E3] p-3.5">
-              <FeeTokenPicker
-                value={feeToken}
-                tokens={tokens}
-                onChange={setFeeToken}
-              />
+              <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
             </div>
 
             {/* Submit */}
@@ -412,12 +415,8 @@ function ExchangeBalancePage(): ReactElement | null {
                 >
                   <CheckCircle className="w-5 h-5 text-[#5B9A6F] shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold text-[#2D3436]">
-                      Withdrawal confirmed
-                    </p>
-                    <p className="text-[12px] text-[#6B6560] font-mono truncate mt-0.5">
-                      {txHash}
-                    </p>
+                    <p className="text-[13px] font-semibold text-[#2D3436]">Withdrawal confirmed</p>
+                    <p className="text-[12px] text-[#6B6560] font-mono truncate mt-0.5">{txHash}</p>
                   </div>
                   <a
                     href={getExplorerTxUrl(txHash)}

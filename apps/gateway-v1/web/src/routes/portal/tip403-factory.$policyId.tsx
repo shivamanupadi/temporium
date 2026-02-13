@@ -1,12 +1,6 @@
-import {
-  createFileRoute,
-  useNavigate,
-  Link,
-  Outlet,
-  redirect,
-} from '@tanstack/react-router';
+import { createFileRoute, useNavigate, Link, Outlet, redirect } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
-import { Shield, ArrowLeft, Loader2 } from 'lucide-react';
+import { Shield, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePolicy } from '@/hooks/usePolicies';
 

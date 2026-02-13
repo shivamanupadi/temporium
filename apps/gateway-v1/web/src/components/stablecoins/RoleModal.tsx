@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, type ReactElement } from 'react';
 import { Loader2, ExternalLink } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
 import {
@@ -46,7 +46,7 @@ export function RoleModal({
 
   const isGrant = mode === 'grant';
   const title = isGrant ? 'Grant Role' : 'Revoke Role';
-  const buttonLabel = isGrant ? 'Grant' : 'Revoke';
+  const _buttonLabel = isGrant ? 'Grant' : 'Revoke';
 
   useEffect(() => {
     if (isOpen) {
@@ -88,7 +88,17 @@ export function RoleModal({
       setIsSubmitting(false);
       isSubmittingRef.current = false;
     }
-  }, [selectedCoin, roleAddress, selectedRole, feeToken, isGrant, grantRoles, revokeRoles, mode, onSuccess]);
+  }, [
+    selectedCoin,
+    roleAddress,
+    selectedRole,
+    feeToken,
+    isGrant,
+    grantRoles,
+    revokeRoles,
+    mode,
+    onSuccess,
+  ]);
 
   const handleClose = useCallback((): void => {
     if (!isSubmitting && !isSubmittingRef.current) {
@@ -102,36 +112,64 @@ export function RoleModal({
         {txHash ? (
           <>
             <DialogTitle className="sr-only">Role {isGrant ? 'Granted' : 'Revoked'}!</DialogTitle>
-            <DialogDescription className="sr-only">{ROLE_OPTIONS.find(r => r.value === selectedRole)?.label} role</DialogDescription>
+            <DialogDescription className="sr-only">
+              {ROLE_OPTIONS.find(r => r.value === selectedRole)?.label} role
+            </DialogDescription>
 
             <div className="px-6 pt-10 pb-6 text-center">
               {/* Success icon */}
               <div className="inline-flex items-center justify-center mb-6">
                 <div className="w-16 h-16 rounded-full bg-[var(--color-sage)] flex items-center justify-center">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-white">
-                    <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="text-white"
+                  >
+                    <path
+                      d="M5 13l4 4L19 7"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </div>
               </div>
 
               {/* Title */}
-              <p className="text-[15px] font-bold text-[#2D3436] mb-1">Role {isGrant ? 'Granted' : 'Revoked'}!</p>
+              <p className="text-[15px] font-bold text-[#2D3436] mb-1">
+                Role {isGrant ? 'Granted' : 'Revoked'}!
+              </p>
 
               {/* Hero value */}
               <div className="mb-6">
-                <span className="text-3xl font-bold text-[#2D3436]">{ROLE_OPTIONS.find(r => r.value === selectedRole)?.label}</span>
-                <span className="text-lg text-[#9B9590] ml-1.5 font-semibold">{isGrant ? 'granted' : 'revoked'}</span>
+                <span className="text-3xl font-bold text-[#2D3436]">
+                  {ROLE_OPTIONS.find(r => r.value === selectedRole)?.label}
+                </span>
+                <span className="text-lg text-[#9B9590] ml-1.5 font-semibold">
+                  {isGrant ? 'granted' : 'revoked'}
+                </span>
               </div>
 
               {/* Details card */}
               <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3] space-y-3 text-left">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Address</span>
-                  <span className="text-[12px] font-medium text-[#2D3436] font-mono">{roleAddress.slice(0, 10)}...{roleAddress.slice(-6)}</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Address
+                  </span>
+                  <span className="text-[12px] font-medium text-[#2D3436] font-mono">
+                    {roleAddress.slice(0, 10)}...{roleAddress.slice(-6)}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between pt-2 border-t border-[#EDE9E3]">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Transaction</span>
-                  <span className="font-mono text-[12px] text-[#2D3436]">{txHash.slice(0, 10)}...{txHash.slice(-4)}</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Transaction
+                  </span>
+                  <span className="font-mono text-[12px] text-[#2D3436]">
+                    {txHash.slice(0, 10)}...{txHash.slice(-4)}
+                  </span>
                 </div>
               </div>
             </div>
@@ -159,7 +197,9 @@ export function RoleModal({
             <div className="px-6 pt-6 pb-5 pr-14">
               <DialogTitle className="text-lg font-bold text-[#2D3436]">{title}</DialogTitle>
               <DialogDescription className="text-[13px] font-light text-[#9B9590]">
-                {isGrant ? 'Grant a permission role to another address' : 'Remove a permission role from an address'}
+                {isGrant
+                  ? 'Grant a permission role to another address'
+                  : 'Remove a permission role from an address'}
               </DialogDescription>
             </div>
             <div className="px-6 pb-4">

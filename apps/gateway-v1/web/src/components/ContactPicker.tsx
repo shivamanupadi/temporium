@@ -62,13 +62,11 @@ export function ContactPicker({
       onChange(contact.address);
       setShowContacts(false);
     },
-    [onChange],
+    [onChange]
   );
 
   // Find matching contact for current value
-  const matchedContact = contacts.find(
-    (c) => c.address.toLowerCase() === value.toLowerCase(),
-  );
+  const matchedContact = contacts.find(c => c.address.toLowerCase() === value.toLowerCase());
 
   return (
     <div>
@@ -83,9 +81,7 @@ export function ContactPicker({
             onClick={toggleDropdown}
             className={cn(
               'flex items-center gap-1 text-[11px] font-medium transition-colors cursor-pointer',
-              showContacts
-                ? 'text-coral'
-                : 'text-[#9B9590] hover:text-[#6B6560]',
+              showContacts ? 'text-coral' : 'text-[#9B9590] hover:text-[#6B6560]'
             )}
           >
             <Users className="h-3 w-3" />
@@ -100,9 +96,7 @@ export function ContactPicker({
             <div className="absolute right-0 top-full mt-1.5 w-60 rounded-xl border border-[#EDE9E3] bg-white z-50 overflow-hidden shadow-lg shadow-black/[0.06]">
               <div className="max-h-[200px] overflow-y-auto">
                 {!contactsLoaded ? (
-                  <div className="px-4 py-3 text-[12px] text-[#9B9590]">
-                    Loading contacts...
-                  </div>
+                  <div className="px-4 py-3 text-[12px] text-[#9B9590]">Loading contacts...</div>
                 ) : contacts.length === 0 ? (
                   <div className="px-4 py-6 text-center">
                     <div className="w-9 h-9 rounded-full bg-[#F5F2ED] flex items-center justify-center mx-auto mb-2">
@@ -122,20 +116,24 @@ export function ContactPicker({
                         className={cn(
                           'flex items-center gap-2.5 w-full px-3 py-2.5 text-left transition-colors cursor-pointer',
                           isSelected ? 'bg-coral/5' : 'hover:bg-[#F5F2ED]',
-                          !isLast && 'border-b border-[#EDE9E3]/40',
+                          !isLast && 'border-b border-[#EDE9E3]/40'
                         )}
                       >
-                        <div className={cn(
-                          'w-8 h-8 rounded-full flex items-center justify-center shrink-0',
-                          isSelected ? 'bg-coral/10' : 'bg-lavender/10',
-                        )}>
-                          <span className={cn(
-                            'text-[11px] font-bold',
-                            isSelected ? 'text-coral' : 'text-lavender',
-                          )}>
+                        <div
+                          className={cn(
+                            'w-8 h-8 rounded-full flex items-center justify-center shrink-0',
+                            isSelected ? 'bg-coral/10' : 'bg-lavender/10'
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              'text-[11px] font-bold',
+                              isSelected ? 'text-coral' : 'text-lavender'
+                            )}
+                          >
                             {contact.name
                               .split(' ')
-                              .map((w) => w[0])
+                              .map(w => w[0])
                               .join('')
                               .slice(0, 2)
                               .toUpperCase()}
@@ -165,10 +163,10 @@ export function ContactPicker({
           type="text"
           placeholder={placeholder}
           value={value}
-          onChange={(e) => onChange(e.target.value.trim())}
+          onChange={e => onChange(e.target.value.trim())}
           className={cn(
             'w-full px-4 py-3 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] font-mono placeholder:text-[#B5B0AA] focus:border-coral/40 focus:outline-none transition-colors',
-            isInvalid && 'border-coral/50 bg-coral/[0.03]',
+            isInvalid && 'border-coral/50 bg-coral/[0.03]'
           )}
         />
         {matchedContact && (

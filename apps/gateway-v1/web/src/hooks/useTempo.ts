@@ -6,7 +6,7 @@ import { type Address, encodeFunctionData } from 'viem';
 import { tempoPasskeyConnector, injectedConnector, wagmiConfig } from '@/lib/wagmi';
 import { tempoChain, tempoPublicClient } from '@/lib/tempo-client';
 import { stringToBytes32, Actions, getTokenBalance } from '@/lib/tempo-client';
-import { DEFAULT_FEE_TOKEN_ADDRESS, MAX_SCHEDULE_SECONDS, TIMING } from '@/lib/constants';
+import { DEFAULT_FEE_TOKEN_ADDRESS, TIMING } from '@/lib/constants';
 import { clearAuthTokens } from '@/lib/auth-storage';
 import { signInWithEthereum } from '@/lib/siwe-auth';
 import type { WalletType } from '@/types';
@@ -62,7 +62,9 @@ interface UseTempoReturn {
   disconnect: () => Promise<void>;
   // Transactions
   sendPayment: (params: SendPaymentParams) => Promise<string>;
-  signScheduledPayment: (params: SendScheduledPaymentParams) => Promise<{ serializedTransaction: string; scheduledFor: number }>;
+  signScheduledPayment: (
+    params: SendScheduledPaymentParams
+  ) => Promise<{ serializedTransaction: string; scheduledFor: number }>;
   submitSignedTransaction: (serializedTransaction: string) => Promise<string>;
   swapTokens: (params: SwapParams) => Promise<string>;
   addLiquidity: (params: AddLiquidityParams) => Promise<string>;
@@ -164,7 +166,11 @@ export function useTempo(): UseTempoReturn {
       await signInWithEthereum(client);
     } catch (err) {
       setError(err as Error);
-      try { await disconnectAsync(); } catch { /* ignore */ }
+      try {
+        await disconnectAsync();
+      } catch {
+        /* ignore */
+      }
       throw err;
     } finally {
       setIsConnecting(false);
@@ -193,16 +199,21 @@ export function useTempo(): UseTempoReturn {
   const sendPayment = useCallback(
     async (params: SendPaymentParams) => {
       const { walletClient: client } = ensureClient();
-      return Actions.token.transfer(client, { token: params.token, to: params.to, amount: params.amount, memo: params.memo, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+      return Actions.token.transfer(client, {
+        token: params.token,
+        to: params.to,
+        amount: params.amount,
+        memo: params.memo,
+        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+      });
     },
-    [ensureClient],
+    [ensureClient]
   );
 
   const signScheduledPayment = useCallback(
     async (params: SendScheduledPaymentParams) => {
       const now = Math.floor(Date.now() / 1000);
       if (params.scheduledFor <= now) throw new Error('Scheduled time must be in the future');
-      if (params.scheduledFor > now + MAX_SCHEDULE_SECONDS) throw new Error('Cannot schedule more than 60 minutes in advance on testnet');
       const { walletClient: client } = ensureClient();
 
       // Build the call data using the SDK helper
@@ -224,67 +235,94 @@ export function useTempo(): UseTempoReturn {
       // never conflicts with any other transaction the user sends.
       const randomBytes = crypto.getRandomValues(new Uint8Array(6));
       const nonceKey = BigInt(
-        '0x' + Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join(''),
+        '0x' +
+          Array.from(randomBytes)
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join('')
       );
 
-      // Prepare the request first to fill in gas, maxFeePerGas, etc.
+      // Prepare the request WITHOUT validAfter so gas estimation succeeds
+      // (estimateGas simulates at the current block timestamp, which is before
+      // the scheduled validAfter — causing a "transaction not valid yet" error).
       const prepared = await client.prepareTransactionRequest({
         to: call.address,
         data,
         feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
-        validAfter: params.scheduledFor,
         nonceKey,
         nonce: 0,
       } as any);
 
+      // Now add validAfter to the prepared request before signing.
+      const withValidAfter = { ...prepared, validAfter: params.scheduledFor };
+
       // Sign the prepared transaction — does NOT submit to the network.
-      const serializedTransaction = await client.signTransaction(prepared as any);
+      const serializedTransaction = await client.signTransaction(withValidAfter as any);
 
       return { serializedTransaction, scheduledFor: params.scheduledFor };
     },
-    [ensureClient],
+    [ensureClient]
   );
 
-  const submitSignedTransaction = useCallback(
-    async (serializedTransaction: string) => {
-      return tempoPublicClient.sendRawTransaction({
-        serializedTransaction: serializedTransaction as `0x${string}`,
-      });
-    },
-    [],
-  );
+  const submitSignedTransaction = useCallback(async (serializedTransaction: string) => {
+    return tempoPublicClient.sendRawTransaction({
+      serializedTransaction: serializedTransaction as `0x${string}`,
+    });
+  }, []);
 
   const approveToken = useCallback(
     async (params: ApproveTokenParams) => {
       const { walletClient: client } = ensureClient();
-      return Actions.token.approve(client, { token: params.token, spender: params.spender, amount: params.amount, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+      return Actions.token.approve(client, {
+        token: params.token,
+        spender: params.spender,
+        amount: params.amount,
+        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+      });
     },
-    [ensureClient],
+    [ensureClient]
   );
 
   const createToken = useCallback(
     async (params: CreateTokenParams) => {
       const { walletClient: client } = ensureClient();
-      const result = await Actions.token.createSync(client, { name: params.name, symbol: params.symbol, currency: params.currency, admin: params.admin, quoteToken: params.quoteToken, salt: params.salt });
+      const result = await Actions.token.createSync(client, {
+        name: params.name,
+        symbol: params.symbol,
+        currency: params.currency,
+        admin: params.admin,
+        quoteToken: params.quoteToken,
+        salt: params.salt,
+      });
       return { hash: result.receipt.transactionHash, tokenAddress: result.token as Address };
     },
-    [ensureClient],
+    [ensureClient]
   );
 
   const mintToken = useCallback(
     async (params: MintTokenParams) => {
       const { walletClient: client } = ensureClient();
-      return Actions.token.mint(client, { token: params.token, to: params.to, amount: params.amount, memo: params.memo, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+      return Actions.token.mint(client, {
+        token: params.token,
+        to: params.to,
+        amount: params.amount,
+        memo: params.memo,
+        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+      });
     },
-    [ensureClient],
+    [ensureClient]
   );
 
   const burnToken = useCallback(
     async (params: BurnTokenParams) => {
       const { walletClient: client } = ensureClient();
-      return Actions.token.burn(client, { token: params.token, amount: params.amount, memo: params.memo, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+      return Actions.token.burn(client, {
+        token: params.token,
+        amount: params.amount,
+        memo: params.memo,
+        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+      });
     },
-    [ensureClient],
+    [ensureClient]
   );
 
   // ---------- DEX ----------
@@ -292,49 +330,77 @@ export function useTempo(): UseTempoReturn {
   const swapTokens = useCallback(
     async (params: SwapParams) => {
       const { walletClient: client } = ensureClient();
-      return Actions.dex.sell(client, { tokenIn: params.tokenIn, tokenOut: params.tokenOut, amountIn: params.amountIn, minAmountOut: params.minAmountOut, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+      return Actions.dex.sell(client, {
+        tokenIn: params.tokenIn,
+        tokenOut: params.tokenOut,
+        amountIn: params.amountIn,
+        minAmountOut: params.minAmountOut,
+        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+      });
     },
-    [ensureClient],
+    [ensureClient]
   );
 
   const buyTokens = useCallback(
     async (params: BuyTokensParams) => {
       const { walletClient: client } = ensureClient();
-      return Actions.dex.buy(client, { tokenIn: params.tokenIn, tokenOut: params.tokenOut, amountOut: params.amountOut, maxAmountIn: params.maxAmountIn, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+      return Actions.dex.buy(client, {
+        tokenIn: params.tokenIn,
+        tokenOut: params.tokenOut,
+        amountOut: params.amountOut,
+        maxAmountIn: params.maxAmountIn,
+        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+      });
     },
-    [ensureClient],
+    [ensureClient]
   );
 
   const placeOrder = useCallback(
     async (params: PlaceOrderParams) => {
       const { walletClient: client } = ensureClient();
-      return Actions.dex.place(client, { token: params.token, amount: params.amount, tick: params.tick, type: params.type, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+      return Actions.dex.place(client, {
+        token: params.token,
+        amount: params.amount,
+        tick: params.tick,
+        type: params.type,
+        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+      });
     },
-    [ensureClient],
+    [ensureClient]
   );
 
   const cancelOrder = useCallback(
     async (params: CancelOrderParams) => {
       const { walletClient: client } = ensureClient();
-      return Actions.dex.cancel(client, { orderId: params.orderId, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+      return Actions.dex.cancel(client, {
+        orderId: params.orderId,
+        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+      });
     },
-    [ensureClient],
+    [ensureClient]
   );
 
   const createPair = useCallback(
     async (params: CreatePairParams) => {
       const { walletClient: client } = ensureClient();
-      return Actions.dex.createPair(client, { base: params.base, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+      return Actions.dex.createPair(client, {
+        base: params.base,
+        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+      });
     },
-    [ensureClient],
+    [ensureClient]
   );
 
   const dexWithdraw = useCallback(
     async (params: DexWithdrawParams) => {
       const { walletClient: client } = ensureClient();
-      return Actions.dex.withdraw(client, { token: params.token, amount: params.amount, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+      return Actions.dex.withdraw(client, {
+        token: params.token,
+        amount: params.amount,
+        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+      });
     },
-    [ensureClient],
+    [ensureClient]
   );
 
   // ---------- AMM ----------
@@ -342,25 +408,43 @@ export function useTempo(): UseTempoReturn {
   const ammSwap = useCallback(
     async (params: AmmSwapParams) => {
       const { walletClient: client, address: sender } = ensureClient();
-      return Actions.amm.rebalanceSwap(client, { userToken: params.userToken, validatorToken: params.validatorToken, amountOut: params.amountOut, to: sender, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+      return Actions.amm.rebalanceSwap(client, {
+        userToken: params.userToken,
+        validatorToken: params.validatorToken,
+        amountOut: params.amountOut,
+        to: sender,
+        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+      });
     },
-    [ensureClient],
+    [ensureClient]
   );
 
   const addLiquidity = useCallback(
     async (params: AddLiquidityParams) => {
       const { walletClient: client, address: sender } = ensureClient();
-      return Actions.amm.mint(client, { userTokenAddress: params.userTokenAddress, validatorTokenAddress: params.validatorTokenAddress, validatorTokenAmount: params.validatorTokenAmount, to: sender, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+      return Actions.amm.mint(client, {
+        userTokenAddress: params.userTokenAddress,
+        validatorTokenAddress: params.validatorTokenAddress,
+        validatorTokenAmount: params.validatorTokenAmount,
+        to: sender,
+        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+      });
     },
-    [ensureClient],
+    [ensureClient]
   );
 
   const removeLiquidity = useCallback(
     async (params: RemoveLiquidityParams) => {
       const { walletClient: client, address: sender } = ensureClient();
-      return Actions.amm.burn(client, { userToken: params.userTokenAddress, validatorToken: params.validatorTokenAddress, liquidity: params.liquidity, to: sender, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+      return Actions.amm.burn(client, {
+        userToken: params.userTokenAddress,
+        validatorToken: params.validatorTokenAddress,
+        liquidity: params.liquidity,
+        to: sender,
+        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+      });
     },
-    [ensureClient],
+    [ensureClient]
   );
 
   // ---------- Rewards ----------
@@ -368,9 +452,12 @@ export function useTempo(): UseTempoReturn {
   const claimRewards = useCallback(
     async (params: ClaimRewardsParams) => {
       const { walletClient: client } = ensureClient();
-      return Actions.reward.claim(client, { token: params.token, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS });
+      return Actions.reward.claim(client, {
+        token: params.token,
+        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+      });
     },
-    [ensureClient],
+    [ensureClient]
   );
 
   return {
@@ -411,7 +498,10 @@ interface UseTokenBalanceReturn {
   isLoading: boolean;
 }
 
-export function useTokenBalance(token: Address | undefined, account?: Address): UseTokenBalanceReturn {
+export function useTokenBalance(
+  token: Address | undefined,
+  account?: Address
+): UseTokenBalanceReturn {
   const { address: wagmiAddress } = useAccount();
   const address = account || wagmiAddress;
 

@@ -17,17 +17,25 @@ export function RemovePolicyModal({
   onCancel,
 }: RemovePolicyModalProps): ReactElement {
   return (
-    <Dialog open={isOpen} onOpenChange={open => { if (!open && !isLoading) onCancel(); }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={open => {
+        if (!open && !isLoading) onCancel();
+      }}
+    >
       <DialogContent className="sm:max-w-[400px] p-0 gap-0 rounded-2xl">
         <div className="px-6 pt-6 pb-5 pr-14">
           <DialogTitle className="text-lg font-bold text-[#2D3436]">Remove Policy</DialogTitle>
-          <DialogDescription className="text-[13px] font-light text-[#9B9590]">This only removes it from your account</DialogDescription>
+          <DialogDescription className="text-[13px] font-light text-[#9B9590]">
+            This only removes it from your account
+          </DialogDescription>
         </div>
         <div className="px-6 pb-4">
           <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3]">
             <p className="text-[14px] font-semibold text-[#2D3436] mb-1">Remove this policy?</p>
             <p className="text-[13px] font-light text-[#9B9590]">
-              This policy will be removed from your list. It will not be deleted from the blockchain and can be re-imported later.
+              This policy will be removed from your list. It will not be deleted from the blockchain
+              and can be re-imported later.
             </p>
           </div>
         </div>

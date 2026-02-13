@@ -9,7 +9,7 @@ import {
   AlertTriangle,
   RefreshCw,
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { TokenPicker } from '@/components/TokenPicker';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
@@ -51,13 +51,10 @@ const itemVariants = {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function computeImpliedPrice(
-  amountInStr: string,
-  amountOutStr: string,
-): string {
+function computeImpliedPrice(amountInStr: string, amountOutStr: string): string {
   const inNum = Number(amountInStr);
   const outNum = Number(amountOutStr);
-  if (!inNum || !outNum || !Number.isFinite(outNum / inNum)) return '--';
+  if (!inNum || !outNum || !Number.isFinite(outNum / inNum)) return '–';
   return (outNum / inNum).toFixed(6);
 }
 
@@ -90,15 +87,22 @@ function SwapPage(): ReactElement | null {
   const [slippage] = useState(0.5);
 
   // Balances
-  const { data: balanceInData, isLoading: isBalanceInLoading } = useTokenBalance(tokenIn?.address, address);
-  const { data: balanceOutData, isLoading: isBalanceOutLoading } = useTokenBalance(tokenOut?.address, address);
+  const { data: balanceInData, isLoading: isBalanceInLoading } = useTokenBalance(
+    tokenIn?.address,
+    address
+  );
+  const { data: balanceOutData, isLoading: isBalanceOutLoading } = useTokenBalance(
+    tokenOut?.address,
+    address
+  );
 
   // Parsed amounts
   const tokenInDecimals = tokenIn?.decimals ?? 6;
   const tokenOutDecimals = tokenOut?.decimals ?? 6;
   const parsedAmountIn = parseAmount(amountIn, tokenInDecimals);
   const parsedQuoteOut = parseAmount(quoteOut, tokenOutDecimals);
-  const minAmountOut = parsedQuoteOut - (parsedQuoteOut * BigInt(Math.floor(slippage * 100))) / 10000n;
+  const minAmountOut =
+    parsedQuoteOut - (parsedQuoteOut * BigInt(Math.floor(slippage * 100))) / 10000n;
   const hasBalance = balanceInData.value >= parsedAmountIn;
   const noLiquidity = amountIn !== '' && parsedAmountIn > 0n && !isQuoting && quoteOut === '0.00';
 
@@ -141,13 +145,13 @@ function SwapPage(): ReactElement | null {
           setQuoteOut('');
           const msg = err instanceof Error ? err.message : String(err);
           if (msg.includes('0xaa4bc69a')) {
-            setQuoteError('Trading pair not created — no orderbook exists');
+            setQuoteError('Trading pair not created. No orderbook exists.');
           } else if (msg.includes('0x13be252b') || msg.includes('InsufficientLiquidity')) {
             setQuoteError('No liquidity available for this pair');
           } else if (msg.includes('revert') || msg.includes('execution reverted')) {
             setQuoteError('This trading pair is not available');
           } else {
-            setQuoteError('Unable to fetch quote — check your connection');
+            setQuoteError('Unable to fetch quote. Check your connection.');
           }
         }
       } finally {
@@ -198,7 +202,7 @@ function SwapPage(): ReactElement | null {
       setTokenIn(t);
       setQuoteOut('');
     },
-    [tokenIn, tokenOut],
+    [tokenIn, tokenOut]
   );
 
   const handleTokenOutChange = useCallback(
@@ -209,7 +213,7 @@ function SwapPage(): ReactElement | null {
       setTokenOut(t);
       setQuoteOut('');
     },
-    [tokenIn, tokenOut],
+    [tokenIn, tokenOut]
   );
 
   const handleSwap = useCallback(async (): Promise<void> => {
@@ -229,7 +233,11 @@ function SwapPage(): ReactElement | null {
     } catch (err) {
       console.error('Swap failed:', err);
       const message = err instanceof Error ? err.message : String(err);
-      if (message.includes('0xaa4bc69a') || message.includes('0x13be252b') || message.includes('InsufficientLiquidity')) {
+      if (
+        message.includes('0xaa4bc69a') ||
+        message.includes('0x13be252b') ||
+        message.includes('InsufficientLiquidity')
+      ) {
         toast.error('No liquidity available', {
           description: 'This trading pair has no orders on testnet. Place limit orders first.',
         });
@@ -390,7 +398,7 @@ function SwapPage(): ReactElement | null {
                     inputMode="decimal"
                     placeholder="0.00"
                     value={amountIn}
-                    onChange={(e) => handleAmountChange(e.target.value)}
+                    onChange={e => handleAmountChange(e.target.value)}
                     disabled={status === 'pending'}
                     className="flex-1 text-[28px] font-bold text-[#2D3436] bg-transparent border-none outline-none placeholder:text-[#D5D0CA] min-w-0"
                   />
@@ -453,9 +461,7 @@ function SwapPage(): ReactElement | null {
                     ) : (
                       <span
                         className={`text-[28px] font-bold ${
-                          quoteOut && quoteOut !== '0.00'
-                            ? 'text-[#2D3436]'
-                            : 'text-[#D5D0CA]'
+                          quoteOut && quoteOut !== '0.00' ? 'text-[#2D3436]' : 'text-[#D5D0CA]'
                         }`}
                       >
                         {quoteOut || '0.00'}
@@ -510,7 +516,8 @@ function SwapPage(): ReactElement | null {
                     <div className="flex items-center justify-between">
                       <span className="text-[12px] text-[#9B9590]">Rate</span>
                       <span className="text-[12px] font-medium text-[#2D3436]">
-                        1 {tokenIn.symbol} = {computeImpliedPrice(amountIn, quoteOut)} {tokenOut.symbol}
+                        1 {tokenIn.symbol} = {computeImpliedPrice(amountIn, quoteOut)}{' '}
+                        {tokenOut.symbol}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
@@ -523,11 +530,7 @@ function SwapPage(): ReactElement | null {
                         {formatAmount(minAmountOut, tokenOutDecimals)} {tokenOut.symbol}
                       </span>
                     </div>
-                    <FeeTokenPicker
-                      value={feeToken}
-                      tokens={tokens}
-                      onChange={setFeeToken}
-                    />
+                    <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
                   </div>
                 </motion.div>
               )}
@@ -580,7 +583,8 @@ function SwapPage(): ReactElement | null {
                       <span className="text-[#6B6560]">{tokenOut.symbol}</span>
                     </div>
                     <p className="text-[11px] text-[#9B9590] mt-2">
-                      Min. received: {formatAmount(minAmountOut, tokenOutDecimals)} {tokenOut.symbol} (slippage: {slippage}%)
+                      Min. received: {formatAmount(minAmountOut, tokenOutDecimals)}{' '}
+                      {tokenOut.symbol} (slippage: {slippage}%)
                     </p>
                   </div>
 

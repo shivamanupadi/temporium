@@ -7,7 +7,7 @@ import {
   redirect,
 } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
-import { CircleDollarSign, Gift, ArrowLeft, Loader2 } from 'lucide-react';
+import { CircleDollarSign, Gift, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTip20Studio } from '@/hooks/useTip20Studio';
 
@@ -117,7 +117,10 @@ function Tip20StudioLayout(): ReactElement {
           </div>
           <h2 className="text-lg font-semibold mb-2">Token Not Found</h2>
           <p className="text-muted-foreground mb-4">This token is not in your list</p>
-          <Button onClick={() => navigate({ to: '/portal/tip20-studio' })} className="rounded-xl font-semibold bg-lavender hover:bg-lavender/80 text-white">
+          <Button
+            onClick={() => navigate({ to: '/portal/tip20-studio' })}
+            className="rounded-xl font-semibold bg-lavender hover:bg-lavender/80 text-white"
+          >
             Back to TIP20 Studio
           </Button>
         </div>

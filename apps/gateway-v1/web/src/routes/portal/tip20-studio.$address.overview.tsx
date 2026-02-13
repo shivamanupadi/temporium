@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from '@tanstack/react-router';
 import { useState, useEffect, type ReactElement } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import {
   CircleDollarSign,
   Plus,
@@ -202,7 +202,10 @@ function Tip20StudioOverview(): ReactElement {
 
             {/* Action Buttons */}
             <div className="flex gap-3">
-              <Button onClick={() => setActiveModal('mint')} className="flex-1 h-11 rounded-xl font-semibold bg-lavender hover:bg-lavender/80 text-white">
+              <Button
+                onClick={() => setActiveModal('mint')}
+                className="flex-1 h-11 rounded-xl font-semibold bg-lavender hover:bg-lavender/80 text-white"
+              >
                 <Plus className="h-4 w-4 mr-2" /> Mint
               </Button>
               <Button

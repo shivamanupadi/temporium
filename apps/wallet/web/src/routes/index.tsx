@@ -1,7 +1,17 @@
 import { type ReactElement, useState, useEffect, useCallback } from 'react';
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ExternalLink, Fingerprint, ArrowRight, Plus, Loader2, Database, Shield, Copy, Check } from 'lucide-react';
+import {
+  ExternalLink,
+  Fingerprint,
+  ArrowRight,
+  Plus,
+  Loader2,
+  Database,
+  Shield,
+  Copy,
+  Check,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { CreateWalletModal } from '@temporium/shared-ui';
@@ -87,7 +97,8 @@ function AuthPage(): ReactElement | null {
         <div
           className="absolute inset-0"
           style={{
-            background: 'radial-gradient(ellipse 60% 50% at 85% 15%, rgba(224,122,95,0.06) 0%, transparent 70%), radial-gradient(ellipse 50% 50% at 10% 85%, rgba(155,114,207,0.05) 0%, transparent 70%), radial-gradient(ellipse 40% 40% at 50% 50%, rgba(91,154,111,0.03) 0%, transparent 60%)',
+            background:
+              'radial-gradient(ellipse 60% 50% at 85% 15%, rgba(224,122,95,0.06) 0%, transparent 70%), radial-gradient(ellipse 50% 50% at 10% 85%, rgba(155,114,207,0.05) 0%, transparent 70%), radial-gradient(ellipse 40% 40% at 50% 50%, rgba(91,154,111,0.03) 0%, transparent 60%)',
           }}
         />
       </div>
@@ -260,7 +271,9 @@ function AuthPage(): ReactElement | null {
                 transition={{ duration: 0.4, delay: i * 0.1 }}
                 className="relative rounded-2xl border border-[#EDE9E3]/80 bg-white p-5 sm:p-6"
               >
-                <span className="text-[11px] font-bold text-[#E2DDD6] tracking-wider">{step.step}</span>
+                <span className="text-[11px] font-bold text-[#E2DDD6] tracking-wider">
+                  {step.step}
+                </span>
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center mt-3 mb-3"
                   style={{ backgroundColor: `color-mix(in srgb, ${step.color} 8%, transparent)` }}
@@ -286,8 +299,12 @@ function AuthPage(): ReactElement | null {
                   <Database className="w-4 h-4 text-primary" strokeWidth={1.7} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">Passkey Registry Contract</p>
-                  <p className="text-[13px] font-mono text-[#6B6560] truncate mt-0.5">{contractAddress}</p>
+                  <p className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">
+                    Passkey Registry Contract
+                  </p>
+                  <p className="text-[13px] font-mono text-[#6B6560] truncate mt-0.5">
+                    {contractAddress}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">

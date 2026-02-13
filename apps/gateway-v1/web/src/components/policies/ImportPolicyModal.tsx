@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, type ReactElement } from 'react';
 import { Loader2, AlertCircle, Download, ShieldCheck, ShieldX } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
 import { Actions, tempoPublicClient } from '@/lib/tempo-client';
@@ -129,9 +129,7 @@ export function ImportPolicyModal({
         {modalState === 'input' && (
           <>
             <div className="px-6 pt-6 pb-5 pr-14">
-              <DialogTitle className="text-lg font-bold text-[#2D3436]">
-                Import Policy
-              </DialogTitle>
+              <DialogTitle className="text-lg font-bold text-[#2D3436]">Import Policy</DialogTitle>
               <DialogDescription className="text-[13px] font-light text-[#9B9590]">
                 Enter the TIP403 policy ID to import
               </DialogDescription>
@@ -177,9 +175,7 @@ export function ImportPolicyModal({
                 onClick={handleLookup}
                 disabled={isValidating || !policyIdInput.trim()}
               >
-                {isValidating ? (
-                  <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
-                ) : null}
+                {isValidating ? <Loader2 className="w-4 h-4 animate-spin mr-1.5" /> : null}
                 {isValidating ? 'Looking up...' : 'Lookup'}
               </Button>
             </div>
@@ -189,9 +185,7 @@ export function ImportPolicyModal({
         {modalState === 'confirm' && policyPreview && (
           <>
             <div className="px-6 pt-6 pb-5 pr-14">
-              <DialogTitle className="text-lg font-bold text-[#2D3436]">
-                Confirm Import
-              </DialogTitle>
+              <DialogTitle className="text-lg font-bold text-[#2D3436]">Confirm Import</DialogTitle>
               <DialogDescription className="text-[13px] font-light text-[#9B9590]">
                 Review policy details before importing
               </DialogDescription>
@@ -213,8 +207,12 @@ export function ImportPolicyModal({
                     )}
                   </div>
                   <div>
-                    <p className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Policy</p>
-                    <p className={`text-lg font-semibold ${isWhitelist ? 'text-[var(--color-sage)]' : 'text-coral'}`}>
+                    <p className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                      Policy
+                    </p>
+                    <p
+                      className={`text-lg font-semibold ${isWhitelist ? 'text-[var(--color-sage)]' : 'text-coral'}`}
+                    >
                       Policy #{policyPreview.policyId.toString()}
                     </p>
                   </div>
@@ -224,13 +222,19 @@ export function ImportPolicyModal({
               {/* Detail Card */}
               <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3] space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Type</span>
-                  <span className={`text-[13px] font-medium ${isWhitelist ? 'text-[var(--color-sage)]' : 'text-coral'}`}>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Type
+                  </span>
+                  <span
+                    className={`text-[13px] font-medium ${isWhitelist ? 'text-[var(--color-sage)]' : 'text-coral'}`}
+                  >
                     {isWhitelist ? 'Whitelist' : 'Blacklist'}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Admin</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Admin
+                  </span>
                   <span className="text-[13px] font-medium text-[#2D3436] font-mono">
                     {formatAddress(policyPreview.admin, 8)}
                   </span>

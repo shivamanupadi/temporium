@@ -1,6 +1,6 @@
 import { useState, useRef, type ReactElement } from 'react';
-import { toast } from 'sonner';
-import { Plus, Loader2, X, Flame, Send, Check, ExternalLink } from 'lucide-react';
+import { toast } from '@/lib/toast';
+import { Plus, Loader2, X, Flame, Send, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -131,7 +131,7 @@ export function YourAccessCard({ tokenAddress }: YourAccessCardProps): ReactElem
               <p className="text-xl font-bold text-foreground mt-1">
                 {stablecoin?.userBalance !== undefined
                   ? formatAmount(stablecoin.userBalance.toString(), decimals)
-                  : '—'}
+                  : '–'}
               </p>
               <p className="text-[11px] text-muted-foreground">{stablecoin?.symbol}</p>
             </div>
@@ -235,7 +235,9 @@ export function YourAccessCard({ tokenAddress }: YourAccessCardProps): ReactElem
               <div className="px-6 pb-4 space-y-3">
                 <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3] space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Transaction</span>
+                    <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                      Transaction
+                    </span>
                     <button
                       onClick={() => window.open(getExplorerTxUrl(roleTxHash), '_blank')}
                       className="flex items-center gap-1 text-[13px] text-lavender hover:text-lavender/80 transition-colors cursor-pointer"
@@ -249,7 +251,10 @@ export function YourAccessCard({ tokenAddress }: YourAccessCardProps): ReactElem
                 </div>
               </div>
               <div className="px-6 pb-6">
-                <Button className="w-full h-11 rounded-xl font-semibold bg-lavender hover:bg-lavender/80 text-white" onClick={handleDialogClose}>
+                <Button
+                  className="w-full h-11 rounded-xl font-semibold bg-lavender hover:bg-lavender/80 text-white"
+                  onClick={handleDialogClose}
+                >
                   Done
                 </Button>
               </div>
@@ -277,7 +282,9 @@ export function YourAccessCard({ tokenAddress }: YourAccessCardProps): ReactElem
                       role to yourself.
                       <br />
                       <br />
-                      <span className="text-[var(--color-warning)]">Note: This requires the Admin role.</span>
+                      <span className="text-[var(--color-warning)]">
+                        Note: This requires the Admin role.
+                      </span>
                     </>
                   ) : (
                     <>

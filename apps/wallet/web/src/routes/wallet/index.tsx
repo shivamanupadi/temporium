@@ -149,7 +149,9 @@ function DashboardPage(): ReactElement {
         transition={{ duration: 0.3 }}
       >
         <h1 className="text-2xl font-bold text-[#2D3436] tracking-tight">Dashboard</h1>
-        <p className="text-[14px] text-[#6B6560] mt-1">Welcome back. Here is your wallet overview.</p>
+        <p className="text-[14px] text-[#6B6560] mt-1">
+          Welcome back. Here is your wallet overview.
+        </p>
       </motion.div>
 
       {/* Balance Card */}

@@ -25,25 +25,27 @@ interface ListScheduledTxParams {
   limit?: number;
 }
 
-export function createScheduledTransaction(params: CreateScheduledTxParams) {
+export function createScheduledTransaction(
+  params: CreateScheduledTxParams
+): Promise<ScheduledTransaction> {
   return apiPost<ScheduledTransaction>('/v1/scheduled-transactions', params);
 }
 
-export function getScheduledTransactions(params?: ListScheduledTxParams) {
+export function getScheduledTransactions(
+  params?: ListScheduledTxParams
+): Promise<PaginatedScheduledTxResponse> {
   const query = new URLSearchParams();
   if (params?.status) query.set('status', params.status);
   if (params?.cursor) query.set('cursor', params.cursor);
   if (params?.limit) query.set('limit', String(params.limit));
   const qs = query.toString();
-  return apiGet<PaginatedScheduledTxResponse>(
-    `/v1/scheduled-transactions${qs ? `?${qs}` : ''}`,
-  );
+  return apiGet<PaginatedScheduledTxResponse>(`/v1/scheduled-transactions${qs ? `?${qs}` : ''}`);
 }
 
-export function getScheduledTransaction(id: string) {
+export function getScheduledTransaction(id: string): Promise<ScheduledTransaction> {
   return apiGet<ScheduledTransaction>(`/v1/scheduled-transactions/${id}`);
 }
 
-export function deleteScheduledTransaction(id: string) {
+export function deleteScheduledTransaction(id: string): Promise<void> {
   return apiDelete(`/v1/scheduled-transactions/${id}`);
 }

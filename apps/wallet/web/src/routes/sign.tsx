@@ -1317,7 +1317,9 @@ function SignPage(): ReactElement {
                   <XCircle className="w-7 h-7 text-red-500" />
                 </div>
                 <h1 className="text-[16px] font-semibold text-[#2D3436] mb-1.5">Request Failed</h1>
-                <p className="text-[13px] text-muted-foreground">{error || 'Something went wrong'}</p>
+                <p className="text-[13px] text-muted-foreground">
+                  {error || 'Something went wrong'}
+                </p>
               </div>
             </div>
             <div className="px-5 pb-5 flex items-center gap-2.5">
@@ -1634,7 +1636,10 @@ function SignPage(): ReactElement {
                     </p>
                   </div>
                   <div className="space-y-0">
-                    <DetailRow label="Type" value={(params.type as string) === 'buy' ? 'Buy' : 'Sell'} />
+                    <DetailRow
+                      label="Type"
+                      value={(params.type as string) === 'buy' ? 'Buy' : 'Sell'}
+                    />
                     <DetailRow label="Tick" value={String(params.tick)} />
                     <DetailRow
                       label="Token"

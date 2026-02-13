@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, type ReactElement } from 'react';
 import { Loader2, ExternalLink, HandCoins } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
@@ -102,7 +102,13 @@ export function ClaimRewardsModal({
             <div className="px-6 pt-10 pb-6 text-center">
               {/* Sage checkmark */}
               <div className="w-16 h-16 rounded-full bg-[var(--color-sage)] flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <svg
+                  className="w-8 h-8 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
@@ -113,7 +119,9 @@ export function ClaimRewardsModal({
               {/* Hero value */}
               <div className="mb-6">
                 <span className="text-3xl font-bold text-[#2D3436]">{claimedAmount}</span>
-                <span className="text-lg text-[#9B9590] ml-1.5 font-semibold">{selectedCoin?.symbol}</span>
+                <span className="text-lg text-[#9B9590] ml-1.5 font-semibold">
+                  {selectedCoin?.symbol}
+                </span>
               </div>
 
               {/* Details card */}
@@ -157,9 +165,7 @@ export function ClaimRewardsModal({
           <>
             {/* Header */}
             <div className="px-6 pt-6 pb-5 pr-14">
-              <DialogTitle className="text-lg font-bold text-[#2D3436]">
-                Claim Rewards
-              </DialogTitle>
+              <DialogTitle className="text-lg font-bold text-[#2D3436]">Claim Rewards</DialogTitle>
               <DialogDescription className="text-[13px] font-light text-[#9B9590] mt-1">
                 Claim your accumulated rewards
               </DialogDescription>
@@ -182,7 +188,9 @@ export function ClaimRewardsModal({
                   Claimable Balance
                 </p>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-bold text-[var(--color-sage)]">{formattedBalance}</span>
+                  <span className="text-2xl font-bold text-[var(--color-sage)]">
+                    {formattedBalance}
+                  </span>
                   <span className="text-sm text-[var(--color-sage)]">{selectedCoin?.symbol}</span>
                 </div>
               </div>

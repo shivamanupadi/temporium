@@ -32,9 +32,7 @@ export function WalletSelectModal({
       <DialogContent className="max-w-[360px] p-0 gap-0 overflow-hidden rounded-2xl">
         {/* Header */}
         <div className="px-6 pt-6 pb-4">
-          <DialogTitle className="text-lg font-semibold text-gray-900 mb-2">
-            Sign In
-          </DialogTitle>
+          <DialogTitle className="text-lg font-semibold text-gray-900 mb-2">Sign In</DialogTitle>
           <DialogDescription className="text-[13px] text-gray-500">
             Sign in with your passkey to access your wallet
           </DialogDescription>

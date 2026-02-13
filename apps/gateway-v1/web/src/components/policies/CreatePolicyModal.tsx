@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, type ReactElement } from 'react';
 import { Loader2, ShieldCheck, ShieldX, Plus } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import confetti from 'canvas-confetti';
 import { isAddress, type Address } from 'viem';
 import { Button } from '@/components/ui/button';
@@ -62,10 +62,15 @@ export function CreatePolicyModal({
   const handleReview = useCallback((): void => {
     const raw = addressesInput.trim();
     if (raw) {
-      const entries = raw.split(/[,\n]+/).map(a => a.trim()).filter(a => a.length > 0);
+      const entries = raw
+        .split(/[,\n]+/)
+        .map(a => a.trim())
+        .filter(a => a.length > 0);
       const invalid = entries.filter(a => !isAddress(a));
       if (invalid.length > 0) {
-        toast.error(`Invalid address${invalid.length > 1 ? 'es' : ''}: ${invalid.slice(0, 3).join(', ')}${invalid.length > 3 ? '...' : ''}`);
+        toast.error(
+          `Invalid address${invalid.length > 1 ? 'es' : ''}: ${invalid.slice(0, 3).join(', ')}${invalid.length > 3 ? '...' : ''}`
+        );
         return;
       }
     }
@@ -120,9 +125,7 @@ export function CreatePolicyModal({
         {modalState === 'form' && (
           <>
             <div className="px-6 pt-6 pb-5 pr-14">
-              <DialogTitle className="text-lg font-bold text-[#2D3436]">
-                Create Policy
-              </DialogTitle>
+              <DialogTitle className="text-lg font-bold text-[#2D3436]">Create Policy</DialogTitle>
               <DialogDescription className="text-[13px] font-light text-[#9B9590]">
                 Configure a new TIP403 transfer policy
               </DialogDescription>
@@ -196,9 +199,7 @@ export function CreatePolicyModal({
         {modalState === 'confirm' && (
           <>
             <div className="px-6 pt-6 pb-5 pr-14">
-              <DialogTitle className="text-lg font-bold text-[#2D3436]">
-                Confirm Policy
-              </DialogTitle>
+              <DialogTitle className="text-lg font-bold text-[#2D3436]">Confirm Policy</DialogTitle>
               <DialogDescription className="text-[13px] font-light text-[#9B9590]">
                 Review the details before creating
               </DialogDescription>
@@ -220,8 +221,12 @@ export function CreatePolicyModal({
                     )}
                   </div>
                   <div>
-                    <p className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Type</p>
-                    <p className={`text-lg font-semibold ${isWhitelist ? 'text-[var(--color-sage)]' : 'text-coral'}`}>
+                    <p className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                      Type
+                    </p>
+                    <p
+                      className={`text-lg font-semibold ${isWhitelist ? 'text-[var(--color-sage)]' : 'text-coral'}`}
+                    >
                       {isWhitelist ? 'Whitelist' : 'Blacklist'}
                     </p>
                   </div>
@@ -234,16 +239,16 @@ export function CreatePolicyModal({
                   <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
                     Initial Addresses
                   </span>
-                  <span className="text-[13px] font-medium text-[#2D3436]">
-                    {addresses.length}
-                  </span>
+                  <span className="text-[13px] font-medium text-[#2D3436]">{addresses.length}</span>
                 </div>
                 {feeToken && (
                   <div className="flex items-center justify-between">
                     <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
                       Fee Token
                     </span>
-                    <span className="text-[13px] font-medium text-[#2D3436]">{feeToken.symbol}</span>
+                    <span className="text-[13px] font-medium text-[#2D3436]">
+                      {feeToken.symbol}
+                    </span>
                   </div>
                 )}
               </div>

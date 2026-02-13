@@ -35,7 +35,7 @@ import {
   ArrowUpFromLine,
   Shield,
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { CreateWalletModal } from '@temporium/shared-ui';
 import { WalletSelectModal } from '@/components/WalletSelectModal';
@@ -510,11 +510,16 @@ function SignPage(): ReactElement {
 
         case 'buy_tokens': {
           const params = request.params as {
-            tokenIn: Address; tokenOut: Address; amountOut: string; maxAmountIn: string; feeToken?: Address;
+            tokenIn: Address;
+            tokenOut: Address;
+            amountOut: string;
+            maxAmountIn: string;
+            feeToken?: Address;
           };
           if (!params.tokenIn || !params.tokenOut) throw new Error('Token addresses required');
           hash = await Actions.dex.buy(walletClient, {
-            tokenIn: params.tokenIn, tokenOut: params.tokenOut,
+            tokenIn: params.tokenIn,
+            tokenOut: params.tokenOut,
             amountOut: safeBigInt(params.amountOut, 'Amount out'),
             maxAmountIn: safeBigInt(params.maxAmountIn, 'Max amount in'),
             feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
@@ -524,92 +529,137 @@ function SignPage(): ReactElement {
 
         case 'place_order': {
           const params = request.params as {
-            token: Address; amount: string; tick: number; type: 'buy' | 'sell'; feeToken?: Address;
+            token: Address;
+            amount: string;
+            tick: number;
+            type: 'buy' | 'sell';
+            feeToken?: Address;
           };
           if (!params.token) throw new Error('Token address required');
           if (params.tick === undefined) throw new Error('Tick required');
-          if (!params.type || !['buy', 'sell'].includes(params.type)) throw new Error('Order type must be buy or sell');
+          if (!params.type || !['buy', 'sell'].includes(params.type))
+            throw new Error('Order type must be buy or sell');
           hash = await Actions.dex.place(walletClient, {
-            token: params.token, amount: safeBigInt(params.amount, 'Amount'),
-            tick: params.tick, type: params.type, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+            token: params.token,
+            amount: safeBigInt(params.amount, 'Amount'),
+            tick: params.tick,
+            type: params.type,
+            feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
           });
           break;
         }
 
         case 'cancel_order': {
-          const params = request.params as { orderId: string; feeToken?: Address; };
+          const params = request.params as { orderId: string; feeToken?: Address };
           if (!params.orderId) throw new Error('Order ID required');
           hash = await Actions.dex.cancel(walletClient, {
-            orderId: safeBigInt(params.orderId, 'Order ID'), feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+            orderId: safeBigInt(params.orderId, 'Order ID'),
+            feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
           });
           break;
         }
 
         case 'create_pair': {
-          const params = request.params as { base: Address; feeToken?: Address; };
+          const params = request.params as { base: Address; feeToken?: Address };
           if (!params.base) throw new Error('Base token required');
           hash = await Actions.dex.createPair(walletClient, {
-            base: params.base, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+            base: params.base,
+            feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
           });
           break;
         }
 
         case 'approve_token': {
-          const params = request.params as { token: Address; spender: Address; amount: string; feeToken?: Address; };
+          const params = request.params as {
+            token: Address;
+            spender: Address;
+            amount: string;
+            feeToken?: Address;
+          };
           if (!params.token || !params.spender) throw new Error('Token and spender required');
           hash = await Actions.token.approve(walletClient, {
-            token: params.token, spender: params.spender,
-            amount: safeBigInt(params.amount, 'Amount'), feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+            token: params.token,
+            spender: params.spender,
+            amount: safeBigInt(params.amount, 'Amount'),
+            feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
           });
           break;
         }
 
         case 'create_token': {
           const params = request.params as {
-            name: string; symbol: string; currency: string; admin?: Address; quoteToken?: Address; salt?: `0x${string}`;
+            name: string;
+            symbol: string;
+            currency: string;
+            admin?: Address;
+            quoteToken?: Address;
+            salt?: `0x${string}`;
           };
-          if (!params.name || !params.symbol || !params.currency) throw new Error('Name, symbol, and currency required');
+          if (!params.name || !params.symbol || !params.currency)
+            throw new Error('Name, symbol, and currency required');
           hash = await Actions.token.create(walletClient, {
-            name: params.name, symbol: params.symbol, currency: params.currency,
-            admin: params.admin, quoteToken: params.quoteToken, salt: params.salt,
+            name: params.name,
+            symbol: params.symbol,
+            currency: params.currency,
+            admin: params.admin,
+            quoteToken: params.quoteToken,
+            salt: params.salt,
           });
           break;
         }
 
         case 'mint_token': {
-          const params = request.params as { token: Address; to: Address; amount: string; memo?: `0x${string}`; feeToken?: Address; };
+          const params = request.params as {
+            token: Address;
+            to: Address;
+            amount: string;
+            memo?: `0x${string}`;
+            feeToken?: Address;
+          };
           if (!params.token || !params.to) throw new Error('Token and recipient required');
           hash = await Actions.token.mint(walletClient, {
-            token: params.token, to: params.to, amount: safeBigInt(params.amount, 'Amount'),
-            memo: params.memo, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+            token: params.token,
+            to: params.to,
+            amount: safeBigInt(params.amount, 'Amount'),
+            memo: params.memo,
+            feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
           });
           break;
         }
 
         case 'burn_token': {
-          const params = request.params as { token: Address; amount: string; memo?: `0x${string}`; feeToken?: Address; };
+          const params = request.params as {
+            token: Address;
+            amount: string;
+            memo?: `0x${string}`;
+            feeToken?: Address;
+          };
           if (!params.token) throw new Error('Token address required');
           hash = await Actions.token.burn(walletClient, {
-            token: params.token, amount: safeBigInt(params.amount, 'Amount'),
-            memo: params.memo, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+            token: params.token,
+            amount: safeBigInt(params.amount, 'Amount'),
+            memo: params.memo,
+            feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
           });
           break;
         }
 
         case 'claim_rewards': {
-          const params = request.params as { token: Address; feeToken?: Address; };
+          const params = request.params as { token: Address; feeToken?: Address };
           if (!params.token) throw new Error('Token address required');
           hash = await Actions.reward.claim(walletClient, {
-            token: params.token, feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+            token: params.token,
+            feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
           });
           break;
         }
 
         case 'dex_withdraw': {
-          const params = request.params as { token: Address; amount: string; feeToken?: Address; };
+          const params = request.params as { token: Address; amount: string; feeToken?: Address };
           if (!params.token) throw new Error('Token address required');
           hash = await Actions.dex.withdraw(walletClient, {
-            token: params.token, amount: safeBigInt(params.amount, 'Amount'),
+            token: params.token,
+            amount: safeBigInt(params.amount, 'Amount'),
             feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
           });
           break;
@@ -622,7 +672,11 @@ function SignPage(): ReactElement {
       if (hash && request.method !== 'sign_message') {
         setTxHash(hash);
         if (sourceWindow)
-          sendResponse(sourceOrigin, { id: request.id, success: true, result: { hash } }, sourceWindow);
+          sendResponse(
+            sourceOrigin,
+            { id: request.id, success: true, result: { hash } },
+            sourceWindow
+          );
       }
 
       addActivity({
@@ -652,7 +706,11 @@ function SignPage(): ReactElement {
 
       if (pendingRequest && sourceWindow && sourceOrigin) {
         const errorCode = getErrorCode(friendlyError);
-        sendResponse(sourceOrigin, createErrorResponse(pendingRequest.request.id, friendlyError, errorCode), sourceWindow);
+        sendResponse(
+          sourceOrigin,
+          createErrorResponse(pendingRequest.request.id, friendlyError, errorCode),
+          sourceWindow
+        );
       }
     }
   }, [pendingRequest, sourceOrigin, sourceWindow, signMessageAsync, walletClient, address]);
@@ -661,13 +719,25 @@ function SignPage(): ReactElement {
     if (status === 'not_connected') return;
     if (
       shouldExecuteAfterAuth.current &&
-      isConnected && address && walletClient && pendingRequest && !isConnecting
+      isConnected &&
+      address &&
+      walletClient &&
+      pendingRequest &&
+      !isConnecting
     ) {
       shouldExecuteAfterAuth.current = false;
       setPendingAction(null);
       executeTransaction();
     }
-  }, [status, isConnected, address, walletClient, pendingRequest, isConnecting, executeTransaction]);
+  }, [
+    status,
+    isConnected,
+    address,
+    walletClient,
+    pendingRequest,
+    isConnecting,
+    executeTransaction,
+  ]);
 
   useEffect(() => {
     if (!pendingRequest || status !== 'waiting') {
@@ -690,7 +760,11 @@ function SignPage(): ReactElement {
         if (sourceWindow && sourceOrigin && pendingRequest) {
           sendResponse(
             sourceOrigin,
-            createErrorResponse(pendingRequest.request.id, 'Request timed out', WalletConnectErrorCode.REQUEST_TIMEOUT),
+            createErrorResponse(
+              pendingRequest.request.id,
+              'Request timed out',
+              WalletConnectErrorCode.REQUEST_TIMEOUT
+            ),
             sourceWindow
           );
           addActivity({
@@ -706,7 +780,9 @@ function SignPage(): ReactElement {
       }
     }, 1000);
 
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
   }, [pendingRequest, status, sourceWindow, sourceOrigin]);
 
   const handleReject = useCallback(() => {
@@ -714,7 +790,11 @@ function SignPage(): ReactElement {
 
     sendResponse(
       sourceOrigin,
-      createErrorResponse(pendingRequest.request.id, 'User rejected the request', WalletConnectErrorCode.USER_REJECTED),
+      createErrorResponse(
+        pendingRequest.request.id,
+        'User rejected the request',
+        WalletConnectErrorCode.USER_REJECTED
+      ),
       sourceWindow
     );
     addActivity({
@@ -733,7 +813,11 @@ function SignPage(): ReactElement {
     const handleBeforeUnload = (): void => {
       sendResponse(
         sourceOrigin,
-        createErrorResponse(pendingRequest.request.id, 'User closed the wallet window', WalletConnectErrorCode.USER_REJECTED),
+        createErrorResponse(
+          pendingRequest.request.id,
+          'User closed the wallet window',
+          WalletConnectErrorCode.USER_REJECTED
+        ),
         sourceWindow
       );
     };
@@ -757,7 +841,17 @@ function SignPage(): ReactElement {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [pendingRequest, status, isConnected, address, walletClient, showCreateWalletModal, showWalletSelectModal, executeTransaction, handleReject]);
+  }, [
+    pendingRequest,
+    status,
+    isConnected,
+    address,
+    walletClient,
+    showCreateWalletModal,
+    showWalletSelectModal,
+    executeTransaction,
+    handleReject,
+  ]);
 
   const handleApprove = useCallback(() => {
     if (!pendingRequest || !sourceOrigin) return;
@@ -831,7 +925,11 @@ function SignPage(): ReactElement {
         setTimeout(() => executeTransaction(), 300);
       } else {
         if (sourceWindow) {
-          sendResponse(sourceOrigin, { id: 'reconnect', success: true, result: { reconnected: true, address } }, sourceWindow);
+          sendResponse(
+            sourceOrigin,
+            { id: 'reconnect', success: true, result: { reconnected: true, address } },
+            sourceWindow
+          );
         }
         toast.success('App reconnected!');
         setTimeout(() => window.close(), 1500);
@@ -839,22 +937,53 @@ function SignPage(): ReactElement {
     } else {
       setShowWalletSelectModal(true);
     }
-  }, [sourceOrigin, disconnectedAppInfo, isConnected, address, walletClient, sourceWindow, pendingRequest, executeTransaction]);
+  }, [
+    sourceOrigin,
+    disconnectedAppInfo,
+    isConnected,
+    address,
+    walletClient,
+    sourceWindow,
+    pendingRequest,
+    executeTransaction,
+  ]);
 
   // Handle reconnection after authentication
   useEffect(() => {
     if (
-      status === 'not_connected' && isConnected && address && walletClient &&
-      disconnectedAppInfo && sourceOrigin && !isConnecting
+      status === 'not_connected' &&
+      isConnected &&
+      address &&
+      walletClient &&
+      disconnectedAppInfo &&
+      sourceOrigin &&
+      !isConnecting
     ) {
       handleReconnect();
     }
-  }, [status, isConnected, address, walletClient, disconnectedAppInfo, sourceOrigin, isConnecting, handleReconnect]);
+  }, [
+    status,
+    isConnected,
+    address,
+    walletClient,
+    disconnectedAppInfo,
+    sourceOrigin,
+    isConnecting,
+    handleReconnect,
+  ]);
 
   const handleCancelNotConnected = (): void => {
     if (sourceWindow && sourceOrigin) {
       const requestId = pendingRequest?.request.id || 'cancelled';
-      sendResponse(sourceOrigin, createErrorResponse(requestId, 'User cancelled - app not connected', WalletConnectErrorCode.NOT_CONNECTED), sourceWindow);
+      sendResponse(
+        sourceOrigin,
+        createErrorResponse(
+          requestId,
+          'User cancelled - app not connected',
+          WalletConnectErrorCode.NOT_CONNECTED
+        ),
+        sourceWindow
+      );
     }
     window.close();
   };
@@ -866,7 +995,11 @@ function SignPage(): ReactElement {
     return (
       <>
         <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-[380px]">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-[380px]"
+          >
             <div className="bg-white rounded-2xl border border-[#EDE9E3] shadow-sm overflow-hidden">
               <div className="relative px-6 pt-8 pb-5 text-center">
                 <div className="absolute inset-0 bg-gradient-to-b from-[#D97706]/[0.03] to-transparent pointer-events-none" />
@@ -874,7 +1007,9 @@ function SignPage(): ReactElement {
                   <div className="w-14 h-14 rounded-2xl bg-amber-50 flex items-center justify-center mx-auto mb-4">
                     <Link2 className="w-7 h-7 text-amber-600" />
                   </div>
-                  <h1 className="text-[17px] font-semibold text-[#2D3436] mb-1.5">App Not Connected</h1>
+                  <h1 className="text-[17px] font-semibold text-[#2D3436] mb-1.5">
+                    App Not Connected
+                  </h1>
                   <p className="text-[13px] text-[#9B9590] leading-relaxed">
                     This app&apos;s connection was revoked or has expired.
                   </p>
@@ -888,8 +1023,12 @@ function SignPage(): ReactElement {
                       <Globe className="w-5 h-5 text-[#9B9590]" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[13px] font-semibold text-[#2D3436] truncate">{disconnectedAppInfo.name}</p>
-                      <p className="text-[11px] text-[#9B9590] truncate">{disconnectedAppInfo.url}</p>
+                      <p className="text-[13px] font-semibold text-[#2D3436] truncate">
+                        {disconnectedAppInfo.name}
+                      </p>
+                      <p className="text-[11px] text-[#9B9590] truncate">
+                        {disconnectedAppInfo.url}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -904,37 +1043,82 @@ function SignPage(): ReactElement {
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className="text-[12px] font-semibold text-[#5B9A6F]">Wallet Ready</p>
-                        <p className="text-[11px] font-mono text-[#5B9A6F]/70 truncate">{formatAddress(address, 6)}</p>
+                        <p className="text-[11px] font-mono text-[#5B9A6F]/70 truncate">
+                          {formatAddress(address, 6)}
+                        </p>
                       </div>
                     </div>
-                    <p className="text-[13px] text-[#9B9590] text-center mb-4">Click below to reconnect this app to your wallet.</p>
+                    <p className="text-[13px] text-[#9B9590] text-center mb-4">
+                      Click below to reconnect this app to your wallet.
+                    </p>
                     <div className="flex gap-2.5">
-                      <Button variant="outline" className="flex-1 h-11 rounded-xl text-[13px] border-[#EDE9E3]" onClick={handleCancelNotConnected}>Cancel</Button>
-                      <Button className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-[#E07A5F] hover:bg-[#D06A4F] text-white" onClick={handleReconnect}>
-                        <Link2 className="w-4 h-4 mr-1.5" />Reconnect
+                      <Button
+                        variant="outline"
+                        className="flex-1 h-11 rounded-xl text-[13px] border-[#EDE9E3]"
+                        onClick={handleCancelNotConnected}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-[#E07A5F] hover:bg-[#D06A4F] text-white"
+                        onClick={handleReconnect}
+                      >
+                        <Link2 className="w-4 h-4 mr-1.5" />
+                        Reconnect
                       </Button>
                     </div>
                   </>
                 ) : (
                   <>
-                    <p className="text-[13px] text-[#9B9590] text-center mb-4">Sign in to your wallet to reconnect this app.</p>
+                    <p className="text-[13px] text-[#9B9590] text-center mb-4">
+                      Sign in to your wallet to reconnect this app.
+                    </p>
                     <div className="flex gap-2 mb-3">
-                      <Button variant="outline" className="flex-1 h-10 rounded-xl text-[13px] border-[#EDE9E3]" onClick={() => setShowWalletSelectModal(true)} disabled={isConnecting}>
-                        <Fingerprint className="w-4 h-4 mr-1.5" />Sign In
+                      <Button
+                        variant="outline"
+                        className="flex-1 h-10 rounded-xl text-[13px] border-[#EDE9E3]"
+                        onClick={() => setShowWalletSelectModal(true)}
+                        disabled={isConnecting}
+                      >
+                        <Fingerprint className="w-4 h-4 mr-1.5" />
+                        Sign In
                       </Button>
-                      <Button className="flex-1 h-10 rounded-xl text-[13px] font-semibold bg-[#2D3436] hover:bg-[#3D4446] text-white" onClick={() => setShowCreateWalletModal(true)} disabled={isConnecting}>
-                        <Plus className="w-4 h-4 mr-1.5" />Create Wallet
+                      <Button
+                        className="flex-1 h-10 rounded-xl text-[13px] font-semibold bg-[#2D3436] hover:bg-[#3D4446] text-white"
+                        onClick={() => setShowCreateWalletModal(true)}
+                        disabled={isConnecting}
+                      >
+                        <Plus className="w-4 h-4 mr-1.5" />
+                        Create Wallet
                       </Button>
                     </div>
-                    <button onClick={handleCancelNotConnected} className="w-full py-2 text-[12px] text-[#9B9590] hover:text-[#6B6560] transition-colors">Cancel</button>
+                    <button
+                      onClick={handleCancelNotConnected}
+                      className="w-full py-2 text-[12px] text-[#9B9590] hover:text-[#6B6560] transition-colors"
+                    >
+                      Cancel
+                    </button>
                   </>
                 )}
               </div>
             </div>
           </motion.div>
         </div>
-        <CreateWalletModal isOpen={showCreateWalletModal} isLoading={isConnecting} onClose={() => setShowCreateWalletModal(false)} onCreateWallet={handleCreateWallet} />
-        <WalletSelectModal isOpen={showWalletSelectModal} isLoading={isConnecting} onClose={() => setShowWalletSelectModal(false)} onSelectPasskey={handlePasskeySignIn} onCreateWallet={() => setShowCreateWalletModal(true)} onInjectedConnect={handleInjectedConnect} hasInjectedWallet={hasInjectedWallet} />
+        <CreateWalletModal
+          isOpen={showCreateWalletModal}
+          isLoading={isConnecting}
+          onClose={() => setShowCreateWalletModal(false)}
+          onCreateWallet={handleCreateWallet}
+        />
+        <WalletSelectModal
+          isOpen={showWalletSelectModal}
+          isLoading={isConnecting}
+          onClose={() => setShowWalletSelectModal(false)}
+          onSelectPasskey={handlePasskeySignIn}
+          onCreateWallet={() => setShowCreateWalletModal(true)}
+          onInjectedConnect={handleInjectedConnect}
+          hasInjectedWallet={hasInjectedWallet}
+        />
       </>
     );
   }
@@ -943,16 +1127,29 @@ function SignPage(): ReactElement {
   if (!pendingRequest) {
     return (
       <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-[380px]">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-[380px]"
+        >
           <div className="bg-white rounded-2xl border border-[#EDE9E3] shadow-sm overflow-hidden">
             <div className="px-6 py-12 text-center">
               <div className="w-14 h-14 rounded-2xl bg-[#E07A5F]/8 flex items-center justify-center mx-auto mb-4">
                 <Loader2 className="w-6 h-6 text-[#E07A5F] animate-spin" />
               </div>
-              <h1 className="text-[16px] font-semibold text-[#2D3436] mb-1.5">Waiting for Request</h1>
-              <p className="text-[13px] text-[#9B9590] mb-6">Waiting for an app to request signing...</p>
-              <Button variant="outline" onClick={() => window.close()} className="h-11 px-6 rounded-xl text-[13px] border-[#EDE9E3]">
-                <Wallet className="w-4 h-4 mr-2" />Close
+              <h1 className="text-[16px] font-semibold text-[#2D3436] mb-1.5">
+                Waiting for Request
+              </h1>
+              <p className="text-[13px] text-[#9B9590] mb-6">
+                Waiting for an app to request signing...
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => window.close()}
+                className="h-11 px-6 rounded-xl text-[13px] border-[#EDE9E3]"
+              >
+                <Wallet className="w-4 h-4 mr-2" />
+                Close
               </Button>
             </div>
           </div>
@@ -966,19 +1163,41 @@ function SignPage(): ReactElement {
     const config = getConfig();
     return (
       <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 25 }} className="w-full max-w-[380px]">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          className="w-full max-w-[380px]"
+        >
           <div className="bg-white rounded-2xl border border-[#EDE9E3] shadow-sm overflow-hidden">
             <div className="relative px-6 py-10 text-center">
               <div className="absolute inset-0 bg-gradient-to-b from-[#5B9A6F]/[0.04] to-transparent pointer-events-none" />
               <div className="relative">
-                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.1 }} className="w-16 h-16 rounded-2xl bg-[#5B9A6F]/10 flex items-center justify-center mx-auto mb-4">
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.1 }}
+                  className="w-16 h-16 rounded-2xl bg-[#5B9A6F]/10 flex items-center justify-center mx-auto mb-4"
+                >
                   <CheckCircle className="w-8 h-8 text-[#5B9A6F]" />
                 </motion.div>
-                <h1 className="text-[17px] font-semibold text-[#2D3436] mb-1.5">{requestType === 'sign_message' ? 'Message Signed' : 'Transaction Sent'}</h1>
-                <p className="text-[13px] text-[#9B9590] mb-1">{requestType === 'sign_message' ? 'Signature complete' : `${config.title} submitted successfully`}</p>
+                <h1 className="text-[17px] font-semibold text-[#2D3436] mb-1.5">
+                  {requestType === 'sign_message' ? 'Message Signed' : 'Transaction Sent'}
+                </h1>
+                <p className="text-[13px] text-[#9B9590] mb-1">
+                  {requestType === 'sign_message'
+                    ? 'Signature complete'
+                    : `${config.title} submitted successfully`}
+                </p>
                 {txHash && (
-                  <a href={getExplorerTxUrl(txHash)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 mt-3 px-4 py-2 rounded-lg bg-[#5B9A6F]/8 text-[12px] font-semibold text-[#5B9A6F] hover:bg-[#5B9A6F]/12 transition-colors">
-                    <ExternalLink className="w-3.5 h-3.5" />View on Explorer
+                  <a
+                    href={getExplorerTxUrl(txHash)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 mt-3 px-4 py-2 rounded-lg bg-[#5B9A6F]/8 text-[12px] font-semibold text-[#5B9A6F] hover:bg-[#5B9A6F]/12 transition-colors"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5" />
+                    View on Explorer
                   </a>
                 )}
               </div>
@@ -993,7 +1212,11 @@ function SignPage(): ReactElement {
   if (status === 'rejected') {
     return (
       <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-[380px]">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-[380px]"
+        >
           <div className="bg-white rounded-2xl border border-[#EDE9E3] shadow-sm overflow-hidden">
             <div className="px-6 py-12 text-center">
               <div className="w-14 h-14 rounded-2xl bg-[#F5F2ED] flex items-center justify-center mx-auto mb-4">
@@ -1012,7 +1235,11 @@ function SignPage(): ReactElement {
   if (status === 'timeout') {
     return (
       <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-[380px]">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-[380px]"
+        >
           <div className="bg-white rounded-2xl border border-[#EDE9E3] shadow-sm overflow-hidden">
             <div className="px-6 py-12 text-center">
               <div className="w-14 h-14 rounded-2xl bg-[#F5F2ED] flex items-center justify-center mx-auto mb-4">
@@ -1031,7 +1258,11 @@ function SignPage(): ReactElement {
   if (status === 'error') {
     return (
       <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-[380px]">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-[380px]"
+        >
           <div className="bg-white rounded-2xl border border-[#EDE9E3] shadow-sm overflow-hidden">
             <div className="relative px-6 pt-10 pb-6 text-center">
               <div className="absolute inset-0 bg-gradient-to-b from-red-500/[0.03] to-transparent pointer-events-none" />
@@ -1044,8 +1275,22 @@ function SignPage(): ReactElement {
               </div>
             </div>
             <div className="px-5 pb-5 flex items-center gap-2.5">
-              <Button variant="outline" className="flex-1 h-11 rounded-xl text-[13px] border-[#EDE9E3]" onClick={() => window.close()}>Cancel</Button>
-              <Button className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-[#2D3436] hover:bg-[#3D4446] text-white" onClick={() => { setStatus('waiting'); setError(null); }}>Try Again</Button>
+              <Button
+                variant="outline"
+                className="flex-1 h-11 rounded-xl text-[13px] border-[#EDE9E3]"
+                onClick={() => window.close()}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-[#2D3436] hover:bg-[#3D4446] text-white"
+                onClick={() => {
+                  setStatus('waiting');
+                  setError(null);
+                }}
+              >
+                Try Again
+              </Button>
             </div>
           </div>
         </motion.div>
@@ -1063,27 +1308,46 @@ function SignPage(): ReactElement {
   return (
     <>
       <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="w-full max-w-[380px]">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-[380px]"
+        >
           <div className="bg-white rounded-2xl border border-[#EDE9E3] shadow-sm overflow-hidden">
             {/* Header: App info + request type */}
             <div className="relative px-6 pt-6 pb-5">
-              <div className="absolute inset-0 bg-gradient-to-b to-transparent pointer-events-none" style={{ background: `linear-gradient(to bottom, ${config.color}06, transparent)` }} />
+              <div
+                className="absolute inset-0 bg-gradient-to-b to-transparent pointer-events-none"
+                style={{ background: `linear-gradient(to bottom, ${config.color}06, transparent)` }}
+              />
               <div className="relative">
                 <div className="flex items-center gap-3 mb-5">
                   <div className="w-10 h-10 rounded-xl bg-[#F5F2ED] border border-[#EDE9E3] flex items-center justify-center overflow-hidden shrink-0">
                     {pendingRequest.appInfo.icon ? (
-                      <img src={pendingRequest.appInfo.icon} alt="" className="w-10 h-10 rounded-xl object-cover" />
+                      <img
+                        src={pendingRequest.appInfo.icon}
+                        alt=""
+                        className="w-10 h-10 rounded-xl object-cover"
+                      />
                     ) : (
                       <Globe className="w-5 h-5 text-[#9B9590]" />
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-[13px] font-semibold text-[#2D3436] truncate">{pendingRequest.appInfo.name}</p>
-                    <p className="text-[11px] text-[#9B9590] font-mono truncate">{pendingRequest.appInfo.url}</p>
+                    <p className="text-[13px] font-semibold text-[#2D3436] truncate">
+                      {pendingRequest.appInfo.name}
+                    </p>
+                    <p className="text-[11px] text-[#9B9590] font-mono truncate">
+                      {pendingRequest.appInfo.url}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${config.color}12` }}>
+                  <div
+                    className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: `${config.color}12` }}
+                  >
                     <Icon className="w-5 h-5" style={{ color: config.color }} />
                   </div>
                   <div>
@@ -1100,7 +1364,9 @@ function SignPage(): ReactElement {
             <div className="px-6 py-5">
               {requestType === 'sign_message' ? (
                 <div>
-                  <p className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-widest mb-2.5">Message</p>
+                  <p className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-widest mb-2.5">
+                    Message
+                  </p>
                   <div className="bg-[#FDFBF8] rounded-xl px-4 py-3.5 border border-[#EDE9E3] max-h-36 overflow-auto">
                     <p className="text-[13px] font-mono text-[#2D3436] break-all whitespace-pre-wrap leading-relaxed">
                       {(params as { message?: string }).message || '(empty)'}
@@ -1109,22 +1375,47 @@ function SignPage(): ReactElement {
                 </div>
               ) : requestType === 'send_payment' || requestType === 'send_scheduled_payment' ? (
                 <div className="space-y-4">
-                  <div className="rounded-xl px-5 py-5 text-center" style={{ backgroundColor: `${config.color}08` }}>
-                    <p className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest" style={{ color: config.color }}>Amount</p>
-                    <p className="text-3xl font-bold text-[#2D3436] tracking-tight">{safeDisplayAmount(params.amount as string)}</p>
-                    <p className="text-[12px] font-medium mt-0.5" style={{ color: config.color }}>USD</p>
+                  <div
+                    className="rounded-xl px-5 py-5 text-center"
+                    style={{ backgroundColor: `${config.color}08` }}
+                  >
+                    <p
+                      className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest"
+                      style={{ color: config.color }}
+                    >
+                      Amount
+                    </p>
+                    <p className="text-3xl font-bold text-[#2D3436] tracking-tight">
+                      {safeDisplayAmount(params.amount as string)}
+                    </p>
+                    <p className="text-[12px] font-medium mt-0.5" style={{ color: config.color }}>
+                      USD
+                    </p>
                   </div>
-                  {requestType === 'send_scheduled_payment' && params.scheduledFor !== null && params.scheduledFor !== undefined && (
-                    <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 rounded-xl border border-amber-100">
-                      <Clock className="w-4 h-4 text-amber-600 shrink-0" />
-                      <div>
-                        <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-widest">Scheduled for</p>
-                        <p className="text-[13px] font-medium text-[#2D3436]">{new Date((params.scheduledFor as number) * 1000).toLocaleString()}</p>
+                  {requestType === 'send_scheduled_payment' &&
+                    params.scheduledFor !== null &&
+                    params.scheduledFor !== undefined && (
+                      <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 rounded-xl border border-amber-100">
+                        <Clock className="w-4 h-4 text-amber-600 shrink-0" />
+                        <div>
+                          <p className="text-[10px] font-semibold text-amber-600 uppercase tracking-widest">
+                            Scheduled for
+                          </p>
+                          <p className="text-[13px] font-medium text-[#2D3436]">
+                            {new Date((params.scheduledFor as number) * 1000).toLocaleString()}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                   <div className="space-y-0">
-                    <DetailRow label="To" value={formatAddress(params.to as string, 8)} copyValue={params.to as string} onCopy={handleCopy} copiedField={copiedField} fieldKey="to" />
+                    <DetailRow
+                      label="To"
+                      value={formatAddress(params.to as string, 8)}
+                      copyValue={params.to as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="to"
+                    />
                     {memo && <DetailRow label="Memo" value={memo} />}
                   </div>
                 </div>
@@ -1132,149 +1423,374 @@ function SignPage(): ReactElement {
                 <div className="space-y-4">
                   <div className="bg-[#FDFBF8] rounded-xl border border-[#EDE9E3] overflow-hidden">
                     <div className="px-5 py-4">
-                      <p className="text-[10px] font-semibold text-[#9B9590] uppercase tracking-widest mb-1">You pay</p>
-                      <p className="text-2xl font-bold text-[#2D3436]">{safeDisplayAmount(params.amountIn as string)}</p>
+                      <p className="text-[10px] font-semibold text-[#9B9590] uppercase tracking-widest mb-1">
+                        You pay
+                      </p>
+                      <p className="text-2xl font-bold text-[#2D3436]">
+                        {safeDisplayAmount(params.amountIn as string)}
+                      </p>
                     </div>
                     <div className="relative">
                       <div className="border-t border-[#EDE9E3]" />
                       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center border-2 border-white" style={{ backgroundColor: config.color }}>
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center border-2 border-white"
+                          style={{ backgroundColor: config.color }}
+                        >
                           <ArrowRightLeft className="w-3.5 h-3.5 text-white" />
                         </div>
                       </div>
                     </div>
                     <div className="px-5 py-4">
-                      <p className="text-[10px] font-semibold text-[#9B9590] uppercase tracking-widest mb-1">You receive (min)</p>
-                      <p className="text-2xl font-bold" style={{ color: config.color }}>{safeDisplayAmount(params.minAmountOut as string)}</p>
+                      <p className="text-[10px] font-semibold text-[#9B9590] uppercase tracking-widest mb-1">
+                        You receive (min)
+                      </p>
+                      <p className="text-2xl font-bold" style={{ color: config.color }}>
+                        {safeDisplayAmount(params.minAmountOut as string)}
+                      </p>
                     </div>
                   </div>
                   <div className="space-y-0">
-                    <DetailRow label="Token In" value={formatAddress(params.tokenIn as string, 6)} copyValue={params.tokenIn as string} onCopy={handleCopy} copiedField={copiedField} fieldKey="tokenIn" />
-                    <DetailRow label="Token Out" value={formatAddress(params.tokenOut as string, 6)} copyValue={params.tokenOut as string} onCopy={handleCopy} copiedField={copiedField} fieldKey="tokenOut" />
+                    <DetailRow
+                      label="Token In"
+                      value={formatAddress(params.tokenIn as string, 6)}
+                      copyValue={params.tokenIn as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="tokenIn"
+                    />
+                    <DetailRow
+                      label="Token Out"
+                      value={formatAddress(params.tokenOut as string, 6)}
+                      copyValue={params.tokenOut as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="tokenOut"
+                    />
                   </div>
                 </div>
               ) : requestType === 'add_liquidity' || requestType === 'remove_liquidity' ? (
                 <div className="space-y-4">
-                  <div className="rounded-xl px-5 py-5 text-center" style={{ backgroundColor: `${config.color}08` }}>
-                    <p className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest" style={{ color: config.color }}>{requestType === 'add_liquidity' ? 'Amount' : 'LP Tokens'}</p>
-                    <p className="text-3xl font-bold text-[#2D3436] tracking-tight">{safeDisplayAmount((requestType === 'add_liquidity' ? params.validatorTokenAmount : params.liquidity) as string)}</p>
+                  <div
+                    className="rounded-xl px-5 py-5 text-center"
+                    style={{ backgroundColor: `${config.color}08` }}
+                  >
+                    <p
+                      className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest"
+                      style={{ color: config.color }}
+                    >
+                      {requestType === 'add_liquidity' ? 'Amount' : 'LP Tokens'}
+                    </p>
+                    <p className="text-3xl font-bold text-[#2D3436] tracking-tight">
+                      {safeDisplayAmount(
+                        (requestType === 'add_liquidity'
+                          ? params.validatorTokenAmount
+                          : params.liquidity) as string
+                      )}
+                    </p>
                   </div>
                   <div className="space-y-0">
-                    <DetailRow label="User Token" value={formatAddress(params.userTokenAddress as string, 6)} copyValue={params.userTokenAddress as string} onCopy={handleCopy} copiedField={copiedField} fieldKey="userTokenAddress" />
-                    <DetailRow label="Validator Token" value={formatAddress(params.validatorTokenAddress as string, 6)} copyValue={params.validatorTokenAddress as string} onCopy={handleCopy} copiedField={copiedField} fieldKey="validatorTokenAddress" />
+                    <DetailRow
+                      label="User Token"
+                      value={formatAddress(params.userTokenAddress as string, 6)}
+                      copyValue={params.userTokenAddress as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="userTokenAddress"
+                    />
+                    <DetailRow
+                      label="Validator Token"
+                      value={formatAddress(params.validatorTokenAddress as string, 6)}
+                      copyValue={params.validatorTokenAddress as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="validatorTokenAddress"
+                    />
                   </div>
                 </div>
               ) : requestType === 'buy_tokens' ? (
                 <div className="space-y-4">
                   <div className="bg-[#FDFBF8] rounded-xl border border-[#EDE9E3] overflow-hidden">
                     <div className="px-5 py-4">
-                      <p className="text-[10px] font-semibold text-[#9B9590] uppercase tracking-widest mb-1">You receive</p>
-                      <p className="text-2xl font-bold" style={{ color: config.color }}>{safeDisplayAmount(params.amountOut as string)}</p>
+                      <p className="text-[10px] font-semibold text-[#9B9590] uppercase tracking-widest mb-1">
+                        You receive
+                      </p>
+                      <p className="text-2xl font-bold" style={{ color: config.color }}>
+                        {safeDisplayAmount(params.amountOut as string)}
+                      </p>
                     </div>
                     <div className="relative">
                       <div className="border-t border-[#EDE9E3]" />
                       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center border-2 border-white" style={{ backgroundColor: config.color }}>
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center border-2 border-white"
+                          style={{ backgroundColor: config.color }}
+                        >
                           <ShoppingCart className="w-3.5 h-3.5 text-white" />
                         </div>
                       </div>
                     </div>
                     <div className="px-5 py-4">
-                      <p className="text-[10px] font-semibold text-[#9B9590] uppercase tracking-widest mb-1">Max you pay</p>
-                      <p className="text-2xl font-bold text-[#2D3436]">{safeDisplayAmount(params.maxAmountIn as string)}</p>
+                      <p className="text-[10px] font-semibold text-[#9B9590] uppercase tracking-widest mb-1">
+                        Max you pay
+                      </p>
+                      <p className="text-2xl font-bold text-[#2D3436]">
+                        {safeDisplayAmount(params.maxAmountIn as string)}
+                      </p>
                     </div>
                   </div>
                   <div className="space-y-0">
-                    <DetailRow label="Token In" value={formatAddress(params.tokenIn as string, 6)} copyValue={params.tokenIn as string} onCopy={handleCopy} copiedField={copiedField} fieldKey="tokenIn" />
-                    <DetailRow label="Token Out" value={formatAddress(params.tokenOut as string, 6)} copyValue={params.tokenOut as string} onCopy={handleCopy} copiedField={copiedField} fieldKey="tokenOut" />
+                    <DetailRow
+                      label="Token In"
+                      value={formatAddress(params.tokenIn as string, 6)}
+                      copyValue={params.tokenIn as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="tokenIn"
+                    />
+                    <DetailRow
+                      label="Token Out"
+                      value={formatAddress(params.tokenOut as string, 6)}
+                      copyValue={params.tokenOut as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="tokenOut"
+                    />
                   </div>
                 </div>
               ) : requestType === 'place_order' ? (
                 <div className="space-y-4">
-                  <div className="rounded-xl px-5 py-5 text-center" style={{ backgroundColor: `${config.color}08` }}>
-                    <p className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest" style={{ color: config.color }}>{(params.type as string) === 'buy' ? 'Buy' : 'Sell'} Amount</p>
-                    <p className="text-3xl font-bold text-[#2D3436] tracking-tight">{safeDisplayAmount(params.amount as string)}</p>
+                  <div
+                    className="rounded-xl px-5 py-5 text-center"
+                    style={{ backgroundColor: `${config.color}08` }}
+                  >
+                    <p
+                      className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest"
+                      style={{ color: config.color }}
+                    >
+                      {(params.type as string) === 'buy' ? 'Buy' : 'Sell'} Amount
+                    </p>
+                    <p className="text-3xl font-bold text-[#2D3436] tracking-tight">
+                      {safeDisplayAmount(params.amount as string)}
+                    </p>
                   </div>
                   <div className="space-y-0">
-                    <DetailRow label="Type" value={(params.type as string) === 'buy' ? 'Buy' : 'Sell'} />
+                    <DetailRow
+                      label="Type"
+                      value={(params.type as string) === 'buy' ? 'Buy' : 'Sell'}
+                    />
                     <DetailRow label="Tick" value={String(params.tick)} />
-                    <DetailRow label="Token" value={formatAddress(params.token as string, 6)} copyValue={params.token as string} onCopy={handleCopy} copiedField={copiedField} fieldKey="token" />
+                    <DetailRow
+                      label="Token"
+                      value={formatAddress(params.token as string, 6)}
+                      copyValue={params.token as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="token"
+                    />
                   </div>
                 </div>
               ) : requestType === 'cancel_order' ? (
                 <div className="space-y-4">
-                  <div className="rounded-xl px-5 py-5 text-center" style={{ backgroundColor: `${config.color}08` }}>
-                    <p className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest" style={{ color: config.color }}>Order ID</p>
-                    <p className="text-2xl font-bold text-[#2D3436] tracking-tight font-mono">#{String(params.orderId)}</p>
+                  <div
+                    className="rounded-xl px-5 py-5 text-center"
+                    style={{ backgroundColor: `${config.color}08` }}
+                  >
+                    <p
+                      className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest"
+                      style={{ color: config.color }}
+                    >
+                      Order ID
+                    </p>
+                    <p className="text-2xl font-bold text-[#2D3436] tracking-tight font-mono">
+                      #{String(params.orderId)}
+                    </p>
                   </div>
                 </div>
               ) : requestType === 'create_pair' ? (
                 <div className="space-y-4">
-                  <DetailRow label="Base Token" value={formatAddress(params.base as string, 6)} copyValue={params.base as string} onCopy={handleCopy} copiedField={copiedField} fieldKey="base" />
+                  <DetailRow
+                    label="Base Token"
+                    value={formatAddress(params.base as string, 6)}
+                    copyValue={params.base as string}
+                    onCopy={handleCopy}
+                    copiedField={copiedField}
+                    fieldKey="base"
+                  />
                 </div>
               ) : requestType === 'approve_token' ? (
                 <div className="space-y-4">
-                  <div className="rounded-xl px-5 py-5 text-center" style={{ backgroundColor: `${config.color}08` }}>
-                    <p className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest" style={{ color: config.color }}>Approval Amount</p>
-                    <p className="text-3xl font-bold text-[#2D3436] tracking-tight">{safeDisplayAmount(params.amount as string)}</p>
+                  <div
+                    className="rounded-xl px-5 py-5 text-center"
+                    style={{ backgroundColor: `${config.color}08` }}
+                  >
+                    <p
+                      className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest"
+                      style={{ color: config.color }}
+                    >
+                      Approval Amount
+                    </p>
+                    <p className="text-3xl font-bold text-[#2D3436] tracking-tight">
+                      {safeDisplayAmount(params.amount as string)}
+                    </p>
                   </div>
                   <div className="space-y-0">
-                    <DetailRow label="Token" value={formatAddress(params.token as string, 6)} copyValue={params.token as string} onCopy={handleCopy} copiedField={copiedField} fieldKey="token" />
-                    <DetailRow label="Spender" value={formatAddress(params.spender as string, 6)} copyValue={params.spender as string} onCopy={handleCopy} copiedField={copiedField} fieldKey="spender" />
+                    <DetailRow
+                      label="Token"
+                      value={formatAddress(params.token as string, 6)}
+                      copyValue={params.token as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="token"
+                    />
+                    <DetailRow
+                      label="Spender"
+                      value={formatAddress(params.spender as string, 6)}
+                      copyValue={params.spender as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="spender"
+                    />
                   </div>
                 </div>
               ) : requestType === 'create_token' ? (
                 <div className="space-y-4">
-                  <div className="rounded-xl px-5 py-5 text-center" style={{ backgroundColor: `${config.color}08` }}>
-                    <p className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest" style={{ color: config.color }}>New Token</p>
-                    <p className="text-2xl font-bold text-[#2D3436] tracking-tight">{params.symbol as string}</p>
+                  <div
+                    className="rounded-xl px-5 py-5 text-center"
+                    style={{ backgroundColor: `${config.color}08` }}
+                  >
+                    <p
+                      className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest"
+                      style={{ color: config.color }}
+                    >
+                      New Token
+                    </p>
+                    <p className="text-2xl font-bold text-[#2D3436] tracking-tight">
+                      {params.symbol as string}
+                    </p>
                     <p className="text-[13px] text-[#9B9590] mt-1">{params.name as string}</p>
                   </div>
                   <div className="space-y-0">
                     <DetailRow label="Currency" value={params.currency as string} />
-                    {(params.admin as string | undefined) && <DetailRow label="Admin" value={formatAddress(params.admin as string, 6)} copyValue={params.admin as string} onCopy={handleCopy} copiedField={copiedField} fieldKey="admin" />}
+                    {(params.admin as string | undefined) && (
+                      <DetailRow
+                        label="Admin"
+                        value={formatAddress(params.admin as string, 6)}
+                        copyValue={params.admin as string}
+                        onCopy={handleCopy}
+                        copiedField={copiedField}
+                        fieldKey="admin"
+                      />
+                    )}
                   </div>
                 </div>
               ) : requestType === 'mint_token' ? (
                 <div className="space-y-4">
-                  <div className="rounded-xl px-5 py-5 text-center" style={{ backgroundColor: `${config.color}08` }}>
-                    <p className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest" style={{ color: config.color }}>Mint Amount</p>
-                    <p className="text-3xl font-bold text-[#2D3436] tracking-tight">{safeDisplayAmount(params.amount as string)}</p>
+                  <div
+                    className="rounded-xl px-5 py-5 text-center"
+                    style={{ backgroundColor: `${config.color}08` }}
+                  >
+                    <p
+                      className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest"
+                      style={{ color: config.color }}
+                    >
+                      Mint Amount
+                    </p>
+                    <p className="text-3xl font-bold text-[#2D3436] tracking-tight">
+                      {safeDisplayAmount(params.amount as string)}
+                    </p>
                   </div>
                   <div className="space-y-0">
-                    <DetailRow label="Token" value={formatAddress(params.token as string, 6)} copyValue={params.token as string} onCopy={handleCopy} copiedField={copiedField} fieldKey="token" />
-                    <DetailRow label="To" value={formatAddress(params.to as string, 8)} copyValue={params.to as string} onCopy={handleCopy} copiedField={copiedField} fieldKey="to" />
+                    <DetailRow
+                      label="Token"
+                      value={formatAddress(params.token as string, 6)}
+                      copyValue={params.token as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="token"
+                    />
+                    <DetailRow
+                      label="To"
+                      value={formatAddress(params.to as string, 8)}
+                      copyValue={params.to as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="to"
+                    />
                     {memo && <DetailRow label="Memo" value={memo} />}
                   </div>
                 </div>
               ) : requestType === 'burn_token' ? (
                 <div className="space-y-4">
-                  <div className="rounded-xl px-5 py-5 text-center" style={{ backgroundColor: `${config.color}08` }}>
-                    <p className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest" style={{ color: config.color }}>Burn Amount</p>
-                    <p className="text-3xl font-bold text-[#2D3436] tracking-tight">{safeDisplayAmount(params.amount as string)}</p>
+                  <div
+                    className="rounded-xl px-5 py-5 text-center"
+                    style={{ backgroundColor: `${config.color}08` }}
+                  >
+                    <p
+                      className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest"
+                      style={{ color: config.color }}
+                    >
+                      Burn Amount
+                    </p>
+                    <p className="text-3xl font-bold text-[#2D3436] tracking-tight">
+                      {safeDisplayAmount(params.amount as string)}
+                    </p>
                   </div>
                   <div className="space-y-0">
-                    <DetailRow label="Token" value={formatAddress(params.token as string, 6)} copyValue={params.token as string} onCopy={handleCopy} copiedField={copiedField} fieldKey="token" />
+                    <DetailRow
+                      label="Token"
+                      value={formatAddress(params.token as string, 6)}
+                      copyValue={params.token as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="token"
+                    />
                     {memo && <DetailRow label="Memo" value={memo} />}
                   </div>
                 </div>
               ) : requestType === 'claim_rewards' ? (
                 <div className="space-y-4">
-                  <DetailRow label="Token" value={formatAddress(params.token as string, 6)} copyValue={params.token as string} onCopy={handleCopy} copiedField={copiedField} fieldKey="token" />
+                  <DetailRow
+                    label="Token"
+                    value={formatAddress(params.token as string, 6)}
+                    copyValue={params.token as string}
+                    onCopy={handleCopy}
+                    copiedField={copiedField}
+                    fieldKey="token"
+                  />
                 </div>
               ) : requestType === 'dex_withdraw' ? (
                 <div className="space-y-4">
-                  <div className="rounded-xl px-5 py-5 text-center" style={{ backgroundColor: `${config.color}08` }}>
-                    <p className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest" style={{ color: config.color }}>Withdraw Amount</p>
-                    <p className="text-3xl font-bold text-[#2D3436] tracking-tight">{safeDisplayAmount(params.amount as string)}</p>
+                  <div
+                    className="rounded-xl px-5 py-5 text-center"
+                    style={{ backgroundColor: `${config.color}08` }}
+                  >
+                    <p
+                      className="text-[11px] font-semibold mb-1.5 uppercase tracking-widest"
+                      style={{ color: config.color }}
+                    >
+                      Withdraw Amount
+                    </p>
+                    <p className="text-3xl font-bold text-[#2D3436] tracking-tight">
+                      {safeDisplayAmount(params.amount as string)}
+                    </p>
                   </div>
                   <div className="space-y-0">
-                    <DetailRow label="Token" value={formatAddress(params.token as string, 6)} copyValue={params.token as string} onCopy={handleCopy} copiedField={copiedField} fieldKey="token" />
+                    <DetailRow
+                      label="Token"
+                      value={formatAddress(params.token as string, 6)}
+                      copyValue={params.token as string}
+                      onCopy={handleCopy}
+                      copiedField={copiedField}
+                      fieldKey="token"
+                    />
                   </div>
                 </div>
               ) : (
                 <div>
-                  <p className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-widest mb-2.5">Transaction Data</p>
+                  <p className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-widest mb-2.5">
+                    Transaction Data
+                  </p>
                   <pre className="text-[11px] font-mono bg-[#FDFBF8] rounded-xl px-4 py-3.5 overflow-auto max-h-36 border border-[#EDE9E3] text-[#6B6560]">
                     {JSON.stringify(params, null, 2)}
                   </pre>
@@ -1288,25 +1804,50 @@ function SignPage(): ReactElement {
             <div className="px-6 py-4">
               <AnimatePresence mode="wait">
                 {isConnected && address ? (
-                  <motion.div key="connected" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-3 px-4 py-3 bg-[#5B9A6F]/6 rounded-xl border border-[#5B9A6F]/15">
+                  <motion.div
+                    key="connected"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex items-center gap-3 px-4 py-3 bg-[#5B9A6F]/6 rounded-xl border border-[#5B9A6F]/15"
+                  >
                     <div className="w-8 h-8 rounded-lg bg-[#5B9A6F]/12 flex items-center justify-center shrink-0">
                       <Shield className="w-4 h-4 text-[#5B9A6F]" />
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-[11px] font-semibold text-[#5B9A6F]">Signing with</p>
-                      <p className="text-[11px] font-mono text-[#5B9A6F]/70 truncate">{formatAddress(address, 6)}</p>
+                      <p className="text-[11px] font-mono text-[#5B9A6F]/70 truncate">
+                        {formatAddress(address, 6)}
+                      </p>
                     </div>
                     <div className="w-2 h-2 rounded-full bg-[#5B9A6F] shrink-0" />
                   </motion.div>
                 ) : (
-                  <motion.div key="not-connected" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-[#FDFBF8] rounded-xl border border-[#EDE9E3] px-4 py-4">
-                    <p className="text-[13px] font-semibold text-[#2D3436] mb-3">Sign in to continue</p>
+                  <motion.div
+                    key="not-connected"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="bg-[#FDFBF8] rounded-xl border border-[#EDE9E3] px-4 py-4"
+                  >
+                    <p className="text-[13px] font-semibold text-[#2D3436] mb-3">
+                      Sign in to continue
+                    </p>
                     <div className="flex gap-2">
-                      <Button variant="outline" className="flex-1 h-9 rounded-xl text-[12px] border-[#EDE9E3]" onClick={() => setShowWalletSelectModal(true)} disabled={isConnecting}>
-                        <Fingerprint className="w-3.5 h-3.5 mr-1.5" />Sign In
+                      <Button
+                        variant="outline"
+                        className="flex-1 h-9 rounded-xl text-[12px] border-[#EDE9E3]"
+                        onClick={() => setShowWalletSelectModal(true)}
+                        disabled={isConnecting}
+                      >
+                        <Fingerprint className="w-3.5 h-3.5 mr-1.5" />
+                        Sign In
                       </Button>
-                      <Button className="flex-1 h-9 rounded-xl text-[12px] font-semibold bg-[#2D3436] hover:bg-[#3D4446] text-white" onClick={() => setShowCreateWalletModal(true)} disabled={isConnecting}>
-                        <Plus className="w-3.5 h-3.5 mr-1.5" />Create
+                      <Button
+                        className="flex-1 h-9 rounded-xl text-[12px] font-semibold bg-[#2D3436] hover:bg-[#3D4446] text-white"
+                        onClick={() => setShowCreateWalletModal(true)}
+                        disabled={isConnecting}
+                      >
+                        <Plus className="w-3.5 h-3.5 mr-1.5" />
+                        Create
                       </Button>
                     </div>
                   </motion.div>
@@ -1334,7 +1875,10 @@ function SignPage(): ReactElement {
                 <div className="px-6 py-3">
                   <div className="flex items-center justify-center gap-1.5 text-[11px] text-[#B5B0AA]">
                     <Clock className="w-3 h-3" />
-                    <span>Expires in {Math.floor(timeRemaining / 60)}:{(timeRemaining % 60).toString().padStart(2, '0')}</span>
+                    <span>
+                      Expires in {Math.floor(timeRemaining / 60)}:
+                      {(timeRemaining % 60).toString().padStart(2, '0')}
+                    </span>
                   </div>
                 </div>
               </>
@@ -1344,9 +1888,25 @@ function SignPage(): ReactElement {
 
             {/* Actions */}
             <div className="px-5 py-5 flex items-center gap-2.5">
-              <Button variant="outline" className="flex-1 h-11 rounded-xl text-[13px] border-[#EDE9E3]" onClick={handleReject} disabled={status === 'processing' || isConnecting}>Reject</Button>
-              <Button className="flex-1 h-11 rounded-xl text-[13px] font-semibold text-white" style={{ backgroundColor: config.color }} onClick={handleApprove} isLoading={status === 'processing' || isConnecting}>
-                {isConnected ? (requestType === 'sign_message' ? 'Sign' : 'Confirm') : 'Sign In to Continue'}
+              <Button
+                variant="outline"
+                className="flex-1 h-11 rounded-xl text-[13px] border-[#EDE9E3]"
+                onClick={handleReject}
+                disabled={status === 'processing' || isConnecting}
+              >
+                Reject
+              </Button>
+              <Button
+                className="flex-1 h-11 rounded-xl text-[13px] font-semibold text-white"
+                style={{ backgroundColor: config.color }}
+                onClick={handleApprove}
+                isLoading={status === 'processing' || isConnecting}
+              >
+                {isConnected
+                  ? requestType === 'sign_message'
+                    ? 'Sign'
+                    : 'Confirm'
+                  : 'Sign In to Continue'}
               </Button>
             </div>
 
@@ -1354,11 +1914,15 @@ function SignPage(): ReactElement {
             {isConnected && status === 'waiting' && (
               <div className="px-5 pb-4 flex items-center justify-center gap-4 text-[10px] text-[#B5B0AA]">
                 <span className="flex items-center gap-1">
-                  <kbd className="px-1.5 py-0.5 bg-[#F5F2ED] rounded text-[9px] font-mono text-[#9B9590]">Enter</kbd>
+                  <kbd className="px-1.5 py-0.5 bg-[#F5F2ED] rounded text-[9px] font-mono text-[#9B9590]">
+                    Enter
+                  </kbd>
                   <span>{requestType === 'sign_message' ? 'sign' : 'confirm'}</span>
                 </span>
                 <span className="flex items-center gap-1">
-                  <kbd className="px-1.5 py-0.5 bg-[#F5F2ED] rounded text-[9px] font-mono text-[#9B9590]">Esc</kbd>
+                  <kbd className="px-1.5 py-0.5 bg-[#F5F2ED] rounded text-[9px] font-mono text-[#9B9590]">
+                    Esc
+                  </kbd>
                   <span>reject</span>
                 </span>
               </div>
@@ -1367,8 +1931,21 @@ function SignPage(): ReactElement {
         </motion.div>
       </div>
 
-      <CreateWalletModal isOpen={showCreateWalletModal} isLoading={isConnecting} onClose={() => setShowCreateWalletModal(false)} onCreateWallet={handleCreateWallet} />
-      <WalletSelectModal isOpen={showWalletSelectModal} isLoading={isConnecting} onClose={() => setShowWalletSelectModal(false)} onSelectPasskey={handlePasskeySignIn} onCreateWallet={() => setShowCreateWalletModal(true)} onInjectedConnect={handleInjectedConnect} hasInjectedWallet={hasInjectedWallet} />
+      <CreateWalletModal
+        isOpen={showCreateWalletModal}
+        isLoading={isConnecting}
+        onClose={() => setShowCreateWalletModal(false)}
+        onCreateWallet={handleCreateWallet}
+      />
+      <WalletSelectModal
+        isOpen={showWalletSelectModal}
+        isLoading={isConnecting}
+        onClose={() => setShowWalletSelectModal(false)}
+        onSelectPasskey={handlePasskeySignIn}
+        onCreateWallet={() => setShowCreateWalletModal(true)}
+        onInjectedConnect={handleInjectedConnect}
+        hasInjectedWallet={hasInjectedWallet}
+      />
     </>
   );
 }
@@ -1391,12 +1968,21 @@ function DetailRow({
 }): ReactElement {
   return (
     <div className="flex items-center justify-between py-2.5 border-b border-[#EDE9E3]/40 last:border-0">
-      <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-widest">{label}</span>
+      <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-widest">
+        {label}
+      </span>
       <div className="flex items-center gap-1.5">
         <span className="text-[12px] text-[#2D3436] font-mono">{value}</span>
         {copyValue && onCopy && fieldKey && (
-          <button onClick={() => onCopy(copyValue, fieldKey)} className="p-1 hover:bg-[#F5F2ED] rounded-md transition-colors">
-            {copiedField === fieldKey ? <Check className="w-3 h-3 text-[#5B9A6F]" /> : <Copy className="w-3 h-3 text-[#B5B0AA]" />}
+          <button
+            onClick={() => onCopy(copyValue, fieldKey)}
+            className="p-1 hover:bg-[#F5F2ED] rounded-md transition-colors"
+          >
+            {copiedField === fieldKey ? (
+              <Check className="w-3 h-3 text-[#5B9A6F]" />
+            ) : (
+              <Copy className="w-3 h-3 text-[#B5B0AA]" />
+            )}
           </button>
         )}
       </div>

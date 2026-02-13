@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, type ReactElement } from 'react';
 import { Loader2, ExternalLink, Gift } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
@@ -95,7 +95,13 @@ export function StartRewardModal({
             <div className="px-6 pt-10 pb-6 text-center">
               {/* Sage checkmark */}
               <div className="w-16 h-16 rounded-full bg-[var(--color-sage)] flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <svg
+                  className="w-8 h-8 text-white"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
@@ -106,7 +112,9 @@ export function StartRewardModal({
               {/* Hero value */}
               <div className="mb-6">
                 <span className="text-3xl font-bold text-[#2D3436]">{amount}</span>
-                <span className="text-lg text-[#9B9590] ml-1.5 font-semibold">{selectedCoin?.symbol}</span>
+                <span className="text-lg text-[#9B9590] ml-1.5 font-semibold">
+                  {selectedCoin?.symbol}
+                </span>
               </div>
 
               {/* Details card */}
@@ -192,7 +200,7 @@ export function StartRewardModal({
                   Your balance:{' '}
                   {selectedCoin?.userBalance !== undefined
                     ? formatAmount(selectedCoin.userBalance.toString(), decimals)
-                    : '—'}{' '}
+                    : '–'}{' '}
                   {selectedCoin?.symbol}
                 </p>
               </div>

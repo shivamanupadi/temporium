@@ -14,14 +14,14 @@ import {
   Globe,
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogDescription,
-} from '@temporium/shared-ui';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 import { getConnectedApps, removeConnectedApp } from '@/lib/connected-apps';
-import { getActivity, clearActivity, getActivityTypeLabel, getActivityStatusColor } from '@/lib/activity';
+import {
+  getActivity,
+  clearActivity,
+  getActivityTypeLabel,
+  getActivityStatusColor,
+} from '@/lib/activity';
 import { LINKS } from '@/lib/constants';
 import { formatAddress } from '@/lib/utils';
 import type { ConnectedApp, ActivityItem } from '@/types';
@@ -185,9 +185,7 @@ function ConnectedAppsPage(): ReactElement {
                         </a>
                       </div>
 
-                      <p className="text-[12px] text-[#9B9590] truncate mt-0.5">
-                        {app.url}
-                      </p>
+                      <p className="text-[12px] text-[#9B9590] truncate mt-0.5">{app.url}</p>
 
                       {app.description && (
                         <p className="text-[12px] text-[#6B6560] mt-1 line-clamp-1">
@@ -267,9 +265,7 @@ function ConnectedAppsPage(): ReactElement {
                     className="px-4 py-3 flex items-center gap-3 hover:bg-[#FDFBF8] transition-colors first:rounded-t-2xl last:rounded-b-2xl"
                   >
                     {/* Status Icon */}
-                    <div className="flex-shrink-0">
-                      {getStatusIcon(item.status)}
-                    </div>
+                    <div className="flex-shrink-0">{getStatusIcon(item.status)}</div>
 
                     {/* Activity Info */}
                     <div className="flex-1 min-w-0">
@@ -277,14 +273,14 @@ function ConnectedAppsPage(): ReactElement {
                         <span className="text-[13px] font-medium text-[#2D3436]">
                           {getActivityTypeLabel(item.type)}
                         </span>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium capitalize ${getActivityStatusColor(item.status)}`}>
+                        <span
+                          className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium capitalize ${getActivityStatusColor(item.status)}`}
+                        >
                           {item.status}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[11px] text-[#9B9590] truncate">
-                          {item.appName}
-                        </span>
+                        <span className="text-[11px] text-[#9B9590] truncate">{item.appName}</span>
                         {item.txHash && (
                           <>
                             <span className="text-[#EDE9E3]">&middot;</span>
@@ -315,7 +311,12 @@ function ConnectedAppsPage(): ReactElement {
       </Tabs>
 
       {/* Revoke Confirm Dialog */}
-      <Dialog open={!!revokeTarget} onOpenChange={open => { if (!open) setRevokeTarget(null); }}>
+      <Dialog
+        open={!!revokeTarget}
+        onOpenChange={open => {
+          if (!open) setRevokeTarget(null);
+        }}
+      >
         <DialogContent className="max-w-[360px] p-0 gap-0 overflow-hidden rounded-2xl">
           <div className="px-6 pt-6 pb-4">
             <DialogTitle className="text-lg font-semibold text-gray-900 mb-2">
@@ -323,8 +324,8 @@ function ConnectedAppsPage(): ReactElement {
             </DialogTitle>
             <DialogDescription className="text-[13px] text-gray-500">
               Are you sure you want to revoke access for{' '}
-              <strong className="text-gray-700">{revokeTarget?.name}</strong>? The app
-              will need to reconnect to interact with your wallet.
+              <strong className="text-gray-700">{revokeTarget?.name}</strong>? The app will need to
+              reconnect to interact with your wallet.
             </DialogDescription>
           </div>
           <div className="px-6 pb-6 flex gap-3">

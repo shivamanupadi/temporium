@@ -27,9 +27,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 const navSections = [
   {
     label: 'Main',
-    items: [
-      { to: '/wallet', label: 'Dashboard', icon: LayoutDashboard },
-    ],
+    items: [{ to: '/wallet', label: 'Dashboard', icon: LayoutDashboard }],
   },
   {
     label: 'Payments',
@@ -123,12 +121,16 @@ export function Sidebar({
       )}
 
       {/* Logo */}
-      <div className={`flex items-start py-4 ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}>
+      <div
+        className={`flex items-start py-4 ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}
+      >
         <div className="flex items-center gap-2.5">
           <img src="/logo.png" alt="Temporium" className="w-6 h-6 rounded-md shrink-0" />
           {!collapsed && (
             <div>
-              <span className="text-[15px] font-bold text-[#2D3436] tracking-tight leading-none">Temporium</span>
+              <span className="text-[15px] font-bold text-[#2D3436] tracking-tight leading-none">
+                Temporium
+              </span>
               <p className="text-[10px] font-medium text-[#B5B0AA] mt-0.5 leading-none">Wallet</p>
             </div>
           )}
@@ -174,9 +176,7 @@ export function Sidebar({
             <button
               onClick={() => setShowNetworkMenu(!showNetworkMenu)}
               className={`w-full flex items-center justify-between gap-2 px-3 py-3 rounded-xl border bg-[#FDFBF8] transition-all cursor-pointer ${
-                showNetworkMenu
-                  ? 'border-[#DDD8D1]'
-                  : 'border-[#EDE9E3] hover:border-[#DDD8D1]'
+                showNetworkMenu ? 'border-[#DDD8D1]' : 'border-[#EDE9E3] hover:border-[#DDD8D1]'
               }`}
             >
               <div className="flex items-center gap-2.5">
@@ -252,7 +252,9 @@ export function Sidebar({
         {navSections.map((section, sectionIdx) => (
           <div key={section.label}>
             {!collapsed ? (
-              <p className={`px-3 pb-1 text-[10px] font-semibold text-[#B5B0AA] uppercase tracking-wider ${sectionIdx === 0 ? 'pt-0.5' : 'pt-3'}`}>
+              <p
+                className={`px-3 pb-1 text-[10px] font-semibold text-[#B5B0AA] uppercase tracking-wider ${sectionIdx === 0 ? 'pt-0.5' : 'pt-3'}`}
+              >
                 {section.label}
               </p>
             ) : (
@@ -260,9 +262,10 @@ export function Sidebar({
             )}
             <div className="space-y-0.5">
               {section.items.map(item => {
-                const isActive = item.to === '/wallet'
-                  ? location.pathname === '/wallet'
-                  : location.pathname === item.to || location.pathname.startsWith(`${item.to}/`);
+                const isActive =
+                  item.to === '/wallet'
+                    ? location.pathname === '/wallet'
+                    : location.pathname === item.to || location.pathname.startsWith(`${item.to}/`);
                 const Icon = item.icon;
                 const linkEl = (
                   <Link
@@ -295,7 +298,10 @@ export function Sidebar({
       </nav>
 
       {/* Wallet Profile Footer */}
-      <div ref={dropdownRef} className={`relative border-t border-[#EDE9E3] ${collapsed ? 'p-2' : 'p-3'}`}>
+      <div
+        ref={dropdownRef}
+        className={`relative border-t border-[#EDE9E3] ${collapsed ? 'p-2' : 'p-3'}`}
+      >
         {collapsed ? (
           <Tooltip>
             <TooltipTrigger asChild>

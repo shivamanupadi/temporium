@@ -1,14 +1,8 @@
 import { type ReactElement, useState, useEffect, useCallback } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Loader2,
-  CheckCircle,
-  ExternalLink,
-  AlertTriangle,
-  Plus,
-} from 'lucide-react';
-import { toast } from 'sonner';
+import { Loader2, CheckCircle, ExternalLink, AlertTriangle, Plus } from 'lucide-react';
+import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { TokenPicker } from '@/components/TokenPicker';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
@@ -90,8 +84,7 @@ function OrderbookPage(): ReactElement | null {
     pairExists &&
     !isPlacing;
 
-  const canCreatePair =
-    baseToken && feeToken && pairExists === false && !isCreatingPair;
+  const canCreatePair = baseToken && feeToken && pairExists === false && !isCreatingPair;
 
   // -------------------------------------------------------------------------
   // Fetch orderbook
@@ -146,7 +139,9 @@ function OrderbookPage(): ReactElement | null {
 
   const handleSetMax = useCallback(() => {
     if (relevantBalance.value > 0n && relevantToken) {
-      setAmount(formatAmount(relevantBalance.value, relevantToken.decimals, relevantToken.decimals));
+      setAmount(
+        formatAmount(relevantBalance.value, relevantToken.decimals, relevantToken.decimals)
+      );
     }
   }, [relevantBalance.value, relevantToken]);
 
@@ -159,7 +154,7 @@ function OrderbookPage(): ReactElement | null {
       setOrderbook(null);
       setPairExists(null);
     },
-    [baseToken, quoteToken],
+    [baseToken, quoteToken]
   );
 
   const handleQuoteChange = useCallback(
@@ -171,7 +166,7 @@ function OrderbookPage(): ReactElement | null {
       setOrderbook(null);
       setPairExists(null);
     },
-    [baseToken, quoteToken],
+    [baseToken, quoteToken]
   );
 
   const handleCreatePair = useCallback(async () => {
@@ -231,7 +226,17 @@ function OrderbookPage(): ReactElement | null {
     } finally {
       setIsPlacing(false);
     }
-  }, [canPlace, baseToken, feeToken, tick, side, parsedAmount, tokenDecimals, placeOrder, fetchOrderbook]);
+  }, [
+    canPlace,
+    baseToken,
+    feeToken,
+    tick,
+    side,
+    parsedAmount,
+    tokenDecimals,
+    placeOrder,
+    fetchOrderbook,
+  ]);
 
   if (!address) return null;
 
@@ -270,7 +275,9 @@ function OrderbookPage(): ReactElement | null {
               <span className="text-[13px] text-[#9B9590]">Loading tokens...</span>
             </div>
           ) : tokens.length === 0 ? (
-            <p className="text-[13px] text-[#9B9590]">No tokens available. Check your network connection.</p>
+            <p className="text-[13px] text-[#9B9590]">
+              No tokens available. Check your network connection.
+            </p>
           ) : (
             <div className="flex items-center justify-center gap-2">
               <Loader2 className="w-4 h-4 animate-spin text-[#9B9590]" />
@@ -290,7 +297,7 @@ function OrderbookPage(): ReactElement | null {
         >
           {/* Buy / Sell Tabs */}
           <div className="flex border-b border-[#EDE9E3]">
-            {(['buy', 'sell'] as const).map((s) => (
+            {(['buy', 'sell'] as const).map(s => (
               <button
                 key={s}
                 onClick={() => {
@@ -340,9 +347,13 @@ function OrderbookPage(): ReactElement | null {
                   <Loader2 className="w-3.5 h-3.5 animate-spin text-[#9B9590]" />
                 ) : orderbook ? (
                   <div className="text-[10px] leading-tight">
-                    <span className="text-[#5B9A6F] font-semibold">{tickToPrice(orderbook.bestBidTick)}</span>
+                    <span className="text-[#5B9A6F] font-semibold">
+                      {tickToPrice(orderbook.bestBidTick)}
+                    </span>
                     <span className="text-[#B5B0AA] mx-1">/</span>
-                    <span className="text-[#D35D3A] font-semibold">{tickToPrice(orderbook.bestAskTick)}</span>
+                    <span className="text-[#D35D3A] font-semibold">
+                      {tickToPrice(orderbook.bestAskTick)}
+                    </span>
                   </div>
                 ) : pairExists === false ? (
                   <span className="text-[10px] text-amber-500 font-medium">No pair</span>
@@ -358,7 +369,8 @@ function OrderbookPage(): ReactElement | null {
                 </span>
                 {isValidTick && tick !== null && (
                   <span className="text-[10px] text-[#9B9590]">
-                    Tick {tick}{price !== tickToPrice(tick) ? ` \u2192 ${tickToPrice(tick)}` : ''}
+                    Tick {tick}
+                    {price !== tickToPrice(tick) ? ` \u2192 ${tickToPrice(tick)}` : ''}
                   </span>
                 )}
               </div>
@@ -368,7 +380,7 @@ function OrderbookPage(): ReactElement | null {
                   inputMode="decimal"
                   placeholder="1.00000"
                   value={price}
-                  onChange={(e) => handlePriceChange(e.target.value)}
+                  onChange={e => handlePriceChange(e.target.value)}
                   disabled={isPlacing}
                   className="flex-1 text-[22px] font-bold text-[#2D3436] bg-transparent border-none outline-none placeholder:text-[#D5D0CA] min-w-0"
                 />
@@ -395,7 +407,8 @@ function OrderbookPage(): ReactElement | null {
                   onClick={handleSetMax}
                   className="text-[10px] text-[#9B9590] hover:text-[#6B6560] transition-colors"
                 >
-                  Bal: {formatAmount(relevantBalance.value, relevantToken?.decimals ?? 6)} {relevantToken?.symbol}
+                  Bal: {formatAmount(relevantBalance.value, relevantToken?.decimals ?? 6)}{' '}
+                  {relevantToken?.symbol}
                 </button>
               </div>
               <div className="flex items-center gap-3">
@@ -404,7 +417,7 @@ function OrderbookPage(): ReactElement | null {
                   inputMode="decimal"
                   placeholder="0.00"
                   value={amount}
-                  onChange={(e) => handleAmountChange(e.target.value)}
+                  onChange={e => handleAmountChange(e.target.value)}
                   disabled={isPlacing}
                   className="flex-1 text-[22px] font-bold text-[#2D3436] bg-transparent border-none outline-none placeholder:text-[#D5D0CA] min-w-0"
                 />

@@ -106,7 +106,7 @@ export class ScheduledTransactionDO implements DurableObject {
     status: 'executed' | 'failed',
     attempts: number,
     txHash?: string,
-    failReason?: string,
+    failReason?: string
   ): Promise<void> {
     const db = this.env.DB;
 

@@ -53,9 +53,9 @@ scheduledTxsRouter.get('/', zValidator('query', scheduledTxQuerySchema), async c
           lt(scheduledTransactions.createdAt, new Date(cursorTs)),
           and(
             eq(scheduledTransactions.createdAt, new Date(cursorTs)),
-            lt(scheduledTransactions.id, cursorId),
-          ),
-        )!,
+            lt(scheduledTransactions.id, cursorId)
+          )
+        )!
       );
     } catch {
       throw new BadRequestError('Invalid cursor');
@@ -175,15 +175,17 @@ scheduledTxsRouter.post('/', zValidator('json', createScheduledTxSchema), async 
   const doId = c.env.SCHEDULED_TX.idFromName(txRecord.id);
   const doStub = c.env.SCHEDULED_TX.get(doId);
 
-  await doStub.fetch(new Request('http://do/schedule', {
-    method: 'POST',
-    body: JSON.stringify({
-      txId: txRecord.id,
-      serializedTx: data.serializedTx,
-      network,
-      scheduledFor: new Date(data.scheduledFor).getTime(),
-    }),
-  }));
+  await doStub.fetch(
+    new Request('http://do/schedule', {
+      method: 'POST',
+      body: JSON.stringify({
+        txId: txRecord.id,
+        serializedTx: data.serializedTx,
+        network,
+        scheduledFor: new Date(data.scheduledFor).getTime(),
+      }),
+    })
+  );
 
   return success(c, txRecord, 201);
 });

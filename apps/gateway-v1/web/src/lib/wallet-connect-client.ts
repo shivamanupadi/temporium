@@ -12,7 +12,7 @@ export function getWalletConnect(): WalletConnect {
     walletConnectInstance = new WalletConnect({
       appName: 'Temporium Gateway',
       appIcon: `${window.location.origin}/logo-dark.png`,
-      appDescription: 'Temporium Gateway — DeFi tools for the Tempo blockchain',
+      appDescription: 'Temporium Gateway: DeFi tools for the Tempo blockchain',
       walletUrl: WALLET_URL,
       permissions: ['connect', 'sign', 'send'],
     });

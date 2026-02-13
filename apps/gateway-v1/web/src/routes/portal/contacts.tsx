@@ -2,7 +2,7 @@ import { type ReactElement, useState, useEffect, useCallback } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Plus, Trash2, Copy, Check, Search, Loader2, X } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 import { apiGet, apiPost, apiDelete } from '@/lib/api-client';
@@ -29,7 +29,11 @@ const itemVariants = {
 
 const cardVariants = {
   hidden: { opacity: 0, scale: 0.97 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.25, ease: [0.4, 0, 0.2, 1] as const } },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.25, ease: [0.4, 0, 0.2, 1] as const },
+  },
   exit: { opacity: 0, scale: 0.95, transition: { duration: 0.15 } },
 };
 
@@ -139,8 +143,7 @@ function ContactsPage(): ReactElement {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
     return (
-      contact.name.toLowerCase().includes(query) ||
-      contact.address.toLowerCase().includes(query)
+      contact.name.toLowerCase().includes(query) || contact.address.toLowerCase().includes(query)
     );
   });
 
@@ -166,7 +169,7 @@ function ContactsPage(): ReactElement {
         </div>
         <Button
           onClick={() => setIsAddOpen(true)}
-          className="h-10 px-4 rounded-xl text-[13px] font-semibold bg-[#E07A5F] hover:bg-[#D06A4F] text-white"
+          className="h-10 px-5 rounded-xl text-[13px] font-semibold bg-[#E07A5F] hover:bg-[#D06A4F] text-white"
         >
           <Plus className="w-4 h-4 mr-1.5" />
           Add Contact
@@ -203,14 +206,14 @@ function ContactsPage(): ReactElement {
             <p className="text-[14px] text-[#9B9590]">Loading contacts...</p>
           </div>
         ) : filteredContacts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 rounded-2xl border border-dashed border-[#EDE9E3] bg-[#FDFBF8]">
-            <div className="w-12 h-12 rounded-2xl bg-[#EDE9E3] flex items-center justify-center mb-4">
-              <Users className="w-6 h-6 text-[#9B9590]" />
+          <div className="rounded-2xl border border-dashed border-[#EDE9E3] bg-white p-12 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-[#F5F2ED] flex items-center justify-center mx-auto mb-4">
+              <Users className="w-7 h-7 text-[#B5B0AA]" />
             </div>
-            <p className="text-[15px] font-semibold text-[#2D3436] mb-1">
+            <h3 className="text-[16px] font-semibold text-[#2D3436]">
               {searchQuery ? 'No contacts found' : 'No contacts yet'}
-            </p>
-            <p className="text-[13px] text-[#9B9590] mb-4">
+            </h3>
+            <p className="text-[13px] text-[#9B9590] mt-1.5 max-w-sm mx-auto leading-relaxed">
               {searchQuery
                 ? 'Try adjusting your search query.'
                 : 'Add a contact to get started with quick transfers.'}
@@ -219,9 +222,9 @@ function ContactsPage(): ReactElement {
               <Button
                 onClick={() => setIsAddOpen(true)}
                 variant="outline"
-                className="h-9 px-4 rounded-lg text-[13px] font-medium border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED] hover:text-[#2D3436]"
+                className="mt-5 h-10 px-6 rounded-xl text-[13px] font-semibold border-[#EDE9E3] gap-2"
               >
-                <Plus className="w-3.5 h-3.5 mr-1.5" />
+                <Plus className="w-4 h-4" />
                 Add Contact
               </Button>
             )}
@@ -277,11 +280,6 @@ function ContactsPage(): ReactElement {
                 </motion.div>
               ))}
             </AnimatePresence>
-
-            <p className="text-[12px] text-[#B5B0AA] text-center pt-2">
-              {filteredContacts.length} {filteredContacts.length === 1 ? 'contact' : 'contacts'}
-              {searchQuery && contacts.length !== filteredContacts.length && ` of ${contacts.length} total`}
-            </p>
           </div>
         )}
       </motion.div>
@@ -296,9 +294,7 @@ function ContactsPage(): ReactElement {
       >
         <DialogContent className="p-0">
           <div className="p-6 pb-0">
-            <DialogTitle className="text-[18px] font-bold text-[#2D3436]">
-              Add Contact
-            </DialogTitle>
+            <DialogTitle className="text-[18px] font-bold text-[#2D3436]">Add Contact</DialogTitle>
             <DialogDescription className="text-[13px] text-[#9B9590] mt-1">
               Save an address for quick access when sending tokens.
             </DialogDescription>
@@ -384,8 +380,8 @@ function ContactsPage(): ReactElement {
             </DialogTitle>
             <DialogDescription className="text-[13px] text-[#9B9590] mt-1">
               Are you sure you want to remove{' '}
-              <span className="font-semibold text-[#2D3436]">{deleteTarget?.name}</span>
-              ? This action cannot be undone.
+              <span className="font-semibold text-[#2D3436]">{deleteTarget?.name}</span>? This
+              action cannot be undone.
             </DialogDescription>
           </div>
 

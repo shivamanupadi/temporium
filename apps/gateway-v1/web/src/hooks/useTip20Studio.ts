@@ -12,7 +12,10 @@ interface UseTip20StudioReturn {
     amount: bigint;
     feeToken?: Address;
   }) => Promise<{ receipt: { transactionHash: string } }>;
-  burnTokens: (params: { amount: bigint; feeToken?: Address }) => Promise<{ receipt: { transactionHash: string } }>;
+  burnTokens: (params: {
+    amount: bigint;
+    feeToken?: Address;
+  }) => Promise<{ receipt: { transactionHash: string } }>;
   pauseToken: (params?: {
     feeToken?: Address;
   }) => Promise<{ receipt: { transactionHash: string } }>;

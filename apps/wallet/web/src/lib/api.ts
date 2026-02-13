@@ -10,7 +10,8 @@ const WALLET_API_URL = import.meta.env.VITE_WALLET_API_URL || 'https://wallet-ap
 /**
  * Gateway-v1 API base URL (contacts, scheduled txs, etc.)
  */
-const GATEWAY_API_URL = import.meta.env.VITE_GATEWAY_V1_API_URL || 'https://gateway-v1-api.temporium.xyz';
+const GATEWAY_API_URL =
+  import.meta.env.VITE_GATEWAY_V1_API_URL || 'https://gateway-v1-api.temporium.xyz';
 
 /**
  * Keys API URL - for passkey storage (wallet-api)

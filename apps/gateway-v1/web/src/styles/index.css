@@ -10,40 +10,40 @@
 :root {
   --radius: 0.5rem;
   /* Warm neutral palette */
-  --background: #FDFBF8;
-  --foreground: #2D3436;
+  --background: #fdfbf8;
+  --foreground: #2d3436;
   --card: #ffffff;
-  --card-foreground: #2D3436;
+  --card-foreground: #2d3436;
   --popover: #ffffff;
-  --popover-foreground: #2D3436;
+  --popover-foreground: #2d3436;
   /* Primary: Coral */
-  --primary: #E07A5F;
+  --primary: #e07a5f;
   --primary-foreground: #ffffff;
-  --secondary: #F5F2ED;
-  --secondary-foreground: #2D3436;
-  --muted: #F5F2ED;
-  --muted-foreground: #6B6560;
-  --accent: #F5F2ED;
-  --accent-foreground: #2D3436;
-  --destructive: #E5484D;
-  --border: #EDE9E3;
-  --input: #EDE9E3;
-  --ring: #E07A5F;
+  --secondary: #f5f2ed;
+  --secondary-foreground: #2d3436;
+  --muted: #f5f2ed;
+  --muted-foreground: #6b6560;
+  --accent: #f5f2ed;
+  --accent-foreground: #2d3436;
+  --destructive: #e5484d;
+  --border: #ede9e3;
+  --input: #ede9e3;
+  --ring: #e07a5f;
   /* Chart colors */
-  --chart-1: #E07A5F;
-  --chart-2: #9B72CF;
-  --chart-3: #5B9A6F;
-  --chart-4: #D4A574;
-  --chart-5: #6B8EAD;
+  --chart-1: #e07a5f;
+  --chart-2: #9b72cf;
+  --chart-3: #5b9a6f;
+  --chart-4: #d4a574;
+  --chart-5: #6b8ead;
   /* Sidebar */
   --sidebar: #ffffff;
-  --sidebar-foreground: #2D3436;
-  --sidebar-primary: #E07A5F;
+  --sidebar-foreground: #2d3436;
+  --sidebar-primary: #e07a5f;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #F5F2ED;
-  --sidebar-accent-foreground: #2D3436;
-  --sidebar-border: #EDE9E3;
-  --sidebar-ring: #E07A5F;
+  --sidebar-accent: #f5f2ed;
+  --sidebar-accent-foreground: #2d3436;
+  --sidebar-border: #ede9e3;
+  --sidebar-ring: #e07a5f;
 }
 
 /* shadcn theme mapping */
@@ -87,19 +87,19 @@
 
 @theme {
   /* Brand accents */
-  --color-coral: #E07A5F;
-  --color-lavender: #9B72CF;
-  --color-sage: #5B9A6F;
+  --color-coral: #e07a5f;
+  --color-lavender: #9b72cf;
+  --color-sage: #5b9a6f;
 
   /* Token colors */
-  --color-token-usd: #5B9A6F;
+  --color-token-usd: #5b9a6f;
   --color-token-usdc: #2775ca;
   --color-token-usdt: #26a17b;
 
   /* Semantic */
-  --color-success: #5B9A6F;
-  --color-warning: #D4A574;
-  --color-info: #6B8EAD;
+  --color-success: #5b9a6f;
+  --color-warning: #d4a574;
+  --color-info: #6b8ead;
 
   /* Shadows */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -130,27 +130,44 @@
     font-size: 14px;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     letter-spacing: -0.02em;
     font-weight: 600;
     line-height: 1.25;
   }
 
-  input, textarea, select, button,
-  [role='combobox'], [role='listbox'], [role='option'],
+  input,
+  textarea,
+  select,
+  button,
+  [role='combobox'],
+  [role='listbox'],
+  [role='option'],
   [data-radix-collection-item] {
     outline: none !important;
     box-shadow: none !important;
   }
 
-  input:focus, textarea:focus, select:focus, button:focus,
-  [role='combobox']:focus, [data-radix-collection-item]:focus {
+  input:focus,
+  textarea:focus,
+  select:focus,
+  button:focus,
+  [role='combobox']:focus,
+  [data-radix-collection-item]:focus {
     outline: none !important;
     box-shadow: none !important;
   }
 
-  input:focus-visible, textarea:focus-visible, select:focus-visible,
-  button:focus-visible, [role='combobox']:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  button:focus-visible,
+  [role='combobox']:focus-visible,
   [data-radix-collection-item]:focus-visible {
     outline: none !important;
     box-shadow: none !important;
@@ -158,61 +175,27 @@
 
   [data-radix-select-trigger]:focus,
   [data-radix-select-trigger]:focus-visible,
-  [data-state]:focus, [data-state]:focus-visible {
+  [data-state]:focus,
+  [data-state]:focus-visible {
     outline: none !important;
     box-shadow: none !important;
   }
 }
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 9999px; }
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 9999px;
+}
 
 /* Selection */
-::selection { background: rgba(224, 122, 95, 0.15); }
-
-/* Toast Styling (Sonner) */
-[data-sonner-toast] {
-  border-radius: 12px !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+::selection {
+  background: rgba(224, 122, 95, 0.15);
 }
-
-[data-sonner-toast][data-type='success'] {
-  background-color: #f0fdf4 !important;
-  border: 1px solid #bbf7d0 !important;
-}
-[data-sonner-toast][data-type='success'] [data-title],
-[data-sonner-toast][data-type='success'] [data-description] { color: #15803d !important; }
-[data-sonner-toast][data-type='success'] [data-title] { font-weight: 600 !important; }
-[data-sonner-toast][data-type='success'] [data-icon] svg { color: #16a34a !important; }
-
-[data-sonner-toast][data-type='error'] {
-  background-color: #fef2f2 !important;
-  border: 1px solid #fecaca !important;
-}
-[data-sonner-toast][data-type='error'] [data-title],
-[data-sonner-toast][data-type='error'] [data-description] { color: #b91c1c !important; }
-[data-sonner-toast][data-type='error'] [data-title] { font-weight: 600 !important; }
-[data-sonner-toast][data-type='error'] [data-icon] svg { color: #dc2626 !important; }
-
-[data-sonner-toast][data-type='info'] {
-  background-color: #eff6ff !important;
-  border: 1px solid #bfdbfe !important;
-}
-[data-sonner-toast][data-type='info'] [data-title],
-[data-sonner-toast][data-type='info'] [data-description] { color: #1d4ed8 !important; }
-
-[data-sonner-toast][data-type='warning'] {
-  background-color: #fefce8 !important;
-  border: 1px solid #fef08a !important;
-}
-[data-sonner-toast][data-type='warning'] [data-title],
-[data-sonner-toast][data-type='warning'] [data-description] { color: #a16207 !important; }
-
-[data-sonner-toast] [data-close-button] {
-  color: #9ca3af !important;
-  transition: color 0.15s ease !important;
-}
-[data-sonner-toast] [data-close-button]:hover { color: #4b5563 !important; }
-[data-sonner-toaster] { font-family: var(--font-sans) !important; }

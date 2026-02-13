@@ -54,11 +54,7 @@ export function getContacts(accessToken: string): Promise<Contact[]> {
   return apiRequest<Contact[]>('/v1/contacts', accessToken);
 }
 
-export function addContact(
-  accessToken: string,
-  name: string,
-  address: Address
-): Promise<Contact> {
+export function addContact(accessToken: string, name: string, address: Address): Promise<Contact> {
   return apiRequest<Contact>('/v1/contacts', accessToken, {
     method: 'POST',
     body: JSON.stringify({ name, address }),

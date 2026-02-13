@@ -1,14 +1,8 @@
 import { type ReactElement, useState, useEffect, useCallback } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Loader2,
-  CheckCircle,
-  ExternalLink,
-  AlertTriangle,
-  Info,
-} from 'lucide-react';
-import { toast } from 'sonner';
+import { Loader2, CheckCircle, ExternalLink, AlertTriangle, Info } from 'lucide-react';
+import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { TokenPicker } from '@/components/TokenPicker';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
@@ -69,9 +63,8 @@ function PoolSwapPage(): ReactElement | null {
   const parsedAmountOut = parseAmount(amountOut, userDecimals);
 
   // Estimated cost
-  const estimatedCost = pool && parsedAmountOut > 0n
-    ? estimateAmmCost(pool, parsedAmountOut)
-    : null;
+  const estimatedCost =
+    pool && parsedAmountOut > 0n ? estimateAmmCost(pool, parsedAmountOut) : null;
 
   const hasBalance = estimatedCost !== null && validatorBalanceData.value >= estimatedCost;
 
@@ -153,7 +146,7 @@ function PoolSwapPage(): ReactElement | null {
       setPoolError(null);
       setTxHash(null);
     },
-    [userToken, validatorToken],
+    [userToken, validatorToken]
   );
 
   const handleValidatorTokenChange = useCallback(
@@ -166,7 +159,7 @@ function PoolSwapPage(): ReactElement | null {
       setPoolError(null);
       setTxHash(null);
     },
-    [userToken, validatorToken],
+    [userToken, validatorToken]
   );
 
   const handleSwap = useCallback(async () => {
@@ -196,7 +189,16 @@ function PoolSwapPage(): ReactElement | null {
     } finally {
       setIsSubmitting(false);
     }
-  }, [isValidForm, userToken, validatorToken, feeToken, parsedAmountOut, userDecimals, ammSwap, fetchPool]);
+  }, [
+    isValidForm,
+    userToken,
+    validatorToken,
+    feeToken,
+    parsedAmountOut,
+    userDecimals,
+    ammSwap,
+    fetchPool,
+  ]);
 
   if (!address) return null;
 
@@ -214,9 +216,7 @@ function PoolSwapPage(): ReactElement | null {
         className="mb-6"
       >
         <h1 className="text-2xl font-bold text-[#2D3436] tracking-tight">Pool Swap</h1>
-        <p className="text-[14px] text-[#6B6560] mt-1">
-          Swap tokens using AMM liquidity pools
-        </p>
+        <p className="text-[14px] text-[#6B6560] mt-1">Swap tokens using AMM liquidity pools</p>
       </motion.div>
 
       {/* Loading state */}
@@ -260,7 +260,7 @@ function PoolSwapPage(): ReactElement | null {
                   inputMode="decimal"
                   placeholder="0.00"
                   value={amountOut}
-                  onChange={(e) => handleAmountChange(e.target.value)}
+                  onChange={e => handleAmountChange(e.target.value)}
                   disabled={isSubmitting}
                   className="flex-1 text-[22px] font-bold text-[#2D3436] bg-transparent border-none outline-none placeholder:text-[#D5D0CA] min-w-0"
                 />
@@ -284,7 +284,8 @@ function PoolSwapPage(): ReactElement | null {
                   onClick={handleSetMax}
                   className="text-[10px] text-[#9B9590] hover:text-[#6B6560] transition-colors"
                 >
-                  Bal: {formatAmount(validatorBalanceData.value, validatorDecimals)} {validatorToken.symbol}
+                  Bal: {formatAmount(validatorBalanceData.value, validatorDecimals)}{' '}
+                  {validatorToken.symbol}
                 </button>
               </div>
               <div className="flex items-center gap-3">
@@ -301,7 +302,7 @@ function PoolSwapPage(): ReactElement | null {
                   ) : parsedAmountOut > 0n && pool ? (
                     <p className="text-[16px] text-[#D35D3A] font-medium">Exceeds pool reserves</p>
                   ) : (
-                    <p className="text-[22px] font-bold text-[#D5D0CA]">—</p>
+                    <p className="text-[22px] font-bold text-[#D5D0CA]">–</p>
                   )}
                 </div>
                 <TokenPicker
@@ -325,16 +326,21 @@ function PoolSwapPage(): ReactElement | null {
                 <Info className="w-3.5 h-3.5 text-[#B5B0AA] mt-0.5 shrink-0" />
                 <div className="text-[11px] text-[#9B9590] space-y-0.5">
                   <p>
-                    Pool: {formatAmount(pool.reserveUserToken, userToken.decimals)} {userToken.symbol}
+                    Pool: {formatAmount(pool.reserveUserToken, userToken.decimals)}{' '}
+                    {userToken.symbol}
                     {' / '}
-                    {formatAmount(pool.reserveValidatorToken, validatorToken.decimals)} {validatorToken.symbol}
+                    {formatAmount(pool.reserveValidatorToken, validatorToken.decimals)}{' '}
+                    {validatorToken.symbol}
                   </p>
                   {estimatedCost !== null && parsedAmountOut > 0n && (
                     <p>
-                      Rate: 1 {userToken.symbol} ≈ {formatAmount(
-                        (pool.reserveValidatorToken * 10n ** BigInt(userToken.decimals)) / pool.reserveUserToken,
-                        validatorToken.decimals,
-                      )} {validatorToken.symbol}
+                      Rate: 1 {userToken.symbol} ≈{' '}
+                      {formatAmount(
+                        (pool.reserveValidatorToken * 10n ** BigInt(userToken.decimals)) /
+                          pool.reserveUserToken,
+                        validatorToken.decimals
+                      )}{' '}
+                      {validatorToken.symbol}
                     </p>
                   )}
                 </div>

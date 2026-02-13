@@ -12,7 +12,7 @@ import {
   AlertCircle,
   Info,
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { TokenPicker } from '@/components/TokenPicker';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
@@ -73,10 +73,14 @@ function LiquidityPage(): ReactElement | null {
   const [txHash, setTxHash] = useState<string | null>(null);
 
   // Token balances
-  const { data: tokenABalanceData, isLoading: isTokenABalanceLoading } =
-    useTokenBalance(tokenA?.address, address);
-  const { data: tokenBBalanceData, isLoading: isTokenBBalanceLoading } =
-    useTokenBalance(tokenB?.address, address);
+  const { data: tokenABalanceData, isLoading: isTokenABalanceLoading } = useTokenBalance(
+    tokenA?.address,
+    address
+  );
+  const { data: tokenBBalanceData, isLoading: isTokenBBalanceLoading } = useTokenBalance(
+    tokenB?.address,
+    address
+  );
 
   // LP tokens use 18 decimals, stablecoins use token decimals
   const decimalsForAmount = activeTab === 'add' ? (tokenB?.decimals ?? 6) : 18;
@@ -89,9 +93,7 @@ function LiquidityPage(): ReactElement | null {
       : null;
 
   const hasTokenBBalance =
-    activeTab === 'add'
-      ? tokenBBalanceData.value >= parsedAmount
-      : lpBalance >= parsedAmount;
+    activeTab === 'add' ? tokenBBalanceData.value >= parsedAmount : lpBalance >= parsedAmount;
   const hasTokenABalance =
     activeTab === 'add' && estimatedTokenAAmount !== null
       ? tokenABalanceData.value >= estimatedTokenAAmount
@@ -123,7 +125,10 @@ function LiquidityPage(): ReactElement | null {
         getPoolInfo(tokenA.address, tokenB.address),
         getLiquidityBalance(tokenA.address, tokenB.address, address),
       ]);
-      console.log('[Liquidity] Pool query:', { userToken: tokenA.address, validatorToken: tokenB.address });
+      console.log('[Liquidity] Pool query:', {
+        userToken: tokenA.address,
+        validatorToken: tokenB.address,
+      });
       console.log('[Liquidity] Pool info:', pool);
       console.log('[Liquidity] LP balance (raw):', balance?.toString());
       setPoolInfo(pool);
@@ -159,7 +164,7 @@ function LiquidityPage(): ReactElement | null {
       setTokenA(t);
       setAmount('');
     },
-    [tokenA, tokenB],
+    [tokenA, tokenB]
   );
 
   const handleTokenBChange = useCallback(
@@ -168,7 +173,7 @@ function LiquidityPage(): ReactElement | null {
       setTokenB(t);
       setAmount('');
     },
-    [tokenA, tokenB],
+    [tokenA, tokenB]
   );
 
   const handleAmountChange = useCallback((value: string) => {
@@ -216,7 +221,7 @@ function LiquidityPage(): ReactElement | null {
       setTxHash(hash);
       setAmount('');
       toast.success(
-        activeTab === 'add' ? 'Liquidity added successfully' : 'Liquidity removed successfully',
+        activeTab === 'add' ? 'Liquidity added successfully' : 'Liquidity removed successfully'
       );
       fetchPoolData();
     } catch (err) {
@@ -227,7 +232,17 @@ function LiquidityPage(): ReactElement | null {
     } finally {
       setIsSubmitting(false);
     }
-  }, [isValidForm, activeTab, tokenA, tokenB, feeToken, parsedAmount, addLiquidity, removeLiquidity, fetchPoolData]);
+  }, [
+    isValidForm,
+    activeTab,
+    tokenA,
+    tokenB,
+    feeToken,
+    parsedAmount,
+    addLiquidity,
+    removeLiquidity,
+    fetchPoolData,
+  ]);
 
   if (!address || !tokenA || !tokenB || !feeToken) return null;
 
@@ -259,7 +274,11 @@ function LiquidityPage(): ReactElement | null {
         {/* Tab Switcher */}
         <div className="flex border-b border-[#EDE9E3]">
           <button
-            onClick={() => { setActiveTab('add'); setTxHash(null); setAmount(''); }}
+            onClick={() => {
+              setActiveTab('add');
+              setTxHash(null);
+              setAmount('');
+            }}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3.5 text-[14px] font-semibold transition-all ${
               activeTab === 'add'
                 ? 'text-[#5B9A6F] border-b-2 border-[#5B9A6F] bg-[#5B9A6F]/[0.04]'
@@ -270,7 +289,11 @@ function LiquidityPage(): ReactElement | null {
             Add
           </button>
           <button
-            onClick={() => { setActiveTab('remove'); setTxHash(null); setAmount(''); }}
+            onClick={() => {
+              setActiveTab('remove');
+              setTxHash(null);
+              setAmount('');
+            }}
             className={`flex-1 flex items-center justify-center gap-2 px-4 py-3.5 text-[14px] font-semibold transition-all ${
               activeTab === 'remove'
                 ? 'text-[#E07A5F] border-b-2 border-[#E07A5F] bg-[#E07A5F]/[0.04]'
@@ -356,7 +379,7 @@ function LiquidityPage(): ReactElement | null {
               ) : (
                 <div className="flex items-center gap-2 text-[12px] text-amber-600">
                   <AlertCircle className="w-3 h-3" />
-                  No pool found — it will be created when you add liquidity.
+                  No pool found. It will be created when you add liquidity.
                 </div>
               )}
             </div>
@@ -392,7 +415,7 @@ function LiquidityPage(): ReactElement | null {
                 inputMode="decimal"
                 placeholder="0.00"
                 value={amount}
-                onChange={(e) => handleAmountChange(e.target.value)}
+                onChange={e => handleAmountChange(e.target.value)}
                 disabled={isSubmitting}
                 className="flex-1 text-[24px] font-bold text-[#2D3436] bg-transparent border-none outline-none placeholder:text-[#D5D0CA] min-w-0"
               />
@@ -436,7 +459,7 @@ function LiquidityPage(): ReactElement | null {
                 <p className="text-[13px] text-[#9B9590]">
                   {poolInfo
                     ? 'Enter a Token B amount to see estimate'
-                    : 'New pool — the contract will determine the ratio'}
+                    : 'New pool. The contract will determine the ratio.'}
                 </p>
               )}
               {estimatedTokenAAmount !== null && !hasTokenABalance && (
@@ -466,11 +489,7 @@ function LiquidityPage(): ReactElement | null {
 
           {/* Fee token */}
           <div className="rounded-xl bg-[#FDFBF8] border border-[#EDE9E3] p-3.5 mb-4">
-            <FeeTokenPicker
-              value={feeToken}
-              tokens={tokens}
-              onChange={setFeeToken}
-            />
+            <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
           </div>
 
           {/* Submit */}
@@ -497,9 +516,13 @@ function LiquidityPage(): ReactElement | null {
             ) : (
               <>
                 {activeTab === 'add' ? (
-                  <><Plus className="w-4 h-4 mr-1.5" /> Add Liquidity</>
+                  <>
+                    <Plus className="w-4 h-4 mr-1.5" /> Add Liquidity
+                  </>
                 ) : (
-                  <><Minus className="w-4 h-4 mr-1.5" /> Remove Liquidity</>
+                  <>
+                    <Minus className="w-4 h-4 mr-1.5" /> Remove Liquidity
+                  </>
                 )}
               </>
             )}
@@ -516,12 +539,8 @@ function LiquidityPage(): ReactElement | null {
               >
                 <CheckCircle className="w-5 h-5 text-[#5B9A6F] shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-[#2D3436]">
-                    Transaction confirmed
-                  </p>
-                  <p className="text-[12px] text-[#6B6560] font-mono truncate mt-0.5">
-                    {txHash}
-                  </p>
+                  <p className="text-[13px] font-semibold text-[#2D3436]">Transaction confirmed</p>
+                  <p className="text-[12px] text-[#6B6560] font-mono truncate mt-0.5">{txHash}</p>
                 </div>
                 <a
                   href={getExplorerTxUrl(txHash)}

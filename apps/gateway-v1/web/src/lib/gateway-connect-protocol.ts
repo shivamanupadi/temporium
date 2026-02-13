@@ -19,10 +19,7 @@ import type {
   ConnectResponse,
   SignMessageRequest,
   SignMessageResponse,
-  SignTransactionRequest,
-  SignTransactionResponse,
   SendTransactionRequest,
-  SendTransactionResponse,
   PendingRequest,
 } from '@/types';
 

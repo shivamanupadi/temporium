@@ -50,26 +50,22 @@ function Tip20StudioIndexPage(): ReactElement {
             variant="outline"
             onClick={handleRefresh}
             disabled={isLoading || isRefreshing}
-            className="h-9 px-3 rounded-xl text-[13px] font-medium border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
+            className="h-10 px-5 rounded-xl text-[13px] font-medium border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
           >
-            <RefreshCw
-              className={`w-3.5 h-3.5 mr-1.5 ${isRefreshing ? 'animate-spin' : ''}`}
-            />
-            <span className="hidden sm:inline">
-              {isRefreshing ? 'Refreshing...' : 'Refresh'}
-            </span>
+            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
           </Button>
           <Button
             variant="outline"
             onClick={() => setShowImportModal(true)}
-            className="h-9 px-3 rounded-xl text-[13px] font-medium border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
+            className="h-10 px-5 rounded-xl text-[13px] font-medium border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
           >
             <Download className="w-3.5 h-3.5 mr-1.5" />
             <span className="hidden sm:inline">Import</span>
           </Button>
           <Button
             onClick={() => setShowCreateModal(true)}
-            className="h-9 px-4 rounded-xl text-[13px] font-semibold bg-lavender hover:bg-lavender/80 text-white"
+            className="h-10 px-5 rounded-xl text-[13px] font-semibold bg-lavender hover:bg-lavender/80 text-white"
           >
             <Plus className="w-3.5 h-3.5 mr-1.5" />
             Create
@@ -86,7 +82,7 @@ function Tip20StudioIndexPage(): ReactElement {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white border border-[#EDE9E3] rounded-2xl shadow-sm"
+          className="rounded-2xl border border-dashed border-[#EDE9E3] bg-white p-12 text-center"
         >
           <StablecoinEmptyState onCreate={() => setShowCreateModal(true)} />
         </motion.div>

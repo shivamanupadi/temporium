@@ -72,14 +72,8 @@ export function TokenPicker({
         className="flex items-center gap-2 h-10 px-3.5 rounded-xl bg-white border border-[#EDE9E3] hover:border-[#D5D0CA] transition-colors min-w-[130px]"
       >
         <TokenIcon token={token} size="sm" />
-        <span className="text-[13px] font-semibold text-[#2D3436]">
-          {token.symbol}
-        </span>
-        <svg
-          className="w-3 h-3 ml-auto text-[#9B9590]"
-          viewBox="0 0 12 12"
-          fill="none"
-        >
+        <span className="text-[13px] font-semibold text-[#2D3436]">{token.symbol}</span>
+        <svg className="w-3 h-3 ml-auto text-[#9B9590]" viewBox="0 0 12 12" fill="none">
           <path
             d="M3 4.5L6 7.5L9 4.5"
             stroke="currentColor"
@@ -99,7 +93,7 @@ export function TokenPicker({
             transition={{ duration: 0.12 }}
             className="absolute right-0 top-full mt-1.5 z-50 min-w-[160px] rounded-xl border border-[#EDE9E3] bg-white shadow-lg shadow-black/[0.04] overflow-hidden"
           >
-            {tokens.map((t) => {
+            {tokens.map(t => {
               const isDisabled = disabledAddresses.includes(t.address);
               const isActive = t.address === token.address;
               return (
@@ -117,7 +111,11 @@ export function TokenPicker({
                         ? 'opacity-40 cursor-not-allowed text-[#9B9590]'
                         : 'text-[#2D3436] hover:bg-[#F5F2ED]'
                   }`}
-                  style={isActive ? { backgroundColor: `${accentColor}14`, color: accentColor } : undefined}
+                  style={
+                    isActive
+                      ? { backgroundColor: `${accentColor}14`, color: accentColor }
+                      : undefined
+                  }
                 >
                   <TokenIcon token={t} size="xs" />
                   <span>{t.symbol}</span>

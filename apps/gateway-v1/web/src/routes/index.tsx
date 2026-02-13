@@ -21,8 +21,13 @@ import {
   Database,
   Copy,
   Check,
+  BarChart3,
+  Repeat,
+  Link2,
+  Coins,
+  type LucideIcon,
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 import { CreateWalletModal } from '@temporium/shared-ui';
@@ -35,21 +40,162 @@ export const Route = createFileRoute('/')({
 });
 
 const features = [
-  { icon: LayoutDashboard, label: 'Dashboard', desc: 'Portfolio overview & analytics', color: '#9B72CF' },
+  {
+    icon: LayoutDashboard,
+    label: 'Dashboard',
+    desc: 'Portfolio overview & analytics',
+    color: '#9B72CF',
+  },
   { icon: Send, label: 'Send', desc: 'Transfer tokens instantly', color: '#E07A5F' },
   { icon: QrCode, label: 'Receive', desc: 'Generate payment QR codes', color: '#5B9A6F' },
   { icon: ArrowRightLeft, label: 'Swap', desc: 'Exchange tokens seamlessly', color: '#D4A574' },
   { icon: Droplets, label: 'Liquidity', desc: 'Provide LP & earn fees', color: '#6BA3BE' },
-  { icon: CircleDollarSign, label: 'TIP20 Studio', desc: 'Create & manage tokens', color: '#E07A5F' },
+  {
+    icon: CircleDollarSign,
+    label: 'TIP20 Studio',
+    desc: 'Create & manage tokens',
+    color: '#E07A5F',
+  },
   { icon: Clock, label: 'Scheduled', desc: 'Recurring & timed payments', color: '#C27BA0' },
-  { icon: Shield, label: 'TIP403 Factory', desc: 'Deploy access-controlled tokens', color: '#9B72CF' },
+  {
+    icon: Shield,
+    label: 'TIP403 Factory',
+    desc: 'Deploy access-controlled tokens',
+    color: '#9B72CF',
+  },
   { icon: Key, label: 'Access Keys', desc: 'Manage signing permissions', color: '#D4A574' },
   { icon: Users, label: 'Contacts', desc: 'Save & organize addresses', color: '#5B9A6F' },
 ];
 
+interface FeatureDetail {
+  icon: LucideIcon;
+  title: string;
+  desc: string;
+  color: string;
+}
+
+const featureSections: {
+  label: string;
+  heading: string;
+  subtitle: string;
+  items: FeatureDetail[];
+}[] = [
+  {
+    label: 'Payments',
+    heading: 'Send & receive with ease',
+    subtitle:
+      'Transfer tokens to anyone, generate shareable QR codes, and automate recurring payments. All with sub-cent fees.',
+    items: [
+      {
+        icon: Send,
+        title: 'Instant Transfers',
+        desc: 'Send tokens to any address in seconds. Enter an amount, pick a contact or paste an address, and confirm.',
+        color: '#E07A5F',
+      },
+      {
+        icon: QrCode,
+        title: 'QR Receive',
+        desc: 'Generate a payment QR code with a pre-filled amount. Share it with anyone for one-tap payments.',
+        color: '#5B9A6F',
+      },
+      {
+        icon: Clock,
+        title: 'Scheduled Payments',
+        desc: 'Set up one-time or recurring payments on a schedule. Payroll, subscriptions, and installments on autopilot.',
+        color: '#9B72CF',
+      },
+    ],
+  },
+  {
+    label: 'Trading',
+    heading: 'Trade stablecoins on-chain',
+    subtitle:
+      'Swap between stablecoins via an orderbook DEX or automated market maker pools with deep liquidity and zero slippage risk.',
+    items: [
+      {
+        icon: ArrowRightLeft,
+        title: 'Stablecoin Swap',
+        desc: 'Swap between USD, USDC, USDT, and other stablecoins through a high-performance on-chain orderbook.',
+        color: '#D4A574',
+      },
+      {
+        icon: BarChart3,
+        title: 'Orderbook',
+        desc: 'View real-time bids and asks. Place limit orders at your target price and let the matching engine handle the rest.',
+        color: '#6BA3BE',
+      },
+      {
+        icon: Repeat,
+        title: 'Pool Swap',
+        desc: 'Trade through AMM liquidity pools for guaranteed execution. Automatic routing picks the best available rate.',
+        color: '#E07A5F',
+      },
+      {
+        icon: Droplets,
+        title: 'Provide Liquidity',
+        desc: 'Deposit token pairs into AMM pools to earn trading fees. Withdraw your position and accumulated rewards anytime.',
+        color: '#5B9A6F',
+      },
+    ],
+  },
+  {
+    label: 'Token Tools',
+    heading: 'Create & deploy tokens',
+    subtitle:
+      'Launch your own TIP20 tokens or deploy access-controlled TIP403 tokens. No coding required.',
+    items: [
+      {
+        icon: CircleDollarSign,
+        title: 'TIP20 Studio',
+        desc: 'Create fungible tokens with custom name, symbol, supply, and decimals. Mint, burn, and manage directly from the dashboard.',
+        color: '#E07A5F',
+      },
+      {
+        icon: Shield,
+        title: 'TIP403 Factory',
+        desc: 'Deploy tokens with built-in access controls. Define policies for transfers, minting, and burning with granular permissions.',
+        color: '#9B72CF',
+      },
+      {
+        icon: Coins,
+        title: 'Spending Limits',
+        desc: 'Set per-token spending caps on access keys. Control exactly how much each key can spend without revoking access.',
+        color: '#D4A574',
+      },
+    ],
+  },
+  {
+    label: 'Security',
+    heading: 'Secure & organized',
+    subtitle:
+      'Manage signing keys, save frequently used addresses, and keep track of connected dApps. All from one place.',
+    items: [
+      {
+        icon: Key,
+        title: 'Access Keys',
+        desc: 'Generate sub-keys with custom expiry and spending limits. Authorize apps to sign on your behalf without exposing your main key.',
+        color: '#D4A574',
+      },
+      {
+        icon: Users,
+        title: 'Contacts',
+        desc: 'Save wallet addresses with names and labels. Pick contacts when sending instead of copy-pasting addresses every time.',
+        color: '#5B9A6F',
+      },
+      {
+        icon: Link2,
+        title: 'Connected Apps',
+        desc: 'See every app authorized to interact with your wallet. Revoke access instantly with a single click.',
+        color: '#6BA3BE',
+      },
+    ],
+  },
+];
+
 function LandingPage(): ReactElement {
   const navigate = useNavigate();
-  const { isConnected, isConnecting, hasInjectedWallet, signUp, signIn, connectInjected } = useTempo();
+  const { isConnected, isConnecting, hasInjectedWallet, signUp, signIn, connectInjected } =
+    useTempo();
 
   const [showSignIn, setShowSignIn] = useState(false);
   const [showCreateWallet, setShowCreateWallet] = useState(false);
@@ -126,7 +272,8 @@ function LandingPage(): ReactElement {
         <div
           className="absolute inset-0"
           style={{
-            background: 'radial-gradient(ellipse 60% 50% at 85% 15%, rgba(224,122,95,0.06) 0%, transparent 70%), radial-gradient(ellipse 50% 50% at 10% 85%, rgba(155,114,207,0.05) 0%, transparent 70%), radial-gradient(ellipse 40% 40% at 50% 50%, rgba(91,154,111,0.03) 0%, transparent 60%)',
+            background:
+              'radial-gradient(ellipse 60% 50% at 85% 15%, rgba(224,122,95,0.06) 0%, transparent 70%), radial-gradient(ellipse 50% 50% at 10% 85%, rgba(155,114,207,0.05) 0%, transparent 70%), radial-gradient(ellipse 40% 40% at 50% 50%, rgba(91,154,111,0.03) 0%, transparent 60%)',
           }}
         />
       </div>
@@ -150,6 +297,16 @@ function LandingPage(): ReactElement {
             How it works
           </a>
           <a
+            href="#features"
+            onClick={e => {
+              e.preventDefault();
+              document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="text-[13px] font-medium text-[#6B6560] hover:text-[#2D3436] transition-colors"
+          >
+            Features
+          </a>
+          <a
             href="https://x.com/HelloTemporium"
             target="_blank"
             rel="noopener noreferrer"
@@ -166,7 +323,6 @@ function LandingPage(): ReactElement {
       {/* Main content — 2-column layout */}
       <main className="relative z-10 flex-1 flex flex-col px-6">
         <div className="max-w-5xl w-full mx-auto flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center py-12 sm:py-16 lg:py-24">
-
           {/* ── Left: Hero ── */}
           <section className="flex flex-col items-center lg:items-start text-center lg:text-left py-8 lg:py-0">
             {/* Passkey badge */}
@@ -218,8 +374,8 @@ function LandingPage(): ReactElement {
               transition={{ duration: 0.5, delay: 0.22 }}
               className="text-[15px] sm:text-[16px] text-[#8A8580] leading-relaxed mb-10 max-w-md"
             >
-              Send, receive, swap, provide liquidity, create tokens, schedule payments,
-              and manage access keys. All with sub-cent fees.
+              Send, receive, swap, provide liquidity, create tokens, schedule payments, and manage
+              access keys. All with sub-cent fees.
             </motion.p>
 
             {/* CTA buttons */}
@@ -296,7 +452,11 @@ function LandingPage(): ReactElement {
                   key={f.label}
                   variants={{
                     hidden: { opacity: 0, y: 14 },
-                    visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as const } },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as const },
+                    },
                   }}
                   whileHover={{ y: -3, transition: { duration: 0.2, ease: 'easeOut' } }}
                   className="group relative rounded-2xl bg-white border border-[#EDE9E3]/80 p-4 cursor-default overflow-hidden transition-shadow duration-300 hover:shadow-lg hover:shadow-black/[0.04] hover:border-[#E2DDD6]"
@@ -322,7 +482,9 @@ function LandingPage(): ReactElement {
 
                     {/* Text */}
                     <div className="min-w-0 pt-0.5">
-                      <p className="text-[13px] font-semibold text-[#2D3436] leading-tight">{f.label}</p>
+                      <p className="text-[13px] font-semibold text-[#2D3436] leading-tight">
+                        {f.label}
+                      </p>
                       <p className="text-[11px] text-[#9B9590] leading-snug mt-0.5">{f.desc}</p>
                     </div>
                   </div>
@@ -334,7 +496,10 @@ function LandingPage(): ReactElement {
       </main>
 
       {/* How It Works */}
-      <section id="how-it-works" className="relative z-10 border-t border-[#EDE9E3]/60 py-14 px-6 scroll-mt-6">
+      <section
+        id="how-it-works"
+        className="relative z-10 border-t border-[#EDE9E3]/60 py-14 px-6 scroll-mt-6"
+      >
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -383,7 +548,9 @@ function LandingPage(): ReactElement {
                 transition={{ duration: 0.4, delay: i * 0.1 }}
                 className="relative rounded-2xl border border-[#EDE9E3]/80 bg-white p-5 sm:p-6"
               >
-                <span className="text-[11px] font-bold text-[#E2DDD6] tracking-wider">{step.step}</span>
+                <span className="text-[11px] font-bold text-[#E2DDD6] tracking-wider">
+                  {step.step}
+                </span>
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center mt-3 mb-3"
                   style={{ backgroundColor: `${step.color}0F` }}
@@ -410,8 +577,12 @@ function LandingPage(): ReactElement {
                   <Database className="w-4 h-4 text-[#9B72CF]" strokeWidth={1.7} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">Passkey Registry Contract</p>
-                  <p className="text-[13px] font-mono text-[#6B6560] truncate mt-0.5">{contractAddress}</p>
+                  <p className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">
+                    Passkey Registry Contract
+                  </p>
+                  <p className="text-[13px] font-mono text-[#6B6560] truncate mt-0.5">
+                    {contractAddress}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -443,6 +614,98 @@ function LandingPage(): ReactElement {
         </div>
       </section>
 
+      {/* Features */}
+      <section
+        id="features"
+        className="relative z-10 border-t border-[#EDE9E3]/60 py-16 px-6 scroll-mt-6"
+      >
+        <div className="max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-60px' }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-14"
+          >
+            <p className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-[0.12em] mb-2">
+              Features
+            </p>
+            <h2 className="text-[22px] sm:text-[26px] font-bold text-[#2D3436] tracking-tight mb-3">
+              Everything you need, on-chain
+            </h2>
+            <p className="text-[14px] text-[#8A8580] max-w-lg mx-auto leading-relaxed">
+              From payments to token creation, a complete toolkit for the Tempo blockchain.
+            </p>
+          </motion.div>
+
+          <div className="space-y-20">
+            {featureSections.map(section => (
+              <div key={section.label}>
+                {/* Section header */}
+                <motion.div
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ duration: 0.45 }}
+                  className="mb-6"
+                >
+                  <p className="text-[10px] font-bold text-[#E07A5F] uppercase tracking-[0.14em] mb-1.5">
+                    {section.label}
+                  </p>
+                  <h3 className="text-[18px] sm:text-[20px] font-bold text-[#2D3436] tracking-tight mb-1.5">
+                    {section.heading}
+                  </h3>
+                  <p className="text-[13px] text-[#8A8580] leading-relaxed max-w-xl">
+                    {section.subtitle}
+                  </p>
+                </motion.div>
+
+                {/* Feature cards */}
+                <div
+                  className={`grid gap-3 ${section.items.length === 4 ? 'grid-cols-1 sm:grid-cols-2' : 'grid-cols-1 sm:grid-cols-3'}`}
+                >
+                  {section.items.map((item, i) => (
+                    <motion.div
+                      key={item.title}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true, margin: '-30px' }}
+                      transition={{ duration: 0.4, delay: i * 0.08, ease: [0.25, 0.1, 0.25, 1] }}
+                      whileHover={{ y: -4, transition: { duration: 0.25, ease: 'easeOut' } }}
+                      className="group relative rounded-2xl border border-[#EDE9E3]/80 bg-white p-5 overflow-hidden transition-shadow duration-300 hover:shadow-lg hover:shadow-black/[0.04] hover:border-[#E2DDD6]"
+                    >
+                      {/* Accent bar on hover */}
+                      <div
+                        className="absolute top-0 left-0 bottom-0 w-[2.5px] origin-top scale-y-0 group-hover:scale-y-100 transition-transform duration-300 ease-out rounded-full"
+                        style={{ backgroundColor: item.color }}
+                      />
+
+                      {/* Icon */}
+                      <div
+                        className="w-10 h-10 rounded-xl flex items-center justify-center mb-3.5 transition-transform duration-300 group-hover:scale-110"
+                        style={{ backgroundColor: `${item.color}0F` }}
+                      >
+                        <item.icon
+                          className="w-5 h-5"
+                          style={{ color: item.color }}
+                          strokeWidth={1.7}
+                        />
+                      </div>
+
+                      {/* Text */}
+                      <h4 className="text-[14px] font-semibold text-[#2D3436] mb-1">
+                        {item.title}
+                      </h4>
+                      <p className="text-[12px] text-[#8A8580] leading-relaxed">{item.desc}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="relative z-10 border-t border-[#EDE9E3]/60 py-6 text-center">
         <p className="text-[11.5px] text-[#B5B0AA]">
@@ -462,7 +725,9 @@ function LandingPage(): ReactElement {
       <Dialog open={showSignIn} onOpenChange={setShowSignIn}>
         <DialogContent className="max-w-[380px] p-0 gap-0 overflow-hidden rounded-2xl">
           <DialogTitle className="sr-only">Sign In</DialogTitle>
-          <DialogDescription className="sr-only">Choose how to connect your wallet</DialogDescription>
+          <DialogDescription className="sr-only">
+            Choose how to connect your wallet
+          </DialogDescription>
 
           <div className="px-6 pt-6 pb-2">
             <h3 className="text-[16px] font-semibold text-[#2D3436] mb-1">Sign In</h3>

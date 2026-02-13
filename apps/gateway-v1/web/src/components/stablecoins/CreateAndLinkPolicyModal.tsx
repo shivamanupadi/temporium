@@ -7,7 +7,7 @@ import {
   type ChangeEvent,
 } from 'react';
 import { Loader2, ShieldCheck, ShieldX, ExternalLink } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import confetti from 'canvas-confetti';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
@@ -154,7 +154,9 @@ export function CreateAndLinkPolicyModal({
         {modalState === 'form' && (
           <>
             <div className="px-6 pt-6 pb-5 pr-14">
-              <DialogTitle className="text-lg font-bold text-[#2D3436]">Create & Link Policy</DialogTitle>
+              <DialogTitle className="text-lg font-bold text-[#2D3436]">
+                Create & Link Policy
+              </DialogTitle>
               <DialogDescription className="text-[13px] font-light text-[#9B9590]">
                 Create a new TIP403 policy and link it to {selectedCoin.symbol}
               </DialogDescription>
@@ -237,7 +239,9 @@ export function CreateAndLinkPolicyModal({
         {modalState === 'confirm' && (
           <>
             <div className="px-6 pt-6 pb-5 pr-14">
-              <DialogTitle className="text-lg font-bold text-[#2D3436]">Confirm Creation</DialogTitle>
+              <DialogTitle className="text-lg font-bold text-[#2D3436]">
+                Confirm Creation
+              </DialogTitle>
               <DialogDescription className="text-[13px] font-light text-[#9B9590]">
                 Review the details before creating and linking
               </DialogDescription>
@@ -259,7 +263,9 @@ export function CreateAndLinkPolicyModal({
                     )}
                   </div>
                   <div>
-                    <p className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Policy Type</p>
+                    <p className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                      Policy Type
+                    </p>
                     <p
                       className={`text-lg font-semibold ${isWhitelist ? 'text-[var(--color-sage)]' : 'text-coral'}`}
                     >
@@ -272,13 +278,17 @@ export function CreateAndLinkPolicyModal({
               {/* Details Card */}
               <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3] space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Token</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Token
+                  </span>
                   <span className="text-[13px] font-medium text-[#2D3436]">
                     {selectedCoin.name} ({selectedCoin.symbol})
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Initial Addresses</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Initial Addresses
+                  </span>
                   <span className="text-[13px] font-medium text-[#2D3436]">
                     {parsedAddresses.length}
                   </span>
@@ -352,8 +362,20 @@ export function CreateAndLinkPolicyModal({
               {/* Success icon */}
               <div className="inline-flex items-center justify-center mb-6">
                 <div className="w-16 h-16 rounded-full bg-[var(--color-sage)] flex items-center justify-center">
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-white">
-                    <path d="M5 13l4 4L19 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    className="text-white"
+                  >
+                    <path
+                      d="M5 13l4 4L19 7"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
                   </svg>
                 </div>
               </div>
@@ -374,11 +396,17 @@ export function CreateAndLinkPolicyModal({
               {/* Details card */}
               <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3] space-y-3 text-left">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Token</span>
-                  <span className="text-[13px] font-medium text-[#2D3436]">{selectedCoin.symbol}</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Token
+                  </span>
+                  <span className="text-[13px] font-medium text-[#2D3436]">
+                    {selectedCoin.symbol}
+                  </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Type</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Type
+                  </span>
                   <span
                     className={`text-[13px] font-medium ${isWhitelist ? 'text-[var(--color-sage)]' : 'text-coral'}`}
                   >
@@ -387,7 +415,9 @@ export function CreateAndLinkPolicyModal({
                 </div>
                 {txHash && (
                   <div className="flex items-center justify-between pt-2 border-t border-[#EDE9E3]">
-                    <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Transaction</span>
+                    <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                      Transaction
+                    </span>
                     <span className="font-mono text-[12px] text-[#2D3436]">
                       {txHash.slice(0, 10)}...{txHash.slice(-4)}
                     </span>

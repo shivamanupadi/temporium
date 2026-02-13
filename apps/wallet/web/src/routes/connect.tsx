@@ -421,7 +421,9 @@ function ConnectPage(): ReactElement {
               <h1 className="text-[16px] font-semibold text-[#2D3436] mb-1.5">
                 Connection Declined
               </h1>
-              <p className="text-[13px] text-muted-foreground">You declined the connection request</p>
+              <p className="text-[13px] text-muted-foreground">
+                You declined the connection request
+              </p>
             </div>
           </div>
         </motion.div>
@@ -471,7 +473,9 @@ function ConnectPage(): ReactElement {
                 <h1 className="text-[16px] font-semibold text-[#2D3436] mb-1.5">
                   Connection Failed
                 </h1>
-                <p className="text-[13px] text-muted-foreground">{error || 'Something went wrong'}</p>
+                <p className="text-[13px] text-muted-foreground">
+                  {error || 'Something went wrong'}
+                </p>
               </div>
             </div>
             <div className="px-5 pb-5 flex items-center gap-2.5">

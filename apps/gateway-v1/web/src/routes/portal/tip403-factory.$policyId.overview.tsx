@@ -1,8 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useState, type ReactElement } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import {
-  Shield,
   ShieldCheck,
   ShieldX,
   UserPlus,
@@ -99,11 +98,15 @@ function Tip403FactoryOverview(): ReactElement {
         {/* Left Column - Main Content */}
         <div className="lg:flex-[3]">
           {/* Hero Section */}
-          <div className={`rounded-2xl overflow-hidden mb-6 ${isWhitelist ? 'bg-[var(--color-sage)]/5' : 'bg-coral/5'}`}>
+          <div
+            className={`rounded-2xl overflow-hidden mb-6 ${isWhitelist ? 'bg-[var(--color-sage)]/5' : 'bg-coral/5'}`}
+          >
             <div className="p-6">
               <div className="flex items-start gap-4 mb-5">
                 {/* Icon */}
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${isWhitelist ? 'bg-[var(--color-sage)]/10' : 'bg-coral/8'}`}>
+                <div
+                  className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${isWhitelist ? 'bg-[var(--color-sage)]/10' : 'bg-coral/8'}`}
+                >
                   {isWhitelist ? (
                     <ShieldCheck className="h-7 w-7 text-[var(--color-sage)]" />
                   ) : (
@@ -127,7 +130,9 @@ function Tip403FactoryOverview(): ReactElement {
                       {isWhitelist ? 'Whitelist' : 'Blacklist'}
                     </span>
                     {isAdmin && (
-                      <span className={`text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full ${isWhitelist ? 'text-[var(--color-sage)] bg-[var(--color-sage)]/12' : 'text-coral bg-coral/10'}`}>
+                      <span
+                        className={`text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full ${isWhitelist ? 'text-[var(--color-sage)] bg-[var(--color-sage)]/12' : 'text-coral bg-coral/10'}`}
+                      >
                         Admin
                       </span>
                     )}
@@ -179,33 +184,45 @@ function Tip403FactoryOverview(): ReactElement {
 
             <div className="p-5 space-y-0">
               <div className="flex justify-between items-center py-2.5">
-                <span className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">Policy ID</span>
-                <span className="text-[13px] font-medium font-mono text-[#2D3436]">{policy.policyId}</span>
+                <span className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">
+                  Policy ID
+                </span>
+                <span className="text-[13px] font-medium font-mono text-[#2D3436]">
+                  {policy.policyId}
+                </span>
               </div>
               <div className="h-px bg-[#EDE9E3]/50" />
               <div className="flex justify-between items-center py-2.5">
-                <span className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">Type</span>
+                <span className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">
+                  Type
+                </span>
                 <span className="text-[13px] font-medium text-[#2D3436]">
                   {isWhitelist ? 'Whitelist' : 'Blacklist'}
                 </span>
               </div>
               <div className="h-px bg-[#EDE9E3]/50" />
               <div className="flex justify-between items-center py-2.5">
-                <span className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">Admin</span>
+                <span className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">
+                  Admin
+                </span>
                 <span className="text-[13px] font-medium font-mono text-[#2D3436]">
                   {formatAddress(policy.admin, 8)}
                 </span>
               </div>
               <div className="h-px bg-[#EDE9E3]/50" />
               <div className="flex justify-between items-center py-2.5">
-                <span className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">Your Role</span>
+                <span className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">
+                  Your Role
+                </span>
                 <span className="text-[11px] font-medium text-[#2D3436] bg-[#F5F2ED] px-2.5 py-0.5 rounded-full">
                   {isAdmin ? 'Admin' : 'Viewer'}
                 </span>
               </div>
               <div className="h-px bg-[#EDE9E3]/50" />
               <div className="flex justify-between items-center py-2.5">
-                <span className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">Tx Hash</span>
+                <span className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">
+                  Tx Hash
+                </span>
                 {policy.txHash ? (
                   <span className="text-[13px] font-medium font-mono text-[#2D3436]">
                     {policy.txHash.slice(0, 10)}...{policy.txHash.slice(-4)}
@@ -222,31 +239,29 @@ function Tip403FactoryOverview(): ReactElement {
         <div className="lg:flex-[2] mt-6 lg:mt-0">
           <div className="bg-white rounded-2xl border border-[#EDE9E3]/80 overflow-hidden h-full shadow-sm">
             <div className="px-5 py-4 border-b border-[#EDE9E3]/50">
-              <h2 className="text-[13px] font-semibold text-[#2D3436] tracking-wide uppercase">Settings</h2>
+              <h2 className="text-[13px] font-semibold text-[#2D3436] tracking-wide uppercase">
+                Settings
+              </h2>
             </div>
 
             {/* Address Management */}
             <div className="px-4 pt-4 pb-1">
-              <p className="text-[10px] font-semibold text-[#B5B0AA] uppercase tracking-widest px-1 mb-1">Address Management</p>
+              <p className="text-[10px] font-semibold text-[#B5B0AA] uppercase tracking-widest px-1 mb-1">
+                Address Management
+              </p>
             </div>
             <SettingsRow
               icon={<UserPlus className="h-4 w-4 text-[#6B6560]" />}
               title={isWhitelist ? 'Add to Whitelist' : 'Add to Blacklist'}
               description={
-                isWhitelist
-                  ? 'Allow an address to transact'
-                  : 'Block an address from transacting'
+                isWhitelist ? 'Allow an address to transact' : 'Block an address from transacting'
               }
               onClick={() => setActiveModal('add-address')}
             />
             <SettingsRow
               icon={<UserMinus className="h-4 w-4 text-[#6B6560]" />}
               title={isWhitelist ? 'Remove from Whitelist' : 'Remove from Blacklist'}
-              description={
-                isWhitelist
-                  ? 'Revoke transfer permission'
-                  : 'Unblock an address'
-              }
+              description={isWhitelist ? 'Revoke transfer permission' : 'Unblock an address'}
               onClick={() => setActiveModal('remove-address')}
             />
             <SettingsRow
@@ -259,7 +274,9 @@ function Tip403FactoryOverview(): ReactElement {
 
             {/* Policy Management */}
             <div className="px-4 pt-4 pb-1 border-t border-[#EDE9E3]/50">
-              <p className="text-[10px] font-semibold text-[#B5B0AA] uppercase tracking-widest px-1 mb-1">Policy Management</p>
+              <p className="text-[10px] font-semibold text-[#B5B0AA] uppercase tracking-widest px-1 mb-1">
+                Policy Management
+              </p>
             </div>
             <SettingsRow
               icon={<UserCog className="h-4 w-4 text-[#6B6560]" />}
@@ -283,7 +300,9 @@ function Tip403FactoryOverview(): ReactElement {
 
             {/* Danger Zone */}
             <div className="px-4 pt-4 pb-1 border-t border-[#EDE9E3]/50">
-              <p className="text-[10px] font-semibold text-coral/60 uppercase tracking-widest px-1 mb-1">Danger Zone</p>
+              <p className="text-[10px] font-semibold text-coral/60 uppercase tracking-widest px-1 mb-1">
+                Danger Zone
+              </p>
             </div>
             <SettingsRow
               icon={<Trash2 className="h-4 w-4 text-coral" />}

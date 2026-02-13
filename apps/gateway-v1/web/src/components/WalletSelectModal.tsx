@@ -32,9 +32,7 @@ export function WalletSelectModal({
       <DialogContent className="max-w-[360px] p-0 gap-0 overflow-hidden rounded-2xl">
         {/* Header */}
         <div className="px-6 pt-6 pb-4">
-          <DialogTitle className="text-lg font-semibold text-gray-900 mb-2">
-            Sign In
-          </DialogTitle>
+          <DialogTitle className="text-lg font-semibold text-gray-900 mb-2">Sign In</DialogTitle>
           <DialogDescription className="text-[13px] text-gray-500">
             Sign in with your passkey to access your wallet
           </DialogDescription>
@@ -48,9 +46,7 @@ export function WalletSelectModal({
             disabled={isLoading}
             className="w-full flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all cursor-pointer disabled:opacity-50"
           >
-            <div
-              className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-[#E07A5F]/8"
-            >
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-[#E07A5F]/8">
               <Fingerprint className="h-5 w-5 text-[#E07A5F]" />
             </div>
             <div className="flex-1 text-left">

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, type ReactElement } from 'react';
 import { Loader2, ExternalLink } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
@@ -85,19 +85,36 @@ export function BurnTokensModal({
         {txHash ? (
           <>
             <DialogTitle className="sr-only">Tokens Burned!</DialogTitle>
-            <DialogDescription className="sr-only">Transaction completed successfully</DialogDescription>
+            <DialogDescription className="sr-only">
+              Transaction completed successfully
+            </DialogDescription>
             <div className="px-6 pt-10 pb-6 text-center">
               <div className="w-16 h-16 rounded-full bg-[var(--color-sage)] flex items-center justify-center mx-auto mb-4">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5" /></svg>
+                <svg
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M20 6L9 17l-5-5" />
+                </svg>
               </div>
               <h3 className="text-[15px] font-bold text-[#2D3436] mb-1">Tokens Burned!</h3>
               <div className="mb-6">
                 <span className="text-3xl font-bold text-[#2D3436]">{amount}</span>
-                <span className="text-lg text-[#9B9590] ml-1.5 font-semibold">{selectedCoin?.symbol}</span>
+                <span className="text-lg text-[#9B9590] ml-1.5 font-semibold">
+                  {selectedCoin?.symbol}
+                </span>
               </div>
               <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3] text-left">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">Transaction</span>
+                  <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                    Transaction
+                  </span>
                   <button
                     onClick={() => window.open(getExplorerTxUrl(txHash), '_blank')}
                     className="flex items-center gap-1 text-[13px] text-lavender hover:text-lavender/80 transition-colors cursor-pointer"
@@ -130,8 +147,12 @@ export function BurnTokensModal({
         ) : (
           <>
             <div className="px-6 pt-6 pb-5 pr-14">
-              <DialogTitle className="text-lg font-bold text-[#2D3436]">Burn {selectedCoin?.symbol}</DialogTitle>
-              <DialogDescription className="text-[13px] font-light text-[#9B9590]">Permanently destroy tokens from your wallet</DialogDescription>
+              <DialogTitle className="text-lg font-bold text-[#2D3436]">
+                Burn {selectedCoin?.symbol}
+              </DialogTitle>
+              <DialogDescription className="text-[13px] font-light text-[#9B9590]">
+                Permanently destroy tokens from your wallet
+              </DialogDescription>
             </div>
             <div className="px-6 pb-4">
               <div className="space-y-3">

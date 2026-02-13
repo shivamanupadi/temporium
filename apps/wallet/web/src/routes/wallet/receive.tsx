@@ -2,15 +2,7 @@ import { createFileRoute } from '@tanstack/react-router';
 import { useState, useRef, useEffect, useCallback, type ReactElement } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
-import {
-  Copy,
-  Check,
-  ExternalLink,
-  Share2,
-  Download,
-  QrCode,
-  Shield,
-} from 'lucide-react';
+import { Copy, Check, ExternalLink, Share2, Download, QrCode, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useTempo } from '@/hooks/useTempo';
