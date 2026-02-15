@@ -1,5 +1,5 @@
 {
-  "name": "@temporium/gateway-v1-api",
+  "name": "@temporium/wallet-api",
   "version": "1.0.0",
   "private": true,
   "type": "module",

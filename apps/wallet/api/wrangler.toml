@@ -1,4 +1,4 @@
-name = "temporium-gateway-v1-api"
+name = "temporium-wallet-api"
 main = "src/index.ts"
 compatibility_date = "2024-12-26"
 compatibility_flags = ["nodejs_compat"]
@@ -6,8 +6,8 @@ compatibility_flags = ["nodejs_compat"]
 # D1 Database (default: local dev)
 [[d1_databases]]
 binding = "DB"
-database_name = "temporium-gateway-v1-db"
-database_id = "placeholder-gateway-v1-db-id"
+database_name = "temporium-wallet-db"
+database_id = "placeholder-wallet-db-id"
 
 # Durable Objects
 [durable_objects]

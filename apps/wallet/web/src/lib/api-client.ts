@@ -1,5 +1,5 @@
 import { getAccessToken, isAccessTokenExpired, clearAuthToken } from './auth-storage';
-import { getGatewayApiUrl, TEMPO_NETWORK } from './api';
+import { getWalletApiUrl, TEMPO_NETWORK } from './api';
 
 export class ApiClientError extends Error {
   status: number;
@@ -23,7 +23,7 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
   }
 
   const accessToken = getAccessToken();
-  const url = `${getGatewayApiUrl()}${endpoint}`;
+  const url = `${getWalletApiUrl()}${endpoint}`;
 
   const response = await fetch(url, {
     ...options,

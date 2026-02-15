@@ -40,7 +40,7 @@ while [[ $# -gt 0 ]]; do
         --help|-h)
             echo "Usage: ./deploy.sh <--dev|-d|--deploy> <--testnet|-t|--mainnet|-m>"
             echo ""
-            echo "Deploys PasskeyRegistry to Tempo and updates gateway-v1 config."
+            echo "Deploys PasskeyRegistry to Tempo and updates wallet config."
             echo ""
             echo "Target (required):"
             echo "  --dev, -d       Deploy contract, update .dev.vars (local dev)"
@@ -204,7 +204,7 @@ echo "Done!"
 echo ""
 echo "Next steps:"
 if [ "$DEPLOY_TARGET" = "dev" ]; then
-    echo "  cd apps/gateway-v1/api && yarn dev"
+    echo "  cd apps/wallet/api && yarn dev"
 else
-    echo "  cd apps/gateway-v1/api && wrangler deploy"
+    echo "  cd apps/wallet/api && wrangler deploy"
 fi

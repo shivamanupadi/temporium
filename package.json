@@ -6,8 +6,8 @@
   "description": "Tempo Gateway - Payments-first gateway for Tempo blockchain",
   "workspaces": [
     "apps/home",
-    "apps/gateway-v1",
-    "apps/gateway-v1/*",
+    "apps/wallet",
+    "apps/wallet/*",
     "apps/node-manager",
     "apps/node-manager/api",
     "apps/node-manager/web",
@@ -28,9 +28,8 @@
     "kill-ports": "lsof -ti:4000,4001,4002,4003,4004,4005,4006,4007,4008,4009,4010 | xargs kill -9 || true",
     "dev:node-manager": "turbo run dev --filter=@temporium/node-manager",
     "build:node-manager": "turbo run build --filter=@temporium/node-manager",
-    "dev:gateway-v1": "turbo run dev --filter=@temporium/gateway-v1-api --filter=@temporium/gateway-v1-web",
-    "dev:gateway-v1-test": "turbo run dev --filter=@temporium/gateway-v1-test --filter=@temporium/gateway-v1-web",
-    "build:gateway-v1": "turbo run build --filter=@temporium/gateway-v1-api --filter=@temporium/gateway-v1-web",
+    "dev:wallet": "turbo run dev --filter=@temporium/wallet-api --filter=@temporium/wallet-web --filter=@temporium/wallet-demo-dapp",
+    "build:wallet": "turbo run build --filter=@temporium/wallet-api --filter=@temporium/wallet-web",
     "dev:playground": "turbo run dev --filter=@temporium/playground",
     "build:playground": "turbo run build --filter=@temporium/playground",
     "postinstall": "patch-package && node scripts/patch-ox.js"

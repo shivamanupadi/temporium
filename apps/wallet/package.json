@@ -1,0 +1,10 @@
+{
+  "name": "@temporium/wallet",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "turbo run dev --filter=@temporium/wallet-api --filter=@temporium/wallet-web --filter=@temporium/wallet-demo-dapp",
+    "build": "turbo run build --filter=@temporium/wallet-api --filter=@temporium/wallet-web --filter=@temporium/wallet-demo-dapp",
+    "type-check": "turbo run type-check --filter=@temporium/wallet-api --filter=@temporium/wallet-web --filter=@temporium/wallet-demo-dapp"
+  }
+}

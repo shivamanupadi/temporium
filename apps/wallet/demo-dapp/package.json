@@ -1,5 +1,5 @@
 {
-  "name": "@temporium/gateway-v1-test",
+  "name": "@temporium/wallet-demo-dapp",
   "private": true,
   "version": "0.0.1",
   "type": "module",
