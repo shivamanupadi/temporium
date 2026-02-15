@@ -18,8 +18,10 @@ import { TokenPicker } from '@/components/TokenPicker';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
 import { useTempo, useTokenBalance } from '@/hooks/useTempo';
 import { useTokenList } from '@/hooks/useTokenList';
+import { useFeePreference } from '@/hooks/useFeePreference';
 import type { Token } from '@/lib/tokenlist';
 import { TIMING } from '@/lib/constants';
+import { tempoChain } from '@/lib/tempo-client';
 import { formatAmount, parseAmount } from '@/lib/utils';
 import {
   getPoolInfo,
@@ -42,6 +44,7 @@ type Tab = 'add' | 'remove';
 function LiquidityPage(): ReactElement | null {
   const { address, addLiquidity, removeLiquidity } = useTempo();
   const { tokens } = useTokenList();
+  const { preferredFeeToken } = useFeePreference();
 
   // Token selection
   const [tokenA, setTokenA] = useState<Token | null>(null);
@@ -56,8 +59,19 @@ function LiquidityPage(): ReactElement | null {
       setTokenA(defaultA);
       setTokenB(defaultB);
     }
-    if (tokens.length > 0 && !feeToken) setFeeToken(tokens[0]);
-  }, [tokens, tokenA, feeToken]);
+  }, [tokens, tokenA]);
+
+  // Fee token priority: user on-chain preference > chain default (AlphaUSD) > first token
+  useEffect(() => {
+    if (tokens.length === 0 || feeToken) return;
+    const preferred = preferredFeeToken
+      ? tokens.find(t => t.address.toLowerCase() === preferredFeeToken.toLowerCase())
+      : null;
+    const chainDefault = tokens.find(
+      t => t.address.toLowerCase() === tempoChain.feeToken.toLowerCase()
+    );
+    setFeeToken(preferred ?? chainDefault ?? tokens[0]);
+  }, [tokens, feeToken, preferredFeeToken]);
 
   // Tab & form state
   const [activeTab, setActiveTab] = useState<Tab>('add');

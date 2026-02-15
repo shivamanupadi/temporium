@@ -64,38 +64,10 @@ export function getActivityTypeLabel(type: ActivityType): string {
       return 'Connected';
     case 'sign_message':
       return 'Signed Message';
-    case 'send_payment':
-      return 'Payment';
-    case 'send_scheduled_payment':
-      return 'Scheduled Payment';
-    case 'swap_tokens':
-      return 'Token Swap';
-    case 'add_liquidity':
-      return 'Add Liquidity';
-    case 'remove_liquidity':
-      return 'Remove Liquidity';
+    case 'sign_transaction':
+      return 'Sign Transaction';
     case 'send_transaction':
       return 'Transaction';
-    case 'buy_tokens':
-      return 'Buy Tokens';
-    case 'place_order':
-      return 'Place Order';
-    case 'cancel_order':
-      return 'Cancel Order';
-    case 'create_pair':
-      return 'Create Pair';
-    case 'approve_token':
-      return 'Approve Token';
-    case 'create_token':
-      return 'Create Token';
-    case 'mint_token':
-      return 'Mint Token';
-    case 'burn_token':
-      return 'Burn Token';
-    case 'claim_rewards':
-      return 'Claim Rewards';
-    case 'dex_withdraw':
-      return 'DEX Withdraw';
     default:
       return 'Unknown';
   }
@@ -107,14 +79,14 @@ export function getActivityTypeLabel(type: ActivityType): string {
 export function getActivityStatusColor(status: ActivityStatus): string {
   switch (status) {
     case 'success':
-      return 'text-green-600 bg-green-50';
+      return 'text-[#5B9A6F] bg-[#5B9A6F]/8';
     case 'failed':
-      return 'text-red-600 bg-red-50';
+      return 'text-red-500 bg-red-500/8';
     case 'rejected':
-      return 'text-amber-600 bg-amber-50';
+      return 'text-amber-500 bg-amber-500/8';
     case 'timeout':
-      return 'text-gray-600 bg-gray-50';
+      return 'text-[#9B9590] bg-[#F5F2ED]';
     default:
-      return 'text-gray-600 bg-gray-50';
+      return 'text-[#9B9590] bg-[#F5F2ED]';
   }
 }

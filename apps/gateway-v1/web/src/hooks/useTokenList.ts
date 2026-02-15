@@ -4,17 +4,19 @@ import type { Address } from 'viem';
 import { getTokens, type Token } from '@/lib/tokenlist';
 import { getTokenBalance } from '@/lib/tempo-client';
 import { TIMING } from '@/lib/constants';
+import { useCustomTokens } from '@/hooks/useCustomTokens';
 
 interface UseTokenListReturn {
   tokens: Token[];
+  officialTokens: Token[];
   isLoading: boolean;
   error: Error | null;
 }
 
 export function useTokenList(): UseTokenListReturn {
   const {
-    data: tokens = [],
-    isLoading,
+    data: apiTokens = [],
+    isLoading: apiLoading,
     error,
   } = useQuery({
     queryKey: ['tokenlist'],
@@ -22,7 +24,21 @@ export function useTokenList(): UseTokenListReturn {
     staleTime: 5 * 60 * 1000,
   });
 
-  return { tokens, isLoading, error: error as Error | null };
+  const { asTokenList: customTokens, isLoading: customLoading } = useCustomTokens();
+
+  // Merge API tokens with custom tokens, deduplicating by address
+  const tokens = useMemo(() => {
+    const apiAddresses = new Set(apiTokens.map(t => t.address.toLowerCase()));
+    const unique = customTokens.filter(ct => !apiAddresses.has(ct.address.toLowerCase()));
+    return [...apiTokens, ...unique];
+  }, [apiTokens, customTokens]);
+
+  return {
+    tokens,
+    officialTokens: apiTokens,
+    isLoading: apiLoading || customLoading,
+    error: error as Error | null,
+  };
 }
 
 interface TokenWithBalance extends Token {

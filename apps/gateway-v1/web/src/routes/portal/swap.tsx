@@ -15,8 +15,10 @@ import { TokenPicker } from '@/components/TokenPicker';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
 import { useTempo, useTokenBalance } from '@/hooks/useTempo';
 import { useTokenList } from '@/hooks/useTokenList';
+import { useFeePreference } from '@/hooks/useFeePreference';
 import type { Token } from '@/lib/tokenlist';
 import { TIMING } from '@/lib/constants';
+import { tempoChain } from '@/lib/tempo-client';
 import { formatAmount, parseAmount } from '@/lib/utils';
 import { getSwapQuote, getExplorerTxUrl } from '@/lib/tempo-client';
 
@@ -65,6 +67,7 @@ function computeImpliedPrice(amountInStr: string, amountOutStr: string): string 
 function SwapPage(): ReactElement | null {
   const { address, swapTokens } = useTempo();
   const { tokens } = useTokenList();
+  const { preferredFeeToken } = useFeePreference();
 
   // Token selection state (default to first two tokens from tokenlist)
   const [tokenIn, setTokenIn] = useState<Token | null>(null);
@@ -74,8 +77,19 @@ function SwapPage(): ReactElement | null {
   useEffect(() => {
     if (tokens.length > 0 && !tokenIn) setTokenIn(tokens[0]);
     if (tokens.length > 1 && !tokenOut) setTokenOut(tokens[1]);
-    if (tokens.length > 0 && !feeToken) setFeeToken(tokens[0]);
-  }, [tokens, tokenIn, tokenOut, feeToken]);
+  }, [tokens, tokenIn, tokenOut]);
+
+  // Fee token priority: user on-chain preference > chain default (AlphaUSD) > first token
+  useEffect(() => {
+    if (tokens.length === 0 || feeToken) return;
+    const preferred = preferredFeeToken
+      ? tokens.find(t => t.address.toLowerCase() === preferredFeeToken.toLowerCase())
+      : null;
+    const chainDefault = tokens.find(
+      t => t.address.toLowerCase() === tempoChain.feeToken.toLowerCase()
+    );
+    setFeeToken(preferred ?? chainDefault ?? tokens[0]);
+  }, [tokens, feeToken, preferredFeeToken]);
 
   // Form state
   const [amountIn, setAmountIn] = useState('');

@@ -16,8 +16,10 @@ import { Route as IndexRouteImport } from './routes/index';
 import { Route as PortalTip403FactoryRouteImport } from './routes/portal/tip403-factory';
 import { Route as PortalTip20StudioRouteImport } from './routes/portal/tip20-studio';
 import { Route as PortalSwapRouteImport } from './routes/portal/swap';
+import { Route as PortalSettingsRouteImport } from './routes/portal/settings';
 import { Route as PortalSendRouteImport } from './routes/portal/send';
 import { Route as PortalScheduledRouteImport } from './routes/portal/scheduled';
+import { Route as PortalRewardsRouteImport } from './routes/portal/rewards';
 import { Route as PortalReceiveRouteImport } from './routes/portal/receive';
 import { Route as PortalPoolSwapRouteImport } from './routes/portal/pool-swap';
 import { Route as PortalOrderbookRouteImport } from './routes/portal/orderbook';
@@ -26,6 +28,8 @@ import { Route as PortalExchangeBalanceRouteImport } from './routes/portal/excha
 import { Route as PortalDashboardRouteImport } from './routes/portal/dashboard';
 import { Route as PortalContactsRouteImport } from './routes/portal/contacts';
 import { Route as PortalConnectedAppsRouteImport } from './routes/portal/connected-apps';
+import { Route as PortalBatchSendRouteImport } from './routes/portal/batch-send';
+import { Route as PortalApprovalsRouteImport } from './routes/portal/approvals';
 import { Route as PortalAccessKeysRouteImport } from './routes/portal/access-keys';
 import { Route as PortalTip403FactoryIndexRouteImport } from './routes/portal/tip403-factory.index';
 import { Route as PortalTip20StudioIndexRouteImport } from './routes/portal/tip20-studio.index';
@@ -70,6 +74,11 @@ const PortalSwapRoute = PortalSwapRouteImport.update({
   path: '/swap',
   getParentRoute: () => PortalRoute,
 } as any);
+const PortalSettingsRoute = PortalSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => PortalRoute,
+} as any);
 const PortalSendRoute = PortalSendRouteImport.update({
   id: '/send',
   path: '/send',
@@ -78,6 +87,11 @@ const PortalSendRoute = PortalSendRouteImport.update({
 const PortalScheduledRoute = PortalScheduledRouteImport.update({
   id: '/scheduled',
   path: '/scheduled',
+  getParentRoute: () => PortalRoute,
+} as any);
+const PortalRewardsRoute = PortalRewardsRouteImport.update({
+  id: '/rewards',
+  path: '/rewards',
   getParentRoute: () => PortalRoute,
 } as any);
 const PortalReceiveRoute = PortalReceiveRouteImport.update({
@@ -118,6 +132,16 @@ const PortalContactsRoute = PortalContactsRouteImport.update({
 const PortalConnectedAppsRoute = PortalConnectedAppsRouteImport.update({
   id: '/connected-apps',
   path: '/connected-apps',
+  getParentRoute: () => PortalRoute,
+} as any);
+const PortalBatchSendRoute = PortalBatchSendRouteImport.update({
+  id: '/batch-send',
+  path: '/batch-send',
+  getParentRoute: () => PortalRoute,
+} as any);
+const PortalApprovalsRoute = PortalApprovalsRouteImport.update({
+  id: '/approvals',
+  path: '/approvals',
   getParentRoute: () => PortalRoute,
 } as any);
 const PortalAccessKeysRoute = PortalAccessKeysRouteImport.update({
@@ -168,6 +192,8 @@ export interface FileRoutesByFullPath {
   '/portal': typeof PortalRouteWithChildren;
   '/sign': typeof SignRoute;
   '/portal/access-keys': typeof PortalAccessKeysRoute;
+  '/portal/approvals': typeof PortalApprovalsRoute;
+  '/portal/batch-send': typeof PortalBatchSendRoute;
   '/portal/connected-apps': typeof PortalConnectedAppsRoute;
   '/portal/contacts': typeof PortalContactsRoute;
   '/portal/dashboard': typeof PortalDashboardRoute;
@@ -176,8 +202,10 @@ export interface FileRoutesByFullPath {
   '/portal/orderbook': typeof PortalOrderbookRoute;
   '/portal/pool-swap': typeof PortalPoolSwapRoute;
   '/portal/receive': typeof PortalReceiveRoute;
+  '/portal/rewards': typeof PortalRewardsRoute;
   '/portal/scheduled': typeof PortalScheduledRoute;
   '/portal/send': typeof PortalSendRoute;
+  '/portal/settings': typeof PortalSettingsRoute;
   '/portal/swap': typeof PortalSwapRoute;
   '/portal/tip20-studio': typeof PortalTip20StudioRouteWithChildren;
   '/portal/tip403-factory': typeof PortalTip403FactoryRouteWithChildren;
@@ -195,6 +223,8 @@ export interface FileRoutesByTo {
   '/portal': typeof PortalRouteWithChildren;
   '/sign': typeof SignRoute;
   '/portal/access-keys': typeof PortalAccessKeysRoute;
+  '/portal/approvals': typeof PortalApprovalsRoute;
+  '/portal/batch-send': typeof PortalBatchSendRoute;
   '/portal/connected-apps': typeof PortalConnectedAppsRoute;
   '/portal/contacts': typeof PortalContactsRoute;
   '/portal/dashboard': typeof PortalDashboardRoute;
@@ -203,8 +233,10 @@ export interface FileRoutesByTo {
   '/portal/orderbook': typeof PortalOrderbookRoute;
   '/portal/pool-swap': typeof PortalPoolSwapRoute;
   '/portal/receive': typeof PortalReceiveRoute;
+  '/portal/rewards': typeof PortalRewardsRoute;
   '/portal/scheduled': typeof PortalScheduledRoute;
   '/portal/send': typeof PortalSendRoute;
+  '/portal/settings': typeof PortalSettingsRoute;
   '/portal/swap': typeof PortalSwapRoute;
   '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRouteWithChildren;
   '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRouteWithChildren;
@@ -221,6 +253,8 @@ export interface FileRoutesById {
   '/portal': typeof PortalRouteWithChildren;
   '/sign': typeof SignRoute;
   '/portal/access-keys': typeof PortalAccessKeysRoute;
+  '/portal/approvals': typeof PortalApprovalsRoute;
+  '/portal/batch-send': typeof PortalBatchSendRoute;
   '/portal/connected-apps': typeof PortalConnectedAppsRoute;
   '/portal/contacts': typeof PortalContactsRoute;
   '/portal/dashboard': typeof PortalDashboardRoute;
@@ -229,8 +263,10 @@ export interface FileRoutesById {
   '/portal/orderbook': typeof PortalOrderbookRoute;
   '/portal/pool-swap': typeof PortalPoolSwapRoute;
   '/portal/receive': typeof PortalReceiveRoute;
+  '/portal/rewards': typeof PortalRewardsRoute;
   '/portal/scheduled': typeof PortalScheduledRoute;
   '/portal/send': typeof PortalSendRoute;
+  '/portal/settings': typeof PortalSettingsRoute;
   '/portal/swap': typeof PortalSwapRoute;
   '/portal/tip20-studio': typeof PortalTip20StudioRouteWithChildren;
   '/portal/tip403-factory': typeof PortalTip403FactoryRouteWithChildren;
@@ -250,6 +286,8 @@ export interface FileRouteTypes {
     | '/portal'
     | '/sign'
     | '/portal/access-keys'
+    | '/portal/approvals'
+    | '/portal/batch-send'
     | '/portal/connected-apps'
     | '/portal/contacts'
     | '/portal/dashboard'
@@ -258,8 +296,10 @@ export interface FileRouteTypes {
     | '/portal/orderbook'
     | '/portal/pool-swap'
     | '/portal/receive'
+    | '/portal/rewards'
     | '/portal/scheduled'
     | '/portal/send'
+    | '/portal/settings'
     | '/portal/swap'
     | '/portal/tip20-studio'
     | '/portal/tip403-factory'
@@ -277,6 +317,8 @@ export interface FileRouteTypes {
     | '/portal'
     | '/sign'
     | '/portal/access-keys'
+    | '/portal/approvals'
+    | '/portal/batch-send'
     | '/portal/connected-apps'
     | '/portal/contacts'
     | '/portal/dashboard'
@@ -285,8 +327,10 @@ export interface FileRouteTypes {
     | '/portal/orderbook'
     | '/portal/pool-swap'
     | '/portal/receive'
+    | '/portal/rewards'
     | '/portal/scheduled'
     | '/portal/send'
+    | '/portal/settings'
     | '/portal/swap'
     | '/portal/tip20-studio/$address'
     | '/portal/tip403-factory/$policyId'
@@ -302,6 +346,8 @@ export interface FileRouteTypes {
     | '/portal'
     | '/sign'
     | '/portal/access-keys'
+    | '/portal/approvals'
+    | '/portal/batch-send'
     | '/portal/connected-apps'
     | '/portal/contacts'
     | '/portal/dashboard'
@@ -310,8 +356,10 @@ export interface FileRouteTypes {
     | '/portal/orderbook'
     | '/portal/pool-swap'
     | '/portal/receive'
+    | '/portal/rewards'
     | '/portal/scheduled'
     | '/portal/send'
+    | '/portal/settings'
     | '/portal/swap'
     | '/portal/tip20-studio'
     | '/portal/tip403-factory'
@@ -382,6 +430,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalSwapRouteImport;
       parentRoute: typeof PortalRoute;
     };
+    '/portal/settings': {
+      id: '/portal/settings';
+      path: '/settings';
+      fullPath: '/portal/settings';
+      preLoaderRoute: typeof PortalSettingsRouteImport;
+      parentRoute: typeof PortalRoute;
+    };
     '/portal/send': {
       id: '/portal/send';
       path: '/send';
@@ -394,6 +449,13 @@ declare module '@tanstack/react-router' {
       path: '/scheduled';
       fullPath: '/portal/scheduled';
       preLoaderRoute: typeof PortalScheduledRouteImport;
+      parentRoute: typeof PortalRoute;
+    };
+    '/portal/rewards': {
+      id: '/portal/rewards';
+      path: '/rewards';
+      fullPath: '/portal/rewards';
+      preLoaderRoute: typeof PortalRewardsRouteImport;
       parentRoute: typeof PortalRoute;
     };
     '/portal/receive': {
@@ -450,6 +512,20 @@ declare module '@tanstack/react-router' {
       path: '/connected-apps';
       fullPath: '/portal/connected-apps';
       preLoaderRoute: typeof PortalConnectedAppsRouteImport;
+      parentRoute: typeof PortalRoute;
+    };
+    '/portal/batch-send': {
+      id: '/portal/batch-send';
+      path: '/batch-send';
+      fullPath: '/portal/batch-send';
+      preLoaderRoute: typeof PortalBatchSendRouteImport;
+      parentRoute: typeof PortalRoute;
+    };
+    '/portal/approvals': {
+      id: '/portal/approvals';
+      path: '/approvals';
+      fullPath: '/portal/approvals';
+      preLoaderRoute: typeof PortalApprovalsRouteImport;
       parentRoute: typeof PortalRoute;
     };
     '/portal/access-keys': {
@@ -566,6 +642,8 @@ const PortalTip403FactoryRouteWithChildren = PortalTip403FactoryRoute._addFileCh
 
 interface PortalRouteChildren {
   PortalAccessKeysRoute: typeof PortalAccessKeysRoute;
+  PortalApprovalsRoute: typeof PortalApprovalsRoute;
+  PortalBatchSendRoute: typeof PortalBatchSendRoute;
   PortalConnectedAppsRoute: typeof PortalConnectedAppsRoute;
   PortalContactsRoute: typeof PortalContactsRoute;
   PortalDashboardRoute: typeof PortalDashboardRoute;
@@ -574,8 +652,10 @@ interface PortalRouteChildren {
   PortalOrderbookRoute: typeof PortalOrderbookRoute;
   PortalPoolSwapRoute: typeof PortalPoolSwapRoute;
   PortalReceiveRoute: typeof PortalReceiveRoute;
+  PortalRewardsRoute: typeof PortalRewardsRoute;
   PortalScheduledRoute: typeof PortalScheduledRoute;
   PortalSendRoute: typeof PortalSendRoute;
+  PortalSettingsRoute: typeof PortalSettingsRoute;
   PortalSwapRoute: typeof PortalSwapRoute;
   PortalTip20StudioRoute: typeof PortalTip20StudioRouteWithChildren;
   PortalTip403FactoryRoute: typeof PortalTip403FactoryRouteWithChildren;
@@ -583,6 +663,8 @@ interface PortalRouteChildren {
 
 const PortalRouteChildren: PortalRouteChildren = {
   PortalAccessKeysRoute: PortalAccessKeysRoute,
+  PortalApprovalsRoute: PortalApprovalsRoute,
+  PortalBatchSendRoute: PortalBatchSendRoute,
   PortalConnectedAppsRoute: PortalConnectedAppsRoute,
   PortalContactsRoute: PortalContactsRoute,
   PortalDashboardRoute: PortalDashboardRoute,
@@ -591,8 +673,10 @@ const PortalRouteChildren: PortalRouteChildren = {
   PortalOrderbookRoute: PortalOrderbookRoute,
   PortalPoolSwapRoute: PortalPoolSwapRoute,
   PortalReceiveRoute: PortalReceiveRoute,
+  PortalRewardsRoute: PortalRewardsRoute,
   PortalScheduledRoute: PortalScheduledRoute,
   PortalSendRoute: PortalSendRoute,
+  PortalSettingsRoute: PortalSettingsRoute,
   PortalSwapRoute: PortalSwapRoute,
   PortalTip20StudioRoute: PortalTip20StudioRouteWithChildren,
   PortalTip403FactoryRoute: PortalTip403FactoryRouteWithChildren,

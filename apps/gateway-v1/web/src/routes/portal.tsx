@@ -16,6 +16,7 @@ import {
   BarChart3,
   Repeat,
   LogOut,
+  Settings,
   Menu,
   X,
   Wallet,
@@ -27,6 +28,9 @@ import {
   ChevronsUpDown,
   PanelLeftClose,
   PanelLeft,
+  ListPlus,
+  Gift,
+  ShieldCheck,
 } from 'lucide-react';
 import { useTempo } from '@/hooks/useTempo';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
@@ -47,6 +51,7 @@ const navSections = [
     label: 'Payments',
     items: [
       { to: '/portal/send', label: 'Send', icon: Send },
+      { to: '/portal/batch-send', label: 'Batch Send', icon: ListPlus },
       { to: '/portal/receive', label: 'Receive', icon: QrCode },
     ],
   },
@@ -79,6 +84,9 @@ const navSections = [
       { to: '/portal/access-keys', label: 'Access Keys', icon: Key },
       { to: '/portal/contacts', label: 'Contacts', icon: Users },
       { to: '/portal/connected-apps', label: 'Connected Apps', icon: Link2 },
+      { to: '/portal/rewards', label: 'Rewards', icon: Gift },
+      { to: '/portal/approvals', label: 'Approvals', icon: ShieldCheck },
+      { to: '/portal/settings', label: 'Settings', icon: Settings },
     ],
   },
 ] as const;

@@ -200,25 +200,7 @@ export interface PendingRequest {
 /**
  * Activity/History types
  */
-export type ActivityType =
-  | 'connect'
-  | 'sign_message'
-  | 'send_payment'
-  | 'send_scheduled_payment'
-  | 'swap_tokens'
-  | 'add_liquidity'
-  | 'remove_liquidity'
-  | 'send_transaction'
-  | 'buy_tokens'
-  | 'place_order'
-  | 'cancel_order'
-  | 'create_pair'
-  | 'approve_token'
-  | 'create_token'
-  | 'mint_token'
-  | 'burn_token'
-  | 'claim_rewards'
-  | 'dex_withdraw';
+export type ActivityType = 'connect' | 'sign_message' | 'sign_transaction' | 'send_transaction';
 
 export type ActivityStatus = 'success' | 'failed' | 'rejected' | 'timeout';
 

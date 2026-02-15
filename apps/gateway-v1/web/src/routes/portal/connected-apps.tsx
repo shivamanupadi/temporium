@@ -1,10 +1,9 @@
-import { type ReactElement, useState, useEffect, useCallback } from 'react';
+import { type ReactElement, useState, useEffect, useCallback, useMemo } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import {
   Link2,
   Trash2,
   ExternalLink,
-  Shield,
   Clock,
   Activity,
   CheckCircle2,
@@ -12,6 +11,8 @@ import {
   AlertTriangle,
   Timer,
   Globe,
+  ChevronDown,
+  Filter,
 } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
@@ -52,15 +53,28 @@ function formatRelativeTime(timestamp: number): string {
 function getStatusIcon(status: string): ReactElement {
   switch (status) {
     case 'success':
-      return <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />;
+      return <CheckCircle2 className="w-3.5 h-3.5 text-[#5B9A6F]" />;
     case 'failed':
-      return <XCircle className="w-3.5 h-3.5 text-red-600" />;
+      return <XCircle className="w-3.5 h-3.5 text-red-500" />;
     case 'rejected':
-      return <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />;
+      return <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />;
     case 'timeout':
-      return <Timer className="w-3.5 h-3.5 text-gray-500" />;
+      return <Timer className="w-3.5 h-3.5 text-[#B5B0AA]" />;
     default:
-      return <Activity className="w-3.5 h-3.5 text-gray-500" />;
+      return <Activity className="w-3.5 h-3.5 text-[#B5B0AA]" />;
+  }
+}
+
+function getPermissionColor(perm: string): string {
+  switch (perm) {
+    case 'connect':
+      return 'bg-[#5B9A6F]/8 text-[#5B9A6F]';
+    case 'sign':
+      return 'bg-[#9B72CF]/8 text-[#9B72CF]';
+    case 'send':
+      return 'bg-[#E07A5F]/8 text-[#E07A5F]';
+    default:
+      return 'bg-[#F5F2ED] text-[#6B6560]';
   }
 }
 
@@ -69,6 +83,24 @@ function ConnectedAppsPage(): ReactElement {
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [revokeTarget, setRevokeTarget] = useState<ConnectedApp | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [activityFilter, setActivityFilter] = useState<string>('all');
+  const [activityVisible, setActivityVisible] = useState(15);
+
+  const PAGE_SIZE = 15;
+
+  const uniqueAppNames = useMemo(
+    () => [...new Set(activity.map(a => a.appName))].sort(),
+    [activity]
+  );
+
+  const filteredActivity = useMemo(
+    () =>
+      activityFilter === 'all' ? activity : activity.filter(a => a.appName === activityFilter),
+    [activity, activityFilter]
+  );
+
+  const visibleActivity = filteredActivity.slice(0, activityVisible);
+  const hasMore = activityVisible < filteredActivity.length;
 
   const refresh = useCallback(() => {
     setApps(getConnectedApps());
@@ -111,11 +143,6 @@ function ConnectedAppsPage(): ReactElement {
           >
             <Link2 className="w-3.5 h-3.5 mr-1.5" />
             Apps
-            {apps.length > 0 && (
-              <span className="ml-1.5 text-[11px] bg-[#E07A5F]/10 text-[#E07A5F] px-1.5 py-0.5 rounded-full font-medium">
-                {apps.length}
-              </span>
-            )}
           </TabsTrigger>
           <TabsTrigger
             value="activity"
@@ -123,11 +150,6 @@ function ConnectedAppsPage(): ReactElement {
           >
             <Activity className="w-3.5 h-3.5 mr-1.5" />
             Activity
-            {activity.length > 0 && (
-              <span className="ml-1.5 text-[11px] bg-[#9B9590]/10 text-[#9B9590] px-1.5 py-0.5 rounded-full font-medium">
-                {activity.length}
-              </span>
-            )}
           </TabsTrigger>
         </TabsList>
 
@@ -148,84 +170,78 @@ function ConnectedAppsPage(): ReactElement {
               {apps.map(app => (
                 <div
                   key={app.id}
-                  className="bg-white border border-[#EDE9E3] rounded-2xl p-4 hover:border-[#DDD8D1] transition-colors"
+                  className="bg-white rounded-2xl border border-[#EDE9E3] p-5 hover:shadow-sm transition-shadow"
                 >
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-start gap-3.5">
                     {/* App Icon */}
-                    <div className="w-10 h-10 rounded-xl bg-[#F5F2ED] flex items-center justify-center flex-shrink-0 overflow-hidden">
+                    <div className="w-11 h-11 rounded-xl bg-[#9B72CF]/8 flex items-center justify-center overflow-hidden shrink-0">
                       {app.icon ? (
                         <img
                           src={app.icon}
                           alt={app.name}
-                          className="w-10 h-10 rounded-xl object-cover"
+                          className="w-11 h-11 rounded-xl object-cover"
                           onError={e => {
                             (e.target as HTMLImageElement).style.display = 'none';
-                            (e.target as HTMLImageElement).parentElement!.innerHTML =
-                              '<svg class="w-5 h-5 text-[#9B9590]" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
                           }}
                         />
                       ) : (
-                        <Globe className="w-5 h-5 text-[#9B9590]" />
+                        <Globe className="w-5 h-5 text-[#9B72CF]" />
                       )}
                     </div>
 
                     {/* App Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-[14px] font-semibold text-[#2D3436] truncate">
-                          {app.name}
-                        </h3>
-                        <a
-                          href={app.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex-shrink-0 text-[#9B9590] hover:text-[#6B6560] transition-colors"
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <h3 className="text-[14px] font-semibold text-[#2D3436] truncate">
+                            {app.name}
+                          </h3>
+                          <a
+                            href={app.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="shrink-0 text-[#B5B0AA] hover:text-[#6B6560] transition-colors"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </div>
+                        <button
+                          onClick={() => setRevokeTarget(app)}
+                          className="shrink-0 p-1.5 rounded-lg text-[#B5B0AA] hover:text-red-500 hover:bg-red-50 transition-colors"
+                          title="Revoke access"
                         >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
 
-                      <p className="text-[12px] text-[#9B9590] truncate mt-0.5">{app.url}</p>
+                      <p className="text-[12px] text-[#9B9590] font-mono truncate mt-0.5">
+                        {app.url}
+                      </p>
 
                       {app.description && (
-                        <p className="text-[12px] text-[#6B6560] mt-1 line-clamp-1">
+                        <p className="text-[12px] text-[#6B6560] mt-1.5 line-clamp-1">
                           {app.description}
                         </p>
                       )}
 
-                      {/* Permissions & Timestamps */}
-                      <div className="flex items-center gap-3 mt-2.5 flex-wrap">
-                        {/* Permissions */}
-                        <div className="flex items-center gap-1">
-                          <Shield className="w-3 h-3 text-[#B5B0AA]" />
-                          <div className="flex gap-1">
-                            {app.permissions.map(perm => (
-                              <span
-                                key={perm}
-                                className="text-[10px] px-1.5 py-0.5 rounded-full bg-[#F5F2ED] text-[#6B6560] font-medium capitalize"
-                              >
-                                {perm}
-                              </span>
-                            ))}
-                          </div>
+                      {/* Permissions + Last used */}
+                      <div className="flex items-center justify-between mt-3">
+                        <div className="flex items-center gap-1.5">
+                          {app.permissions.map(perm => (
+                            <span
+                              key={perm}
+                              className={`text-[10px] px-2 py-0.5 rounded-md font-medium capitalize ${getPermissionColor(perm)}`}
+                            >
+                              {perm}
+                            </span>
+                          ))}
                         </div>
-
-                        {/* Last Used */}
                         <div className="flex items-center gap-1 text-[11px] text-[#B5B0AA]">
                           <Clock className="w-3 h-3" />
                           <span>{formatRelativeTime(app.lastUsedAt)}</span>
                         </div>
                       </div>
                     </div>
-
-                    {/* Revoke Button */}
-                    <button
-                      onClick={() => setRevokeTarget(app)}
-                      className="flex-shrink-0 p-2 rounded-lg text-[#B5B0AA] hover:text-red-500 hover:bg-red-50 transition-colors"
-                      title="Revoke access"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
                   </div>
                 </div>
               ))}
@@ -247,8 +263,42 @@ function ConnectedAppsPage(): ReactElement {
             </div>
           ) : (
             <div className="space-y-3">
-              {/* Clear All */}
-              <div className="flex justify-end">
+              {/* Toolbar: filter + clear */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Filter className="w-3.5 h-3.5 text-[#B5B0AA]" />
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => {
+                        setActivityFilter('all');
+                        setActivityVisible(PAGE_SIZE);
+                      }}
+                      className={`text-[12px] px-2.5 py-1 rounded-lg font-medium transition-colors ${
+                        activityFilter === 'all'
+                          ? 'bg-[#2D3436] text-white'
+                          : 'text-[#9B9590] hover:bg-[#F5F2ED]'
+                      }`}
+                    >
+                      All
+                    </button>
+                    {uniqueAppNames.map(name => (
+                      <button
+                        key={name}
+                        onClick={() => {
+                          setActivityFilter(name);
+                          setActivityVisible(PAGE_SIZE);
+                        }}
+                        className={`text-[12px] px-2.5 py-1 rounded-lg font-medium transition-colors truncate max-w-[120px] ${
+                          activityFilter === name
+                            ? 'bg-[#2D3436] text-white'
+                            : 'text-[#9B9590] hover:bg-[#F5F2ED]'
+                        }`}
+                      >
+                        {name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <button
                   onClick={() => setShowClearConfirm(true)}
                   className="text-[12px] text-[#9B9590] hover:text-red-500 transition-colors px-2 py-1 rounded-lg hover:bg-red-50"
@@ -257,53 +307,86 @@ function ConnectedAppsPage(): ReactElement {
                 </button>
               </div>
 
-              {/* Activity List */}
-              <div className="bg-white border border-[#EDE9E3] rounded-2xl divide-y divide-[#EDE9E3]">
-                {activity.map(item => (
-                  <div
-                    key={item.id}
-                    className="px-4 py-3 flex items-center gap-3 hover:bg-[#FDFBF8] transition-colors first:rounded-t-2xl last:rounded-b-2xl"
-                  >
-                    {/* Status Icon */}
-                    <div className="flex-shrink-0">{getStatusIcon(item.status)}</div>
+              {/* Table */}
+              <div className="bg-white rounded-2xl border border-[#EDE9E3] overflow-hidden">
+                {/* Header */}
+                <div className="grid grid-cols-[1fr_100px_100px_80px] gap-3 px-5 py-3 border-b border-[#EDE9E3]/60">
+                  <span className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">
+                    Action
+                  </span>
+                  <span className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">
+                    App
+                  </span>
+                  <span className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">
+                    Status
+                  </span>
+                  <span className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider text-right">
+                    Time
+                  </span>
+                </div>
 
-                    {/* Activity Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-medium text-[#2D3436]">
-                          {getActivityTypeLabel(item.type)}
-                        </span>
-                        <span
-                          className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium capitalize ${getActivityStatusColor(item.status)}`}
-                        >
-                          {item.status}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[11px] text-[#9B9590] truncate">{item.appName}</span>
-                        {item.txHash && (
-                          <>
-                            <span className="text-[#EDE9E3]">&middot;</span>
+                {/* Rows */}
+                {filteredActivity.length === 0 ? (
+                  <div className="px-5 py-10 text-center">
+                    <p className="text-[13px] text-[#9B9590]">No activity for this app</p>
+                  </div>
+                ) : (
+                  visibleActivity.map((item, index) => (
+                    <div
+                      key={item.id}
+                      className={`grid grid-cols-[1fr_100px_100px_80px] gap-3 px-5 py-3.5 items-center hover:bg-[#FDFBF8] transition-colors ${
+                        index < visibleActivity.length - 1 ? 'border-b border-[#EDE9E3]/40' : ''
+                      }`}
+                    >
+                      {/* Action + tx hash */}
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="shrink-0">{getStatusIcon(item.status)}</div>
+                        <div className="min-w-0">
+                          <p className="text-[13px] font-medium text-[#2D3436] truncate">
+                            {getActivityTypeLabel(item.type)}
+                          </p>
+                          {item.txHash && (
                             <a
                               href={`${LINKS.explorer}/tx/${item.txHash}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-[11px] text-[#E07A5F] hover:underline font-mono flex items-center gap-1"
+                              className="text-[11px] text-[#E07A5F] hover:underline font-mono inline-flex items-center gap-1"
                             >
                               {formatAddress(item.txHash, 6)}
-                              <ExternalLink className="w-3 h-3" />
+                              <ExternalLink className="w-2.5 h-2.5" />
                             </a>
-                          </>
-                        )}
+                          )}
+                        </div>
                       </div>
-                    </div>
 
-                    {/* Timestamp */}
-                    <div className="flex-shrink-0 text-[11px] text-[#B5B0AA]">
-                      {formatRelativeTime(item.timestamp)}
+                      {/* App */}
+                      <span className="text-[12px] text-[#9B9590] truncate">{item.appName}</span>
+
+                      {/* Status */}
+                      <span
+                        className={`text-[10px] px-2 py-0.5 rounded-md font-medium capitalize w-fit ${getActivityStatusColor(item.status)}`}
+                      >
+                        {item.status}
+                      </span>
+
+                      {/* Time */}
+                      <span className="text-[11px] text-[#B5B0AA] text-right">
+                        {formatRelativeTime(item.timestamp)}
+                      </span>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
+
+                {/* Load more */}
+                {hasMore && (
+                  <button
+                    onClick={() => setActivityVisible(v => v + PAGE_SIZE)}
+                    className="w-full px-5 py-3 flex items-center justify-center gap-1.5 text-[12px] font-medium text-[#9B9590] hover:text-[#6B6560] hover:bg-[#FDFBF8] transition-colors border-t border-[#EDE9E3]/40"
+                  >
+                    <ChevronDown className="w-3.5 h-3.5" />
+                    Load more ({filteredActivity.length - activityVisible} remaining)
+                  </button>
+                )}
               </div>
             </div>
           )}
@@ -319,12 +402,12 @@ function ConnectedAppsPage(): ReactElement {
       >
         <DialogContent className="max-w-[360px] p-0 gap-0 overflow-hidden rounded-2xl">
           <div className="px-6 pt-6 pb-4">
-            <DialogTitle className="text-lg font-semibold text-gray-900 mb-2">
+            <DialogTitle className="text-lg font-semibold text-[#2D3436] mb-2">
               Revoke Access
             </DialogTitle>
-            <DialogDescription className="text-[13px] text-gray-500">
+            <DialogDescription className="text-[13px] text-[#9B9590]">
               Are you sure you want to revoke access for{' '}
-              <strong className="text-gray-700">{revokeTarget?.name}</strong>? The app will need to
+              <strong className="text-[#2D3436]">{revokeTarget?.name}</strong>? The app will need to
               reconnect to interact with your wallet.
             </DialogDescription>
           </div>
@@ -349,10 +432,10 @@ function ConnectedAppsPage(): ReactElement {
       <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
         <DialogContent className="max-w-[360px] p-0 gap-0 overflow-hidden rounded-2xl">
           <div className="px-6 pt-6 pb-4">
-            <DialogTitle className="text-lg font-semibold text-gray-900 mb-2">
+            <DialogTitle className="text-lg font-semibold text-[#2D3436] mb-2">
               Clear Activity
             </DialogTitle>
-            <DialogDescription className="text-[13px] text-gray-500">
+            <DialogDescription className="text-[13px] text-[#9B9590]">
               Are you sure you want to clear all activity history? This action cannot be undone.
             </DialogDescription>
           </div>

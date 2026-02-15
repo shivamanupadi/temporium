@@ -29,9 +29,11 @@ import { FeeTokenPicker } from '@/components/FeeTokenPicker';
 import { ContactPicker } from '@/components/ContactPicker';
 import { useTempo, useTokenBalance, encodeMemo } from '@/hooks/useTempo';
 import { useTokenList } from '@/hooks/useTokenList';
+import { useFeePreference } from '@/hooks/useFeePreference';
 import { createScheduledTransaction } from '@/lib/scheduled-transactions';
 import type { Token } from '@/lib/tokenlist';
 import { SCHEDULE_PRESETS } from '@/lib/constants';
+import { tempoChain } from '@/lib/tempo-client';
 import {
   formatAmount,
   parseAmount,
@@ -98,6 +100,7 @@ function SendPage(): ReactElement | null {
   const navigate = useNavigate();
   const { address, isConnected, sendPayment, signScheduledPayment } = useTempo();
   const { tokens } = useTokenList();
+  const { preferredFeeToken } = useFeePreference();
 
   // Token selection state
   const [selectedToken, setSelectedToken] = useState<Token | null>(null);
@@ -106,8 +109,19 @@ function SendPage(): ReactElement | null {
   // Default to first token when tokens load
   useEffect(() => {
     if (tokens.length > 0 && !selectedToken) setSelectedToken(tokens[0]);
-    if (tokens.length > 0 && !feeToken) setFeeToken(tokens[0]);
-  }, [tokens, selectedToken, feeToken]);
+  }, [tokens, selectedToken]);
+
+  // Fee token priority: user on-chain preference > chain default (AlphaUSD) > first token
+  useEffect(() => {
+    if (tokens.length === 0 || feeToken) return;
+    const preferred = preferredFeeToken
+      ? tokens.find(t => t.address.toLowerCase() === preferredFeeToken.toLowerCase())
+      : null;
+    const chainDefault = tokens.find(
+      t => t.address.toLowerCase() === tempoChain.feeToken.toLowerCase()
+    );
+    setFeeToken(preferred ?? chainDefault ?? tokens[0]);
+  }, [tokens, feeToken, preferredFeeToken]);
 
   const balance = useTokenBalance(selectedToken?.address, address);
 

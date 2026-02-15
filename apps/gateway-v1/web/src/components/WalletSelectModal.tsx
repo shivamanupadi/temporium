@@ -32,8 +32,8 @@ export function WalletSelectModal({
       <DialogContent className="max-w-[360px] p-0 gap-0 overflow-hidden rounded-2xl">
         {/* Header */}
         <div className="px-6 pt-6 pb-4">
-          <DialogTitle className="text-lg font-semibold text-gray-900 mb-2">Sign In</DialogTitle>
-          <DialogDescription className="text-[13px] text-gray-500">
+          <DialogTitle className="text-lg font-semibold text-[#2D3436] mb-2">Sign In</DialogTitle>
+          <DialogDescription className="text-[13px] text-[#9B9590]">
             Sign in with your passkey to access your wallet
           </DialogDescription>
         </div>
@@ -44,14 +44,14 @@ export function WalletSelectModal({
           <button
             onClick={onSelectPasskey}
             disabled={isLoading}
-            className="w-full flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all cursor-pointer disabled:opacity-50"
+            className="w-full flex items-center gap-3 p-4 rounded-xl border border-[#EDE9E3] hover:border-[#E07A5F]/30 hover:bg-[#F5F2ED] transition-all cursor-pointer disabled:opacity-50"
           >
             <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-[#E07A5F]/8">
               <Fingerprint className="h-5 w-5 text-[#E07A5F]" />
             </div>
             <div className="flex-1 text-left">
-              <p className="text-[14px] font-medium text-gray-900">Continue with Passkey</p>
-              <p className="text-[12px] text-gray-500">Use Face ID or Touch ID</p>
+              <p className="text-[14px] font-medium text-[#2D3436]">Continue with Passkey</p>
+              <p className="text-[12px] text-[#9B9590]">Use Face ID or Touch ID</p>
             </div>
           </button>
 
@@ -60,14 +60,14 @@ export function WalletSelectModal({
             <button
               onClick={onInjectedConnect}
               disabled={isLoading}
-              className="w-full flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all cursor-pointer disabled:opacity-50"
+              className="w-full flex items-center gap-3 p-4 rounded-xl border border-[#EDE9E3] hover:border-[#EDE9E3] hover:bg-[#F5F2ED] transition-all cursor-pointer disabled:opacity-50"
             >
-              <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-gray-100">
-                <Wallet className="h-5 w-5 text-gray-600" />
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-[#F5F2ED]">
+                <Wallet className="h-5 w-5 text-[#6B6560]" />
               </div>
               <div className="flex-1 text-left">
-                <p className="text-[14px] font-medium text-gray-900">Browser Wallet</p>
-                <p className="text-[12px] text-gray-500">MetaMask or other wallet</p>
+                <p className="text-[14px] font-medium text-[#2D3436]">Browser Wallet</p>
+                <p className="text-[12px] text-[#9B9590]">MetaMask or other wallet</p>
               </div>
             </button>
           )}
@@ -76,7 +76,7 @@ export function WalletSelectModal({
         {/* Footer */}
         <div className="px-6 pb-6">
           {onCreateWallet && (
-            <div className="pt-3 border-t border-gray-100">
+            <div className="pt-3 border-t border-[#F5F2ED]">
               <button
                 onClick={() => {
                   onClose();

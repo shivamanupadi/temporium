@@ -17,8 +17,10 @@ import { TokenPicker } from '@/components/TokenPicker';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
 import { useTempo, useTokenBalance } from '@/hooks/useTempo';
 import { useTokenList } from '@/hooks/useTokenList';
+import { useFeePreference } from '@/hooks/useFeePreference';
 import type { Token } from '@/lib/tokenlist';
 import { TIMING } from '@/lib/constants';
+import { tempoChain } from '@/lib/tempo-client';
 import { formatAmount, parseAmount } from '@/lib/utils';
 import { getDexBalance, getExplorerTxUrl } from '@/lib/tempo-client';
 
@@ -56,6 +58,7 @@ interface DexTokenBalance {
 function ExchangeBalancePage(): ReactElement | null {
   const { address, dexWithdraw } = useTempo();
   const { tokens } = useTokenList();
+  const { preferredFeeToken } = useFeePreference();
 
   // DEX balances for all tokens
   const [dexBalances, setDexBalances] = useState<DexTokenBalance[]>([]);
@@ -71,8 +74,19 @@ function ExchangeBalancePage(): ReactElement | null {
   // Default tokens
   useEffect(() => {
     if (tokens.length > 0 && !selectedToken) setSelectedToken(tokens[0]);
-    if (tokens.length > 0 && !feeToken) setFeeToken(tokens[0]);
-  }, [tokens, selectedToken, feeToken]);
+  }, [tokens, selectedToken]);
+
+  // Fee token priority: user on-chain preference > chain default (AlphaUSD) > first token
+  useEffect(() => {
+    if (tokens.length === 0 || feeToken) return;
+    const preferred = preferredFeeToken
+      ? tokens.find(t => t.address.toLowerCase() === preferredFeeToken.toLowerCase())
+      : null;
+    const chainDefault = tokens.find(
+      t => t.address.toLowerCase() === tempoChain.feeToken.toLowerCase()
+    );
+    setFeeToken(preferred ?? chainDefault ?? tokens[0]);
+  }, [tokens, feeToken, preferredFeeToken]);
 
   // Fetch all DEX balances
   const fetchDexBalances = useCallback(async () => {

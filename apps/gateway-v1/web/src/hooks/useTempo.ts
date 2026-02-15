@@ -27,6 +27,7 @@ import type {
   ClaimRewardsParams,
   DexWithdrawParams,
   AmmSwapParams,
+  BatchSendParams,
 } from '@temporium/gateway-connect';
 
 /**
@@ -79,6 +80,7 @@ interface UseTempoReturn {
   mintToken: (params: MintTokenParams) => Promise<string>;
   burnToken: (params: BurnTokenParams) => Promise<string>;
   claimRewards: (params: ClaimRewardsParams) => Promise<string>;
+  batchSend: (params: BatchSendParams) => Promise<string>;
   dexWithdraw: (params: DexWithdrawParams) => Promise<string>;
   // Utilities
   encodeMemo: typeof encodeMemo;
@@ -447,6 +449,28 @@ export function useTempo(): UseTempoReturn {
     [ensureClient]
   );
 
+  // ---------- Batch Send ----------
+
+  const batchSend = useCallback(
+    async (params: BatchSendParams): Promise<string> => {
+      const { walletClient: client } = ensureClient();
+      const calls = params.transfers.map(transfer =>
+        Actions.token.transfer.call({
+          token: params.token,
+          to: transfer.to,
+          amount: transfer.amount,
+          memo: transfer.memo,
+        })
+      );
+      const result = await client.sendCalls({
+        calls,
+        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+      } as any);
+      return result.id;
+    },
+    [ensureClient]
+  );
+
   // ---------- Rewards ----------
 
   const claimRewards = useCallback(
@@ -487,6 +511,7 @@ export function useTempo(): UseTempoReturn {
     mintToken,
     burnToken,
     claimRewards,
+    batchSend,
     dexWithdraw,
     encodeMemo,
     decodeMemo,

@@ -8,8 +8,10 @@ import { TokenPicker } from '@/components/TokenPicker';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
 import { useTempo, useTokenBalance } from '@/hooks/useTempo';
 import { useTokenList } from '@/hooks/useTokenList';
+import { useFeePreference } from '@/hooks/useFeePreference';
 import type { Token } from '@/lib/tokenlist';
 import { TIMING } from '@/lib/constants';
+import { tempoChain } from '@/lib/tempo-client';
 import { formatAmount, parseAmount } from '@/lib/utils';
 import {
   getPoolInfo,
@@ -30,6 +32,7 @@ export const Route = createFileRoute('/portal/pool-swap')({
 function PoolSwapPage(): ReactElement | null {
   const { address, ammSwap } = useTempo();
   const { tokens, isLoading: isLoadingTokens } = useTokenList();
+  const { preferredFeeToken } = useFeePreference();
 
   // Token selection — userToken = what you receive, validatorToken = what you pay
   const [userToken, setUserToken] = useState<Token | null>(null);
@@ -41,8 +44,19 @@ function PoolSwapPage(): ReactElement | null {
       setUserToken(tokens[0]);
       setValidatorToken(tokens[1]);
     }
-    if (tokens.length > 0 && !feeToken) setFeeToken(tokens[0]);
-  }, [tokens, userToken, feeToken]);
+  }, [tokens, userToken]);
+
+  // Fee token priority: user on-chain preference > chain default (AlphaUSD) > first token
+  useEffect(() => {
+    if (tokens.length === 0 || feeToken) return;
+    const preferred = preferredFeeToken
+      ? tokens.find(t => t.address.toLowerCase() === preferredFeeToken.toLowerCase())
+      : null;
+    const chainDefault = tokens.find(
+      t => t.address.toLowerCase() === tempoChain.feeToken.toLowerCase()
+    );
+    setFeeToken(preferred ?? chainDefault ?? tokens[0]);
+  }, [tokens, feeToken, preferredFeeToken]);
 
   // Form state
   const [amountOut, setAmountOut] = useState('');

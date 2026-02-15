@@ -80,6 +80,27 @@ export const scheduledTransactions = sqliteTable(
   ]
 );
 
+// ============ Custom Tokens ============
+export const customTokens = sqliteTable(
+  'custom_tokens',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    owner: text('owner').notNull(), // Wallet address that owns this record
+    address: text('address').notNull(), // Token contract address
+    name: text('name').notNull(),
+    symbol: text('symbol').notNull(),
+    decimals: integer('decimals').notNull().default(6),
+    logoURI: text('logo_uri'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  },
+  table => [
+    uniqueIndex('custom_tokens_owner_address_idx').on(table.owner, table.address),
+    index('custom_tokens_owner_idx').on(table.owner),
+  ]
+);
+
 // ============ TIP-403 Policies ============
 export const policyTypeValues = ['whitelist', 'blacklist'] as const;
 export type PolicyType = (typeof policyTypeValues)[number];

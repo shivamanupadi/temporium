@@ -88,6 +88,30 @@ export const createTip20ContractSchema = z.object({
 
 export type CreateTip20ContractRequest = z.infer<typeof createTip20ContractSchema>;
 
+// ============ Custom Tokens Schemas ============
+
+export const createCustomTokenSchema = z.object({
+  address: ethereumAddress,
+  name: z
+    .string()
+    .min(1, 'Name is required')
+    .max(100, 'Name must be 100 characters or less')
+    .trim(),
+  symbol: z
+    .string()
+    .min(1, 'Symbol is required')
+    .max(20, 'Symbol must be 20 characters or less')
+    .trim(),
+  decimals: z
+    .number()
+    .int('Decimals must be an integer')
+    .min(0, 'Decimals must be non-negative')
+    .max(18, 'Decimals must be 18 or less'),
+  logoURI: z.string().url('Invalid URL').optional().or(z.literal('')),
+});
+
+export type CreateCustomTokenRequest = z.infer<typeof createCustomTokenSchema>;
+
 // ============ Policies Schemas ============
 
 export const policyTypeSchema = z.enum(policyTypeValues);

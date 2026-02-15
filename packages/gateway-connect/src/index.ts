@@ -2,25 +2,23 @@
  * @temporium/gateway-connect
  *
  * SDK for connecting to Temporium Gateway from Tempo apps.
- * Uses the same parameter types as tempo.ts SDK for seamless integration.
+ * Exposes a standard viem WalletClient for use with Actions.* from viem/tempo.
  *
  * @example
  * ```typescript
  * import { GatewayConnect } from '@temporium/gateway-connect';
+ * import { Actions } from 'viem/tempo';
  *
  * const gateway = new GatewayConnect({
  *   appName: 'My App',
- *   appIcon: 'https://myapp.com/icon.png',
+ *   chain: tempoModerato,
  * });
  *
- * // Connect to gateway
- * const { address, chainId } = await gateway.connect();
+ * await gateway.connect();
+ * const walletClient = gateway.getWalletClient();
  *
- * // Send a payment (same params as Actions.token.transfer)
- * const { hash } = await gateway.sendPayment({
- *   to: '0x...',
- *   amount: 1000000n, // 1 USD
- *   token: '0x20c0000000000000000000000000000000000001',
+ * const hash = await Actions.token.transfer(walletClient, {
+ *   token, to, amount, feeToken,
  * });
  * ```
  *
@@ -38,6 +36,7 @@ export type {
   ConnectionEventListener,
   SignMessageResult,
   TransactionResult,
+  SignTransactionResult,
   // Tempo SDK compatible types
   SendPaymentParams,
   SendScheduledPaymentParams,
@@ -55,6 +54,8 @@ export type {
   ClaimRewardsParams,
   DexWithdrawParams,
   AmmSwapParams,
+  BatchSendParams,
+  BatchTransfer,
   AppPermission,
 } from './types';
 export { WALLET_CONNECT_VERSION, WalletConnectErrorCode, WalletConnectError } from './types';
