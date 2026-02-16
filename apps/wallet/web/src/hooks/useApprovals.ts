@@ -1,5 +1,5 @@
-import { useMemo } from 'react';
-import { useQueries } from '@tanstack/react-query';
+import { useMemo, useCallback } from 'react';
+import { useQueries, useQueryClient } from '@tanstack/react-query';
 import type { Address } from 'viem';
 import { useAccount } from 'wagmi';
 import { Actions, tempoPublicClient } from '@/lib/tempo-client';
@@ -33,6 +33,7 @@ interface UseApprovalsReturn {
 export function useApprovals(): UseApprovalsReturn {
   const { address } = useAccount();
   const { tokens, isLoading: tokensLoading } = useTokenList();
+  const queryClient = useQueryClient();
 
   // Build all token×spender pairs
   const pairs = useMemo(() => {
@@ -84,9 +85,9 @@ export function useApprovals(): UseApprovalsReturn {
       }));
   }, [allowanceQueries]);
 
-  const refresh = (): void => {
-    allowanceQueries.forEach(q => q.refetch());
-  };
+  const refresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ['allowance'] });
+  }, [queryClient]);
 
   return { approvals, isLoading, refresh };
 }

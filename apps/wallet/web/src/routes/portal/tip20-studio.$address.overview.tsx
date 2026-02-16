@@ -276,12 +276,21 @@ function Tip20StudioOverview(): ReactElement {
 
         {/* Right Column - Settings */}
         <div className="lg:flex-[2] mt-6 lg:mt-0">
-          <div className="bg-card rounded-xl shadow-xs border border-border overflow-hidden h-full">
-            <div className="px-4 py-3 border-b border-border/50">
-              <h2 className="text-[13px] font-semibold text-foreground">Token Settings</h2>
+          <div className="bg-white rounded-2xl border border-[#EDE9E3]/80 overflow-hidden h-full shadow-sm">
+            <div className="px-5 py-4 border-b border-[#EDE9E3]/50">
+              <h2 className="text-[13px] font-semibold text-[#2D3436] tracking-wide uppercase">
+                Settings
+              </h2>
+            </div>
+
+            {/* Token Operations */}
+            <div className="px-4 pt-4 pb-1">
+              <p className="text-[10px] font-semibold text-[#B5B0AA] uppercase tracking-widest px-1 mb-1">
+                Token Operations
+              </p>
             </div>
             <SettingsRow
-              icon={<Plus className="h-4 w-4 text-lavender" />}
+              icon={<Plus className="h-4 w-4 text-[#6B6560]" />}
               title="Mint Tokens"
               description="Issue new tokens to an address"
               onClick={() => setActiveModal('mint')}
@@ -289,9 +298,9 @@ function Tip20StudioOverview(): ReactElement {
             <SettingsRow
               icon={
                 isPaused ? (
-                  <Play className="h-4 w-4 text-[var(--color-sage)]" />
+                  <Play className="h-4 w-4 text-[#6B6560]" />
                 ) : (
-                  <Pause className="h-4 w-4 text-[var(--color-warning)]" />
+                  <Pause className="h-4 w-4 text-[#6B6560]" />
                 )
               }
               title={isPaused ? 'Unpause Token' : 'Pause Token'}
@@ -301,29 +310,45 @@ function Tip20StudioOverview(): ReactElement {
               onClick={() => setActiveModal('pause')}
             />
             <SettingsRow
-              icon={<Gauge className="h-4 w-4 text-[var(--color-lavender)]" />}
+              icon={<Gauge className="h-4 w-4 text-[#6B6560]" />}
               title="Set Supply Cap"
               description="Limit maximum token supply"
               onClick={() => setActiveModal('supply-cap')}
             />
             <SettingsRow
-              icon={<UserPlus className="h-4 w-4 text-[var(--color-sage)]" />}
+              icon={<Ban className="h-4 w-4 text-[#6B6560]" />}
+              title="Burn Blocked"
+              description="Burn tokens from a blocked address"
+              onClick={() => setActiveModal('burn-blocked')}
+              isLast
+            />
+
+            {/* Role Management */}
+            <div className="px-4 pt-4 pb-1 border-t border-[#EDE9E3]/50">
+              <p className="text-[10px] font-semibold text-[#B5B0AA] uppercase tracking-widest px-1 mb-1">
+                Role Management
+              </p>
+            </div>
+            <SettingsRow
+              icon={<UserPlus className="h-4 w-4 text-[#6B6560]" />}
               title="Grant Role"
               description="Give permissions to an address"
               onClick={() => setActiveModal('grant-role')}
             />
             <SettingsRow
-              icon={<UserMinus className="h-4 w-4 text-coral" />}
+              icon={<UserMinus className="h-4 w-4 text-[#6B6560]" />}
               title="Revoke Role"
               description="Remove permissions from an address"
               onClick={() => setActiveModal('revoke-role')}
+              isLast
             />
-            <SettingsRow
-              icon={<Ban className="h-4 w-4 text-coral/80" />}
-              title="Burn Blocked"
-              description="Burn tokens from a blocked address"
-              onClick={() => setActiveModal('burn-blocked')}
-            />
+
+            {/* Danger Zone */}
+            <div className="px-4 pt-4 pb-1 border-t border-[#EDE9E3]/50">
+              <p className="text-[10px] font-semibold text-coral/60 uppercase tracking-widest px-1 mb-1">
+                Danger Zone
+              </p>
+            </div>
             <SettingsRow
               icon={<Trash2 className="h-4 w-4 text-coral" />}
               title="Remove from List"
@@ -441,28 +466,28 @@ function SettingsRow({
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center justify-between p-4 transition-colors cursor-pointer ${
-        variant === 'danger' ? 'hover:bg-coral/5' : 'hover:bg-muted/50'
-      } ${!isLast ? 'border-b border-border/30' : ''}`}
+      className={`group w-full flex items-center justify-between px-5 py-3 transition-all cursor-pointer ${
+        variant === 'danger' ? 'hover:bg-coral/4' : 'hover:bg-[#F5F2ED]/50'
+      } ${!isLast ? 'border-b border-[#EDE9E3]/30' : ''}`}
     >
       <div className="flex items-center gap-3">
         <div
-          className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-            variant === 'danger' ? 'bg-coral/5' : 'bg-lavender/10'
+          className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+            variant === 'danger' ? 'bg-coral/6' : 'bg-[#F5F2ED]'
           }`}
         >
           {icon}
         </div>
         <div className="text-left">
           <p
-            className={`text-[13px] font-medium ${variant === 'danger' ? 'text-coral' : 'text-foreground'}`}
+            className={`text-[13px] font-medium leading-tight ${variant === 'danger' ? 'text-coral' : 'text-[#2D3436]'}`}
           >
             {title}
           </p>
-          <p className="text-[11px] text-muted-foreground">{description}</p>
+          <p className="text-[11px] text-[#B5B0AA] leading-tight mt-0.5">{description}</p>
         </div>
       </div>
-      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+      <ChevronRight className="h-3.5 w-3.5 text-[#D1CCC7] group-hover:text-[#9B9590] transition-colors" />
     </button>
   );
 }

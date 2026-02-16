@@ -91,7 +91,7 @@ export function TokenPicker({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.12 }}
-            className="absolute right-0 top-full mt-1.5 z-50 min-w-[160px] rounded-xl border border-[#EDE9E3] bg-white shadow-lg shadow-black/[0.04] overflow-hidden"
+            className="absolute left-0 top-full mt-1.5 z-50 min-w-[160px] rounded-xl border border-[#EDE9E3] bg-white shadow-lg shadow-black/[0.04] overflow-hidden"
           >
             {tokens.map(t => {
               const isDisabled = disabledAddresses.includes(t.address);

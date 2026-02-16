@@ -20,6 +20,9 @@ import {
   Key,
   Users,
   Link2,
+  ShieldCheck,
+  Gift,
+  ListPlus,
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
@@ -111,6 +114,27 @@ const quickActions = [
     icon: Shield,
     color: '#E07A5F',
     description: 'Transfer policies',
+  },
+  {
+    to: '/portal/batch-send',
+    label: 'Bulk Payments',
+    icon: ListPlus,
+    color: '#E07A5F',
+    description: 'Send to many at once',
+  },
+  {
+    to: '/portal/approvals',
+    label: 'Approvals',
+    icon: ShieldCheck,
+    color: '#5B9A6F',
+    description: 'Token allowances',
+  },
+  {
+    to: '/portal/rewards',
+    label: 'TIP20 Rewards',
+    icon: Gift,
+    color: '#5B9A6F',
+    description: 'Claim token rewards',
   },
   {
     to: '/portal/scheduled',

@@ -4,7 +4,7 @@ import { getWalletClient } from '@wagmi/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type Address, encodeFunctionData } from 'viem';
 import { tempoPasskeyConnector, injectedConnector, wagmiConfig } from '@/lib/wagmi';
-import { tempoChain, tempoPublicClient } from '@/lib/tempo-client';
+import { tempoChain, tempoPublicClient, waitForTx } from '@/lib/tempo-client';
 import { stringToBytes32, Actions, getTokenBalance } from '@/lib/tempo-client';
 import { DEFAULT_FEE_TOKEN_ADDRESS, TIMING } from '@/lib/constants';
 import { clearAuthTokens } from '@/lib/auth-storage';
@@ -466,7 +466,12 @@ export function useTempo(): UseTempoReturn {
         calls,
         feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
       } as any);
-      return result.id;
+      // result.id is a composite: txHash (32 bytes) + chainId + magic
+      // Extract the actual tx hash (first 66 hex chars)
+      const id: string = result.id;
+      const txHash = (id.length > 66 ? id.slice(0, 66) : id) as `0x${string}`;
+      await waitForTx(txHash);
+      return txHash;
     },
     [ensureClient]
   );

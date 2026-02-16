@@ -42,7 +42,7 @@ import {
   copyToClipboard,
   cn,
 } from '@/lib/utils';
-import { getExplorerTxUrl } from '@/lib/tempo-client';
+import { getExplorerTxUrl, waitForTx } from '@/lib/tempo-client';
 
 interface SendSearchParams {
   mode?: SendMode;
@@ -278,6 +278,7 @@ function SendPage(): ReactElement | null {
           memo: form.memo ? encodeMemo(form.memo) : undefined,
         });
 
+        await waitForTx(hash as `0x${string}`);
         setTxHash(hash);
         setStep('success');
         toast.success('Payment sent');
@@ -400,7 +401,11 @@ function SendPage(): ReactElement | null {
 
         <div className="p-5 space-y-5">
           {/* Recipient address */}
-          <ContactPicker value={form.recipient} onChange={v => updateField('recipient', v)} />
+          <ContactPicker
+            value={form.recipient}
+            onChange={v => updateField('recipient', v)}
+            selfAddress={address}
+          />
 
           {/* Amount */}
           <div>

@@ -687,7 +687,7 @@ function AccessKeysPage(): ReactElement {
           }
         }}
       >
-        <DialogContent className="p-0 gap-0 max-w-[400px] overflow-hidden">
+        <DialogContent className="p-0 gap-0 max-w-[400px]">
           <div className="px-6 pt-6 pb-4">
             <DialogTitle className="text-[18px] font-bold text-[#2D3436]">
               Add Token Limit

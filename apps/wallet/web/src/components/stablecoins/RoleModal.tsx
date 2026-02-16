@@ -48,6 +48,7 @@ export function RoleModal({
   const title = isGrant ? 'Grant Role' : 'Revoke Role';
   const _buttonLabel = isGrant ? 'Grant' : 'Revoke';
 
+  // Reset form only when modal opens (not when tokens refetch)
   useEffect(() => {
     if (isOpen) {
       setRoleAddress('');
@@ -56,7 +57,8 @@ export function RoleModal({
       setTxHash(null);
       setIsSubmitting(false);
     }
-  }, [isOpen, tokens]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleSubmit = useCallback(async (): Promise<void> => {
     if (!selectedCoin || !roleAddress) {

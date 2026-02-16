@@ -38,13 +38,15 @@ export function ClaimRewardsModal({
   const decimals = selectedCoin?.metadata?.decimals ?? 6;
 
   // Reset form when modal opens (not when claimableBalance changes)
+  // Reset form only when modal opens (not when tokens refetch)
   useEffect(() => {
     if (isOpen) {
       setFeeToken(tokens[0] ?? null);
       setTxHash(null);
       setIsSubmitting(false);
     }
-  }, [isOpen, tokens]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   // Store the claimable amount when modal opens
   useEffect(() => {

@@ -39,10 +39,6 @@ export const Route = createFileRoute('/portal/batch-send')({
   component: BatchSendPage,
 });
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
 type FlowStep = 'form' | 'confirm' | 'sending' | 'success';
 
 interface RecipientRow {
@@ -55,9 +51,7 @@ function createRow(): RecipientRow {
   return { id: crypto.randomUUID(), address: '', amount: '' };
 }
 
-// ---------------------------------------------------------------------------
 // Component
-// ---------------------------------------------------------------------------
 
 function BatchSendPage(): ReactElement | null {
   const { address, isConnected, batchSend } = useTempo();
@@ -95,9 +89,7 @@ function BatchSendPage(): ReactElement | null {
     };
   }, []);
 
-  // ---------------------------------------------------------------------------
   // Derived
-  // ---------------------------------------------------------------------------
 
   const tokenDecimals = selectedToken?.decimals ?? 6;
 
@@ -114,9 +106,7 @@ function BatchSendPage(): ReactElement | null {
   const isFormValid =
     validCount >= 2 && validCount === recipients.length && hasSufficientBalance && totalAmount > 0n;
 
-  // ---------------------------------------------------------------------------
   // Handlers
-  // ---------------------------------------------------------------------------
 
   const updateRecipient = useCallback((id: string, field: 'address' | 'amount', value: string) => {
     setRecipients(prev =>
@@ -194,9 +184,7 @@ function BatchSendPage(): ReactElement | null {
     }
   }, [step, resetForm]);
 
-  // ---------------------------------------------------------------------------
   // Guard
-  // ---------------------------------------------------------------------------
 
   if (!isConnected || !address || !selectedToken || !feeToken) return null;
 
@@ -207,7 +195,7 @@ function BatchSendPage(): ReactElement | null {
   const formattedTotal = totalAmount > 0n ? formatAmount(totalAmount, tokenDecimals, 2) : '0.00';
 
   return (
-    <div className="max-w-lg">
+    <div className="max-w-2xl">
       {/* Page header */}
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-[#2D3436] tracking-tight">Batch Send</h1>
@@ -258,33 +246,43 @@ function BatchSendPage(): ReactElement | null {
                     transition={{ duration: 0.2 }}
                     className="overflow-hidden"
                   >
-                    <div className="bg-[#FDFBF8] rounded-xl border border-[#EDE9E3] p-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-semibold text-[#B5B0AA]">#{idx + 1}</span>
-                        {recipients.length > 2 && (
+                    <div className="bg-[#FDFBF8] rounded-xl border border-[#EDE9E3] p-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-[11px] font-semibold text-[#B5B0AA] shrink-0 w-5 text-center leading-10">
+                          #{idx + 1}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <ContactPicker
+                            value={row.address}
+                            onChange={v => updateRecipient(row.id, 'address', v)}
+                            compact
+                            selfAddress={address}
+                          />
+                        </div>
+                        <div className="w-32 shrink-0">
+                          <Input
+                            type="text"
+                            inputMode="decimal"
+                            placeholder="0.00"
+                            value={row.amount}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                              updateRecipient(row.id, 'amount', e.target.value)
+                            }
+                            className="text-[14px] font-semibold h-10 rounded-xl border-[#EDE9E3] bg-white focus:border-[#E07A5F] focus:ring-1 focus:ring-[#E07A5F]/20 transition-all"
+                          />
+                        </div>
+                        {recipients.length > 2 ? (
                           <button
                             type="button"
                             onClick={() => removeRecipient(row.id)}
-                            className="p-1 rounded-md hover:bg-red-50 text-[#B5B0AA] hover:text-red-500 transition-colors"
+                            className="p-1 rounded-md hover:bg-red-50 text-[#B5B0AA] hover:text-red-500 transition-colors shrink-0"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
+                        ) : (
+                          <div className="w-[26px] shrink-0" />
                         )}
                       </div>
-                      <ContactPicker
-                        value={row.address}
-                        onChange={v => updateRecipient(row.id, 'address', v)}
-                      />
-                      <Input
-                        type="text"
-                        inputMode="decimal"
-                        placeholder="0.00"
-                        value={row.amount}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                          updateRecipient(row.id, 'amount', e.target.value)
-                        }
-                        className="text-[14px] font-semibold h-10 rounded-xl border-[#EDE9E3] bg-white focus:border-[#E07A5F] focus:ring-1 focus:ring-[#E07A5F]/20 transition-all"
-                      />
                     </div>
                   </motion.div>
                 ))}
@@ -351,9 +349,7 @@ function BatchSendPage(): ReactElement | null {
         </div>
       </motion.div>
 
-      {/* ================================================================= */}
-      {/* Confirmation / Sending / Success Dialog                            */}
-      {/* ================================================================= */}
+      {/* Confirmation / Sending / Success Dialog */}
       <Dialog
         open={step !== 'form'}
         onOpenChange={(open: boolean) => {

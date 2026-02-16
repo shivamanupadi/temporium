@@ -59,6 +59,7 @@ export function CreateAndLinkPolicyModal({
   const [txHash, setTxHash] = useState<string>('');
   const isProcessingRef = useRef(false);
 
+  // Reset form only when modal opens (not when tokens refetch)
   useEffect(() => {
     if (isOpen) {
       setPolicyType('whitelist');
@@ -68,7 +69,8 @@ export function CreateAndLinkPolicyModal({
       setCreatedPolicyId(null);
       setTxHash('');
     }
-  }, [isOpen, tokens]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const parseAddresses = useCallback((): Address[] => {
     if (!addresses.trim()) return [];

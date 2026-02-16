@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
 import { ContactPicker } from '@/components/ContactPicker';
-import { getExplorerTxUrl } from '@/lib/tempo-client';
+import { getExplorerTxUrl, waitForTx } from '@/lib/tempo-client';
 import { parseAmount } from '@/lib/utils';
 import { useStablecoins } from '@/hooks/useStablecoins';
 import { useTokenList } from '@/hooks/useTokenList';
@@ -35,6 +35,7 @@ export function SendTokensModal({
   const [txHash, setTxHash] = useState<string | null>(null);
   const isSubmittingRef = useRef(false);
 
+  // Reset form only when modal opens (not when tokens refetch)
   useEffect(() => {
     if (isOpen) {
       setRecipient('');
@@ -43,7 +44,8 @@ export function SendTokensModal({
       setTxHash(null);
       setIsSubmitting(false);
     }
-  }, [isOpen, tokens]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleSubmit = useCallback(async (): Promise<void> => {
     if (!selectedCoin || !recipient || !amount) {
@@ -71,6 +73,7 @@ export function SendTokensModal({
         amount: parsedAmount,
         feeToken: feeToken?.address,
       });
+      await waitForTx(result.transactionHash as `0x${string}`);
       setTxHash(result.transactionHash);
       onSuccess();
     } catch (error) {

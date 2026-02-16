@@ -11,7 +11,7 @@ import { useTokenList } from '@/hooks/useTokenList';
 import { useFeePreference } from '@/hooks/useFeePreference';
 import type { Token } from '@/lib/tokenlist';
 import { TIMING } from '@/lib/constants';
-import { tempoChain } from '@/lib/tempo-client';
+import { tempoChain, waitForTx } from '@/lib/tempo-client';
 import { formatAmount, parseAmount } from '@/lib/utils';
 import {
   getOrderbookInfo,
@@ -187,10 +187,11 @@ function OrderbookPage(): ReactElement | null {
     if (!baseToken || !feeToken) return;
     setIsCreatingPair(true);
     try {
-      await createPair({
+      const pairHash = await createPair({
         base: baseToken.address,
         feeToken: feeToken.address,
       });
+      await waitForTx(pairHash as `0x${string}`);
       toast.success('Trading pair created', {
         description: `${baseToken.symbol} pair is now active on the exchange.`,
       });
@@ -219,6 +220,7 @@ function OrderbookPage(): ReactElement | null {
         type: side,
         feeToken: feeToken.address,
       });
+      await waitForTx(hash as `0x${string}`);
       setTxHash(hash);
       setAmount('');
       toast.success(`${side === 'buy' ? 'Buy' : 'Sell'} order placed`, {

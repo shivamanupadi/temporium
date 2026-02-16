@@ -18,7 +18,7 @@ import { useTokenList } from '@/hooks/useTokenList';
 import { useFeePreference } from '@/hooks/useFeePreference';
 import type { Token } from '@/lib/tokenlist';
 import { TIMING } from '@/lib/constants';
-import { tempoChain } from '@/lib/tempo-client';
+import { tempoChain, waitForTx } from '@/lib/tempo-client';
 import { formatAmount, parseAmount } from '@/lib/utils';
 import { getSwapQuote, getExplorerTxUrl } from '@/lib/tempo-client';
 
@@ -242,6 +242,7 @@ function SwapPage(): ReactElement | null {
         minAmountOut,
         feeToken: feeToken.address,
       });
+      await waitForTx(hash as `0x${string}`);
       setTxHash(hash);
       setStatus('success');
     } catch (err) {

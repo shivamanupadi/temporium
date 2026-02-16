@@ -42,6 +42,7 @@ export function UnlinkPolicyModal({
   const [txHash, setTxHash] = useState<string>('');
   const isSubmittingRef = useRef(false);
 
+  // Reset form only when modal opens (not when tokens refetch)
   useEffect(() => {
     if (isOpen) {
       setModalState('form');
@@ -49,7 +50,8 @@ export function UnlinkPolicyModal({
       setTxHash('');
       setFeeToken(tokens[0] ?? null);
     }
-  }, [isOpen, tokens]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleContinue = useCallback((): void => {
     setModalState('confirm');

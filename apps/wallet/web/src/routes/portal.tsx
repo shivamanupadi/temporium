@@ -56,10 +56,19 @@ const navSections = [
     ],
   },
   {
-    label: 'Tools',
+    label: 'TIP20 Manager',
     items: [
       { to: '/portal/tip20-studio', label: 'TIP20 Studio', icon: CircleDollarSign },
+      { to: '/portal/rewards', label: 'TIP20 Rewards', icon: Gift },
+    ],
+  },
+  {
+    label: 'Tools',
+    items: [
       { to: '/portal/tip403-factory', label: 'TIP403 Factory', icon: Shield },
+      { to: '/portal/access-keys', label: 'Access Keys', icon: Key },
+      { to: '/portal/scheduled', label: 'Scheduled Txns', icon: Clock },
+      { to: '/portal/approvals', label: 'Token Approvals', icon: ShieldCheck },
     ],
   },
   {
@@ -80,12 +89,8 @@ const navSections = [
   {
     label: 'Manage',
     items: [
-      { to: '/portal/scheduled', label: 'Scheduled', icon: Clock },
-      { to: '/portal/access-keys', label: 'Access Keys', icon: Key },
       { to: '/portal/contacts', label: 'Contacts', icon: Users },
       { to: '/portal/connected-apps', label: 'Connected Apps', icon: Link2 },
-      { to: '/portal/rewards', label: 'Rewards', icon: Gift },
-      { to: '/portal/approvals', label: 'Approvals', icon: ShieldCheck },
       { to: '/portal/settings', label: 'Settings', icon: Settings },
     ],
   },

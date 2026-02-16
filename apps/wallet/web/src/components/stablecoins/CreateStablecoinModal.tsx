@@ -41,6 +41,7 @@ export function CreateStablecoinModal({
   const [isCreating, setIsCreating] = useState(false);
   const isCreatingRef = useRef(false);
 
+  // Reset form only when modal opens (not when tokens refetch)
   useEffect(() => {
     if (isOpen) {
       setName('');
@@ -50,7 +51,8 @@ export function CreateStablecoinModal({
       setModalState('form');
       setIsCreating(false);
     }
-  }, [isOpen, tokens]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleReview = useCallback((): void => {
     if (!name || !symbol) {

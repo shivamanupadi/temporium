@@ -20,7 +20,7 @@ import { useTokenList } from '@/hooks/useTokenList';
 import { useFeePreference } from '@/hooks/useFeePreference';
 import type { Token } from '@/lib/tokenlist';
 import { TIMING } from '@/lib/constants';
-import { tempoChain } from '@/lib/tempo-client';
+import { tempoChain, waitForTx } from '@/lib/tempo-client';
 import { formatAmount, parseAmount } from '@/lib/utils';
 import { getDexBalance, getExplorerTxUrl } from '@/lib/tempo-client';
 
@@ -162,6 +162,7 @@ function ExchangeBalancePage(): ReactElement | null {
         amount: parsedWithdrawAmount,
         feeToken: feeToken.address,
       });
+      await waitForTx(hash as `0x${string}`);
       setTxHash(hash);
       setWithdrawAmount('');
       toast.success('Withdrawal successful', {

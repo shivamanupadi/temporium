@@ -33,6 +33,7 @@ export function BurnTokensModal({
   const [txHash, setTxHash] = useState<string | null>(null);
   const isSubmittingRef = useRef(false);
 
+  // Reset form only when modal opens (not when tokens refetch)
   useEffect(() => {
     if (isOpen) {
       setAmount('');
@@ -40,7 +41,8 @@ export function BurnTokensModal({
       setTxHash(null);
       setIsSubmitting(false);
     }
-  }, [isOpen, tokens]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleSubmit = useCallback(async (): Promise<void> => {
     if (!selectedCoin || !amount) {

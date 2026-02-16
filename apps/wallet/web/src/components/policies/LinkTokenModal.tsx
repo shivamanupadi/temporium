@@ -44,6 +44,7 @@ export function LinkTokenModal({
   const [error, setError] = useState<string | null>(null);
   const isSubmittingRef = useRef(false);
 
+  // Reset form only when modal opens (not when tokens refetch)
   useEffect(() => {
     if (isOpen) {
       setTokenAddress('');
@@ -55,7 +56,8 @@ export function LinkTokenModal({
       setTxHash('');
       setError(null);
     }
-  }, [isOpen, tokens]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const isWhitelist = policyType === 'whitelist';
 

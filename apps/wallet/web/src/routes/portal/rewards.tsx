@@ -1,17 +1,14 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { useState, useCallback, useEffect, type ReactElement } from 'react';
+import { useState, useCallback, type ReactElement } from 'react';
 import { motion } from 'framer-motion';
 import { Gift, Loader2, RefreshCw, Coins } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
-import { FeeTokenPicker } from '@/components/FeeTokenPicker';
 import { useTempo } from '@/hooks/useTempo';
-import { useTokenList } from '@/hooks/useTokenList';
 import { useFeePreference } from '@/hooks/useFeePreference';
 import { useAllRewards, type TokenReward } from '@/hooks/useAllRewards';
-import type { Token } from '@/lib/tokenlist';
-import { tempoChain } from '@/lib/tempo-client';
-import { formatAmount, cn } from '@/lib/utils';
+import { tempoChain, waitForTx } from '@/lib/tempo-client';
+import { formatAmount } from '@/lib/utils';
 import { getTokenColors } from '@/lib/tokenlist';
 
 export const Route = createFileRoute('/portal/rewards')({
@@ -20,33 +17,24 @@ export const Route = createFileRoute('/portal/rewards')({
 
 function RewardsPage(): ReactElement | null {
   const { address, isConnected, claimRewards } = useTempo();
-  const { tokens } = useTokenList();
   const { preferredFeeToken } = useFeePreference();
   const { rewards, isLoading, refresh } = useAllRewards();
 
-  const [feeToken, setFeeToken] = useState<Token | null>(null);
   const [claimingToken, setClaimingToken] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (tokens.length === 0 || feeToken) return;
-    const preferred = preferredFeeToken
-      ? tokens.find(t => t.address.toLowerCase() === preferredFeeToken.toLowerCase())
-      : null;
-    const chainDefault = tokens.find(
-      t => t.address.toLowerCase() === tempoChain.feeToken.toLowerCase()
-    );
-    setFeeToken(preferred ?? chainDefault ?? tokens[0]);
-  }, [tokens, feeToken, preferredFeeToken]);
+  // Auto-resolve fee token from preference or chain default
+  const feeTokenAddress = preferredFeeToken || tempoChain.feeToken;
 
   const handleClaim = useCallback(
     async (reward: TokenReward) => {
-      if (!feeToken || claimingToken) return;
+      if (claimingToken) return;
       setClaimingToken(reward.token.address);
       try {
-        await claimRewards({
+        const hash = await claimRewards({
           token: reward.token.address,
-          feeToken: feeToken.address,
+          feeToken: feeTokenAddress,
         });
+        await waitForTx(hash as `0x${string}`);
         toast.success(`Claimed ${reward.token.symbol} rewards`);
         refresh();
       } catch (err) {
@@ -57,38 +45,33 @@ function RewardsPage(): ReactElement | null {
         setClaimingToken(null);
       }
     },
-    [feeToken, claimingToken, claimRewards, refresh]
+    [feeTokenAddress, claimingToken, claimRewards, refresh]
   );
 
   if (!isConnected || !address) return null;
 
   return (
-    <div className="max-w-2xl">
-      {/* Page header */}
-      <div className="flex items-center justify-between mb-6">
+    <div className="w-full space-y-6">
+      {/* Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between"
+      >
         <div>
-          <h1 className="text-2xl font-bold text-[#2D3436] tracking-tight">Rewards</h1>
+          <h1 className="text-2xl font-bold text-[#2D3436] tracking-tight">TIP20 Rewards</h1>
           <p className="text-[14px] text-[#6B6560] mt-1">View and claim your token rewards</p>
         </div>
-        <button
+        <Button
+          variant="outline"
           onClick={refresh}
-          className="p-2 rounded-xl border border-[#EDE9E3] text-[#9B9590] hover:text-[#6B6560] hover:bg-[#F5F2ED] transition-colors"
+          disabled={isLoading}
+          className="h-10 px-5 rounded-xl text-[13px] font-medium border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
         >
-          <RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin')} />
-        </button>
-      </div>
-
-      {/* Fee token picker */}
-      {feeToken && tokens.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="bg-white rounded-2xl border border-[#EDE9E3] shadow-sm p-5 mb-4"
-        >
-          <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
-        </motion.div>
-      )}
+          <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${isLoading ? 'animate-spin' : ''}`} />
+          <span className="hidden sm:inline">{isLoading ? 'Refreshing...' : 'Refresh'}</span>
+        </Button>
+      </motion.div>
 
       {/* Loading skeleton */}
       {isLoading && (
@@ -164,9 +147,9 @@ function RewardsPage(): ReactElement | null {
 
                   {/* Claim button */}
                   <Button
-                    disabled={isClaiming || !feeToken}
+                    disabled={isClaiming}
                     onClick={() => handleClaim(reward)}
-                    className="h-9 px-4 rounded-xl text-[13px] font-semibold bg-[#5B9A6F] hover:bg-[#4E8A62] text-white transition-all"
+                    className="h-9 px-4 rounded-xl text-[13px] font-semibold bg-sage hover:bg-sage/80 text-white transition-all"
                   >
                     {isClaiming ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -187,17 +170,16 @@ function RewardsPage(): ReactElement | null {
       {/* Empty state */}
       {!isLoading && rewards.length === 0 && (
         <motion.div
-          initial={{ opacity: 0, y: 8 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="bg-white rounded-2xl border border-[#EDE9E3] shadow-sm p-12 text-center"
+          className="rounded-2xl border border-dashed border-[#EDE9E3] bg-white p-12 text-center"
         >
-          <div className="w-14 h-14 rounded-full bg-[#F5F2ED] flex items-center justify-center mx-auto mb-4">
-            <Coins className="w-6 h-6 text-[#B5B0AA]" />
+          <div className="w-14 h-14 rounded-2xl bg-[#F5F2ED] flex items-center justify-center mx-auto mb-4">
+            <Coins className="w-7 h-7 text-[#B5B0AA]" />
           </div>
-          <p className="text-[15px] font-semibold text-[#2D3436] mb-1">No Rewards Available</p>
-          <p className="text-[13px] text-[#9B9590]">
-            Rewards will appear here when you have claimable balances
+          <h3 className="text-[16px] font-semibold text-[#2D3436]">No Rewards Available</h3>
+          <p className="text-[13px] text-[#9B9590] mt-1.5 max-w-sm mx-auto leading-relaxed">
+            Rewards will appear here when you have claimable token balances.
           </p>
         </motion.div>
       )}

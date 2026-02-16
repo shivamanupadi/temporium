@@ -48,6 +48,7 @@ export function LinkPolicyModal({
   const [txHash, setTxHash] = useState<string>('');
   const isSubmittingRef = useRef(false);
 
+  // Reset form only when modal opens (not when tokens refetch)
   useEffect(() => {
     if (isOpen) {
       setPolicyIdInput('');
@@ -58,7 +59,8 @@ export function LinkPolicyModal({
       setTxHash('');
       setFeeToken(tokens[0] ?? null);
     }
-  }, [isOpen, tokens]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleLookup = useCallback(async (): Promise<void> => {
     if (!policyIdInput) {

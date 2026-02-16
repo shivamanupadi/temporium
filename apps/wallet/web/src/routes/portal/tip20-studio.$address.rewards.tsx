@@ -312,82 +312,113 @@ function Tip20StudioRewards(): ReactElement {
 
         {/* Right Column - Actions */}
         <div className="lg:flex-[2] mt-6 lg:mt-0">
-          <div className="bg-card rounded-xl shadow-xs border border-border overflow-hidden h-full">
-            <div className="px-4 py-3 border-b border-border/50">
-              <h2 className="text-[13px] font-semibold text-foreground">Reward Actions</h2>
+          <div className="bg-white rounded-2xl border border-[#EDE9E3]/80 overflow-hidden h-full shadow-sm">
+            <div className="px-5 py-4 border-b border-[#EDE9E3]/50">
+              <h2 className="text-[13px] font-semibold text-[#2D3436] tracking-wide uppercase">
+                Settings
+              </h2>
+            </div>
+
+            {/* Claim & Manage */}
+            <div className="px-4 pt-4 pb-1">
+              <p className="text-[10px] font-semibold text-[#B5B0AA] uppercase tracking-widest px-1 mb-1">
+                Claim & Manage
+              </p>
             </div>
             <button
               onClick={() => setActiveModal('claim')}
-              className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted/50 border-b border-border/30 cursor-pointer"
+              className="group w-full flex items-center justify-between px-5 py-3 transition-all hover:bg-[#F5F2ED]/50 border-b border-[#EDE9E3]/30 cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-sage/10 flex items-center justify-center">
-                  <HandCoins className="h-4 w-4 text-[var(--color-sage)]" />
+                <div className="w-8 h-8 rounded-lg bg-[#F5F2ED] flex items-center justify-center shrink-0">
+                  <HandCoins className="h-4 w-4 text-[#6B6560]" />
                 </div>
                 <div className="text-left">
-                  <p className="text-[13px] font-medium text-foreground">Claim Rewards</p>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-[13px] font-medium text-[#2D3436] leading-tight">
+                    Claim Rewards
+                  </p>
+                  <p className="text-[11px] text-[#B5B0AA] leading-tight mt-0.5">
                     {hasClaimableRewards
                       ? `${formattedBalance} ${stablecoin?.symbol} available`
                       : 'Check claimable rewards'}
                   </p>
                 </div>
               </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              <ChevronRight className="h-3.5 w-3.5 text-[#D1CCC7] group-hover:text-[#9B9590] transition-colors" />
             </button>
             <button
               onClick={() => setActiveModal('opt-in')}
-              className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted/50 border-b border-border/30 cursor-pointer"
+              className="group w-full flex items-center justify-between px-5 py-3 transition-all hover:bg-[#F5F2ED]/50 cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-sage/10 flex items-center justify-center">
-                  <UserCheck className="h-4 w-4 text-[var(--color-sage)]" />
+                <div className="w-8 h-8 rounded-lg bg-[#F5F2ED] flex items-center justify-center shrink-0">
+                  <UserCheck className="h-4 w-4 text-[#6B6560]" />
                 </div>
                 <div className="text-left">
-                  <p className="text-[13px] font-medium text-foreground">
+                  <p className="text-[13px] font-medium text-[#2D3436] leading-tight">
                     {isOptedIn ? 'Change Recipient' : 'Opt In'}
                   </p>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-[11px] text-[#B5B0AA] leading-tight mt-0.5">
                     {isOptedIn ? 'Update your reward recipient' : 'Start receiving rewards'}
                   </p>
                 </div>
               </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              <ChevronRight className="h-3.5 w-3.5 text-[#D1CCC7] group-hover:text-[#9B9590] transition-colors" />
             </button>
-            {isOptedIn && (
-              <button
-                onClick={() => setActiveModal('opt-out')}
-                className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted/50 border-b border-border/30 cursor-pointer"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-sage/10 flex items-center justify-center">
-                    <UserX className="h-4 w-4 text-coral" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-[13px] font-medium text-foreground">Opt Out</p>
-                    <p className="text-[11px] text-muted-foreground">Stop receiving rewards</p>
-                  </div>
-                </div>
-                <ChevronRight className="h-4 w-4 text-muted-foreground" />
-              </button>
-            )}
+
+            {/* Distribution */}
+            <div className="px-4 pt-4 pb-1 border-t border-[#EDE9E3]/50">
+              <p className="text-[10px] font-semibold text-[#B5B0AA] uppercase tracking-widest px-1 mb-1">
+                Distribution
+              </p>
+            </div>
             <button
               onClick={() => setActiveModal('start-reward')}
-              className="w-full flex items-center justify-between p-4 transition-colors hover:bg-muted/50 cursor-pointer"
+              className="group w-full flex items-center justify-between px-5 py-3 transition-all hover:bg-[#F5F2ED]/50 cursor-pointer"
             >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-sage/10 flex items-center justify-center">
-                  <Gift className="h-4 w-4 text-[var(--color-sage)]" />
+                <div className="w-8 h-8 rounded-lg bg-[#F5F2ED] flex items-center justify-center shrink-0">
+                  <Gift className="h-4 w-4 text-[#6B6560]" />
                 </div>
                 <div className="text-left">
-                  <p className="text-[13px] font-medium text-foreground">Distribute Rewards</p>
-                  <p className="text-[11px] text-muted-foreground">
+                  <p className="text-[13px] font-medium text-[#2D3436] leading-tight">
+                    Distribute Rewards
+                  </p>
+                  <p className="text-[11px] text-[#B5B0AA] leading-tight mt-0.5">
                     Send rewards to all opted-in holders
                   </p>
                 </div>
               </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+              <ChevronRight className="h-3.5 w-3.5 text-[#D1CCC7] group-hover:text-[#9B9590] transition-colors" />
             </button>
+
+            {/* Danger Zone - Opt Out (only shown when opted in) */}
+            {isOptedIn && (
+              <>
+                <div className="px-4 pt-4 pb-1 border-t border-[#EDE9E3]/50">
+                  <p className="text-[10px] font-semibold text-coral/60 uppercase tracking-widest px-1 mb-1">
+                    Danger Zone
+                  </p>
+                </div>
+                <button
+                  onClick={() => setActiveModal('opt-out')}
+                  className="group w-full flex items-center justify-between px-5 py-3 transition-all hover:bg-coral/4 cursor-pointer"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-coral/6 flex items-center justify-center shrink-0">
+                      <UserX className="h-4 w-4 text-coral" />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-[13px] font-medium text-coral leading-tight">Opt Out</p>
+                      <p className="text-[11px] text-[#B5B0AA] leading-tight mt-0.5">
+                        Stop receiving rewards
+                      </p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-3.5 w-3.5 text-[#D1CCC7] group-hover:text-[#9B9590] transition-colors" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       </div>

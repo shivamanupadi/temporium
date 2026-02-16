@@ -38,6 +38,7 @@ export function PauseTokenModal({
   const title = isPause ? 'Pause Token' : 'Unpause Token';
   const _actionLabel = isPause ? 'Pause' : 'Unpause';
 
+  // Reset form only when modal opens (not when tokens refetch)
   useEffect(() => {
     if (isOpen) {
       setTxHash(null);
@@ -45,7 +46,8 @@ export function PauseTokenModal({
       setFeeToken(tokens[0] ?? null);
       setActionTaken(null);
     }
-  }, [isOpen, tokens]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleSubmit = useCallback(async (): Promise<void> => {
     if (!selectedCoin) return;

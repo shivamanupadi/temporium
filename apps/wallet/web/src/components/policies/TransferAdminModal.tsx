@@ -43,6 +43,7 @@ export function TransferAdminModal({
   const [txHash, setTxHash] = useState<string>('');
   const isSubmittingRef = useRef(false);
 
+  // Reset form only when modal opens (not when tokens refetch)
   useEffect(() => {
     if (isOpen) {
       setNewAdmin('');
@@ -51,7 +52,8 @@ export function TransferAdminModal({
       setIsSubmitting(false);
       setTxHash('');
     }
-  }, [isOpen, tokens]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleReview = useCallback((): void => {
     const trimmed = newAdmin.trim();

@@ -34,6 +34,7 @@ export function StartRewardModal({
   const isSubmittingRef = useRef(false);
 
   // Reset form when modal opens
+  // Reset form only when modal opens (not when tokens refetch)
   useEffect(() => {
     if (isOpen) {
       setAmount('');
@@ -41,7 +42,8 @@ export function StartRewardModal({
       setTxHash(null);
       setIsSubmitting(false);
     }
-  }, [isOpen, tokens]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const handleSubmit = useCallback(async (): Promise<void> => {
     if (!selectedCoin || !amount) {

@@ -41,6 +41,7 @@ export function CreatePolicyModal({
   const [isCreating, setIsCreating] = useState(false);
   const isCreatingRef = useRef(false);
 
+  // Reset form only when modal opens (not when tokens refetch)
   useEffect(() => {
     if (isOpen) {
       setPolicyType('whitelist');
@@ -49,7 +50,8 @@ export function CreatePolicyModal({
       setModalState('form');
       setIsCreating(false);
     }
-  }, [isOpen, tokens]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const parsedAddresses = useCallback((): Address[] => {
     if (!addressesInput.trim()) return [];

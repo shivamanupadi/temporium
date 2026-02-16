@@ -25,6 +25,9 @@ import {
   Repeat,
   Link2,
   Coins,
+  ShieldCheck,
+  Gift,
+  ListPlus,
   type LucideIcon,
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
@@ -63,6 +66,9 @@ const features = [
     desc: 'Deploy access-controlled tokens',
     color: '#9B72CF',
   },
+  { icon: ListPlus, label: 'Bulk Payments', desc: 'Send to many at once', color: '#E07A5F' },
+  { icon: ShieldCheck, label: 'Token Approvals', desc: 'Manage allowances', color: '#5B9A6F' },
+  { icon: Gift, label: 'TIP20 Rewards', desc: 'Claim token rewards', color: '#5B9A6F' },
   { icon: Key, label: 'Access Keys', desc: 'Manage signing permissions', color: '#D4A574' },
   { icon: Users, label: 'Contacts', desc: 'Save & organize addresses', color: '#5B9A6F' },
 ];
@@ -97,6 +103,12 @@ const featureSections: {
         title: 'QR Receive',
         desc: 'Generate a payment QR code with a pre-filled amount. Share it with anyone for one-tap payments.',
         color: '#5B9A6F',
+      },
+      {
+        icon: ListPlus,
+        title: 'Bulk Payments',
+        desc: 'Send tokens to multiple recipients in a single transaction. Perfect for payroll, airdrops, and batch distributions.',
+        color: '#E07A5F',
       },
       {
         icon: Clock,
@@ -155,6 +167,18 @@ const featureSections: {
         title: 'TIP403 Factory',
         desc: 'Deploy tokens with built-in access controls. Define policies for transfers, minting, and burning with granular permissions.',
         color: '#9B72CF',
+      },
+      {
+        icon: ShieldCheck,
+        title: 'Token Approvals',
+        desc: 'View and manage token spending allowances. Grant approvals to spenders or revoke them instantly.',
+        color: '#5B9A6F',
+      },
+      {
+        icon: Gift,
+        title: 'TIP20 Rewards',
+        desc: 'Claim accumulated token rewards from opted-in TIP20 tokens. Track claimable balances across all your holdings.',
+        color: '#5B9A6F',
       },
       {
         icon: Coins,
