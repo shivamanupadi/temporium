@@ -6,8 +6,6 @@ import {
   Plus,
   ShieldOff,
   Shield,
-  Clock,
-  CalendarIcon,
   AlertCircle,
   AlertTriangle,
   Loader2,
@@ -28,13 +26,11 @@ import { format } from 'date-fns';
 import { isAddress, type Address } from 'viem';
 import { Actions, tempoPublicClient } from '@/lib/tempo-client';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
-import { TimePicker } from '@/components/ui/time-picker';
-import { cn, formatAddress, copyToClipboard } from '@/lib/utils';
+import { formatAddress, copyToClipboard } from '@/lib/utils';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 import { useTempo } from '@/hooks/useTempo';
 import { useAccessKeys } from '@/hooks/useAccessKeys';
@@ -195,8 +191,7 @@ function AccessKeysPage(): ReactElement {
   const [wizardStep, setWizardStep] = useState<WizardStep>('type');
   const [selectedKeyType, setSelectedKeyType] = useState<AccessKeyType>('secp256k1');
   const [selectedExpiry, setSelectedExpiry] = useState<number | 'custom'>(86400);
-  const [customExpiryDate, setCustomExpiryDate] = useState<Date | undefined>(undefined);
-  const [customExpiryTime, setCustomExpiryTime] = useState<Date | undefined>(undefined);
+  const [customExpiry, setCustomExpiry] = useState<Date | undefined>(undefined);
   const [enforceLimits, setEnforceLimits] = useState(false);
   const [spendingLimits, setSpendingLimits] = useState<SpendingLimitEntry[]>([]);
 
@@ -244,8 +239,7 @@ function AccessKeysPage(): ReactElement {
     setWizardStep('type');
     setSelectedKeyType('secp256k1');
     setSelectedExpiry(86400);
-    setCustomExpiryDate(undefined);
-    setCustomExpiryTime(undefined);
+    setCustomExpiry(undefined);
     setEnforceLimits(false);
     setSpendingLimits([]);
     setGeneratedKey(null);
@@ -371,17 +365,11 @@ function AccessKeysPage(): ReactElement {
   // Compute expiry timestamp for custom date/time
   const computedExpirySeconds = useMemo(() => {
     if (selectedExpiry !== 'custom') return selectedExpiry;
-    if (!customExpiryDate) return null;
-    const d = new Date(customExpiryDate);
-    if (customExpiryTime) {
-      d.setHours(customExpiryTime.getHours(), customExpiryTime.getMinutes(), 0, 0);
-    } else {
-      d.setHours(23, 59, 59, 0);
-    }
-    const ts = Math.floor(d.getTime() / 1000);
+    if (!customExpiry) return null;
+    const ts = Math.floor(customExpiry.getTime() / 1000);
     const now = Math.floor(Date.now() / 1000);
     return ts > now ? ts - now : null;
-  }, [selectedExpiry, customExpiryDate, customExpiryTime]);
+  }, [selectedExpiry, customExpiry]);
 
   const handleAuthorizeKey = useCallback(async () => {
     if (!generatedKey) return;
@@ -659,13 +647,13 @@ function AccessKeysPage(): ReactElement {
                             ? 'bg-[#B5B0AA]/10'
                             : status === 'expired'
                               ? 'bg-[#E07A5F]/10'
-                              : 'bg-[#9B72CF]/10'
+                              : 'bg-coral/10'
                         }`}
                       >
                         {status === 'expired' ? (
                           <AlertTriangle className="w-5 h-5 text-[#E07A5F]" />
                         ) : (
-                          <Key className="w-5 h-5 text-[#9B72CF]" />
+                          <Key className="w-5 h-5 text-coral" />
                         )}
                       </div>
                       <div className="min-w-0">
@@ -673,7 +661,7 @@ function AccessKeysPage(): ReactElement {
 
                         {/* Key metadata */}
                         <div className="flex flex-wrap gap-1.5 mt-2">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#F5F2ED] text-[11px] font-medium text-[#6B6560]">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-lavender/10 text-[11px] font-medium text-lavender">
                             {key.signatureType}
                           </span>
                           {key.enforceLimits && (
@@ -697,7 +685,7 @@ function AccessKeysPage(): ReactElement {
 
                         {/* Expiry */}
                         <div className="flex items-center gap-1.5 mt-2">
-                          <Clock className="w-3.5 h-3.5 text-[#B5B0AA]" />
+                          <span className="text-[11px] font-medium text-[#B5B0AA]">Expires</span>
                           <span
                             className={`text-[12px] ${
                               isKeyExpired(key.expiry)
@@ -712,14 +700,14 @@ function AccessKeysPage(): ReactElement {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center gap-2 shrink-0">
                       {!key.isRevoked ? (
                         <>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => setLimitsModalKeyId(key.keyId)}
-                            className="h-8 rounded-lg text-[11px] font-medium border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED] gap-1.5"
+                            className="h-9 px-3 rounded-lg text-[12px] font-semibold border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED] gap-1.5"
                           >
                             <Coins className="w-3.5 h-3.5" />
                             Manage Limits
@@ -1241,8 +1229,7 @@ function AccessKeysPage(): ReactElement {
                           type="button"
                           onClick={() => {
                             setSelectedExpiry(preset.seconds);
-                            setCustomExpiryDate(undefined);
-                            setCustomExpiryTime(undefined);
+                            setCustomExpiry(undefined);
                           }}
                           className={`px-3.5 py-1.5 rounded-lg text-[12px] font-medium transition-all cursor-pointer ${
                             selectedExpiry === preset.seconds
@@ -1280,77 +1267,20 @@ function AccessKeysPage(): ReactElement {
                       <Label className="text-[12px] font-semibold text-[#6B6560] uppercase tracking-wider">
                         Expiry Date & Time
                       </Label>
-                      <div className="flex gap-2">
-                        {/* Date picker */}
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className={cn(
-                                'flex-1 h-10 justify-start text-left font-normal rounded-xl border-[#EDE9E3]',
-                                customExpiryDate && 'border-coral/40 bg-coral/[0.03]',
-                                !customExpiryDate && 'text-[#B5B0AA]'
-                              )}
-                            >
-                              <CalendarIcon className="w-3.5 h-3.5 mr-2 shrink-0" />
-                              <span className="text-[13px]">
-                                {customExpiryDate
-                                  ? format(customExpiryDate, 'MMM d, yyyy')
-                                  : 'Pick date'}
-                              </span>
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              captionLayout="dropdown"
-                              selected={customExpiryDate}
-                              onSelect={date => {
-                                setCustomExpiryDate(date);
-                                if (!customExpiryTime) {
-                                  const now = new Date();
-                                  now.setHours(now.getHours() + 1, 0, 0, 0);
-                                  setCustomExpiryTime(now);
-                                }
-                              }}
-                              disabled={date => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                            />
-                          </PopoverContent>
-                        </Popover>
-
-                        {/* Time picker */}
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              className={cn(
-                                'w-[130px] h-10 justify-start text-left font-normal rounded-xl border-[#EDE9E3]',
-                                customExpiryTime &&
-                                  customExpiryDate &&
-                                  'border-coral/40 bg-coral/[0.03]',
-                                !customExpiryTime && 'text-[#B5B0AA]'
-                              )}
-                            >
-                              <Clock className="w-3.5 h-3.5 mr-2 shrink-0" />
-                              <span className="text-[13px]">
-                                {customExpiryTime ? format(customExpiryTime, 'hh:mm aa') : 'Time'}
-                              </span>
-                            </Button>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-fit p-0" align="start">
-                            <TimePicker date={customExpiryTime} setDate={setCustomExpiryTime} />
-                          </PopoverContent>
-                        </Popover>
-                      </div>
-                      {customExpiryDate && computedExpirySeconds !== null && (
+                      <DateTimePicker
+                        date={customExpiry}
+                        onDateChange={setCustomExpiry}
+                        color="coral"
+                        placeholder="Pick expiry date & time"
+                        disabled={date => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                      />
+                      {customExpiry && computedExpirySeconds !== null && (
                         <p className="text-[11px] text-[#B5B0AA]">
-                          Expires on {format(customExpiryDate, 'MMM d, yyyy')}
-                          {customExpiryTime ? ` at ${format(customExpiryTime, 'hh:mm aa')}` : ''}.
+                          Expires on {format(customExpiry, 'MMM d, yyyy')} at{' '}
+                          {format(customExpiry, 'hh:mm aa')}.
                         </p>
                       )}
-                      {customExpiryDate && computedExpirySeconds === null && (
+                      {customExpiry && computedExpirySeconds === null && (
                         <p className="text-[11px] text-[#E5484D]">
                           Selected date/time is in the past.
                         </p>
@@ -1586,8 +1516,8 @@ function AccessKeysPage(): ReactElement {
                       <div className="flex items-center justify-between">
                         <span className="text-[12px] text-[#9B9590]">Expiry</span>
                         <span className="text-[12px] font-medium text-[#2D3436]">
-                          {selectedExpiry === 'custom' && customExpiryDate
-                            ? `${format(customExpiryDate, 'MMM d, yyyy')}${customExpiryTime ? ` ${format(customExpiryTime, 'hh:mm aa')}` : ''}`
+                          {selectedExpiry === 'custom' && customExpiry
+                            ? `${format(customExpiry, 'MMM d, yyyy')} ${format(customExpiry, 'hh:mm aa')}`
                             : selectedExpiry === 0
                               ? 'Never'
                               : EXPIRY_PRESETS.find(p => p.seconds === selectedExpiry)?.label}

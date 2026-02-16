@@ -1,16 +1,24 @@
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import type { AccentColor } from '@/components/ui/calendar';
+
+const timeColorMap = {
+  coral: 'bg-coral/15 hover:bg-coral/20 text-coral',
+  lavender: 'bg-lavender/15 hover:bg-lavender/20 text-lavender',
+  sage: 'bg-sage/15 hover:bg-sage/20 text-sage',
+} as const;
 
 interface TimePickerProps {
   date: Date | undefined;
   setDate: (date: Date | undefined) => void;
+  color?: AccentColor;
 }
 
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 1);
 const MINUTES = Array.from({ length: 12 }, (_, i) => i * 5);
 
-function TimePicker({ date, setDate }: TimePickerProps) {
+function TimePicker({ date, setDate, color = 'lavender' }: TimePickerProps) {
   const handleTimeChange = (type: 'hour' | 'minute' | 'ampm', value: string) => {
     const newDate = new Date(date ?? new Date());
     if (type === 'hour') {
@@ -44,6 +52,7 @@ function TimePicker({ date, setDate }: TimePickerProps) {
             key={hour}
             selected={isHourSelected(hour)}
             onClick={() => handleTimeChange('hour', hour.toString())}
+            color={color}
           >
             {hour}
           </TimeButton>
@@ -55,6 +64,7 @@ function TimePicker({ date, setDate }: TimePickerProps) {
             key={minute}
             selected={isMinuteSelected(minute)}
             onClick={() => handleTimeChange('minute', minute.toString())}
+            color={color}
           >
             {minute.toString().padStart(2, '0')}
           </TimeButton>
@@ -66,6 +76,7 @@ function TimePicker({ date, setDate }: TimePickerProps) {
             key={ampm}
             selected={isAmPmSelected(ampm)}
             onClick={() => handleTimeChange('ampm', ampm)}
+            color={color}
           >
             {ampm}
           </TimeButton>
@@ -98,10 +109,12 @@ function TimeButton({
   selected,
   onClick,
   children,
+  color = 'lavender',
 }: {
   selected: boolean;
   onClick: () => void;
   children: React.ReactNode;
+  color?: AccentColor;
 }) {
   return (
     <Button
@@ -110,7 +123,7 @@ function TimeButton({
       variant={selected ? 'default' : 'ghost'}
       className={cn(
         'w-full shrink-0 aspect-square',
-        selected ? 'bg-lavender hover:bg-lavender/90 text-white' : 'text-[#6B6560]'
+        selected ? timeColorMap[color] : 'text-[#6B6560]'
       )}
       onClick={onClick}
     >

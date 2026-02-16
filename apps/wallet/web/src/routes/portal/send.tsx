@@ -19,9 +19,7 @@ import { format } from 'date-fns';
 import type { Address } from 'viem';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { TimePicker } from '@/components/ui/time-picker';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { TokenPicker } from '@/components/TokenPicker';
@@ -142,9 +140,8 @@ function SendPage(): ReactElement | null {
     SCHEDULE_PRESETS[0].seconds
   );
 
-  // Custom date/time picker state
-  const [customDate, setCustomDate] = useState<Date | undefined>(undefined);
-  const [customTimeDate, setCustomTimeDate] = useState<Date | undefined>(undefined);
+  // Custom date/time picker state (combined)
+  const [customDateTime, setCustomDateTime] = useState<Date | undefined>(undefined);
 
   // Flow state
   const [step, setStep] = useState<FlowStep>('form');
@@ -174,12 +171,10 @@ function SendPage(): ReactElement | null {
 
   // Compute the custom datetime timestamp (if user picked a custom date/time)
   const customTimestamp = useMemo(() => {
-    if (!customDate || !customTimeDate) return null;
-    const dt = new Date(customDate);
-    dt.setHours(customTimeDate.getHours(), customTimeDate.getMinutes(), 0, 0);
-    const ts = Math.floor(dt.getTime() / 1000);
+    if (!customDateTime) return null;
+    const ts = Math.floor(customDateTime.getTime() / 1000);
     return ts > Math.floor(Date.now() / 1000) ? ts : null;
-  }, [customDate, customTimeDate]);
+  }, [customDateTime]);
 
   const isCustomMode = scheduleSeconds === null;
   const hasValidSchedule = isCustomMode ? customTimestamp !== null : scheduleSeconds !== null;
@@ -318,8 +313,7 @@ function SendPage(): ReactElement | null {
     setForm(EMPTY_FORM);
     setMode('instant');
     setScheduleSeconds(SCHEDULE_PRESETS[0].seconds);
-    setCustomDate(undefined);
-    setCustomTimeDate(undefined);
+    setCustomDateTime(undefined);
     setStep('form');
     setTxHash(null);
     setCopied(false);
@@ -508,9 +502,7 @@ function SendPage(): ReactElement | null {
                               type="button"
                               onClick={() => {
                                 setScheduleSeconds(preset.seconds);
-                                const target = new Date(Date.now() + preset.seconds * 1000);
-                                setCustomDate(target);
-                                setCustomTimeDate(new Date(target));
+                                setCustomDateTime(new Date(Date.now() + preset.seconds * 1000));
                               }}
                               className={cn(
                                 'px-4 py-2 rounded-xl text-[13px] font-medium transition-all border',
@@ -540,80 +532,22 @@ function SendPage(): ReactElement | null {
                     <label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider block">
                       Pick a date & time
                     </label>
-                    <div className="flex gap-2">
-                      {/* Date picker */}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className={cn(
-                              'flex-1 h-10 justify-start text-left font-normal rounded-xl border-[#EDE9E3] bg-[#FDFBF8] hover:bg-[#F5F2ED]',
-                              isCustomMode && customDate && 'border-[#9B72CF] bg-[#9B72CF]/5',
-                              !customDate && 'text-[#B5B0AA]'
-                            )}
-                          >
-                            <CalendarIcon className="w-3.5 h-3.5 mr-2 shrink-0" />
-                            <span className="text-[13px]">
-                              {customDate ? format(customDate, 'MMM d, yyyy') : 'Select date'}
-                            </span>
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            captionLayout="dropdown"
-                            selected={customDate}
-                            onSelect={date => {
-                              setCustomDate(date);
-                              setScheduleSeconds(null);
-                              if (!customTimeDate) {
-                                // Default to next hour
-                                const now = new Date();
-                                now.setHours(now.getHours() + 1, 0, 0, 0);
-                                setCustomTimeDate(now);
-                              }
-                            }}
-                            disabled={date => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                          />
-                        </PopoverContent>
-                      </Popover>
-
-                      {/* Time picker */}
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            className={cn(
-                              'w-[130px] h-10 justify-start text-left font-normal rounded-xl border-[#EDE9E3] bg-[#FDFBF8] hover:bg-[#F5F2ED]',
-                              isCustomMode && customTimeDate && 'border-[#9B72CF] bg-[#9B72CF]/5',
-                              !customTimeDate && 'text-[#B5B0AA]'
-                            )}
-                          >
-                            <Clock className="w-3.5 h-3.5 mr-2 shrink-0" />
-                            <span className="text-[13px]">
-                              {customTimeDate ? format(customTimeDate, 'hh:mm aa') : 'Time'}
-                            </span>
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-fit p-0" align="start">
-                          <TimePicker
-                            date={customTimeDate}
-                            setDate={d => {
-                              setCustomTimeDate(d);
-                              if (customDate) setScheduleSeconds(null);
-                            }}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
+                    <DateTimePicker
+                      date={customDateTime}
+                      onDateChange={d => {
+                        setCustomDateTime(d);
+                        setScheduleSeconds(null);
+                      }}
+                      color="lavender"
+                      placeholder="Select date & time"
+                      disabled={date => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                    />
                     {isCustomMode && customTimestamp && (
                       <p className="text-[12px] text-[#9B72CF] font-medium">
                         {format(new Date(customTimestamp * 1000), "EEEE, MMM d 'at' h:mm a")}
                       </p>
                     )}
-                    {isCustomMode && customDate && customTimeDate && !customTimestamp && (
+                    {isCustomMode && customDateTime && !customTimestamp && (
                       <p className="text-[12px] text-coral/70">Selected time is in the past</p>
                     )}
                   </div>

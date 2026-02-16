@@ -5,12 +5,36 @@ import { DayPicker } from 'react-day-picker';
 import { cn } from '@/lib/utils';
 import { buttonVariants } from '@/components/ui/button';
 
+type AccentColor = 'coral' | 'lavender' | 'sage';
+
+const accentColorMap = {
+  coral: {
+    selected: 'bg-coral text-white hover:bg-coral hover:text-white focus:bg-coral focus:text-white',
+    dayButton:
+      'aria-selected:bg-coral aria-selected:text-white aria-selected:hover:bg-coral aria-selected:hover:text-white',
+  },
+  lavender: {
+    selected:
+      'bg-lavender text-white hover:bg-lavender hover:text-white focus:bg-lavender focus:text-white',
+    dayButton:
+      'aria-selected:bg-lavender aria-selected:text-white aria-selected:hover:bg-lavender aria-selected:hover:text-white',
+  },
+  sage: {
+    selected: 'bg-sage text-white hover:bg-sage hover:text-white focus:bg-sage focus:text-white',
+    dayButton:
+      'aria-selected:bg-sage aria-selected:text-white aria-selected:hover:bg-sage aria-selected:hover:text-white',
+  },
+} as const;
+
 function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  accentColor = 'lavender',
   ...props
-}: React.ComponentProps<typeof DayPicker>) {
+}: React.ComponentProps<typeof DayPicker> & { accentColor?: AccentColor }) {
+  const colors = accentColorMap[accentColor];
+
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -44,12 +68,12 @@ function Calendar({
         ),
         day_button: cn(
           buttonVariants({ variant: 'ghost' }),
-          'h-8 w-8 p-0 font-normal aria-selected:opacity-100 aria-selected:bg-lavender aria-selected:text-white aria-selected:hover:bg-lavender aria-selected:hover:text-white'
+          'h-8 w-8 p-0 font-normal aria-selected:opacity-100',
+          colors.dayButton
         ),
         range_end: 'day-range-end',
         range_start: 'day-range-start',
-        selected:
-          'bg-lavender text-white hover:bg-lavender hover:text-white focus:bg-lavender focus:text-white',
+        selected: colors.selected,
         today: 'bg-accent text-accent-foreground',
         outside:
           'day-outside text-muted-foreground aria-selected:text-muted-foreground opacity-50 aria-selected:opacity-30',
@@ -70,3 +94,4 @@ function Calendar({
 }
 
 export { Calendar };
+export type { AccentColor };
