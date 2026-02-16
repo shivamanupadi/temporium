@@ -16,16 +16,13 @@ import { Route as IndexRouteImport } from './routes/index';
 import { Route as PortalTokenApprovalsRouteImport } from './routes/portal/token-approvals';
 import { Route as PortalTip403FactoryRouteImport } from './routes/portal/tip403-factory';
 import { Route as PortalTip20StudioRouteImport } from './routes/portal/tip20-studio';
-import { Route as PortalSwapRouteImport } from './routes/portal/swap';
 import { Route as PortalSettingsRouteImport } from './routes/portal/settings';
 import { Route as PortalSendRouteImport } from './routes/portal/send';
 import { Route as PortalScheduledTxnsRouteImport } from './routes/portal/scheduled-txns';
 import { Route as PortalRewardsRouteImport } from './routes/portal/rewards';
 import { Route as PortalReceiveRouteImport } from './routes/portal/receive';
-import { Route as PortalOrderbookRouteImport } from './routes/portal/orderbook';
 import { Route as PortalFeeAmmSwapRouteImport } from './routes/portal/fee-amm-swap';
 import { Route as PortalFeeAmmLiquidityRouteImport } from './routes/portal/fee-amm-liquidity';
-import { Route as PortalExchangeBalanceRouteImport } from './routes/portal/exchange-balance';
 import { Route as PortalDashboardRouteImport } from './routes/portal/dashboard';
 import { Route as PortalContactsRouteImport } from './routes/portal/contacts';
 import { Route as PortalConnectedAppsRouteImport } from './routes/portal/connected-apps';
@@ -74,11 +71,6 @@ const PortalTip20StudioRoute = PortalTip20StudioRouteImport.update({
   path: '/tip20-studio',
   getParentRoute: () => PortalRoute,
 } as any);
-const PortalSwapRoute = PortalSwapRouteImport.update({
-  id: '/swap',
-  path: '/swap',
-  getParentRoute: () => PortalRoute,
-} as any);
 const PortalSettingsRoute = PortalSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -104,11 +96,6 @@ const PortalReceiveRoute = PortalReceiveRouteImport.update({
   path: '/receive',
   getParentRoute: () => PortalRoute,
 } as any);
-const PortalOrderbookRoute = PortalOrderbookRouteImport.update({
-  id: '/orderbook',
-  path: '/orderbook',
-  getParentRoute: () => PortalRoute,
-} as any);
 const PortalFeeAmmSwapRoute = PortalFeeAmmSwapRouteImport.update({
   id: '/fee-amm-swap',
   path: '/fee-amm-swap',
@@ -117,11 +104,6 @@ const PortalFeeAmmSwapRoute = PortalFeeAmmSwapRouteImport.update({
 const PortalFeeAmmLiquidityRoute = PortalFeeAmmLiquidityRouteImport.update({
   id: '/fee-amm-liquidity',
   path: '/fee-amm-liquidity',
-  getParentRoute: () => PortalRoute,
-} as any);
-const PortalExchangeBalanceRoute = PortalExchangeBalanceRouteImport.update({
-  id: '/exchange-balance',
-  path: '/exchange-balance',
   getParentRoute: () => PortalRoute,
 } as any);
 const PortalDashboardRoute = PortalDashboardRouteImport.update({
@@ -196,16 +178,13 @@ export interface FileRoutesByFullPath {
   '/portal/connected-apps': typeof PortalConnectedAppsRoute;
   '/portal/contacts': typeof PortalContactsRoute;
   '/portal/dashboard': typeof PortalDashboardRoute;
-  '/portal/exchange-balance': typeof PortalExchangeBalanceRoute;
   '/portal/fee-amm-liquidity': typeof PortalFeeAmmLiquidityRoute;
   '/portal/fee-amm-swap': typeof PortalFeeAmmSwapRoute;
-  '/portal/orderbook': typeof PortalOrderbookRoute;
   '/portal/receive': typeof PortalReceiveRoute;
   '/portal/rewards': typeof PortalRewardsRoute;
   '/portal/scheduled-txns': typeof PortalScheduledTxnsRoute;
   '/portal/send': typeof PortalSendRoute;
   '/portal/settings': typeof PortalSettingsRoute;
-  '/portal/swap': typeof PortalSwapRoute;
   '/portal/tip20-studio': typeof PortalTip20StudioRouteWithChildren;
   '/portal/tip403-factory': typeof PortalTip403FactoryRouteWithChildren;
   '/portal/token-approvals': typeof PortalTokenApprovalsRoute;
@@ -227,16 +206,13 @@ export interface FileRoutesByTo {
   '/portal/connected-apps': typeof PortalConnectedAppsRoute;
   '/portal/contacts': typeof PortalContactsRoute;
   '/portal/dashboard': typeof PortalDashboardRoute;
-  '/portal/exchange-balance': typeof PortalExchangeBalanceRoute;
   '/portal/fee-amm-liquidity': typeof PortalFeeAmmLiquidityRoute;
   '/portal/fee-amm-swap': typeof PortalFeeAmmSwapRoute;
-  '/portal/orderbook': typeof PortalOrderbookRoute;
   '/portal/receive': typeof PortalReceiveRoute;
   '/portal/rewards': typeof PortalRewardsRoute;
   '/portal/scheduled-txns': typeof PortalScheduledTxnsRoute;
   '/portal/send': typeof PortalSendRoute;
   '/portal/settings': typeof PortalSettingsRoute;
-  '/portal/swap': typeof PortalSwapRoute;
   '/portal/token-approvals': typeof PortalTokenApprovalsRoute;
   '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRouteWithChildren;
   '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRouteWithChildren;
@@ -257,16 +233,13 @@ export interface FileRoutesById {
   '/portal/connected-apps': typeof PortalConnectedAppsRoute;
   '/portal/contacts': typeof PortalContactsRoute;
   '/portal/dashboard': typeof PortalDashboardRoute;
-  '/portal/exchange-balance': typeof PortalExchangeBalanceRoute;
   '/portal/fee-amm-liquidity': typeof PortalFeeAmmLiquidityRoute;
   '/portal/fee-amm-swap': typeof PortalFeeAmmSwapRoute;
-  '/portal/orderbook': typeof PortalOrderbookRoute;
   '/portal/receive': typeof PortalReceiveRoute;
   '/portal/rewards': typeof PortalRewardsRoute;
   '/portal/scheduled-txns': typeof PortalScheduledTxnsRoute;
   '/portal/send': typeof PortalSendRoute;
   '/portal/settings': typeof PortalSettingsRoute;
-  '/portal/swap': typeof PortalSwapRoute;
   '/portal/tip20-studio': typeof PortalTip20StudioRouteWithChildren;
   '/portal/tip403-factory': typeof PortalTip403FactoryRouteWithChildren;
   '/portal/token-approvals': typeof PortalTokenApprovalsRoute;
@@ -290,16 +263,13 @@ export interface FileRouteTypes {
     | '/portal/connected-apps'
     | '/portal/contacts'
     | '/portal/dashboard'
-    | '/portal/exchange-balance'
     | '/portal/fee-amm-liquidity'
     | '/portal/fee-amm-swap'
-    | '/portal/orderbook'
     | '/portal/receive'
     | '/portal/rewards'
     | '/portal/scheduled-txns'
     | '/portal/send'
     | '/portal/settings'
-    | '/portal/swap'
     | '/portal/tip20-studio'
     | '/portal/tip403-factory'
     | '/portal/token-approvals'
@@ -321,16 +291,13 @@ export interface FileRouteTypes {
     | '/portal/connected-apps'
     | '/portal/contacts'
     | '/portal/dashboard'
-    | '/portal/exchange-balance'
     | '/portal/fee-amm-liquidity'
     | '/portal/fee-amm-swap'
-    | '/portal/orderbook'
     | '/portal/receive'
     | '/portal/rewards'
     | '/portal/scheduled-txns'
     | '/portal/send'
     | '/portal/settings'
-    | '/portal/swap'
     | '/portal/token-approvals'
     | '/portal/tip20-studio/$address'
     | '/portal/tip403-factory/$policyId'
@@ -350,16 +317,13 @@ export interface FileRouteTypes {
     | '/portal/connected-apps'
     | '/portal/contacts'
     | '/portal/dashboard'
-    | '/portal/exchange-balance'
     | '/portal/fee-amm-liquidity'
     | '/portal/fee-amm-swap'
-    | '/portal/orderbook'
     | '/portal/receive'
     | '/portal/rewards'
     | '/portal/scheduled-txns'
     | '/portal/send'
     | '/portal/settings'
-    | '/portal/swap'
     | '/portal/tip20-studio'
     | '/portal/tip403-factory'
     | '/portal/token-approvals'
@@ -430,13 +394,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalTip20StudioRouteImport;
       parentRoute: typeof PortalRoute;
     };
-    '/portal/swap': {
-      id: '/portal/swap';
-      path: '/swap';
-      fullPath: '/portal/swap';
-      preLoaderRoute: typeof PortalSwapRouteImport;
-      parentRoute: typeof PortalRoute;
-    };
     '/portal/settings': {
       id: '/portal/settings';
       path: '/settings';
@@ -472,13 +429,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalReceiveRouteImport;
       parentRoute: typeof PortalRoute;
     };
-    '/portal/orderbook': {
-      id: '/portal/orderbook';
-      path: '/orderbook';
-      fullPath: '/portal/orderbook';
-      preLoaderRoute: typeof PortalOrderbookRouteImport;
-      parentRoute: typeof PortalRoute;
-    };
     '/portal/fee-amm-swap': {
       id: '/portal/fee-amm-swap';
       path: '/fee-amm-swap';
@@ -491,13 +441,6 @@ declare module '@tanstack/react-router' {
       path: '/fee-amm-liquidity';
       fullPath: '/portal/fee-amm-liquidity';
       preLoaderRoute: typeof PortalFeeAmmLiquidityRouteImport;
-      parentRoute: typeof PortalRoute;
-    };
-    '/portal/exchange-balance': {
-      id: '/portal/exchange-balance';
-      path: '/exchange-balance';
-      fullPath: '/portal/exchange-balance';
-      preLoaderRoute: typeof PortalExchangeBalanceRouteImport;
       parentRoute: typeof PortalRoute;
     };
     '/portal/dashboard': {
@@ -646,16 +589,13 @@ interface PortalRouteChildren {
   PortalConnectedAppsRoute: typeof PortalConnectedAppsRoute;
   PortalContactsRoute: typeof PortalContactsRoute;
   PortalDashboardRoute: typeof PortalDashboardRoute;
-  PortalExchangeBalanceRoute: typeof PortalExchangeBalanceRoute;
   PortalFeeAmmLiquidityRoute: typeof PortalFeeAmmLiquidityRoute;
   PortalFeeAmmSwapRoute: typeof PortalFeeAmmSwapRoute;
-  PortalOrderbookRoute: typeof PortalOrderbookRoute;
   PortalReceiveRoute: typeof PortalReceiveRoute;
   PortalRewardsRoute: typeof PortalRewardsRoute;
   PortalScheduledTxnsRoute: typeof PortalScheduledTxnsRoute;
   PortalSendRoute: typeof PortalSendRoute;
   PortalSettingsRoute: typeof PortalSettingsRoute;
-  PortalSwapRoute: typeof PortalSwapRoute;
   PortalTip20StudioRoute: typeof PortalTip20StudioRouteWithChildren;
   PortalTip403FactoryRoute: typeof PortalTip403FactoryRouteWithChildren;
   PortalTokenApprovalsRoute: typeof PortalTokenApprovalsRoute;
@@ -667,16 +607,13 @@ const PortalRouteChildren: PortalRouteChildren = {
   PortalConnectedAppsRoute: PortalConnectedAppsRoute,
   PortalContactsRoute: PortalContactsRoute,
   PortalDashboardRoute: PortalDashboardRoute,
-  PortalExchangeBalanceRoute: PortalExchangeBalanceRoute,
   PortalFeeAmmLiquidityRoute: PortalFeeAmmLiquidityRoute,
   PortalFeeAmmSwapRoute: PortalFeeAmmSwapRoute,
-  PortalOrderbookRoute: PortalOrderbookRoute,
   PortalReceiveRoute: PortalReceiveRoute,
   PortalRewardsRoute: PortalRewardsRoute,
   PortalScheduledTxnsRoute: PortalScheduledTxnsRoute,
   PortalSendRoute: PortalSendRoute,
   PortalSettingsRoute: PortalSettingsRoute,
-  PortalSwapRoute: PortalSwapRoute,
   PortalTip20StudioRoute: PortalTip20StudioRouteWithChildren,
   PortalTip403FactoryRoute: PortalTip403FactoryRouteWithChildren,
   PortalTokenApprovalsRoute: PortalTokenApprovalsRoute,

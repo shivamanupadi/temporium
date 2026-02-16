@@ -13,19 +13,13 @@ import type { WalletType } from '@/types';
 import type {
   SendPaymentParams,
   SendScheduledPaymentParams,
-  SwapParams,
   AddLiquidityParams,
   RemoveLiquidityParams,
-  BuyTokensParams,
-  PlaceOrderParams,
-  CancelOrderParams,
-  CreatePairParams,
   ApproveTokenParams,
   CreateTokenParams,
   MintTokenParams,
   BurnTokenParams,
   ClaimRewardsParams,
-  DexWithdrawParams,
   AmmSwapParams,
   BatchSendParams,
 } from '@temporium/gateway-connect';
@@ -67,13 +61,8 @@ interface UseTempoReturn {
     params: SendScheduledPaymentParams
   ) => Promise<{ serializedTransaction: string; scheduledFor: number }>;
   submitSignedTransaction: (serializedTransaction: string) => Promise<string>;
-  swapTokens: (params: SwapParams) => Promise<string>;
   addLiquidity: (params: AddLiquidityParams) => Promise<string>;
   removeLiquidity: (params: RemoveLiquidityParams) => Promise<string>;
-  buyTokens: (params: BuyTokensParams) => Promise<string>;
-  placeOrder: (params: PlaceOrderParams) => Promise<string>;
-  cancelOrder: (params: CancelOrderParams) => Promise<string>;
-  createPair: (params: CreatePairParams) => Promise<string>;
   ammSwap: (params: AmmSwapParams) => Promise<string>;
   approveToken: (params: ApproveTokenParams) => Promise<string>;
   createToken: (params: CreateTokenParams) => Promise<{ hash: string; tokenAddress: Address }>;
@@ -81,7 +70,6 @@ interface UseTempoReturn {
   burnToken: (params: BurnTokenParams) => Promise<string>;
   claimRewards: (params: ClaimRewardsParams) => Promise<string>;
   batchSend: (params: BatchSendParams) => Promise<string>;
-  dexWithdraw: (params: DexWithdrawParams) => Promise<string>;
   // Utilities
   encodeMemo: typeof encodeMemo;
   decodeMemo: typeof decodeMemo;
@@ -327,84 +315,6 @@ export function useTempo(): UseTempoReturn {
     [ensureClient]
   );
 
-  // ---------- DEX ----------
-
-  const swapTokens = useCallback(
-    async (params: SwapParams) => {
-      const { walletClient: client } = ensureClient();
-      return Actions.dex.sell(client, {
-        tokenIn: params.tokenIn,
-        tokenOut: params.tokenOut,
-        amountIn: params.amountIn,
-        minAmountOut: params.minAmountOut,
-        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
-      });
-    },
-    [ensureClient]
-  );
-
-  const buyTokens = useCallback(
-    async (params: BuyTokensParams) => {
-      const { walletClient: client } = ensureClient();
-      return Actions.dex.buy(client, {
-        tokenIn: params.tokenIn,
-        tokenOut: params.tokenOut,
-        amountOut: params.amountOut,
-        maxAmountIn: params.maxAmountIn,
-        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
-      });
-    },
-    [ensureClient]
-  );
-
-  const placeOrder = useCallback(
-    async (params: PlaceOrderParams) => {
-      const { walletClient: client } = ensureClient();
-      return Actions.dex.place(client, {
-        token: params.token,
-        amount: params.amount,
-        tick: params.tick,
-        type: params.type,
-        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
-      });
-    },
-    [ensureClient]
-  );
-
-  const cancelOrder = useCallback(
-    async (params: CancelOrderParams) => {
-      const { walletClient: client } = ensureClient();
-      return Actions.dex.cancel(client, {
-        orderId: params.orderId,
-        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
-      });
-    },
-    [ensureClient]
-  );
-
-  const createPair = useCallback(
-    async (params: CreatePairParams) => {
-      const { walletClient: client } = ensureClient();
-      return Actions.dex.createPair(client, {
-        base: params.base,
-        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
-      });
-    },
-    [ensureClient]
-  );
-
-  const dexWithdraw = useCallback(
-    async (params: DexWithdrawParams) => {
-      const { walletClient: client } = ensureClient();
-      return Actions.dex.withdraw(client, {
-        token: params.token,
-        amount: params.amount,
-        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
-      });
-    },
-    [ensureClient]
-  );
-
   // ---------- AMM ----------
 
   const ammSwap = useCallback(
@@ -503,13 +413,8 @@ export function useTempo(): UseTempoReturn {
     sendPayment,
     signScheduledPayment,
     submitSignedTransaction,
-    swapTokens,
     addLiquidity,
     removeLiquidity,
-    buyTokens,
-    placeOrder,
-    cancelOrder,
-    createPair,
     ammSwap,
     approveToken,
     createToken,
@@ -517,7 +422,6 @@ export function useTempo(): UseTempoReturn {
     burnToken,
     claimRewards,
     batchSend,
-    dexWithdraw,
     encodeMemo,
     decodeMemo,
   };

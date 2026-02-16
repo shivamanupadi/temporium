@@ -4,7 +4,6 @@ import { motion } from 'framer-motion';
 import {
   Send,
   QrCode,
-  ArrowRightLeft,
   Copy,
   Check,
   Droplets,
@@ -12,7 +11,6 @@ import {
   DollarSign,
   Loader2,
   Wallet,
-  BarChart3,
   Repeat,
   CircleDollarSign,
   Shield,
@@ -127,32 +125,6 @@ const quickActionSections = [
         icon: ShieldCheck,
         color: '#5B9A6F',
         description: 'Token allowances',
-      },
-    ],
-  },
-  {
-    label: 'Stablecoin DEX',
-    items: [
-      {
-        to: '/portal/swap',
-        label: 'Swap',
-        icon: ArrowRightLeft,
-        color: '#9B72CF',
-        description: 'Exchange tokens',
-      },
-      {
-        to: '/portal/orderbook',
-        label: 'Orderbook',
-        icon: BarChart3,
-        color: '#9B72CF',
-        description: 'Limit orders',
-      },
-      {
-        to: '/portal/exchange-balance',
-        label: 'DEX Balance',
-        icon: Wallet,
-        color: '#9B72CF',
-        description: 'Manage DEX funds',
       },
     ],
   },

@@ -5,7 +5,6 @@ import {
   LayoutDashboard,
   Send,
   QrCode,
-  ArrowRightLeft,
   Droplets,
   CircleDollarSign,
   Shield,
@@ -13,7 +12,6 @@ import {
   Users,
   Clock,
   Link2,
-  BarChart3,
   Repeat,
   LogOut,
   Settings,
@@ -69,14 +67,6 @@ const navSections = [
       { to: '/portal/access-keys', label: 'Access Keys', icon: Key },
       { to: '/portal/scheduled-txns', label: 'Scheduled Txns', icon: Clock },
       { to: '/portal/token-approvals', label: 'Token Approvals', icon: ShieldCheck },
-    ],
-  },
-  {
-    label: 'Stablecoin DEX',
-    items: [
-      { to: '/portal/swap', label: 'Swap', icon: ArrowRightLeft },
-      { to: '/portal/orderbook', label: 'Orderbook', icon: BarChart3 },
-      { to: '/portal/exchange-balance', label: 'DEX Balance', icon: Wallet },
     ],
   },
   {

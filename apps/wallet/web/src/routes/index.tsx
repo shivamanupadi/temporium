@@ -9,7 +9,6 @@ import {
   LayoutDashboard,
   Send,
   QrCode,
-  ArrowRightLeft,
   Droplets,
   CircleDollarSign,
   Clock,
@@ -21,7 +20,6 @@ import {
   Database,
   Copy,
   Check,
-  BarChart3,
   Repeat,
   Link2,
   Coins,
@@ -51,8 +49,13 @@ const features = [
   },
   { icon: Send, label: 'Send', desc: 'Transfer tokens instantly', color: '#E07A5F' },
   { icon: QrCode, label: 'Receive', desc: 'Generate payment QR codes', color: '#5B9A6F' },
-  { icon: ArrowRightLeft, label: 'Swap', desc: 'Exchange tokens seamlessly', color: '#D4A574' },
-  { icon: Droplets, label: 'Liquidity', desc: 'Provide LP & earn fees', color: '#6BA3BE' },
+  { icon: Repeat, label: 'Fee AMM', desc: 'Rebalance swaps at fixed rates', color: '#D4A574' },
+  {
+    icon: Droplets,
+    label: 'Liquidity',
+    desc: 'Provide LP & earn 0.3% on fee conversions',
+    color: '#6BA3BE',
+  },
   {
     icon: CircleDollarSign,
     label: 'TIP20 Studio',
@@ -119,33 +122,21 @@ const featureSections: {
     ],
   },
   {
-    label: 'Trading',
-    heading: 'Trade stablecoins on-chain',
+    label: 'Fee AMM',
+    heading: 'Fee AMM — fixed-rate token swaps',
     subtitle:
-      'Swap between stablecoins via an orderbook DEX or automated market maker pools with deep liquidity and zero slippage risk.',
+      'The Fee AMM enables rebalance swaps between user tokens and validator tokens at a fixed rate with a ~0.15% bonus. Liquidity providers earn 0.3% on every protocol fee conversion.',
     items: [
       {
-        icon: ArrowRightLeft,
-        title: 'Stablecoin Swap',
-        desc: 'Swap between USD, USDC, USDT, and other stablecoins through a high-performance on-chain orderbook.',
-        color: '#D4A574',
-      },
-      {
-        icon: BarChart3,
-        title: 'Orderbook',
-        desc: 'View real-time bids and asks. Place limit orders at your target price and let the matching engine handle the rest.',
-        color: '#6BA3BE',
-      },
-      {
         icon: Repeat,
-        title: 'Pool Swap',
-        desc: 'Trade through AMM liquidity pools for guaranteed execution. Automatic routing picks the best available rate.',
+        title: 'Rebalance Swap',
+        desc: 'Swap validator tokens for user tokens at a fixed rate. Rebalancers receive a ~0.15% bonus — pay less than they receive.',
         color: '#E07A5F',
       },
       {
         icon: Droplets,
         title: 'Provide Liquidity',
-        desc: 'Deposit token pairs into AMM pools to earn trading fees. Withdraw your position and accumulated rewards anytime.',
+        desc: 'Deposit validator tokens into Fee AMM pools and earn 0.3% on every protocol fee conversion. Withdraw anytime.',
         color: '#5B9A6F',
       },
     ],
@@ -398,8 +389,8 @@ function LandingPage(): ReactElement {
               transition={{ duration: 0.5, delay: 0.22 }}
               className="text-[15px] sm:text-[16px] text-[#8A8580] leading-relaxed mb-10 max-w-md"
             >
-              Send, receive, swap, provide liquidity, create tokens, schedule payments, and manage
-              access keys. All with sub-cent fees.
+              Send, receive, provide liquidity, create tokens, schedule payments, and manage access
+              keys. All with sub-cent fees.
             </motion.p>
 
             {/* CTA buttons */}

@@ -65,19 +65,6 @@ export async function fundFromFaucet(account: Address): Promise<readonly Hash[]>
   return hashes;
 }
 
-export async function getSwapQuote(
-  tokenIn: Address,
-  tokenOut: Address,
-  amountIn: bigint
-): Promise<bigint> {
-  const amountOut = await Actions.dex.getSellQuote(tempoPublicClient, {
-    tokenIn,
-    tokenOut,
-    amountIn,
-  });
-  return amountOut;
-}
-
 export interface PoolInfo {
   reserveUserToken: bigint;
   reserveValidatorToken: bigint;
@@ -168,76 +155,6 @@ export function getAmmOutput(pool: PoolInfo, amountIn: bigint): bigint | null {
   // Clamp to pool reserves; return null when reserves are exhausted
   const clamped = raw > pool.reserveUserToken ? pool.reserveUserToken : raw;
   return clamped <= 0n ? null : clamped;
-}
-
-export async function getDexBalance(token: Address, account: Address): Promise<bigint> {
-  try {
-    const balance = await Actions.dex.getBalance(tempoPublicClient, {
-      token,
-      account,
-    });
-    return balance;
-  } catch (error) {
-    console.error('Failed to get DEX balance:', error);
-    return 0n;
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Tick / Price helpers for the stablecoin DEX orderbook
-// ---------------------------------------------------------------------------
-
-export const TICK_SPACING = 10;
-export const MIN_TICK = -2000;
-export const MAX_TICK = 2000;
-export const PRICE_SCALE = 100_000;
-
-/** Convert a tick integer to a human-readable price string (5 decimals). */
-export function tickToPrice(tick: number): string {
-  return ((PRICE_SCALE + tick) / PRICE_SCALE).toFixed(5);
-}
-
-/**
- * Parse a price string and return the nearest valid tick.
- * Returns `null` when the result is out of range or the input is invalid.
- */
-export function priceToTick(priceStr: string): number | null {
-  const price = parseFloat(priceStr);
-  if (isNaN(price) || price <= 0) return null;
-  const rawTick = Math.round(price * PRICE_SCALE - PRICE_SCALE);
-  const aligned = Math.round(rawTick / TICK_SPACING) * TICK_SPACING;
-  if (aligned < MIN_TICK || aligned > MAX_TICK) return null;
-  return aligned;
-}
-
-// ---------------------------------------------------------------------------
-// Orderbook helpers
-// ---------------------------------------------------------------------------
-
-export interface OrderbookInfo {
-  bestBidTick: number;
-  bestAskTick: number;
-}
-
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
-
-export async function getOrderbookInfo(
-  base: Address,
-  quote: Address
-): Promise<OrderbookInfo | null> {
-  try {
-    const book = await Actions.dex.getOrderbook(tempoPublicClient, { base, quote });
-    // The `books` mapping returns zero-initialised structs for non-existent pairs
-    if (book.base === ZERO_ADDRESS || book.quote === ZERO_ADDRESS) {
-      return null;
-    }
-    return {
-      bestBidTick: book.bestBidTick,
-      bestAskTick: book.bestAskTick,
-    };
-  } catch {
-    return null;
-  }
 }
 
 export { Actions };
