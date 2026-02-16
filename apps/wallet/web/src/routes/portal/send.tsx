@@ -111,7 +111,7 @@ function SendPage(): ReactElement | null {
 
   // Fee token priority: user on-chain preference > chain default (AlphaUSD) > first token
   useEffect(() => {
-    if (tokens.length === 0 || feeToken) return;
+    if (tokens.length === 0) return;
     const preferred = preferredFeeToken
       ? tokens.find(t => t.address.toLowerCase() === preferredFeeToken.toLowerCase())
       : null;
@@ -119,7 +119,7 @@ function SendPage(): ReactElement | null {
       t => t.address.toLowerCase() === tempoChain.feeToken.toLowerCase()
     );
     setFeeToken(preferred ?? chainDefault ?? tokens[0]);
-  }, [tokens, feeToken, preferredFeeToken]);
+  }, [tokens, preferredFeeToken]);
 
   const balance = useTokenBalance(selectedToken?.address, address);
 
@@ -1013,7 +1013,7 @@ function SendPage(): ReactElement | null {
                       Explorer
                     </Button>
                   ) : (
-                    <Link to="/portal/scheduled" className="flex-1">
+                    <Link to="/portal/scheduled-txns" className="flex-1">
                       <Button
                         variant="outline"
                         className="w-full h-11 rounded-xl border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"

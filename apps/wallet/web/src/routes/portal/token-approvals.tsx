@@ -37,7 +37,7 @@ const KNOWN_SPENDERS: { address: Address; label: string }[] = [
   { address: '0xcccccccc00000000000000000000000000000000' as Address, label: 'Validator' },
 ];
 
-export const Route = createFileRoute('/portal/approvals')({
+export const Route = createFileRoute('/portal/token-approvals')({
   component: ApprovalsPage,
 });
 

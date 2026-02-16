@@ -126,15 +126,48 @@ export async function getLiquidityBalance(
   }
 }
 
+// ---------------------------------------------------------------------------
+// Fee AMM quote helpers (fixed-rate, no RPC needed)
+//
+// The Fee AMM uses fixed rates — NOT a bonding curve:
+//   Fee swap (protocol-only):  amountOut = (amountIn * M) / SCALE
+//   Rebalance swap (public):   amountIn  = (amountOut * N) / SCALE + 1
+//
+// M = 9970, N = 9985, SCALE = 10000
+//
+// In a rebalance swap the caller pays validator tokens and receives MORE
+// user tokens (a ~0.15% bonus incentivising pool rebalancing).
+//
+// See: https://docs.tempo.xyz/protocol/fees/spec-fee-amm
+// ---------------------------------------------------------------------------
+
+const AMM_N = 9985n;
+const AMM_SCALE = 10000n;
+
 /**
- * Estimate the validatorToken cost for a given userToken amountOut using
- * pool reserves and constant-product formula.  This is an approximation —
- * the contract may apply its own fee.
+ * Compute the exact validatorToken cost (amountIn) for a given userToken
+ * amountOut using the Fee AMM's fixed rebalance rate.
+ * Returns null if amountOut exceeds pool reserves.
  */
-export function estimateAmmCost(pool: PoolInfo, amountOut: bigint): bigint | null {
-  if (amountOut <= 0n || amountOut >= pool.reserveUserToken) return null;
-  // constant product: dx = (Rv * dy) / (Ru - dy)
-  return (pool.reserveValidatorToken * amountOut) / (pool.reserveUserToken - amountOut);
+export function getAmmCost(pool: PoolInfo, amountOut: bigint): bigint | null {
+  if (amountOut <= 0n || amountOut > pool.reserveUserToken) return null;
+  // amountIn = (amountOut * N) / SCALE + 1  (rounded up)
+  return (amountOut * AMM_N) / AMM_SCALE + 1n;
+}
+
+/**
+ * Compute the max userToken amountOut for a given validatorToken amountIn
+ * using the Fee AMM's fixed rebalance rate.
+ * Clamps to available pool reserves.
+ */
+export function getAmmOutput(pool: PoolInfo, amountIn: bigint): bigint | null {
+  if (amountIn <= 0n) return null;
+  // amountOut = ((amountIn - 1) * SCALE) / N  (rounded down)
+  const raw = amountIn > 1n ? ((amountIn - 1n) * AMM_SCALE) / AMM_N : 0n;
+  if (raw <= 0n) return null;
+  // Clamp to pool reserves; return null when reserves are exhausted
+  const clamped = raw > pool.reserveUserToken ? pool.reserveUserToken : raw;
+  return clamped <= 0n ? null : clamped;
 }
 
 export async function getDexBalance(token: Address, account: Address): Promise<bigint> {

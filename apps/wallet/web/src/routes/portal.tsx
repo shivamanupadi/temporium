@@ -67,8 +67,8 @@ const navSections = [
     items: [
       { to: '/portal/tip403-factory', label: 'TIP403 Factory', icon: Shield },
       { to: '/portal/access-keys', label: 'Access Keys', icon: Key },
-      { to: '/portal/scheduled', label: 'Scheduled Txns', icon: Clock },
-      { to: '/portal/approvals', label: 'Token Approvals', icon: ShieldCheck },
+      { to: '/portal/scheduled-txns', label: 'Scheduled Txns', icon: Clock },
+      { to: '/portal/token-approvals', label: 'Token Approvals', icon: ShieldCheck },
     ],
   },
   {
@@ -80,10 +80,10 @@ const navSections = [
     ],
   },
   {
-    label: 'AMM',
+    label: 'Fee AMM',
     items: [
-      { to: '/portal/pool-swap', label: 'Pool Swap', icon: Repeat },
-      { to: '/portal/liquidity', label: 'Liquidity', icon: Droplets },
+      { to: '/portal/fee-amm-swap', label: 'Swap', icon: Repeat },
+      { to: '/portal/fee-amm-liquidity', label: 'Liquidity', icon: Droplets },
     ],
   },
   {

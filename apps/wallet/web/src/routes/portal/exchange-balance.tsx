@@ -78,7 +78,7 @@ function ExchangeBalancePage(): ReactElement | null {
 
   // Fee token priority: user on-chain preference > chain default (AlphaUSD) > first token
   useEffect(() => {
-    if (tokens.length === 0 || feeToken) return;
+    if (tokens.length === 0) return;
     const preferred = preferredFeeToken
       ? tokens.find(t => t.address.toLowerCase() === preferredFeeToken.toLowerCase())
       : null;
@@ -86,7 +86,7 @@ function ExchangeBalancePage(): ReactElement | null {
       t => t.address.toLowerCase() === tempoChain.feeToken.toLowerCase()
     );
     setFeeToken(preferred ?? chainDefault ?? tokens[0]);
-  }, [tokens, feeToken, preferredFeeToken]);
+  }, [tokens, preferredFeeToken]);
 
   // Fetch all DEX balances
   const fetchDexBalances = useCallback(async () => {

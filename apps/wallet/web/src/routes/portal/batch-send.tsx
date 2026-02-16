@@ -71,7 +71,7 @@ function BatchSendPage(): ReactElement | null {
   }, [tokens, selectedToken]);
 
   useEffect(() => {
-    if (tokens.length === 0 || feeToken) return;
+    if (tokens.length === 0) return;
     const preferred = preferredFeeToken
       ? tokens.find(t => t.address.toLowerCase() === preferredFeeToken.toLowerCase())
       : null;
@@ -79,7 +79,7 @@ function BatchSendPage(): ReactElement | null {
       t => t.address.toLowerCase() === tempoChain.feeToken.toLowerCase()
     );
     setFeeToken(preferred ?? chainDefault ?? tokens[0]);
-  }, [tokens, feeToken, preferredFeeToken]);
+  }, [tokens, preferredFeeToken]);
 
   const balance = useTokenBalance(selectedToken?.address, address);
 

@@ -31,7 +31,7 @@ interface ScheduledSearchParams {
   filter?: StatusFilter;
 }
 
-export const Route = createFileRoute('/portal/scheduled')({
+export const Route = createFileRoute('/portal/scheduled-txns')({
   component: ScheduledPage,
   validateSearch: (search: Record<string, unknown>): ScheduledSearchParams => {
     const f = search.filter;
@@ -67,7 +67,7 @@ function ScheduledPage(): ReactElement {
   const setFilter = useCallback(
     (next: StatusFilter) => {
       navigate({
-        to: '/portal/scheduled',
+        to: '/portal/scheduled-txns',
         search: { filter: next === 'pending' ? undefined : next },
         replace: true,
       } as any);

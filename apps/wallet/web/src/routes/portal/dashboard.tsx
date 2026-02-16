@@ -115,14 +115,14 @@ const quickActionSections = [
         description: 'Manage keys',
       },
       {
-        to: '/portal/scheduled',
+        to: '/portal/scheduled-txns',
         label: 'Scheduled',
         icon: Clock,
         color: '#D4A574',
         description: 'Scheduled payments',
       },
       {
-        to: '/portal/approvals',
+        to: '/portal/token-approvals',
         label: 'Approvals',
         icon: ShieldCheck,
         color: '#5B9A6F',
@@ -157,18 +157,18 @@ const quickActionSections = [
     ],
   },
   {
-    label: 'AMM',
+    label: 'Fee AMM',
     items: [
       {
-        to: '/portal/pool-swap',
-        label: 'Pool Swap',
+        to: '/portal/fee-amm-swap',
+        label: 'Fee AMM Swap',
         icon: Repeat,
         color: '#6B8EAD',
-        description: 'AMM swap',
+        description: 'Swap via Fee AMM',
       },
       {
-        to: '/portal/liquidity',
-        label: 'Liquidity',
+        to: '/portal/fee-amm-liquidity',
+        label: 'Fee AMM Liquidity',
         icon: Droplets,
         color: '#6B8EAD',
         description: 'Provide liquidity',
