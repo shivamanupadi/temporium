@@ -101,6 +101,29 @@ export const customTokens = sqliteTable(
   ]
 );
 
+// ============ Access Keys ============
+export const accessKeyTypeValues = ['secp256k1', 'p256', 'webAuthn'] as const;
+export type AccessKeySignatureType = (typeof accessKeyTypeValues)[number];
+
+export const accessKeys = sqliteTable(
+  'access_keys',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    owner: text('owner').notNull(), // Wallet address that owns this key
+    keyId: text('key_id').notNull(), // On-chain key address (publicKey hash)
+    signatureType: text('signature_type').$type<AccessKeySignatureType>().notNull(),
+    txHash: text('tx_hash'),
+    label: text('label'), // Optional user-friendly label
+    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  },
+  table => [
+    uniqueIndex('access_keys_owner_keyId_idx').on(table.owner, table.keyId),
+    index('access_keys_owner_idx').on(table.owner),
+  ]
+);
+
 // ============ TIP-403 Policies ============
 export const policyTypeValues = ['whitelist', 'blacklist'] as const;
 export type PolicyType = (typeof policyTypeValues)[number];

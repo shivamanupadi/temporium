@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Key,
   Plus,
-  Trash2,
+  ShieldOff,
   Shield,
   Clock,
   CalendarIcon,
@@ -19,6 +19,9 @@ import {
   EyeOff,
   Coins,
   X,
+  Download,
+  Info,
+  Trash2,
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { format } from 'date-fns';
@@ -31,10 +34,11 @@ import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Switch } from '@/components/ui/switch';
 import { TimePicker } from '@/components/ui/time-picker';
-import { cn, formatAddress } from '@/lib/utils';
+import { cn, formatAddress, copyToClipboard } from '@/lib/utils';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 import { useTempo } from '@/hooks/useTempo';
 import { useAccessKeys } from '@/hooks/useAccessKeys';
+import { apiPost, apiDelete } from '@/lib/api-client';
 import {
   generateSecp256k1Key,
   generateP256Key,
@@ -132,6 +136,38 @@ const cardVariants = {
 };
 
 // ---------------------------------------------------------------------------
+// Inline copy with tick animation
+// ---------------------------------------------------------------------------
+
+function KeyIdWithCopy({ keyId }: { keyId: string }): ReactElement {
+  const [copied, setCopied] = useState(false);
+
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[14px] font-mono font-medium text-[#2D3436] truncate">
+      {keyId}
+      <button
+        type="button"
+        onClick={async e => {
+          e.stopPropagation();
+          const success = await copyToClipboard(keyId);
+          if (success) {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 1500);
+          }
+        }}
+        className="shrink-0 text-[#B5B0AA] hover:text-[#6B6560] transition-colors"
+      >
+        {copied ? (
+          <Check className="w-3.5 h-3.5 text-[#5B9A6F]" />
+        ) : (
+          <Copy className="w-3.5 h-3.5" />
+        )}
+      </button>
+    </span>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Main Page
 // ---------------------------------------------------------------------------
 
@@ -143,6 +179,7 @@ function AccessKeysPage(): ReactElement {
     authorizeKey,
     revokeKey,
     updateSpendingLimit,
+    getKey,
     getRemainingLimit,
     refresh,
   } = useAccessKeys();
@@ -175,6 +212,18 @@ function AccessKeysPage(): ReactElement {
   const [keySaved, setKeySaved] = useState(false);
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // --- Import dialog state ---
+  const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
+  const [importKeyId, setImportKeyId] = useState('');
+  const [importError, setImportError] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+
+  // --- Delete dialog state ---
+  const [deleteConfirmKey, setDeleteConfirmKey] = useState<{ dbId: string; keyId: string } | null>(
+    null
+  );
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Steps are always 5: type → config → limits → save → review
   const steps = useMemo<WizardStep[]>(() => ['type', 'config', 'limits', 'save', 'review'], []);
@@ -402,6 +451,71 @@ function AccessKeysPage(): ReactElement {
     }
   }, [revokeConfirmKeyId, revokeKey]);
 
+  const handleImportKey = useCallback(async () => {
+    const trimmed = importKeyId.trim();
+    if (!trimmed) {
+      setImportError('Please enter a key ID');
+      return;
+    }
+    if (!isAddress(trimmed)) {
+      setImportError('Invalid address format');
+      return;
+    }
+
+    setIsImporting(true);
+    setImportError(null);
+
+    try {
+      // Verify key exists on-chain and belongs to this wallet
+      const keyData = await getKey(trimmed as Address);
+      if (!keyData) {
+        setImportError('Key not found on-chain for your wallet');
+        return;
+      }
+
+      // Save to D1
+      await apiPost('/v1/access-keys', {
+        keyId: trimmed,
+        signatureType: keyData.signatureType,
+      });
+
+      toast.success('Access key imported', {
+        description: `Key ${formatAddress(trimmed)} has been added to your dashboard.`,
+      });
+
+      setIsImportDialogOpen(false);
+      setImportKeyId('');
+      setImportError(null);
+      await refresh();
+    } catch (err) {
+      const msg = (err as Error).message;
+      if (msg.includes('already exists') || msg.includes('Conflict')) {
+        setImportError('This key is already in your dashboard');
+      } else {
+        setImportError(msg || 'Failed to import key');
+      }
+    } finally {
+      setIsImporting(false);
+    }
+  }, [importKeyId, getKey, refresh]);
+
+  const handleDeleteKey = useCallback(async () => {
+    if (!deleteConfirmKey) return;
+    setIsDeleting(true);
+    try {
+      await apiDelete(`/v1/access-keys/${deleteConfirmKey.dbId}`);
+      toast.success('Key removed from dashboard');
+      setDeleteConfirmKey(null);
+      await refresh();
+    } catch (err) {
+      toast.error('Failed to remove key', {
+        description: (err as Error).message,
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [deleteConfirmKey, refresh]);
+
   // Filter active keys for display count
   const activeKeys = keys.filter(k => !k.isRevoked);
 
@@ -438,14 +552,29 @@ function AccessKeysPage(): ReactElement {
             Manage session keys that can act on behalf of your wallet.
           </p>
         </div>
-        <Button
-          onClick={handleOpenAddDialog}
-          disabled={!address}
-          className="h-10 px-5 rounded-xl text-[13px] font-semibold bg-coral hover:bg-coral/80 text-white gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Add Key
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            onClick={() => {
+              setImportKeyId('');
+              setImportError(null);
+              setIsImportDialogOpen(true);
+            }}
+            disabled={!address}
+            variant="outline"
+            className="h-10 px-5 rounded-xl text-[13px] font-semibold border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED] gap-2"
+          >
+            <Download className="w-4 h-4" />
+            Import
+          </Button>
+          <Button
+            onClick={handleOpenAddDialog}
+            disabled={!address}
+            className="h-10 px-5 rounded-xl text-[13px] font-semibold bg-coral hover:bg-coral/80 text-white gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Add Access Key
+          </Button>
+        </div>
       </motion.div>
 
       {/* Info Banner */}
@@ -540,9 +669,7 @@ function AccessKeysPage(): ReactElement {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[14px] font-mono font-medium text-[#2D3436] truncate">
-                          {formatAddress(key.keyId, 8)}
-                        </p>
+                        <KeyIdWithCopy keyId={key.keyId} />
 
                         {/* Key metadata */}
                         <div className="flex flex-wrap gap-1.5 mt-2">
@@ -558,7 +685,7 @@ function AccessKeysPage(): ReactElement {
                           <span
                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium ${
                               status === 'active'
-                                ? 'bg-emerald-50 text-emerald-600'
+                                ? 'bg-[#5B9A6F]/10 text-[#5B9A6F]'
                                 : status === 'expired'
                                   ? 'bg-[#E07A5F]/10 text-[#E07A5F]'
                                   : 'bg-[#B5B0AA]/10 text-[#B5B0AA]'
@@ -585,32 +712,41 @@ function AccessKeysPage(): ReactElement {
                     </div>
 
                     {/* Actions */}
-                    {!key.isRevoked && (
-                      <div className="flex items-center gap-1 shrink-0">
+                    <div className="flex items-center gap-1 shrink-0">
+                      {!key.isRevoked ? (
+                        <>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setLimitsModalKeyId(key.keyId)}
+                            className="h-8 rounded-lg text-[11px] font-medium border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED] gap-1.5"
+                          >
+                            <Coins className="w-3.5 h-3.5" />
+                            Manage Limits
+                          </Button>
+                          <Button
+                            onClick={() => setRevokeConfirmKeyId(key.keyId)}
+                            disabled={revokingKeyId === key.keyId}
+                            className="h-9 px-3 rounded-lg text-[12px] font-semibold text-[#E07A5F] bg-[#E07A5F]/10 hover:bg-[#E07A5F]/20 gap-1.5"
+                          >
+                            {revokingKeyId === key.keyId ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <ShieldOff className="w-3.5 h-3.5" />
+                            )}
+                            Revoke
+                          </Button>
+                        </>
+                      ) : key.dbId ? (
                         <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setLimitsModalKeyId(key.keyId)}
-                          className="h-8 rounded-lg text-[11px] font-medium border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED] gap-1.5"
+                          onClick={() => setDeleteConfirmKey({ dbId: key.dbId!, keyId: key.keyId })}
+                          className="h-9 px-3 rounded-lg text-[12px] font-semibold text-[#B5B0AA] bg-[#F5F2ED] hover:bg-[#EDE9E3] gap-1.5"
                         >
-                          <Coins className="w-3.5 h-3.5" />
-                          Manage Limits
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Delete
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setRevokeConfirmKeyId(key.keyId)}
-                          disabled={revokingKeyId === key.keyId}
-                          className="w-9 h-9 rounded-lg text-[#B5B0AA] hover:text-[#E07A5F] hover:bg-[#E07A5F]/10"
-                        >
-                          {revokingKeyId === key.keyId ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-4 h-4" />
-                          )}
-                        </Button>
-                      </div>
-                    )}
+                      ) : null}
+                    </div>
                   </div>
                 </motion.div>
               );
@@ -668,8 +804,157 @@ function AccessKeysPage(): ReactElement {
                 </>
               ) : (
                 <>
-                  <Trash2 className="w-4 h-4" />
+                  <ShieldOff className="w-4 h-4" />
                   Revoke Key
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Access Key Dialog */}
+      <Dialog
+        open={isImportDialogOpen}
+        onOpenChange={open => {
+          if (!open && !isImporting) {
+            setIsImportDialogOpen(false);
+            setImportKeyId('');
+            setImportError(null);
+          }
+        }}
+      >
+        <DialogContent className="p-0 gap-0 max-w-[420px] overflow-hidden">
+          <div className="px-6 pt-6 pb-4">
+            <DialogTitle className="text-[18px] font-bold text-[#2D3436]">
+              Import Access Key
+            </DialogTitle>
+            <DialogDescription className="text-[13px] text-[#9B9590] mt-1">
+              Add an existing on-chain access key to your dashboard.
+            </DialogDescription>
+          </div>
+          <div className="border-t border-[#EDE9E3]/60" />
+          <div className="px-6 py-5 space-y-4">
+            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#6B8EAD]/[0.06] border border-[#6B8EAD]/15">
+              <Info className="w-4 h-4 text-[#6B8EAD] shrink-0 mt-0.5" />
+              <p className="text-[12px] text-[#6B8EAD]/80 leading-relaxed">
+                This only imports key metadata (ID, type, status) for display and management.
+                Private keys are never stored or transmitted — importing is completely safe.
+              </p>
+            </div>
+            <div>
+              <Label className="text-[12px] font-semibold text-[#6B6560] mb-1.5 block">
+                Key ID (Address)
+              </Label>
+              <Input
+                placeholder="0x..."
+                value={importKeyId}
+                onChange={e => {
+                  setImportKeyId(e.target.value);
+                  setImportError(null);
+                }}
+                className="h-11 rounded-xl border-[#EDE9E3] text-[13px] font-mono placeholder:text-[#D5D0CA]"
+              />
+              {importError && (
+                <p className="text-[12px] text-[#E07A5F] mt-1.5 flex items-center gap-1.5">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  {importError}
+                </p>
+              )}
+            </div>
+          </div>
+          <div className="px-6 pb-6 pt-0 flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsImportDialogOpen(false);
+                setImportKeyId('');
+                setImportError(null);
+              }}
+              disabled={isImporting}
+              className="flex-1 h-11 rounded-xl text-[13px] font-semibold border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleImportKey}
+              disabled={isImporting || !importKeyId.trim()}
+              className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-coral hover:bg-coral/80 text-white gap-2"
+            >
+              {isImporting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4" />
+                  Import Key
+                </>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteConfirmKey !== null}
+        onOpenChange={open => {
+          if (!open && !isDeleting) setDeleteConfirmKey(null);
+        }}
+      >
+        <DialogContent className="p-0 gap-0 max-w-[380px] overflow-hidden">
+          <div className="px-6 pt-6 pb-4">
+            <DialogTitle className="text-[18px] font-bold text-[#2D3436]">Remove Key</DialogTitle>
+            <DialogDescription className="text-[13px] text-[#9B9590] mt-1">
+              Remove this revoked key from your dashboard.
+            </DialogDescription>
+          </div>
+          <div className="border-t border-[#EDE9E3]/60" />
+          <div className="px-6 py-5 space-y-3">
+            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#6B8EAD]/[0.06] border border-[#6B8EAD]/15">
+              <Info className="w-4 h-4 text-[#6B8EAD] shrink-0 mt-0.5" />
+              <p className="text-[12px] text-[#6B8EAD]/80 leading-relaxed">
+                This only removes the key from your dashboard view. The key is already revoked
+                on-chain and will remain revoked — no on-chain state is affected. You can always
+                re-import it later using the key ID.
+              </p>
+            </div>
+            {deleteConfirmKey && (
+              <div className="p-3 rounded-xl bg-[#F5F2ED]/60">
+                <p className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-1">
+                  Key ID
+                </p>
+                <p className="text-[12px] font-mono text-[#2D3436] break-all">
+                  {deleteConfirmKey.keyId}
+                </p>
+              </div>
+            )}
+          </div>
+          <div className="px-6 pb-6 pt-0 flex gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteConfirmKey(null)}
+              disabled={isDeleting}
+              className="flex-1 h-11 rounded-xl text-[13px] font-semibold border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleDeleteKey}
+              disabled={isDeleting}
+              className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-[#E07A5F] hover:bg-[#E07A5F]/80 text-white gap-2"
+            >
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Removing...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="w-4 h-4" />
+                  Remove
                 </>
               )}
             </Button>
@@ -838,7 +1123,7 @@ function AccessKeysPage(): ReactElement {
         );
       })()}
 
-      {/* Add Key Dialog — Multi-Step Wizard */}
+      {/* Add Access Key Dialog — Multi-Step Wizard */}
       <Dialog
         open={isAddDialogOpen}
         onOpenChange={open => {

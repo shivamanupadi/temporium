@@ -51,118 +51,148 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.4, 0, 0.2, 1] as const } },
 };
 
-const quickActions = [
+const quickActionSections = [
   {
-    to: '/portal/send',
-    label: 'Send',
-    icon: Send,
-    color: '#E07A5F',
-    description: 'Transfer tokens',
+    label: 'Payments',
+    items: [
+      {
+        to: '/portal/send',
+        label: 'Send',
+        icon: Send,
+        color: '#E07A5F',
+        description: 'Transfer tokens',
+      },
+      {
+        to: '/portal/batch-send',
+        label: 'Batch Send',
+        icon: ListPlus,
+        color: '#E07A5F',
+        description: 'Send to many',
+      },
+      {
+        to: '/portal/receive',
+        label: 'Receive',
+        icon: QrCode,
+        color: '#5B9A6F',
+        description: 'Get your address',
+      },
+    ],
   },
   {
-    to: '/portal/receive',
-    label: 'Receive',
-    icon: QrCode,
-    color: '#5B9A6F',
-    description: 'Get your address',
+    label: 'TIP20 Manager',
+    items: [
+      {
+        to: '/portal/tip20-studio',
+        label: 'TIP20 Studio',
+        icon: CircleDollarSign,
+        color: '#E07A5F',
+        description: 'Manage stablecoins',
+      },
+      {
+        to: '/portal/rewards',
+        label: 'Rewards',
+        icon: Gift,
+        color: '#5B9A6F',
+        description: 'Claim rewards',
+      },
+    ],
   },
   {
-    to: '/portal/swap',
-    label: 'Swap',
-    icon: ArrowRightLeft,
-    color: '#9B72CF',
-    description: 'Exchange tokens',
+    label: 'Tools',
+    items: [
+      {
+        to: '/portal/tip403-factory',
+        label: 'TIP403',
+        icon: Shield,
+        color: '#E07A5F',
+        description: 'Transfer policies',
+      },
+      {
+        to: '/portal/access-keys',
+        label: 'Access Keys',
+        icon: Key,
+        color: '#D4A574',
+        description: 'Manage keys',
+      },
+      {
+        to: '/portal/scheduled',
+        label: 'Scheduled',
+        icon: Clock,
+        color: '#D4A574',
+        description: 'Scheduled payments',
+      },
+      {
+        to: '/portal/approvals',
+        label: 'Approvals',
+        icon: ShieldCheck,
+        color: '#5B9A6F',
+        description: 'Token allowances',
+      },
+    ],
   },
   {
-    to: '/portal/orderbook',
-    label: 'Orderbook',
-    icon: BarChart3,
-    color: '#9B72CF',
-    description: 'Limit orders',
+    label: 'Stablecoin DEX',
+    items: [
+      {
+        to: '/portal/swap',
+        label: 'Swap',
+        icon: ArrowRightLeft,
+        color: '#9B72CF',
+        description: 'Exchange tokens',
+      },
+      {
+        to: '/portal/orderbook',
+        label: 'Orderbook',
+        icon: BarChart3,
+        color: '#9B72CF',
+        description: 'Limit orders',
+      },
+      {
+        to: '/portal/exchange-balance',
+        label: 'DEX Balance',
+        icon: Wallet,
+        color: '#9B72CF',
+        description: 'Manage DEX funds',
+      },
+    ],
   },
   {
-    to: '/portal/exchange-balance',
-    label: 'DEX Balance',
-    icon: Wallet,
-    color: '#9B72CF',
-    description: 'Manage DEX funds',
+    label: 'AMM',
+    items: [
+      {
+        to: '/portal/pool-swap',
+        label: 'Pool Swap',
+        icon: Repeat,
+        color: '#6B8EAD',
+        description: 'AMM swap',
+      },
+      {
+        to: '/portal/liquidity',
+        label: 'Liquidity',
+        icon: Droplets,
+        color: '#6B8EAD',
+        description: 'Provide liquidity',
+      },
+    ],
   },
   {
-    to: '/portal/pool-swap',
-    label: 'Pool Swap',
-    icon: Repeat,
-    color: '#6B8EAD',
-    description: 'AMM swap',
-  },
-  {
-    to: '/portal/liquidity',
-    label: 'Liquidity',
-    icon: Droplets,
-    color: '#6B8EAD',
-    description: 'Provide liquidity',
-  },
-  {
-    to: '/portal/tip20-studio',
-    label: 'TIP20 Studio',
-    icon: CircleDollarSign,
-    color: '#E07A5F',
-    description: 'Manage stablecoins',
-  },
-  {
-    to: '/portal/tip403-factory',
-    label: 'TIP403',
-    icon: Shield,
-    color: '#E07A5F',
-    description: 'Transfer policies',
-  },
-  {
-    to: '/portal/batch-send',
-    label: 'Bulk Payments',
-    icon: ListPlus,
-    color: '#E07A5F',
-    description: 'Send to many at once',
-  },
-  {
-    to: '/portal/approvals',
-    label: 'Approvals',
-    icon: ShieldCheck,
-    color: '#5B9A6F',
-    description: 'Token allowances',
-  },
-  {
-    to: '/portal/rewards',
-    label: 'TIP20 Rewards',
-    icon: Gift,
-    color: '#5B9A6F',
-    description: 'Claim token rewards',
-  },
-  {
-    to: '/portal/scheduled',
-    label: 'Scheduled',
-    icon: Clock,
-    color: '#D4A574',
-    description: 'Scheduled payments',
-  },
-  {
-    to: '/portal/access-keys',
-    label: 'Access Keys',
-    icon: Key,
-    color: '#D4A574',
-    description: 'Manage keys',
-  },
-  {
-    to: '/portal/contacts',
-    label: 'Contacts',
-    icon: Users,
-    color: '#5B9A6F',
-    description: 'Address book',
-  },
-  {
-    to: '/portal/connected-apps',
-    label: 'Apps',
-    icon: Link2,
-    color: '#5B9A6F',
-    description: 'Connected apps',
+    label: 'Manage',
+    items: [
+      {
+        to: '/portal/contacts',
+        label: 'Contacts',
+        icon: Users,
+        color: '#5B9A6F',
+        description: 'Address book',
+      },
+      {
+        to: '/portal/connected-apps',
+        label: 'Apps',
+        icon: Link2,
+        color: '#5B9A6F',
+        description: 'Connected apps',
+      },
+    ],
   },
 ] as const;
 
@@ -440,32 +470,45 @@ function DashboardPage(): ReactElement {
         </div>
 
         {/* Right Column */}
-        <div>
-          {/* Quick Actions */}
-          <motion.div variants={itemVariants}>
-            <div className="grid grid-cols-3 gap-3">
-              {quickActions.map(action => (
-                <Link key={action.to} to={action.to} className="group">
-                  <motion.div
-                    whileHover={{ y: -2 }}
-                    whileTap={{ scale: 0.97 }}
-                    transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
-                    className="rounded-2xl border border-dashed border-[#EDE9E3] bg-transparent p-4 text-center hover:shadow-sm transition-shadow"
-                  >
-                    <div
-                      className="w-11 h-11 rounded-xl flex items-center justify-center mx-auto mb-2.5"
-                      style={{ backgroundColor: `${action.color}12` }}
-                    >
-                      <action.icon className="w-5 h-5" style={{ color: action.color }} />
-                    </div>
-                    <p className="text-[14px] font-semibold text-[#2D3436]">{action.label}</p>
-                    <p className="text-[11px] text-[#9B9590] mt-0.5">{action.description}</p>
-                  </motion.div>
-                </Link>
-              ))}
+        <motion.div
+          variants={itemVariants}
+          className="rounded-2xl border border-[#EDE9E3] bg-white overflow-hidden"
+        >
+          {quickActionSections.map((section, sectionIdx) => (
+            <div key={section.label}>
+              {sectionIdx > 0 && <div className="mx-5 border-t border-[#EDE9E3]/60" />}
+              <div className="px-5 pt-4 pb-1.5">
+                <p className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">
+                  {section.label}
+                </p>
+              </div>
+              <div className="px-3 pb-2.5 grid grid-cols-2 gap-x-2 gap-y-2">
+                {section.items.map(action => {
+                  const Icon = action.icon;
+                  return (
+                    <Link key={action.to} to={action.to} className="block">
+                      <motion.div
+                        whileTap={{ scale: 0.97 }}
+                        transition={{ duration: 0.1 }}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[#FAF8F5] hover:bg-[#F5F2ED] transition-colors"
+                      >
+                        <div
+                          className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
+                          style={{ backgroundColor: `${action.color}12` }}
+                        >
+                          <Icon className="w-[18px] h-[18px]" style={{ color: action.color }} />
+                        </div>
+                        <p className="text-[13px] font-semibold text-[#2D3436] truncate">
+                          {action.label}
+                        </p>
+                      </motion.div>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
-          </motion.div>
-        </div>
+          ))}
+        </motion.div>
       </div>
     </motion.div>
   );

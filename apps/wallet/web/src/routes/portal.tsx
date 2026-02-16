@@ -197,9 +197,7 @@ function PortalLayout(): ReactElement | null {
                 <span className="text-[15px] font-bold text-[#2D3436] tracking-tight leading-none">
                   Temporium
                 </span>
-                <p className="text-[10px] font-medium text-[#B5B0AA] mt-0.5 leading-none">
-                  Gateway
-                </p>
+                <p className="text-[10px] font-medium text-[#B5B0AA] mt-0.5 leading-none">Wallet</p>
               </div>
             )}
           </div>
@@ -464,7 +462,7 @@ function PortalLayout(): ReactElement | null {
           <div className="flex items-center gap-2.5">
             <img src="/logo-dark.png" alt="Temporium" className="w-6 h-6" />
             <span className="text-[14px] font-bold text-[#2D3436]">Temporium</span>
-            <span className="text-[14px] font-medium text-[#B5B0AA]">| Gateway</span>
+            <span className="text-[14px] font-medium text-[#B5B0AA]">| Wallet</span>
           </div>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

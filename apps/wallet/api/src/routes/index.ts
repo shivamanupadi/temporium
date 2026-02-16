@@ -6,6 +6,7 @@ import tip20Router from './tip20-studio';
 import policiesRouter from './policies';
 import scheduledTxsRouter from './scheduled-txs';
 import customTokensRouter from './custom-tokens';
+import accessKeysRouter from './access-keys';
 import tokenlistRouter from './tokenlist';
 import authRouter from './auth';
 import keysRouter from './keys';
@@ -24,6 +25,7 @@ routes.route('/v1/tip20-contracts', tip20Router);
 routes.route('/v1/policies', policiesRouter);
 routes.route('/v1/scheduled-transactions', scheduledTxsRouter);
 routes.route('/v1/custom-tokens', customTokensRouter);
+routes.route('/v1/access-keys', accessKeysRouter);
 
 // Non-versioned routes
 routes.route('/tokenlist', tokenlistRouter);

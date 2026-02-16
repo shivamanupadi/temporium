@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { policyTypeValues, transactionStatusValues } from '../db/schema';
+import { policyTypeValues, transactionStatusValues, accessKeyTypeValues } from '../db/schema';
 
 // ============ Common Validators ============
 
@@ -111,6 +111,19 @@ export const createCustomTokenSchema = z.object({
 });
 
 export type CreateCustomTokenRequest = z.infer<typeof createCustomTokenSchema>;
+
+// ============ Access Keys Schemas ============
+
+export const accessKeyTypeSchema = z.enum(accessKeyTypeValues);
+
+export const createAccessKeySchema = z.object({
+  keyId: ethereumAddress,
+  signatureType: accessKeyTypeSchema,
+  txHash: transactionHash.optional(),
+  label: z.string().max(100, 'Label must be 100 characters or less').trim().optional(),
+});
+
+export type CreateAccessKeyRequest = z.infer<typeof createAccessKeySchema>;
 
 // ============ Policies Schemas ============
 

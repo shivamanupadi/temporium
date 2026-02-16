@@ -4,6 +4,7 @@ import { useWalletClient, useAccount } from 'wagmi';
 import { tempoPublicClient } from '@/lib/tempo-client';
 import { ACCOUNT_KEYCHAIN_ADDRESS } from '@/lib/constants';
 import { getSignatureTypeLabel } from '@/lib/access-keys-utils';
+import { apiGet, apiPost } from '@/lib/api-client';
 import { Abis } from 'viem/tempo';
 import type { Address } from 'viem';
 import type { AccessKey } from '@/types';
@@ -12,6 +13,18 @@ export const ACCESS_KEYS_QUERY_KEY = 'accessKeys';
 
 export interface AccessKeyWithMetadata extends AccessKey {
   publicKeyHash?: `0x${string}`;
+  dbId?: string; // D1 record ID for delete
+  label?: string;
+}
+
+interface DbAccessKey {
+  id: string;
+  owner: string;
+  keyId: string;
+  signatureType: string;
+  txHash: string | null;
+  label: string | null;
+  createdAt: string | null;
 }
 
 interface UseAccessKeysReturn {
@@ -56,31 +69,13 @@ export function useAccessKeys(): UseAccessKeysReturn {
       if (!address) return [];
 
       try {
-        const currentBlock = await tempoPublicClient.getBlockNumber();
-        const fromBlock = currentBlock > 99000n ? currentBlock - 99000n : 0n;
+        // 1. Fetch saved key IDs from D1
+        const dbKeys = await apiGet<DbAccessKey[]>('/v1/access-keys');
 
-        const logs = await tempoPublicClient.getLogs({
-          address: ACCOUNT_KEYCHAIN_ADDRESS,
-          event: {
-            type: 'event',
-            name: 'KeyAuthorized',
-            inputs: [
-              { type: 'address', name: 'account', indexed: true },
-              { type: 'address', name: 'publicKey', indexed: true },
-              { type: 'uint8', name: 'signatureType' },
-              { type: 'uint64', name: 'expiry' },
-            ],
-          },
-          args: {
-            account: address,
-          },
-          fromBlock,
-          toBlock: 'latest',
-        });
-
-        const keysWithState = await Promise.all(
-          logs.map(async log => {
-            const keyId = log.args.publicKey as Address;
+        // 2. Hydrate each key with live on-chain state
+        const hydratedKeys = await Promise.all(
+          dbKeys.map(async dbKey => {
+            const keyId = dbKey.keyId as Address;
 
             try {
               const keyData = (await tempoPublicClient.readContract({
@@ -102,18 +97,22 @@ export function useAccessKeys(): UseAccessKeysReturn {
                 expiry: Number(keyData.expiry),
                 enforceLimits: keyData.enforceLimits,
                 isRevoked: keyData.isRevoked,
+                dbId: dbKey.id,
+                label: dbKey.label ?? undefined,
               };
             } catch (error) {
-              console.error(`Failed to fetch key data for ${keyId}:`, error);
+              console.error(`Failed to fetch on-chain state for key ${keyId}:`, error);
+              // Return DB-only data with unknown on-chain state
               return null;
             }
           })
         );
 
-        const validKeys = keysWithState.filter(
+        const validKeys = hydratedKeys.filter(
           (key): key is NonNullable<typeof key> => key !== null
         ) as AccessKeyWithMetadata[];
 
+        // Deduplicate by keyId
         const uniqueKeys = new Map<string, AccessKeyWithMetadata>();
         for (const key of validKeys) {
           uniqueKeys.set(key.keyId.toLowerCase(), key);
@@ -158,6 +157,19 @@ export function useAccessKeys(): UseAccessKeysReturn {
       });
 
       await tempoPublicClient.waitForTransactionReceipt({ hash });
+
+      // Save key metadata to D1
+      try {
+        await apiPost('/v1/access-keys', {
+          keyId: params.keyId,
+          signatureType: getSignatureTypeLabel(params.signatureType),
+          txHash: hash,
+        });
+      } catch (error) {
+        // Non-fatal: key is on-chain even if DB save fails
+        console.error('Failed to save access key to DB:', error);
+      }
+
       await refresh();
 
       return { transactionHash: hash };
