@@ -36,7 +36,7 @@ import {
   WalletConnectErrorCode,
   getErrorCode,
   createErrorResponse,
-} from '@/lib/gateway-connect-protocol';
+} from '@/lib/wallet-connect-protocol';
 import { isAppConnected, hasPermission, saveConnectedApp } from '@/lib/connected-apps';
 import { addActivity } from '@/lib/activity';
 import type { SignMessageRequest, PendingRequest, ActivityType } from '@/types';

@@ -1,11 +1,11 @@
 /**
- * Gateway Connect Protocol
+ * Wallet Connect Protocol
  *
- * Handles communication between the gateway app and other Tempo apps
+ * Handles communication between the wallet app and other Tempo apps
  * Uses postMessage API for cross-origin communication
  */
 
-import { GATEWAY_CONNECT_VERSION } from './constants';
+import { WALLET_CONNECT_VERSION } from './constants';
 import {
   isAppConnected,
   saveConnectedApp,
@@ -25,7 +25,7 @@ import type {
 
 /**
  * Error codes for programmatic error handling
- * Must match the WalletConnectErrorCode enum in @temporium/gateway-connect
+ * Must match the WalletConnectErrorCode enum in @temporium/wallet-connect
  */
 export enum WalletConnectErrorCode {
   // Connection errors
@@ -156,7 +156,7 @@ export function parseMessage(
 
     // Check version compatibility
     if (!message.version || !message.version.startsWith('1.')) {
-      console.warn('[GatewayConnect] Incompatible version:', message.version);
+      console.warn('[WalletConnect] Incompatible version:', message.version);
       return null;
     }
 
@@ -164,7 +164,7 @@ export function parseMessage(
 
     // Validate request structure
     if (!request.id || !request.method || !request.timestamp) {
-      console.warn('[GatewayConnect] Invalid request structure');
+      console.warn('[WalletConnect] Invalid request structure');
       return null;
     }
 
@@ -176,7 +176,7 @@ export function parseMessage(
       origin: event.origin,
     };
   } catch (error) {
-    console.error('[GatewayConnect] Failed to parse message:', error);
+    console.error('[WalletConnect] Failed to parse message:', error);
     return null;
   }
 }
@@ -191,7 +191,7 @@ export function sendResponse(
 ): void {
   const message: WalletConnectMessage = {
     type: 'TEMPO_WALLET_RESPONSE',
-    version: GATEWAY_CONNECT_VERSION,
+    version: WALLET_CONNECT_VERSION,
     payload: response,
   };
 
@@ -201,10 +201,10 @@ export function sendResponse(
     try {
       target.postMessage(message, targetOrigin);
     } catch (err) {
-      console.error('[GatewayConnect] Failed to post message:', err);
+      console.error('[WalletConnect] Failed to post message:', err);
     }
   } else {
-    console.warn('[GatewayConnect] Target window not available');
+    console.warn('[WalletConnect] Target window not available');
   }
 }
 

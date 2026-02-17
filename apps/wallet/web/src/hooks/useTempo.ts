@@ -22,7 +22,7 @@ import type {
   ClaimRewardsParams,
   AmmSwapParams,
   BatchSendParams,
-} from '@temporium/gateway-connect';
+} from '@temporium/wallet-connect';
 
 /**
  * Encode a memo string to bytes

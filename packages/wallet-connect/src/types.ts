@@ -1,4 +1,4 @@
-import type { Address, Hash, Hex } from 'viem';
+import type { Address, Chain, Hash, Hex } from 'viem';
 
 /**
  * Wallet Connect Protocol Version
@@ -45,6 +45,18 @@ export interface WalletConnectConfig {
    * @default ['connect', 'sign', 'send']
    */
   permissions?: AppPermission[];
+
+  /**
+   * RPC URL for the Tempo chain
+   * If not provided, uses the chain's default RPC URL
+   */
+  rpcUrl?: string;
+
+  /**
+   * Tempo chain with serializers/formatters
+   * Required for getWalletClient()
+   */
+  chain?: Chain;
 
   /**
    * Callback when connection state changes (connected, disconnected, or verified invalid)
@@ -97,6 +109,13 @@ export interface SignMessageResult {
  */
 export interface TransactionResult {
   hash: Hash;
+}
+
+/**
+ * Result from wallet sign-only operation
+ */
+export interface SignTransactionResult {
+  signedTransaction: Hex;
 }
 
 // ============================================================================
@@ -319,6 +338,46 @@ export interface DexWithdrawParams {
   token: Address;
   /** Amount to withdraw */
   amount: bigint;
+  /** Token to pay fees with (defaults to USD) */
+  feeToken?: Address;
+}
+
+/**
+ * A single recipient in a batch send operation
+ */
+export interface BatchTransfer {
+  /** Recipient address */
+  to: Address;
+  /** Amount in smallest units */
+  amount: bigint;
+  /** Optional memo (hex-encoded, up to 32 bytes) */
+  memo?: `0x${string}`;
+}
+
+/**
+ * Parameters for batch sending tokens to multiple recipients
+ * Uses walletClient.sendCalls() to bundle multiple transfers
+ */
+export interface BatchSendParams {
+  /** Token address to send */
+  token: Address;
+  /** Array of recipients with amounts */
+  transfers: BatchTransfer[];
+  /** Token to pay fees with (defaults to USD) */
+  feeToken?: Address;
+}
+
+/**
+ * Parameters for swapping via AMM (rebalanceSwap)
+ * Compatible with tempo.ts Actions.amm.rebalanceSwap
+ */
+export interface AmmSwapParams {
+  /** User token address (token to receive) */
+  userToken: Address;
+  /** Validator token address (token to pay) */
+  validatorToken: Address;
+  /** Amount of user token to receive */
+  amountOut: bigint;
   /** Token to pay fees with (defaults to USD) */
   feeToken?: Address;
 }

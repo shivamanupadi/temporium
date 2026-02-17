@@ -1,11 +1,11 @@
-import { GatewayConnect } from '@temporium/gateway-connect';
+import { WalletConnect } from '@temporium/wallet-connect';
 import { WALLET_URL, RPC_URL, TEMPO_CHAIN } from './constants';
 
-let instance: GatewayConnect | null = null;
+let instance: WalletConnect | null = null;
 
-export function getGateway(): GatewayConnect {
+export function getGateway(): WalletConnect {
   if (!instance) {
-    instance = new GatewayConnect({
+    instance = new WalletConnect({
       appName: 'Gateway Test dApp',
       appIcon: '',
       appDescription: 'Test application for the Gateway Connect SDK',

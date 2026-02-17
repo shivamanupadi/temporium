@@ -27,7 +27,7 @@ import {
   createPendingRequest,
   WalletConnectErrorCode,
   createErrorResponse,
-} from '@/lib/gateway-connect-protocol';
+} from '@/lib/wallet-connect-protocol';
 import { isAppConnected, removeConnectedApp } from '@/lib/connected-apps';
 import type { ConnectRequest, PendingRequest } from '@/types';
 import { formatAddress } from '@/lib/utils';

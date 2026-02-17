@@ -7,11 +7,11 @@ import {
   type ReactNode,
 } from 'react';
 import type { Address, Account, Chain, HttpTransport, WalletClient } from 'viem';
-import type { GatewayConnect } from '@temporium/gateway-connect';
+import type { WalletConnect } from '@temporium/wallet-connect';
 import { getGateway } from '@/lib/gateway';
 
 export interface GatewayContextValue {
-  gateway: GatewayConnect;
+  gateway: WalletConnect;
   isConnected: boolean;
   address: Address | null;
   chainId: number | null;

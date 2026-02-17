@@ -8,5 +8,5 @@ export default defineConfig({
   sourcemap: true,
   minify: false,
   target: 'es2022',
-  external: ['viem'],
+  external: ['viem', /^viem\//],
 });

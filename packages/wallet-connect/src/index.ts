@@ -2,54 +2,23 @@
  * @temporium/wallet-connect
  *
  * SDK for connecting to Temporium Wallet from Tempo apps.
- * Uses the same parameter types as tempo.ts SDK for seamless integration.
+ * Exposes a standard viem WalletClient for use with Actions.* from viem/tempo.
  *
  * @example
  * ```typescript
  * import { WalletConnect } from '@temporium/wallet-connect';
+ * import { Actions } from 'viem/tempo';
  *
  * const wallet = new WalletConnect({
  *   appName: 'My App',
- *   appIcon: 'https://myapp.com/icon.png',
+ *   chain: tempoModerato,
  * });
  *
- * // Connect to wallet
- * const { address, chainId } = await wallet.connect();
+ * await wallet.connect();
+ * const walletClient = wallet.getWalletClient();
  *
- * // Send a payment (same params as Actions.token.transfer)
- * const { hash } = await wallet.sendPayment({
- *   to: '0x...',
- *   amount: 1000000n, // 1 USD
- *   token: '0x20c0000000000000000000000000000000000001',
- * });
- *
- * // Swap tokens (same params as useTempo().swapTokens)
- * const { hash } = await wallet.swapTokens({
- *   tokenIn: '0x...',
- *   tokenOut: '0x...',
- *   amountIn: 1000000n,
- *   minAmountOut: 990000n,
- * });
- * ```
- *
- * ## Migration to Other Wallets
- *
- * The SDK uses the same parameter types as tempo.ts SDK, so migrating to
- * another wallet provider requires minimal changes:
- *
- * ```typescript
- * // Before (with WalletConnect)
- * const { hash } = await wallet.sendPayment({
- *   to: '0x...',
- *   amount: 1000000n,
- *   token: USD_ADDRESS,
- * });
- *
- * // After (with Actions SDK directly)
  * const hash = await Actions.token.transfer(walletClient, {
- *   to: '0x...',
- *   amount: 1000000n,
- *   token: USD_ADDRESS,
+ *   token, to, amount, feeToken,
  * });
  * ```
  *
@@ -65,6 +34,7 @@ export type {
   ConnectionEventListener,
   SignMessageResult,
   TransactionResult,
+  SignTransactionResult,
   // Tempo SDK compatible types
   SendPaymentParams,
   SendScheduledPaymentParams,
@@ -81,6 +51,9 @@ export type {
   BurnTokenParams,
   ClaimRewardsParams,
   DexWithdrawParams,
+  AmmSwapParams,
+  BatchSendParams,
+  BatchTransfer,
   AppPermission,
 } from './types';
 export { WALLET_CONNECT_VERSION, WalletConnectErrorCode, WalletConnectError } from './types';

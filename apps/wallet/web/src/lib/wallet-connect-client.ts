@@ -1,4 +1,4 @@
-import { WalletConnect } from '@temporium/gateway-connect';
+import { WalletConnect } from '@temporium/wallet-connect';
 import { WALLET_URL } from './constants';
 
 /**
@@ -22,7 +22,7 @@ export function getWalletConnect(): WalletConnect {
 
 export function destroyWalletConnect(): void {
   if (walletConnectInstance) {
-    walletConnectInstance.destroy();
+    walletConnectInstance.disconnect();
     walletConnectInstance = null;
   }
 }

@@ -89,9 +89,9 @@ export const TIMING = {
 export const ACCOUNT_KEYCHAIN_ADDRESS = '0xaAAAaaAA00000000000000000000000000000000' as Address;
 
 /**
- * Gateway Connect Protocol Version
+ * Wallet Connect Protocol Version
  */
-export const GATEWAY_CONNECT_VERSION = '1.0.0';
+export const WALLET_CONNECT_VERSION = '1.0.0';
 
 /**
  * Storage keys
@@ -102,6 +102,6 @@ export const STORAGE_KEYS = {
 } as const;
 
 /**
- * Wallet URL for GatewayConnect popup (self-host popups)
+ * Wallet URL for WalletConnect popup (self-host popups)
  */
 export const WALLET_URL = import.meta.env.VITE_WALLET_URL || window.location.origin;

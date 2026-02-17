@@ -15,7 +15,7 @@ export function Header(): ReactElement {
           </div>
           <div>
             <h1 className="text-[14px] font-semibold text-[#2D3436]">Gateway Test dApp</h1>
-            <p className="text-[11px] text-[#9B9590]">@temporium/gateway-connect</p>
+            <p className="text-[11px] text-[#9B9590]">@temporium/wallet-connect</p>
           </div>
         </div>
 
