@@ -124,6 +124,70 @@ export const accessKeys = sqliteTable(
   ]
 );
 
+// ============ Recurring Payments ============
+export const recurringPaymentStatusValues = [
+  'active',
+  'paused',
+  'completed',
+  'cancelled',
+  'failed',
+] as const;
+export type RecurringPaymentStatus = (typeof recurringPaymentStatusValues)[number];
+
+export const recurringPayments = sqliteTable(
+  'recurring_payments',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    owner: text('owner').notNull(), // Wallet address that owns this subscription
+    recipient: text('recipient').notNull(), // Payment recipient address
+    token: text('token').notNull(), // TIP-20 token contract address
+    tokenSymbol: text('token_symbol').notNull(),
+    tokenDecimals: integer('token_decimals').notNull(),
+    amount: text('amount').notNull(), // Amount per payment (wei string)
+    intervalSeconds: integer('interval_seconds').notNull(), // Seconds between payments
+    maxPayments: integer('max_payments').notNull().default(0), // 0 = unlimited
+    paymentsMade: integer('payments_made').notNull().default(0),
+    subscriptionId: integer('subscription_id'), // On-chain subscription ID from RecurringPayments contract
+    contractAddress: text('contract_address').notNull(), // RecurringPayments contract address
+    network: text('network').notNull(), // 'testnet' | 'mainnet'
+    status: text('status').$type<RecurringPaymentStatus>().default('active').notNull(),
+    nextPaymentAt: integer('next_payment_at', { mode: 'timestamp' }).notNull(),
+    lastPaidAt: integer('last_paid_at', { mode: 'timestamp' }),
+    txHash: text('tx_hash'), // Creation tx hash
+    label: text('label'), // Optional user-friendly label
+    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+    failReason: text('fail_reason'),
+  },
+  table => [
+    index('recurring_owner_idx').on(table.owner),
+    index('recurring_owner_status_idx').on(table.owner, table.status),
+  ]
+);
+
+// ============ Recurring Payment Executions ============
+export const recurringPaymentExecutions = sqliteTable(
+  'recurring_payment_executions',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    recurringPaymentId: text('recurring_payment_id')
+      .notNull()
+      .references(() => recurringPayments.id),
+    paymentNumber: integer('payment_number').notNull(),
+    txHash: text('tx_hash').notNull(),
+    amount: text('amount').notNull(),
+    status: text('status').notNull().default('confirmed'),
+    executedAt: integer('executed_at', { mode: 'timestamp' }).notNull(),
+  },
+  table => [
+    index('rpe_recurring_id_idx').on(table.recurringPaymentId),
+    index('rpe_tx_hash_idx').on(table.txHash),
+  ]
+);
+
 // ============ TIP-403 Policies ============
 export const policyTypeValues = ['whitelist', 'blacklist'] as const;
 export type PolicyType = (typeof policyTypeValues)[number];

@@ -19,11 +19,16 @@ migrations_dir = "src/db/migrations"
 [durable_objects]
 bindings = [
   { name = "SCHEDULED_TX", class_name = "ScheduledTransactionDO" },
+  { name = "RECURRING_PAYMENT", class_name = "RecurringPaymentDO" },
 ]
 
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["ScheduledTransactionDO"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["RecurringPaymentDO"]
 
 # Single worker serving both testnet and mainnet via X-Tempo-Network header
 [vars]
