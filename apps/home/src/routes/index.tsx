@@ -14,36 +14,39 @@ const products = [
   {
     id: 'wallet',
     title: 'Wallet',
-    tagline: 'Your Wallet',
+    subtitle: 'Your Wallet',
     description:
       'Send, receive, swap tokens, provide liquidity, and create TIP20 assets. Secured by passkeys.',
     icon: Wallet,
     color: '#E07A5F',
-    lightColor: '#FFF5F0',
+    gradient: 'linear-gradient(to bottom, #FFF5F0, #FFCDB233, white)',
+    iconBg: '#FFF5F0',
     href: WALLET_URL,
     available: true,
   },
   {
     id: 'node-manager',
     title: 'Node Manager',
-    tagline: 'Your Infrastructure',
+    subtitle: 'Your Infrastructure',
     description:
       'Deploy your own Tempo RPC node. One-click setup with dashboard, snapshot sync, and monitoring.',
     icon: Server,
     color: '#9B72CF',
-    lightColor: '#F8F4FF',
+    gradient: 'linear-gradient(to bottom, #F8F4FF, #E2D1F933, white)',
+    iconBg: '#F8F4FF',
     href: NODE_MANAGER_URL,
     available: false,
   },
   {
     id: 'playground',
     title: 'Playground',
-    tagline: 'Your Studio',
+    subtitle: 'Your Studio',
     description:
       'Write, compile, and deploy Solidity contracts. Full editor with one-click deployment.',
     icon: Code2,
     color: '#5B9A6F',
-    lightColor: '#F0FDF4',
+    gradient: 'linear-gradient(to bottom, #F0FDF4, #BBF7D033, white)',
+    iconBg: '#F0FDF4',
     href: '#',
     available: false,
   },
@@ -72,74 +75,37 @@ function ProductCard({
   onSelect: (p: (typeof products)[number]) => void;
 }): ReactElement {
   const inner = (
-    <div className="group/card relative h-full">
-      {/* Colored left accent bar */}
+    <div
+      className="group/card relative rounded-2xl border p-6 text-left hover:shadow-lg transition-all duration-200 hover:-translate-y-0.5"
+      style={{
+        background: product.gradient,
+        borderColor: `${product.color}25`,
+      }}
+    >
+      {/* Icon */}
       <div
-        className="absolute left-0 top-6 bottom-6 w-[3px] rounded-full transition-all duration-500 group-hover/card:top-3 group-hover/card:bottom-3"
-        style={{ backgroundColor: product.color }}
-      />
+        className="w-12 h-12 rounded-xl flex items-center justify-center mb-4 group-hover/card:scale-110 transition-transform"
+        style={{ backgroundColor: product.iconBg }}
+      >
+        <product.icon className="w-6 h-6" style={{ color: product.color }} />
+      </div>
 
-      <div className="relative h-full rounded-2xl bg-white border border-[#EDE9E3] pl-7 pr-6 py-7 sm:pl-8 sm:pr-7 sm:py-8 transition-all duration-300 group-hover/card:border-[#DDD8D1] group-hover/card:shadow-lg overflow-hidden">
-        {/* Hover glow */}
-        <div
-          className="absolute -top-20 -right-20 w-52 h-52 rounded-full opacity-0 group-hover/card:opacity-100 transition-opacity duration-700 blur-[80px] pointer-events-none"
-          style={{ background: product.color }}
-        />
+      {/* Content */}
+      <h3 className="text-lg font-bold text-[#2D3436] mb-0.5">{product.title}</h3>
+      <p className="text-xs font-medium text-[#9B9590] uppercase tracking-wide mb-2">
+        {product.subtitle}
+      </p>
+      <p className="text-sm text-[#6B6560] leading-relaxed mb-5 line-clamp-3">
+        {product.description}
+      </p>
 
-        <div className="relative flex flex-col h-full">
-          {/* Top row: icon + status */}
-          <div className="flex items-start justify-between mb-6">
-            <div
-              className="w-11 h-11 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover/card:scale-110 group-hover/card:rotate-[-3deg]"
-              style={{ backgroundColor: product.lightColor }}
-            >
-              <product.icon
-                className="w-5 h-5"
-                style={{ color: product.color }}
-                strokeWidth={1.8}
-              />
-            </div>
-            {product.available ? (
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#5B9A6F]">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#5B9A6F] animate-pulse" />
-                Live
-              </span>
-            ) : (
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-[#9B9590]">
-                Soon
-              </span>
-            )}
-          </div>
-
-          {/* Tagline */}
-          <p
-            className="text-[11px] font-bold uppercase tracking-[0.15em] mb-1.5"
-            style={{ color: product.color }}
-          >
-            {product.tagline}
-          </p>
-
-          {/* Title */}
-          <h3 className="text-[22px] sm:text-2xl font-bold text-[#2D3436] mb-2.5 tracking-[-0.02em]">
-            {product.title}
-          </h3>
-
-          {/* Description */}
-          <p className="text-[13.5px] leading-[1.65] text-[#6B6560] mb-8 flex-1">
-            {product.description}
-          </p>
-
-          {/* CTA */}
-          <div className="flex items-center gap-2 group-hover/card:gap-2.5 transition-all duration-300">
-            <span className="text-[13px] font-semibold" style={{ color: product.color }}>
-              {product.available ? 'Launch App' : 'Learn More'}
-            </span>
-            <ArrowRight
-              className="w-3.5 h-3.5 transition-transform duration-300 group-hover/card:translate-x-1"
-              style={{ color: product.color }}
-            />
-          </div>
-        </div>
+      {/* Button */}
+      <div
+        className="inline-flex items-center gap-1.5 px-4 py-2 text-white rounded-full text-sm font-medium transition-colors"
+        style={{ backgroundColor: product.available ? product.color : '#9B9590' }}
+      >
+        {product.available ? 'Launch App' : 'Coming Soon'}
+        <ArrowRight className="w-3.5 h-3.5 group-hover/card:translate-x-0.5 transition-transform" />
       </div>
     </div>
   );
@@ -261,23 +227,6 @@ function HomePage(): ReactElement {
       <main className="relative pt-32 sm:pt-40 pb-20 sm:pb-28">
         <div className="mx-auto max-w-6xl px-5 sm:px-8">
           <div className="max-w-3xl mx-auto text-center mb-20 sm:mb-24">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease }}
-            >
-              {/* Status badge */}
-              <div className="inline-flex items-center gap-2.5 px-4 py-[7px] rounded-full border border-[#EDE9E3] bg-white/70 backdrop-blur-sm mb-8">
-                <span className="relative flex h-[7px] w-[7px]">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E07A5F] opacity-60" />
-                  <span className="relative inline-flex rounded-full h-[7px] w-[7px] bg-[#E07A5F]" />
-                </span>
-                <span className="text-[12px] font-semibold tracking-wide uppercase text-[#6B6560]">
-                  Tools for Tempo Blockchain
-                </span>
-              </div>
-            </motion.div>
-
             <motion.h1
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
@@ -285,15 +234,13 @@ function HomePage(): ReactElement {
               className="text-[40px] sm:text-[56px] md:text-[68px] lg:text-[80px] font-bold tracking-[-0.04em] leading-[1.05] mb-6"
             >
               <span className="relative inline-block">
-                <span
-                  className="bg-clip-text text-transparent"
-                  style={{
-                    backgroundImage:
-                      'linear-gradient(135deg, #E07A5F 0%, #9B72CF 50%, #5B9A6F 100%)',
-                  }}
-                >
-                  Tempo
-                </span>
+                <span className="relative z-10 text-[#E07A5F]">Tempo</span>
+                <motion.span
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ duration: 0.5, delay: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+                  className="absolute -bottom-1 left-0 right-0 h-[3px] bg-gradient-to-r from-[#E07A5F]/60 via-[#E07A5F]/40 to-transparent rounded-full origin-left"
+                />
               </span>
               <span className="text-[#2D3436]"> at Your </span>
               <br className="hidden md:block" />
@@ -392,7 +339,7 @@ function HomePage(): ReactElement {
                     <div className="flex items-center gap-3">
                       <div
                         className="w-10 h-10 rounded-xl flex items-center justify-center"
-                        style={{ backgroundColor: selectedProduct.lightColor }}
+                        style={{ backgroundColor: selectedProduct.iconBg }}
                       >
                         <selectedProduct.icon
                           className="w-5 h-5"
