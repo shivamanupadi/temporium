@@ -1,16 +1,41 @@
+import type { Chain } from 'viem';
+
+/**
+ * Per-request network configuration resolved from X-Tempo-Network header
+ */
+export interface NetworkConfig {
+  network: 'testnet' | 'mainnet';
+  chain: Chain;
+  rpcUrl: string;
+  explorerUrl: string;
+  passkeyRegistryAddress: string;
+  relayerPrivateKey: string;
+}
+
 /**
  * Cloudflare Worker Environment Bindings
  */
 export interface Env {
+  // D1 Database
+  DB: D1Database;
+
+  // Durable Objects
+  SCHEDULED_TX: DurableObjectNamespace;
+
   // Environment Variables
-  TEMPO_RPC_URL: string;
-  PASSKEY_REGISTRY_ADDRESS: string;
   ALLOWED_ORIGINS: string;
+
+  // JWT config (shared across networks)
   JWT_EXPIRATION: string;
+
+  // Per-network passkey registry addresses
+  TESTNET_PASSKEY_REGISTRY_ADDRESS: string;
+  MAINNET_PASSKEY_REGISTRY_ADDRESS: string;
 
   // Secrets (set via wrangler secret put)
   JWT_SECRET: string;
-  RELAYER_PRIVATE_KEY: string;
+  TESTNET_RELAYER_PRIVATE_KEY: string;
+  MAINNET_RELAYER_PRIVATE_KEY: string;
 }
 
 /**
@@ -28,5 +53,7 @@ export interface JwtPayload {
  */
 export interface Variables {
   user: JwtPayload;
+  db: import('../db').Database;
   requestId: string;
+  networkConfig: NetworkConfig;
 }

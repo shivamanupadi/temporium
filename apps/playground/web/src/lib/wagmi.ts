@@ -1,6 +1,6 @@
 import { createConfig, http } from 'wagmi';
 import { injected } from 'wagmi/connectors';
-import { webAuthn, KeyManager } from 'tempo.ts/wagmi';
+import { webAuthn, KeyManager } from 'wagmi/tempo';
 import { tempoChain } from './tempo-client';
 
 /**

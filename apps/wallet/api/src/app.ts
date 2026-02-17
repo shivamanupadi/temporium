@@ -5,6 +5,7 @@ import { secureHeaders } from 'hono/secure-headers';
 import { createCorsMiddleware } from './middleware/cors';
 import { requestId } from './middleware/request-id';
 import { errorHandler } from './middleware/error';
+import { networkMiddleware } from './middleware/network';
 import routes from './routes';
 import type { Env, Variables } from './types/env';
 
@@ -34,13 +35,16 @@ export function createApp() {
     return corsMiddleware(c, next);
   });
 
+  // Network resolution from X-Tempo-Network header
+  app.use('*', networkMiddleware);
+
   // Health check endpoints
   app.get('/', c => {
     return c.json({
       success: true,
       data: {
-        name: 'Temporium Wallet API',
-        version: '1.0.0',
+        name: 'Temporium API',
+        version: '2.0.0',
         runtime: 'Cloudflare Workers',
         status: 'healthy',
       },

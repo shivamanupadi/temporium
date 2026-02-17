@@ -1,7 +1,7 @@
 import type React from 'react';
 import { useState } from 'react';
 import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import { Hooks } from 'tempo.ts/wagmi';
+import { Hooks } from 'wagmi/tempo';
 import {
   Wallet,
   LogOut,

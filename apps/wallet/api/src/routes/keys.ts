@@ -7,7 +7,6 @@ import {
   hashCredentialId,
   validateAndNormalizePublicKey,
   normalizePublicKey,
-  tempoTestnet,
   type Address,
   type Hex,
   type PublicClient,
@@ -21,7 +20,7 @@ import {
   BadRequestError,
   ConflictError,
 } from '../middleware/error';
-import type { Env, Variables } from '../types/env';
+import type { Env, Variables, NetworkConfig } from '../types/env';
 
 /**
  * Challenge expiration time in milliseconds (5 minutes)
@@ -70,13 +69,22 @@ class KeysService implements Kv.Kv {
   private publicClient: PublicClient;
   private walletClient: WalletClient | null = null;
   private registryAddress: Address;
+  private chain: NetworkConfig['chain'];
 
-  constructor(private env: Env) {
-    this.registryAddress = env.PASSKEY_REGISTRY_ADDRESS as Address;
-    this.publicClient = createTempoPublicClient(env.TEMPO_RPC_URL);
+  constructor(
+    private networkConfig: NetworkConfig,
+    private env: Pick<Env, 'JWT_SECRET' | 'JWT_EXPIRATION'>
+  ) {
+    this.registryAddress = networkConfig.passkeyRegistryAddress as Address;
+    this.chain = networkConfig.chain;
+    this.publicClient = createTempoPublicClient(networkConfig.rpcUrl, this.chain);
 
-    if (env.RELAYER_PRIVATE_KEY) {
-      this.walletClient = createTempoWalletClient(env.TEMPO_RPC_URL, env.RELAYER_PRIVATE_KEY);
+    if (networkConfig.relayerPrivateKey) {
+      this.walletClient = createTempoWalletClient(
+        networkConfig.rpcUrl,
+        networkConfig.relayerPrivateKey,
+        this.chain
+      );
     }
   }
 
@@ -184,7 +192,7 @@ class KeysService implements Kv.Kv {
       console.log(`Registering passkey on-chain for credentialId: ${credentialId}`);
 
       const hash = await this.walletClient.writeContract({
-        chain: tempoTestnet,
+        chain: this.chain,
         account: this.walletClient.account!,
         address: this.registryAddress,
         abi: PasskeyRegistryABI,
@@ -269,7 +277,7 @@ const keysRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
  * Handle all /keys/* requests via tempo.ts Handler.keyManager
  */
 keysRouter.all('/*', async c => {
-  const keysService = new KeysService(c.env);
+  const keysService = new KeysService(c.get('networkConfig'), c.env);
 
   // Create tempo.ts key manager handler
   const keysHandler = Handler.keyManager({

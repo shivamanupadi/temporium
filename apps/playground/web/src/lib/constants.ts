@@ -4,7 +4,7 @@ import type { Address } from 'viem';
  * Tempo Testnet Configuration
  */
 export const TEMPO_TESTNET = {
-  id: 42429,
+  id: 42431,
   name: 'Tempo Testnet',
   network: 'tempo-testnet',
   nativeCurrency: {
@@ -14,16 +14,16 @@ export const TEMPO_TESTNET = {
   },
   rpcUrls: {
     default: {
-      http: ['https://rpc.testnet.tempo.xyz'],
-      webSocket: ['wss://rpc.testnet.tempo.xyz'],
+      http: ['https://rpc.moderato.tempo.xyz'],
+      webSocket: ['wss://rpc.moderato.tempo.xyz'],
     },
     public: {
-      http: ['https://rpc.testnet.tempo.xyz'],
-      webSocket: ['wss://rpc.testnet.tempo.xyz'],
+      http: ['https://rpc.moderato.tempo.xyz'],
+      webSocket: ['wss://rpc.moderato.tempo.xyz'],
     },
   },
   blockExplorers: {
-    default: { name: 'Tempo Explorer', url: 'https://explore.tempo.xyz' },
+    default: { name: 'Tempo Explorer', url: 'https://explore.moderato.tempo.xyz' },
   },
 } as const;
 
@@ -37,7 +37,7 @@ export const DEFAULT_FEE_TOKEN_ADDRESS = '0x20c000000000000000000000000000000000
  */
 export const LINKS = {
   faucet: 'https://docs.tempo.xyz/quickstart/faucet',
-  explorer: 'https://explore.tempo.xyz',
+  explorer: 'https://explore.moderato.tempo.xyz',
   docs: 'https://docs.tempo.xyz',
   gateway: 'https://gateway.temporium.xyz',
   github: 'https://github.com/tempoxyz',

@@ -3,23 +3,27 @@
 
 /*
  * Temporium Design System
- * Stripe-inspired - Clean, sleek, refined
+ * Warm palette - Coral, Lavender, Sage
  */
 
 :root {
   --radius: 0.5rem;
-  --background: #fafafa;
-  --foreground: #0a2540;
+  --background: #fdfbf8;
+  --foreground: #2d3436;
   --card: #ffffff;
-  --card-foreground: #0a2540;
-  --primary: #7c5cff;
+  --card-foreground: #2d3436;
+  --primary: #9b72cf;
   --primary-foreground: #ffffff;
-  --secondary: #f4f5f7;
-  --secondary-foreground: #0a2540;
-  --muted: #f4f5f7;
-  --muted-foreground: #526070;
-  --border: #eef0f3;
-  --ring: #7c5cff;
+  --secondary: #f5f2ed;
+  --secondary-foreground: #2d3436;
+  --muted: #f5f2ed;
+  --muted-foreground: #6b6560;
+  --border: #ede9e3;
+  --ring: #9b72cf;
+
+  --color-coral: #e07a5f;
+  --color-lavender: #9b72cf;
+  --color-sage: #5b9a6f;
 }
 
 @theme inline {
@@ -42,8 +46,11 @@
 }
 
 @theme {
+  --color-coral: #e07a5f;
+  --color-lavender: #9b72cf;
+  --color-sage: #5b9a6f;
   --color-accent-blue: #0073e6;
-  --color-accent-green: #00a67e;
+  --color-accent-green: #5b9a6f;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
   --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.06);
   --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
@@ -95,5 +102,5 @@
 }
 
 ::selection {
-  background: rgba(124, 92, 255, 0.15);
+  background: rgba(155, 114, 207, 0.18);
 }

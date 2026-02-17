@@ -13,23 +13,11 @@ import {
 import { privateKeyToAccount } from 'viem/accounts';
 
 /**
- * Tempo Testnet chain configuration
- */
-export const tempoTestnet: Chain = {
-  id: 42429,
-  name: 'Tempo Testnet',
-  nativeCurrency: { name: 'USD', symbol: 'USD', decimals: 6 },
-  rpcUrls: {
-    default: { http: ['https://rpc.testnet.tempo.xyz'] },
-  },
-};
-
-/**
  * Create a public client for reading from blockchain (free)
  */
-export function createTempoPublicClient(rpcUrl: string): PublicClient {
+export function createTempoPublicClient(rpcUrl: string, chain: Chain): PublicClient {
   return createPublicClient({
-    chain: tempoTestnet,
+    chain,
     transport: http(rpcUrl),
   });
 }
@@ -37,11 +25,15 @@ export function createTempoPublicClient(rpcUrl: string): PublicClient {
 /**
  * Create a wallet client for writing to blockchain
  */
-export function createTempoWalletClient(rpcUrl: string, privateKey: string): WalletClient {
+export function createTempoWalletClient(
+  rpcUrl: string,
+  privateKey: string,
+  chain: Chain
+): WalletClient {
   const account = privateKeyToAccount(privateKey as Hex);
   return createWalletClient({
     account,
-    chain: tempoTestnet,
+    chain,
     transport: http(rpcUrl),
   });
 }

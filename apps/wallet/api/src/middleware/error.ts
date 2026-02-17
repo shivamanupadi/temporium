@@ -87,6 +87,36 @@ export class ConflictError extends AppError {
 }
 
 /**
+ * 422 Unprocessable Entity - Semantic error in request
+ */
+export class UnprocessableError extends AppError {
+  readonly statusCode = 422;
+  readonly code = 'UNPROCESSABLE_ENTITY';
+}
+
+/**
+ * 429 Too Many Requests - Rate limit exceeded
+ */
+export class RateLimitError extends AppError {
+  readonly statusCode = 429;
+  readonly code = 'RATE_LIMIT_EXCEEDED';
+  readonly retryAfter: number;
+
+  constructor(message: string, retryAfter: number = 60) {
+    super(message);
+    this.retryAfter = retryAfter;
+  }
+}
+
+/**
+ * 500 Internal Server Error - Unexpected error
+ */
+export class InternalError extends AppError {
+  readonly statusCode = 500;
+  readonly code = 'INTERNAL_ERROR';
+}
+
+/**
  * 502 Bad Gateway - External service error
  */
 export class ExternalServiceError extends AppError {
@@ -192,7 +222,28 @@ export function errorHandler(err: Error, c: Context) {
       err instanceof ValidationError ? err.details : undefined
     );
 
-    return c.json(response, err.statusCode as 400 | 401 | 403 | 404 | 409 | 502 | 503);
+    // Add Retry-After header for rate limit errors
+    if (err instanceof RateLimitError) {
+      c.header('Retry-After', err.retryAfter.toString());
+    }
+
+    return c.json(
+      response,
+      err.statusCode as 400 | 401 | 403 | 404 | 409 | 422 | 429 | 500 | 502 | 503
+    );
+  }
+
+  // Handle D1/SQLite unique constraint violations
+  if (err.message?.includes('UNIQUE constraint failed')) {
+    return c.json(createErrorResponse('CONFLICT', 'Resource already exists', requestId), 409);
+  }
+
+  // Handle D1/SQLite foreign key violations
+  if (err.message?.includes('FOREIGN KEY constraint failed')) {
+    return c.json(
+      createErrorResponse('BAD_REQUEST', 'Invalid reference to related resource', requestId),
+      400
+    );
   }
 
   // Generic internal server error (hide details in production)

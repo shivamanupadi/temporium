@@ -3,16 +3,31 @@ main = "src/index.ts"
 compatibility_date = "2024-12-26"
 compatibility_flags = ["nodejs_compat"]
 
-# Production: Custom domain
-routes = [{ pattern = "wallet-api.temporium.xyz", custom_domain = true }]
+# D1 Database (default: local dev)
+[[d1_databases]]
+binding = "DB"
+database_name = "temporium-wallet-db"
+database_id = "placeholder-wallet-db-id"
+migrations_dir = "src/db/migrations"
 
-# Environment Variables
+# Durable Objects
+[durable_objects]
+bindings = [
+  { name = "SCHEDULED_TX", class_name = "ScheduledTransactionDO" },
+]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["ScheduledTransactionDO"]
+
+# Single worker serving both testnet and mainnet via X-Tempo-Network header
 [vars]
-TEMPO_RPC_URL = "https://rpc.testnet.tempo.xyz"
-PASSKEY_REGISTRY_ADDRESS = "0xba6FFf66aE28e8Fe13b8679653934f3C8Ef9Ca9e"
 ALLOWED_ORIGINS = "*"
 JWT_EXPIRATION = "24h"
+TESTNET_PASSKEY_REGISTRY_ADDRESS = "0xba6FFf66aE28e8Fe13b8679653934f3C8Ef9Ca9e"
+MAINNET_PASSKEY_REGISTRY_ADDRESS = "0x0000000000000000000000000000000000000000"
 
-# Secrets (set via CLI):
+# Secrets:
 # wrangler secret put JWT_SECRET
-# wrangler secret put RELAYER_PRIVATE_KEY
+# wrangler secret put TESTNET_RELAYER_PRIVATE_KEY
+# wrangler secret put MAINNET_RELAYER_PRIVATE_KEY
