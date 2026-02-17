@@ -296,7 +296,7 @@ function SettingsPage(): ReactElement | null {
               <h2 className="text-[15px] font-semibold text-[#2D3436] mb-1">Add Custom Token</h2>
               <p className="text-[13px] text-[#9B9590] mb-4">
                 Paste a token contract address to look up its details on-chain. Custom tokens appear
-                across all features — send, batch send, rewards, approvals, and more.
+                across all features: send, batch send, rewards, approvals, and more.
               </p>
 
               <div className="flex gap-2">

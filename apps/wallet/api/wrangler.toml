@@ -1,4 +1,4 @@
-name = "temporium-wallet-api"
+name = "temporium-api"
 main = "src/index.ts"
 compatibility_date = "2024-12-26"
 compatibility_flags = ["nodejs_compat"]
@@ -29,7 +29,7 @@ new_sqlite_classes = ["ScheduledTransactionDO"]
 [vars]
 ALLOWED_ORIGINS = "*"
 JWT_EXPIRATION = "24h"
-TESTNET_PASSKEY_REGISTRY_ADDRESS = "0x612F63Ab7c5fADc0915f8Dd7F8176e7d458e6844"
+TESTNET_PASSKEY_REGISTRY_ADDRESS = "0x4AF321C210AF0cbf15d8ed955007f2Dd57540057"
 MAINNET_PASSKEY_REGISTRY_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 # Secrets:

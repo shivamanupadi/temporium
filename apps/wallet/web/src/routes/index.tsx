@@ -63,16 +63,11 @@ const features = [
   },
   { icon: Key, label: 'Access Keys', desc: 'Manage signing permissions', color: '#D4A574' },
   { icon: Clock, label: 'Scheduled Txns', desc: 'Recurring & timed payments', color: '#C27BA0' },
-  { icon: Repeat, label: 'Fee AMM', desc: 'Rebalance swaps at fixed rates', color: '#D4A574' },
-  {
-    icon: Droplets,
-    label: 'Liquidity',
-    desc: 'Provide LP & earn 0.3% on fee conversions',
-    color: '#6BA3BE',
-  },
-  { icon: ListPlus, label: 'Bulk Payments', desc: 'Send to many at once', color: '#E07A5F' },
-  { icon: ShieldCheck, label: 'Token Approvals', desc: 'Manage allowances', color: '#5B9A6F' },
-  { icon: Gift, label: 'TIP20 Rewards', desc: 'Claim token rewards', color: '#5B9A6F' },
+  { icon: Repeat, label: 'Fee AMM', desc: 'Rebalance swaps at fixed rates', color: '#E07A5F' },
+  { icon: Droplets, label: 'Liquidity', desc: 'Provide LP & earn fees', color: '#9B72CF' },
+  { icon: ListPlus, label: 'Bulk Payments', desc: 'Send to many at once', color: '#5B9A6F' },
+  { icon: ShieldCheck, label: 'Token Approvals', desc: 'Manage allowances', color: '#E07A5F' },
+  { icon: Gift, label: 'TIP20 Rewards', desc: 'Claim token rewards', color: '#9B72CF' },
   { icon: Users, label: 'Contacts', desc: 'Save & organize addresses', color: '#5B9A6F' },
 ];
 
@@ -123,14 +118,14 @@ const featureSections: {
   },
   {
     label: 'Fee AMM',
-    heading: 'Fee AMM — fixed-rate token swaps',
+    heading: 'Fee AMM - fixed-rate token swaps',
     subtitle:
       'The Fee AMM enables rebalance swaps between user tokens and validator tokens at a fixed rate with a ~0.15% bonus. Liquidity providers earn 0.3% on every protocol fee conversion.',
     items: [
       {
         icon: Repeat,
         title: 'Rebalance Swap',
-        desc: 'Swap validator tokens for user tokens at a fixed rate. Rebalancers receive a ~0.15% bonus — pay less than they receive.',
+        desc: 'Swap validator tokens for user tokens at a fixed rate. Rebalancers receive a ~0.15% bonus, paying less than they receive.',
         color: '#E07A5F',
       },
       {
@@ -426,7 +421,7 @@ function LandingPage(): ReactElement {
               className="mt-8 flex items-center gap-2 text-[12px] text-[#B5B0AA]"
             >
               <Fingerprint className="w-3.5 h-3.5 text-[#9B72CF]/60" />
-              <span>Secured by passkeys — no seed phrases</span>
+              <span>Secured by passkeys, no seed phrases</span>
             </motion.div>
           </section>
 
@@ -568,7 +563,7 @@ function LandingPage(): ReactElement {
               ))}
             </div>
 
-            {/* Bottom row — single tile with remaining features */}
+            {/* Bottom row — remaining features in a single card */}
             <motion.div
               variants={{
                 hidden: { opacity: 0, y: 14 },

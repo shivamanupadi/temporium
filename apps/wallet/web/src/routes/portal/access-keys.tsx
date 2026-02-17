@@ -827,7 +827,7 @@ function AccessKeysPage(): ReactElement {
               <Info className="w-4 h-4 text-[#6B8EAD] shrink-0 mt-0.5" />
               <p className="text-[12px] text-[#6B8EAD]/80 leading-relaxed">
                 This only imports key metadata (ID, type, status) for display and management.
-                Private keys are never stored or transmitted — importing is completely safe.
+                Private keys are never stored or transmitted. Importing is completely safe.
               </p>
             </div>
             <div>
@@ -905,7 +905,7 @@ function AccessKeysPage(): ReactElement {
               <Info className="w-4 h-4 text-[#6B8EAD] shrink-0 mt-0.5" />
               <p className="text-[12px] text-[#6B8EAD]/80 leading-relaxed">
                 This only removes the key from your dashboard view. The key is already revoked
-                on-chain and will remain revoked — no on-chain state is affected. You can always
+                on-chain and will remain revoked. No on-chain state is affected. You can always
                 re-import it later using the key ID.
               </p>
             </div>
