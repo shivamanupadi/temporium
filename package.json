@@ -5,17 +5,8 @@
   "packageManager": "yarn@1.22.22",
   "description": "Tempo Gateway - Payments-first gateway for Tempo blockchain",
   "workspaces": [
-    "apps/home",
     "apps/wallet",
     "apps/wallet/*",
-    "apps/node-manager",
-    "apps/node-manager/api",
-    "apps/node-manager/web",
-    "apps/node-manager/home",
-    "apps/playground",
-    "apps/playground/*",
-    "apps/playground-v1",
-    "apps/playground-v1/*",
     "packages/*"
   ],
   "scripts": {
@@ -27,15 +18,9 @@
     "format": "turbo run format",
     "reset": "yarn clean && yarn install",
     "check:push": "yarn lint && yarn build",
-    "kill-ports": "lsof -ti:4000,4001,4002,4003,4004,4005,4006,4007,4008,4009,4010 | xargs kill -9 || true",
-    "dev:node-manager": "turbo run dev --filter=@temporium/node-manager",
-    "build:node-manager": "turbo run build --filter=@temporium/node-manager",
+    "kill-ports": "lsof -ti:4000,4001,4002,4003,4004,4005 | xargs kill -9 || true",
     "dev:wallet": "turbo run dev --filter=@temporium/wallet-api --filter=@temporium/wallet-web --filter=@temporium/wallet-demo-dapp",
     "build:wallet": "turbo run build --filter=@temporium/wallet-api --filter=@temporium/wallet-web",
-    "dev:playground": "turbo run dev --filter=@temporium/playground",
-    "build:playground": "turbo run build --filter=@temporium/playground",
-    "dev:playground-v1": "turbo run dev --filter=@temporium/playground-api --filter=@temporium/playground-web",
-    "build:playground-v1": "turbo run build --filter=@temporium/playground-api --filter=@temporium/playground-web",
     "postinstall": "patch-package && node scripts/patch-ox.js"
   },
   "devDependencies": {

@@ -19,8 +19,7 @@
         "RELAYER_PRIVATE_KEY",
         "ALLOWED_ORIGINS",
         "VITE_API_URL",
-        "VITE_GATEWAY_URL",
-        "VITE_NODE_MANAGER_URL"
+        "VITE_GATEWAY_URL"
       ]
     },
     "dev": {
@@ -36,8 +35,7 @@
         "RELAYER_PRIVATE_KEY",
         "ALLOWED_ORIGINS",
         "VITE_API_URL",
-        "VITE_GATEWAY_URL",
-        "VITE_NODE_MANAGER_URL"
+        "VITE_GATEWAY_URL"
       ]
     },
     "start": {
