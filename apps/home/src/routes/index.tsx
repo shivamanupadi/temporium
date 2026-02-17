@@ -7,20 +7,20 @@ export const Route = createFileRoute('/')({
   component: HomePage,
 });
 
-const GATEWAY_URL = import.meta.env.VITE_GATEWAY_URL || 'https://gateway.temporium.xyz';
+const WALLET_URL = import.meta.env.VITE_WALLET_URL || 'https://wallet.temporium.xyz';
 const NODE_MANAGER_URL = import.meta.env.VITE_NODE_MANAGER_URL || 'https://node.temporium.xyz';
 
 const products = [
   {
-    id: 'gateway',
-    title: 'Gateway',
+    id: 'wallet',
+    title: 'Wallet',
     tagline: 'Your Wallet',
     description:
       'Send, receive, swap tokens, provide liquidity, and create TIP20 assets. Secured by passkeys.',
     icon: Wallet,
     color: '#E07A5F',
     lightColor: '#FFF5F0',
-    href: GATEWAY_URL,
+    href: WALLET_URL,
     available: true,
   },
   {
@@ -244,7 +244,7 @@ function HomePage(): ReactElement {
               </a>
               <div className="w-px h-5 bg-[#EDE9E3] mx-2 hidden sm:block" />
               <a
-                href={GATEWAY_URL}
+                href={WALLET_URL}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 text-[13px] font-semibold text-white bg-[#E07A5F] rounded-xl hover:bg-[#d06a50] transition-colors"

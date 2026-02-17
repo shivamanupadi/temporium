@@ -1,4 +1,4 @@
-import { WalletConnect } from '@temporium/wallet-connect';
+import { WalletConnect } from '@temporium/gateway-connect';
 import { WALLET_URL } from './constants';
 
 /**

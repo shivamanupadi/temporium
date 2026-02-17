@@ -3,11 +3,16 @@ main = "src/index.ts"
 compatibility_date = "2024-12-26"
 compatibility_flags = ["nodejs_compat"]
 
+# Custom domain
+routes = [
+  { pattern = "api.wallet.temporium.xyz", custom_domain = true },
+]
+
 # D1 Database (default: local dev)
 [[d1_databases]]
 binding = "DB"
 database_name = "temporium-wallet-db"
-database_id = "placeholder-wallet-db-id"
+database_id = "4eda211b-369a-4d07-ac5b-5f92c6906338"
 migrations_dir = "src/db/migrations"
 
 # Durable Objects
@@ -18,13 +23,13 @@ bindings = [
 
 [[migrations]]
 tag = "v1"
-new_classes = ["ScheduledTransactionDO"]
+new_sqlite_classes = ["ScheduledTransactionDO"]
 
 # Single worker serving both testnet and mainnet via X-Tempo-Network header
 [vars]
 ALLOWED_ORIGINS = "*"
 JWT_EXPIRATION = "24h"
-TESTNET_PASSKEY_REGISTRY_ADDRESS = "0xba6FFf66aE28e8Fe13b8679653934f3C8Ef9Ca9e"
+TESTNET_PASSKEY_REGISTRY_ADDRESS = "0x612F63Ab7c5fADc0915f8Dd7F8176e7d458e6844"
 MAINNET_PASSKEY_REGISTRY_ADDRESS = "0x0000000000000000000000000000000000000000"
 
 # Secrets:
