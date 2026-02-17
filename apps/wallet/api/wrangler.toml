@@ -5,14 +5,14 @@ compatibility_flags = ["nodejs_compat"]
 
 # Custom domain
 routes = [
-  { pattern = "api.wallet.temporium.xyz", custom_domain = true },
+  { pattern = "api.temporium.xyz", custom_domain = true },
 ]
 
 # D1 Database (default: local dev)
 [[d1_databases]]
 binding = "DB"
-database_name = "temporium-wallet-db"
-database_id = "4eda211b-369a-4d07-ac5b-5f92c6906338"
+database_name = "temporium-db"
+database_id = "f4f31f16-b5b5-4dfe-9e6e-5f08bdca09cb"
 migrations_dir = "src/db/migrations"
 
 # Durable Objects

@@ -294,7 +294,7 @@ function LandingPage(): ReactElement {
       </div>
 
       {/* Header */}
-      <header className="relative z-10 px-6 py-5 flex items-center justify-between max-w-5xl mx-auto w-full">
+      <header className="relative z-10 py-5 max-w-5xl mx-auto w-full px-6 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <img src="/logo-dark.png" alt="Temporium" className="w-8 h-8" />
           <span className="text-[17px] font-bold text-[#2D3436] tracking-tight">Temporium</span>
@@ -338,8 +338,8 @@ function LandingPage(): ReactElement {
       </header>
 
       {/* Main content — 2-column layout */}
-      <main className="relative z-10 flex-1 flex flex-col px-6">
-        <div className="max-w-5xl w-full mx-auto flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center py-12 sm:py-16 lg:py-24">
+      <main className="relative z-10 flex-1 flex flex-col">
+        <div className="max-w-5xl w-full mx-auto flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center px-6 py-12 sm:py-16 lg:py-24">
           {/* ── Left: Hero ── */}
           <section className="flex flex-col justify-center items-center lg:items-start text-center lg:text-left">
             {/* Heading */}

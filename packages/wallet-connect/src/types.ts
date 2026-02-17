@@ -1,4 +1,4 @@
-import type { Address, Chain, Hash, Hex } from 'viem';
+import type { Address, Chain, Hex } from 'viem';
 
 /**
  * Wallet Connect Protocol Version
@@ -105,13 +105,6 @@ export interface SignMessageResult {
 }
 
 /**
- * Transaction result (used for all transaction types)
- */
-export interface TransactionResult {
-  hash: Hash;
-}
-
-/**
  * Result from wallet sign-only operation
  */
 export interface SignTransactionResult {
@@ -197,62 +190,6 @@ export interface RemoveLiquidityParams {
 }
 
 /**
- * Parameters for buying tokens via DEX
- * Compatible with tempo.ts Actions.dex.buy
- */
-export interface BuyTokensParams {
-  /** Token to pay with */
-  tokenIn: Address;
-  /** Token to receive */
-  tokenOut: Address;
-  /** Exact amount of tokenOut to receive */
-  amountOut: bigint;
-  /** Maximum amount of tokenIn to spend */
-  maxAmountIn: bigint;
-  /** Token to pay fees with (defaults to USD) */
-  feeToken?: Address;
-}
-
-/**
- * Parameters for placing a limit order
- * Compatible with tempo.ts Actions.dex.place
- */
-export interface PlaceOrderParams {
-  /** Token address */
-  token: Address;
-  /** Order amount */
-  amount: bigint;
-  /** Price tick */
-  tick: number;
-  /** Order type */
-  type: 'buy' | 'sell';
-  /** Token to pay fees with (defaults to USD) */
-  feeToken?: Address;
-}
-
-/**
- * Parameters for cancelling a limit order
- * Compatible with tempo.ts Actions.dex.cancel
- */
-export interface CancelOrderParams {
-  /** Order ID to cancel */
-  orderId: bigint;
-  /** Token to pay fees with (defaults to USD) */
-  feeToken?: Address;
-}
-
-/**
- * Parameters for creating a DEX pair
- * Compatible with tempo.ts Actions.dex.createPair
- */
-export interface CreatePairParams {
-  /** Base token address */
-  base: Address;
-  /** Token to pay fees with (defaults to USD) */
-  feeToken?: Address;
-}
-
-/**
  * Parameters for approving a token spender
  * Compatible with tempo.ts Actions.token.approve
  */
@@ -325,19 +262,6 @@ export interface BurnTokenParams {
 export interface ClaimRewardsParams {
   /** Token address to claim rewards for */
   token: Address;
-  /** Token to pay fees with (defaults to USD) */
-  feeToken?: Address;
-}
-
-/**
- * Parameters for withdrawing from DEX
- * Compatible with tempo.ts Actions.dex.withdraw
- */
-export interface DexWithdrawParams {
-  /** Token address to withdraw */
-  token: Address;
-  /** Amount to withdraw */
-  amount: bigint;
   /** Token to pay fees with (defaults to USD) */
   feeToken?: Address;
 }
