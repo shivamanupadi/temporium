@@ -49,6 +49,20 @@ const features = [
   },
   { icon: Send, label: 'Send', desc: 'Transfer tokens instantly', color: '#E07A5F' },
   { icon: QrCode, label: 'Receive', desc: 'Generate payment QR codes', color: '#5B9A6F' },
+  {
+    icon: CircleDollarSign,
+    label: 'TIP20 Studio',
+    desc: 'Create & manage tokens',
+    color: '#E07A5F',
+  },
+  {
+    icon: Shield,
+    label: 'TIP403 Factory',
+    desc: 'Deploy access-controlled tokens',
+    color: '#9B72CF',
+  },
+  { icon: Key, label: 'Access Keys', desc: 'Manage signing permissions', color: '#D4A574' },
+  { icon: Clock, label: 'Scheduled Txns', desc: 'Recurring & timed payments', color: '#C27BA0' },
   { icon: Repeat, label: 'Fee AMM', desc: 'Rebalance swaps at fixed rates', color: '#D4A574' },
   {
     icon: Droplets,
@@ -56,23 +70,9 @@ const features = [
     desc: 'Provide LP & earn 0.3% on fee conversions',
     color: '#6BA3BE',
   },
-  {
-    icon: CircleDollarSign,
-    label: 'TIP20 Studio',
-    desc: 'Create & manage tokens',
-    color: '#E07A5F',
-  },
-  { icon: Clock, label: 'Scheduled', desc: 'Recurring & timed payments', color: '#C27BA0' },
-  {
-    icon: Shield,
-    label: 'TIP403 Factory',
-    desc: 'Deploy access-controlled tokens',
-    color: '#9B72CF',
-  },
   { icon: ListPlus, label: 'Bulk Payments', desc: 'Send to many at once', color: '#E07A5F' },
   { icon: ShieldCheck, label: 'Token Approvals', desc: 'Manage allowances', color: '#5B9A6F' },
   { icon: Gift, label: 'TIP20 Rewards', desc: 'Claim token rewards', color: '#5B9A6F' },
-  { icon: Key, label: 'Access Keys', desc: 'Manage signing permissions', color: '#D4A574' },
   { icon: Users, label: 'Contacts', desc: 'Save & organize addresses', color: '#5B9A6F' },
 ];
 
@@ -298,17 +298,17 @@ function LandingPage(): ReactElement {
         <div className="flex items-center gap-2.5">
           <img src="/logo-dark.png" alt="Temporium" className="w-8 h-8" />
           <span className="text-[17px] font-bold text-[#2D3436] tracking-tight">Temporium</span>
-          <span className="text-[17px] font-medium text-[#B5B0AA] tracking-tight">| Gateway</span>
         </div>
-        <div className="flex items-center gap-5">
+        <nav className="flex items-center gap-1">
           <a
             href="#how-it-works"
             onClick={e => {
               e.preventDefault();
               document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="text-[13px] font-medium text-[#6B6560] hover:text-[#2D3436] transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13px] font-medium text-[#6B6560] hover:text-[#2D3436] hover:bg-[#F5F2ED]/80 transition-all"
           >
+            <Fingerprint className="w-3.5 h-3.5" strokeWidth={1.75} />
             How it works
           </a>
           <a
@@ -317,68 +317,51 @@ function LandingPage(): ReactElement {
               e.preventDefault();
               document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
             }}
-            className="text-[13px] font-medium text-[#6B6560] hover:text-[#2D3436] transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13px] font-medium text-[#6B6560] hover:text-[#2D3436] hover:bg-[#F5F2ED]/80 transition-all"
           >
+            <LayoutDashboard className="w-3.5 h-3.5" strokeWidth={1.75} />
             Features
           </a>
+          <div className="w-px h-4 bg-[#EDE9E3] mx-1" />
           <a
             href="https://x.com/HelloTemporium"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[#6B6560] hover:text-[#2D3436] transition-colors"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13px] font-medium text-[#6B6560] hover:text-[#2D3436] hover:bg-[#F5F2ED]/80 transition-all"
           >
-            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-current" aria-hidden="true">
+            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-current" aria-hidden="true">
               <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
             </svg>
-            @HelloTemporium
+            Twitter
           </a>
-        </div>
+        </nav>
       </header>
 
       {/* Main content — 2-column layout */}
       <main className="relative z-10 flex-1 flex flex-col px-6">
         <div className="max-w-5xl w-full mx-auto flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center py-12 sm:py-16 lg:py-24">
           {/* ── Left: Hero ── */}
-          <section className="flex flex-col items-center lg:items-start text-center lg:text-left py-8 lg:py-0">
-            {/* Passkey badge */}
-            <motion.a
-              href="https://docs.tempo.xyz/guide/use-accounts/embed-passkeys#embed-passkey-accounts"
-              target="_blank"
-              rel="noopener noreferrer"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.05 }}
-              className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-[#EDE9E3] bg-white mb-8 shadow-xs hover:border-[#9B72CF]/30 hover:shadow-sm transition-all cursor-pointer"
-            >
-              <div className="w-[22px] h-[22px] rounded-full bg-gradient-to-br from-[#9B72CF]/15 to-[#9B72CF]/5 flex items-center justify-center">
-                <Fingerprint className="h-3 w-3 text-[#9B72CF]" />
-              </div>
-              <span className="text-[12px] font-medium text-[#6B6560]">
-                Learn about passkey wallets
-              </span>
-              <ExternalLink className="h-3 w-3 text-[#B5B0AA]" />
-            </motion.a>
-
+          <section className="flex flex-col justify-center items-center lg:items-start text-center lg:text-left">
             {/* Heading */}
             <motion.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.12, ease: [0.25, 0.1, 0.25, 1] }}
-              className="mb-5"
+              transition={{ duration: 0.6, delay: 0.08, ease: [0.25, 0.1, 0.25, 1] }}
+              className="mb-6"
             >
-              <span className="block text-[40px] sm:text-[52px] lg:text-[60px] font-bold text-[#2D3436] leading-[1.05] tracking-[-0.03em]">
+              <span className="block text-[42px] sm:text-[54px] lg:text-[62px] font-bold text-[#2D3436] leading-[1.05] tracking-[-0.03em]">
                 Your{' '}
                 <span className="relative inline-block">
-                  <span className="relative z-10 text-[#E07A5F]">Gateway</span>
+                  <span className="relative z-10 text-[#E07A5F]">Wallet</span>
                   <motion.span
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
-                    transition={{ duration: 0.5, delay: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+                    transition={{ duration: 0.5, delay: 0.55, ease: [0.25, 0.1, 0.25, 1] }}
                     className="absolute -bottom-1 left-0 right-0 h-[3px] bg-gradient-to-r from-[#E07A5F]/60 via-[#E07A5F]/40 to-transparent rounded-full origin-left"
                   />
                 </span>
                 <br />
-                to Tempo
+                for Tempo
               </span>
             </motion.h1>
 
@@ -386,8 +369,8 @@ function LandingPage(): ReactElement {
             <motion.p
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.22 }}
-              className="text-[15px] sm:text-[16px] text-[#8A8580] leading-relaxed mb-10 max-w-md"
+              transition={{ duration: 0.5, delay: 0.18 }}
+              className="text-[16px] sm:text-[17px] text-[#8A8580] leading-relaxed mb-10 max-w-[420px]"
             >
               Send, receive, provide liquidity, create tokens, schedule payments, and manage access
               keys. All with sub-cent fees.
@@ -397,7 +380,7 @@ function LandingPage(): ReactElement {
             <motion.div
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.32 }}
+              transition={{ duration: 0.5, delay: 0.28 }}
               className="flex items-center gap-3.5"
             >
               <Button
@@ -434,9 +417,20 @@ function LandingPage(): ReactElement {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Passkey hint */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+              className="mt-8 flex items-center gap-2 text-[12px] text-[#B5B0AA]"
+            >
+              <Fingerprint className="w-3.5 h-3.5 text-[#9B72CF]/60" />
+              <span>Secured by passkeys — no seed phrases</span>
+            </motion.div>
           </section>
 
-          {/* ── Right: Feature grid ── */}
+          {/* ── Right: Feature showcase ── */}
           <motion.div
             initial="hidden"
             animate="visible"
@@ -444,68 +438,183 @@ function LandingPage(): ReactElement {
               hidden: { opacity: 0 },
               visible: {
                 opacity: 1,
-                transition: { staggerChildren: 0.04, delayChildren: 0.35 },
+                transition: { staggerChildren: 0.05, delayChildren: 0.3 },
               },
             }}
-            className="flex flex-col"
+            className="hidden lg:flex flex-col gap-3"
           >
-            {/* Section label */}
-            <motion.p
-              variants={{
-                hidden: { opacity: 0 },
-                visible: { opacity: 1, transition: { duration: 0.4 } },
-              }}
-              className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-[0.12em] mb-4"
-            >
-              Built for Tempo
-            </motion.p>
-
-            {/* Feature cards — 2-column grid */}
-            <div className="grid grid-cols-2 gap-2.5">
-              {features.map(f => (
+            {/* Top row — 3 highlight cards */}
+            <div className="grid grid-cols-3 gap-3">
+              {features.slice(0, 3).map(f => (
                 <motion.div
                   key={f.label}
                   variants={{
-                    hidden: { opacity: 0, y: 14 },
+                    hidden: { opacity: 0, y: 18, scale: 0.97 },
                     visible: {
                       opacity: 1,
                       y: 0,
-                      transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as const },
+                      scale: 1,
+                      transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] as const },
                     },
                   }}
-                  whileHover={{ y: -3, transition: { duration: 0.2, ease: 'easeOut' } }}
-                  className="group relative rounded-2xl bg-white border border-[#EDE9E3]/80 p-4 cursor-default overflow-hidden transition-shadow duration-300 hover:shadow-lg hover:shadow-black/[0.04] hover:border-[#E2DDD6]"
+                  whileHover={{ y: -4, transition: { duration: 0.25, ease: 'easeOut' } }}
+                  className="group relative rounded-2xl bg-white border border-[#EDE9E3]/80 p-5 cursor-default overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-black/[0.06] hover:border-[#D5D0C9]"
                 >
-                  {/* Colored left accent — appears on hover */}
                   <div
-                    className="absolute top-0 left-0 bottom-0 w-[2px] origin-top scale-y-0 group-hover:scale-y-100 transition-transform duration-300 ease-out"
+                    className="absolute top-0 left-0 right-0 h-[2px] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-400 ease-out"
                     style={{ backgroundColor: f.color }}
                   />
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center mb-3 transition-transform duration-300 group-hover:scale-110"
+                    style={{ backgroundColor: `${f.color}12` }}
+                  >
+                    <f.icon
+                      className="w-[18px] h-[18px]"
+                      style={{ color: f.color }}
+                      strokeWidth={1.7}
+                    />
+                  </div>
+                  <p className="text-[13px] font-semibold text-[#2D3436] leading-tight">
+                    {f.label}
+                  </p>
+                  <p className="text-[11px] text-[#9B9590] leading-snug mt-1">{f.desc}</p>
+                </motion.div>
+              ))}
+            </div>
 
-                  <div className="flex items-start gap-3">
-                    {/* Icon */}
+            {/* Middle row — 2 wide feature cards */}
+            <div className="grid grid-cols-2 gap-3">
+              {features.slice(3, 5).map(f => (
+                <motion.div
+                  key={f.label}
+                  variants={{
+                    hidden: { opacity: 0, y: 18, scale: 0.97 },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      scale: 1,
+                      transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] as const },
+                    },
+                  }}
+                  whileHover={{ y: -4, transition: { duration: 0.25, ease: 'easeOut' } }}
+                  className="group relative rounded-2xl bg-white border border-[#EDE9E3]/80 p-5 cursor-default overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-black/[0.06] hover:border-[#D5D0C9]"
+                >
+                  <div
+                    className="absolute top-0 left-0 right-0 h-[2px] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-400 ease-out"
+                    style={{ backgroundColor: f.color }}
+                  />
+                  <div className="flex items-start gap-3.5">
                     <div
-                      className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105"
-                      style={{ backgroundColor: `${f.color}0F` }}
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110"
+                      style={{ backgroundColor: `${f.color}12` }}
                     >
                       <f.icon
-                        className="w-[17px] h-[17px]"
+                        className="w-[18px] h-[18px]"
                         style={{ color: f.color }}
                         strokeWidth={1.7}
                       />
                     </div>
-
-                    {/* Text */}
                     <div className="min-w-0 pt-0.5">
                       <p className="text-[13px] font-semibold text-[#2D3436] leading-tight">
                         {f.label}
                       </p>
-                      <p className="text-[11px] text-[#9B9590] leading-snug mt-0.5">{f.desc}</p>
+                      <p className="text-[11px] text-[#9B9590] leading-snug mt-1">{f.desc}</p>
                     </div>
                   </div>
                 </motion.div>
               ))}
             </div>
+
+            {/* Third row — 2 wide cards: Access Keys & Scheduled Txns */}
+            <div className="grid grid-cols-2 gap-3">
+              {features.slice(5, 7).map(f => (
+                <motion.div
+                  key={f.label}
+                  variants={{
+                    hidden: { opacity: 0, y: 18, scale: 0.97 },
+                    visible: {
+                      opacity: 1,
+                      y: 0,
+                      scale: 1,
+                      transition: { duration: 0.5, ease: [0.25, 0.1, 0.25, 1] as const },
+                    },
+                  }}
+                  whileHover={{ y: -4, transition: { duration: 0.25, ease: 'easeOut' } }}
+                  className="group relative rounded-2xl bg-white border border-[#EDE9E3]/80 p-5 cursor-default overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-black/[0.06] hover:border-[#D5D0C9]"
+                >
+                  <div
+                    className="absolute top-0 left-0 right-0 h-[2px] origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-400 ease-out"
+                    style={{ backgroundColor: f.color }}
+                  />
+                  <div className="flex items-start gap-3.5">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-110"
+                      style={{ backgroundColor: `${f.color}12` }}
+                    >
+                      <f.icon
+                        className="w-[18px] h-[18px]"
+                        style={{ color: f.color }}
+                        strokeWidth={1.7}
+                      />
+                    </div>
+                    <div className="min-w-0 pt-0.5">
+                      <p className="text-[13px] font-semibold text-[#2D3436] leading-tight">
+                        {f.label}
+                      </p>
+                      <p className="text-[11px] text-[#9B9590] leading-snug mt-1">{f.desc}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Bottom row — single tile with remaining features */}
+            <motion.div
+              variants={{
+                hidden: { opacity: 0, y: 14 },
+                visible: {
+                  opacity: 1,
+                  y: 0,
+                  transition: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as const },
+                },
+              }}
+              className="rounded-2xl bg-white border border-[#EDE9E3]/80 p-4 cursor-default"
+            >
+              <div className="grid grid-cols-3 gap-x-4 gap-y-3">
+                {features.slice(7).map(f => (
+                  <div key={f.label} className="flex items-center gap-2">
+                    <div
+                      className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                      style={{ backgroundColor: `${f.color}12` }}
+                    >
+                      <f.icon
+                        className="w-3.5 h-3.5"
+                        style={{ color: f.color }}
+                        strokeWidth={1.7}
+                      />
+                    </div>
+                    <span className="text-[11px] font-semibold text-[#4D5456] leading-tight">
+                      {f.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Built for Tempo badge */}
+            <motion.div
+              variants={{
+                hidden: { opacity: 0 },
+                visible: { opacity: 1, transition: { duration: 0.5, delay: 0.2 } },
+              }}
+              className="flex items-center justify-center gap-2 pt-1"
+            >
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#EDE9E3] to-transparent" />
+              <span className="text-[10px] font-semibold text-[#C5C0BA] uppercase tracking-[0.14em] px-3">
+                Built for Tempo
+              </span>
+              <div className="h-px flex-1 bg-gradient-to-r from-transparent via-[#EDE9E3] to-transparent" />
+            </motion.div>
           </motion.div>
         </div>
       </main>
@@ -744,24 +853,26 @@ function LandingPage(): ReactElement {
             Choose how to connect your wallet
           </DialogDescription>
 
-          <div className="px-6 pt-6 pb-2">
-            <h3 className="text-[16px] font-semibold text-[#2D3436] mb-1">Sign In</h3>
-            <p className="text-[13px] text-[#6B6560]">Choose how to connect</p>
+          <div className="px-6 pt-7 pb-5">
+            <h3 className="text-[17px] font-semibold text-[#2D3436] mb-1">Sign In</h3>
+            <p className="text-[13px] text-[#8A8580]">Choose how to connect your wallet</p>
           </div>
 
-          <div className="px-4 pb-5 space-y-2">
+          <div className="px-5 pb-6 space-y-2.5">
             {/* Passkey */}
             <button
               onClick={handleSignIn}
               disabled={!!connectingType}
-              className="flex items-center gap-3.5 w-full p-3.5 rounded-xl border border-[#EDE9E3] hover:border-[#9B72CF]/30 hover:bg-[#9B72CF]/4 transition-all text-left group cursor-pointer"
+              className="flex items-center gap-3.5 w-full p-4 rounded-xl border border-[#EDE9E3] hover:border-[#9B72CF]/30 hover:bg-[#9B72CF]/4 transition-all text-left group cursor-pointer"
             >
               <div className="w-10 h-10 rounded-xl bg-[#9B72CF]/10 flex items-center justify-center shrink-0">
                 <Fingerprint className="w-5 h-5 text-[#9B72CF]" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[14px] font-semibold text-[#2D3436]">Passkey</p>
-                <p className="text-[12px] text-[#9B9590]">Sign in with Face ID or Touch ID</p>
+                <p className="text-[12px] text-[#9B9590] mt-0.5">
+                  Sign in with Face ID or Touch ID
+                </p>
               </div>
               {connectingType === 'passkey' ? (
                 <Loader2 className="w-4 h-4 animate-spin text-[#9B72CF]" />
@@ -774,7 +885,7 @@ function LandingPage(): ReactElement {
             <button
               onClick={handleConnectInjected}
               disabled={!!connectingType || !hasInjectedWallet}
-              className={`flex items-center gap-3.5 w-full p-3.5 rounded-xl border border-[#EDE9E3] transition-all text-left group cursor-pointer ${
+              className={`flex items-center gap-3.5 w-full p-4 rounded-xl border border-[#EDE9E3] transition-all text-left group cursor-pointer ${
                 hasInjectedWallet
                   ? 'hover:border-[#E07A5F]/30 hover:bg-[#E07A5F]/4'
                   : 'opacity-50 cursor-not-allowed'
@@ -785,7 +896,7 @@ function LandingPage(): ReactElement {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[14px] font-semibold text-[#2D3436]">Browser Wallet</p>
-                <p className="text-[12px] text-[#9B9590]">
+                <p className="text-[12px] text-[#9B9590] mt-0.5">
                   {hasInjectedWallet ? 'Connect MetaMask, Brave, etc.' : 'No wallet detected'}
                 </p>
               </div>
@@ -796,6 +907,22 @@ function LandingPage(): ReactElement {
               )}
             </button>
           </div>
+
+          {/* Footer */}
+          <div className="border-t border-[#EDE9E3]/60 px-6 py-4">
+            <p className="text-[13px] text-center text-[#9B9590]">
+              Don&apos;t have a wallet?{' '}
+              <button
+                onClick={() => {
+                  setShowSignIn(false);
+                  setShowCreateWallet(true);
+                }}
+                className="font-semibold text-[#E07A5F] hover:text-[#D4694F] transition-colors cursor-pointer"
+              >
+                Create one
+              </button>
+            </p>
+          </div>
         </DialogContent>
       </Dialog>
 
@@ -805,6 +932,10 @@ function LandingPage(): ReactElement {
         isLoading={isConnecting}
         onClose={() => setShowCreateWallet(false)}
         onCreateWallet={handleCreateWallet}
+        onSignIn={() => {
+          setShowCreateWallet(false);
+          setShowSignIn(true);
+        }}
       />
     </div>
   );

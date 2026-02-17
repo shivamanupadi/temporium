@@ -18,6 +18,8 @@ export interface CreateWalletModalProps {
   isLoading: boolean;
   onClose: () => void;
   onCreateWallet: (walletName?: string) => Promise<void>;
+  /** Called when user clicks "Sign in" link in footer */
+  onSignIn?: () => void;
   /** Primary accent color (defaults to coral #E07A5F) */
   accentColor?: string;
 }
@@ -50,6 +52,7 @@ export function CreateWalletModal({
   isLoading,
   onClose,
   onCreateWallet,
+  onSignIn,
   accentColor = '#E07A5F',
 }: CreateWalletModalProps): ReactElement {
   const [walletName, setWalletName] = useState('');
@@ -254,7 +257,7 @@ export function CreateWalletModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-[#EDE9E3]/60 bg-[#FDFBF8]/50">
+        <div className="px-6 py-4 border-t border-[#EDE9E3]/60">
           {currentStep === 1 ? (
             <div className="flex gap-3">
               <Button
@@ -297,6 +300,21 @@ export function CreateWalletModal({
             </div>
           )}
         </div>
+
+        {onSignIn && (
+          <div className="border-t border-[#EDE9E3]/60 px-6 py-4">
+            <p className="text-[13px] text-center text-[#9B9590]">
+              Already have a wallet?{' '}
+              <button
+                onClick={onSignIn}
+                disabled={isLoading}
+                className="font-semibold text-[#E07A5F] hover:text-[#D4694F] transition-colors cursor-pointer disabled:opacity-50"
+              >
+                Sign in
+              </button>
+            </p>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
