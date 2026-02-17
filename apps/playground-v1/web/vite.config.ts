@@ -1,12 +1,17 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { TanStackRouterVite } from '@tanstack/router-vite-plugin';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 import path from 'path';
 
 export default defineConfig({
   plugins: [
     react(),
     TanStackRouterVite(),
+    nodePolyfills({
+      include: ['buffer'],
+      globals: { Buffer: true },
+    }),
   ],
   resolve: {
     alias: {
@@ -14,6 +19,9 @@ export default defineConfig({
     },
   },
   server: {
-    port: 4012,
+    port: 4011,
+  },
+  worker: {
+    format: 'es',
   },
 });

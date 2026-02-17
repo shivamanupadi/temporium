@@ -14,6 +14,8 @@
     "apps/node-manager/home",
     "apps/playground",
     "apps/playground/*",
+    "apps/playground-v1",
+    "apps/playground-v1/*",
     "packages/*"
   ],
   "scripts": {
@@ -32,6 +34,8 @@
     "build:wallet": "turbo run build --filter=@temporium/wallet-api --filter=@temporium/wallet-web",
     "dev:playground": "turbo run dev --filter=@temporium/playground",
     "build:playground": "turbo run build --filter=@temporium/playground",
+    "dev:playground-v1": "turbo run dev --filter=@temporium/playground-api --filter=@temporium/playground-web",
+    "build:playground-v1": "turbo run build --filter=@temporium/playground-api --filter=@temporium/playground-web",
     "postinstall": "patch-package && node scripts/patch-ox.js"
   },
   "devDependencies": {
