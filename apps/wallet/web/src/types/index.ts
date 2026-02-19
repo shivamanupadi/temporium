@@ -56,6 +56,47 @@ export interface ScheduledTransaction {
 }
 
 /**
+ * Recurring Payment
+ */
+export interface RecurringPayment {
+  id: string;
+  owner: string;
+  recipient: Address;
+  token: Address;
+  tokenSymbol: string;
+  tokenDecimals: number;
+  amount: string;
+  intervalSeconds: number;
+  maxPayments: number;
+  paymentsMade: number;
+  subscriptionId: number;
+  contractAddress: Address;
+  network: string;
+  status: RecurringPaymentStatus;
+  nextPaymentAt: string; // ISO datetime from Drizzle timestamp mode
+  lastPaidAt?: string; // ISO datetime from Drizzle timestamp mode
+  txHash?: string;
+  label?: string;
+  createdAt: string;
+  failReason?: string;
+}
+
+export type RecurringPaymentStatus = 'active' | 'completed' | 'cancelled' | 'failed';
+
+/**
+ * Recurring Payment Execution (individual payment record)
+ */
+export interface RecurringPaymentExecution {
+  id: string;
+  recurringPaymentId: string;
+  paymentNumber: number;
+  txHash: string;
+  amount: string;
+  status: string;
+  executedAt: string; // ISO datetime
+}
+
+/**
  * Policy (on-chain TIP403)
  */
 export interface Policy {

@@ -21,6 +21,7 @@ export interface Env {
 
   // Durable Objects
   SCHEDULED_TX: DurableObjectNamespace;
+  RECURRING_PAYMENT: DurableObjectNamespace;
 
   // Environment Variables
   ALLOWED_ORIGINS: string;

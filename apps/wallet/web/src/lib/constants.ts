@@ -89,6 +89,26 @@ export const TIMING = {
 export const ACCOUNT_KEYCHAIN_ADDRESS = '0xaAAAaaAA00000000000000000000000000000000' as Address;
 
 /**
+ * RecurringPayments contract address
+ * Deploy via: forge script script/DeployRecurringPayments.s.sol
+ */
+export const RECURRING_PAYMENTS_ADDRESS = (import.meta.env.VITE_RECURRING_PAYMENTS_ADDRESS ||
+  '0x0000000000000000000000000000000000000000') as Address;
+
+/**
+ * Recurring payment interval presets (in seconds)
+ */
+export const RECURRING_INTERVAL_PRESETS = [
+  { label: '1 min', seconds: 60 },
+  { label: '5 min', seconds: 300 },
+  { label: '15 min', seconds: 900 },
+  { label: 'Hourly', seconds: 3600 },
+  { label: 'Daily', seconds: 86400 },
+  { label: 'Weekly', seconds: 604800 },
+  { label: 'Monthly', seconds: 2592000 },
+] as const;
+
+/**
  * Wallet Connect Protocol Version
  */
 export const WALLET_CONNECT_VERSION = '1.0.0';

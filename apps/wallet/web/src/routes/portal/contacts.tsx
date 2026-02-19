@@ -1,13 +1,13 @@
 import { type ReactElement, useState, useEffect, useCallback } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Plus, Trash2, Copy, Check, Search, Loader2, X } from 'lucide-react';
+import { Users, Plus, Trash2, Copy, Check, Search, Loader2, X, ExternalLink } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 import { apiGet, apiPost, apiDelete } from '@/lib/api-client';
 import { formatAddress, copyToClipboard, isValidAddress } from '@/lib/utils';
-import { TIMING } from '@/lib/constants';
+import { TIMING, LINKS } from '@/lib/constants';
 import type { Contact } from '@/types';
 
 export const Route = createFileRoute('/portal/contacts')({
@@ -268,14 +268,24 @@ function ContactsPage(): ReactElement {
                         </button>
                       </div>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setDeleteTarget(contact)}
-                      className="w-9 h-9 rounded-lg text-[#B5B0AA] hover:text-red-500 hover:bg-red-50 shrink-0"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <a
+                        href={`${LINKS.explorer}/address/${contact.address}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-9 h-9 rounded-lg flex items-center justify-center text-[#B5B0AA] hover:text-[#9B72CF] hover:bg-[#9B72CF]/6 transition-colors"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setDeleteTarget(contact)}
+                        className="w-9 h-9 rounded-lg text-[#B5B0AA] hover:text-red-500 hover:bg-red-50 shrink-0"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </div>
                 </motion.div>
               ))}

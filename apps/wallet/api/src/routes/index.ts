@@ -7,6 +7,7 @@ import policiesRouter from './policies';
 import scheduledTxsRouter from './scheduled-txs';
 import customTokensRouter from './custom-tokens';
 import accessKeysRouter from './access-keys';
+import recurringPaymentsRouter from './recurring-payments';
 import tokenlistRouter from './tokenlist';
 import authRouter from './auth';
 import keysRouter from './keys';
@@ -26,6 +27,7 @@ routes.route('/v1/policies', policiesRouter);
 routes.route('/v1/scheduled-transactions', scheduledTxsRouter);
 routes.route('/v1/custom-tokens', customTokensRouter);
 routes.route('/v1/access-keys', accessKeysRouter);
+routes.route('/v1/recurring-payments', recurringPaymentsRouter);
 
 // Non-versioned routes
 routes.route('/tokenlist', tokenlistRouter);

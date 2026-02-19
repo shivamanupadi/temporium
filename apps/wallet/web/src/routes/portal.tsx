@@ -29,6 +29,7 @@ import {
   ListPlus,
   Gift,
   ShieldCheck,
+  RefreshCw,
 } from 'lucide-react';
 import { useTempo } from '@/hooks/useTempo';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
@@ -51,6 +52,7 @@ const navSections = [
       { to: '/portal/send', label: 'Send', icon: Send },
       { to: '/portal/batch-send', label: 'Batch Send', icon: ListPlus },
       { to: '/portal/receive', label: 'Receive', icon: QrCode },
+      { to: '/portal/recurring-payments', label: 'Recurring', icon: RefreshCw },
     ],
   },
   {
