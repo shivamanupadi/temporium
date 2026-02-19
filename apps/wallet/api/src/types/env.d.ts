@@ -9,6 +9,7 @@ export interface NetworkConfig {
   rpcUrl: string;
   explorerUrl: string;
   passkeyRegistryAddress: string;
+  recurringPaymentsAddress: string;
   relayerPrivateKey: string;
 }
 
@@ -32,6 +33,10 @@ export interface Env {
   // Per-network passkey registry addresses
   TESTNET_PASSKEY_REGISTRY_ADDRESS: string;
   MAINNET_PASSKEY_REGISTRY_ADDRESS: string;
+
+  // Per-network recurring payments contract addresses
+  TESTNET_RECURRING_PAYMENTS_ADDRESS: string;
+  MAINNET_RECURRING_PAYMENTS_ADDRESS: string;
 
   // Secrets (set via wrangler secret put)
   JWT_SECRET: string;

@@ -1,5 +1,7 @@
 import { apiGet, apiPost, apiDelete } from './api-client';
-import type { RecurringPayment, RecurringPaymentExecution } from '@/types';
+import { getWalletApiUrl } from './api';
+import { TEMPO_NETWORK } from './constants';
+import type { RecurringPaymentExecution, RecurringPayment } from '@/types';
 
 interface CreateRecurringPaymentParams {
   recipient: string;
@@ -56,4 +58,20 @@ export function getRecurringPaymentExecutions(id: string): Promise<RecurringPaym
 
 export function deleteRecurringPayment(id: string): Promise<void> {
   return apiDelete(`/v1/recurring-payments/${id}`);
+}
+
+let cachedContractAddress: `0x${string}` | null = null;
+
+export async function getRecurringPaymentsContractAddress(): Promise<`0x${string}`> {
+  if (cachedContractAddress) return cachedContractAddress;
+
+  const res = await fetch(`${getWalletApiUrl()}/contracts`, {
+    headers: { 'X-Tempo-Network': TEMPO_NETWORK },
+  });
+  const data = await res.json();
+  if (data.success && data.data.contracts.recurringPayments?.address) {
+    cachedContractAddress = data.data.contracts.recurringPayments.address as `0x${string}`;
+    return cachedContractAddress;
+  }
+  throw new Error('Failed to load recurring payments contract address');
 }

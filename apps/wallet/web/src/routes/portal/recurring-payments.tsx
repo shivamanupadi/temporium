@@ -37,6 +37,7 @@ import {
   deleteRecurringPayment,
   createRecurringPayment,
   getRecurringPaymentExecutions,
+  getRecurringPaymentsContractAddress,
   type PaginatedRecurringPaymentResponse,
 } from '@/lib/recurring-payments';
 import type { Token } from '@/lib/tokenlist';
@@ -55,13 +56,7 @@ import {
   getExplorerTxUrl,
   waitForTx,
 } from '@/lib/tempo-client';
-import {
-  TIMING,
-  TEMPO_NETWORK,
-  RECURRING_PAYMENTS_ADDRESS,
-  RECURRING_INTERVAL_PRESETS,
-  LINKS,
-} from '@/lib/constants';
+import { TIMING, TEMPO_NETWORK, RECURRING_INTERVAL_PRESETS, LINKS } from '@/lib/constants';
 import type { RecurringPayment, RecurringPaymentStatus, RecurringPaymentExecution } from '@/types';
 
 // ---------------------------------------------------------------------------
@@ -201,9 +196,17 @@ function RecurringPaymentsPage(): ReactElement {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [, setTick] = useState(0);
+  const [contractAddress, setContractAddress] = useState<`0x${string}` | ''>('');
 
   // Create dialog state
   const [showCreate, setShowCreate] = useState(false);
+
+  // Fetch contract address from API
+  useEffect(() => {
+    getRecurringPaymentsContractAddress()
+      .then(setContractAddress)
+      .catch(() => {});
+  }, []);
 
   const fetchPayments = useCallback(
     async (cursor?: string): Promise<void> => {
@@ -289,15 +292,19 @@ function RecurringPaymentsPage(): ReactElement {
           <p className="text-[14px] text-[#6B6560] mt-1">Automated token transfers on a schedule</p>
           <div className="flex items-center gap-1.5 mt-1.5">
             <span className="text-[11px] text-[#B5B0AA]">Contract:</span>
-            <a
-              href={`${LINKS.explorer}/address/${RECURRING_PAYMENTS_ADDRESS}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[11px] font-mono text-[#9B72CF]/70 hover:text-[#9B72CF] transition-colors"
-            >
-              {formatAddress(RECURRING_PAYMENTS_ADDRESS, 6)}
-              <ExternalLink className="w-2.5 h-2.5 inline ml-1 -mt-0.5" />
-            </a>
+            {contractAddress ? (
+              <a
+                href={`${LINKS.explorer}/address/${contractAddress}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] font-mono text-[#9B72CF]/70 hover:text-[#9B72CF] transition-colors"
+              >
+                {formatAddress(contractAddress, 6)}
+                <ExternalLink className="w-2.5 h-2.5 inline ml-1 -mt-0.5" />
+              </a>
+            ) : (
+              <span className="text-[11px] text-[#B5B0AA]">Loading...</span>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -447,6 +454,7 @@ function RecurringPaymentsPage(): ReactElement {
           approveToken={approveToken}
           walletClient={walletClient ?? null}
           onCreated={handleCreated}
+          contractAddress={contractAddress}
         />
       )}
     </div>
@@ -468,6 +476,7 @@ function CreateSubscriptionDialog({
   approveToken,
   walletClient,
   onCreated,
+  contractAddress,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -482,6 +491,7 @@ function CreateSubscriptionDialog({
   }) => Promise<string>;
   walletClient: any;
   onCreated: () => void;
+  contractAddress: `0x${string}` | '';
 }): ReactElement {
   const [step, setStep] = useState<CreateStep>('form');
   const [processingStatus, setProcessingStatus] = useState('');
@@ -529,7 +539,12 @@ function CreateSubscriptionDialog({
   const parsedMaxPayments = parseInt(maxPayments) || 0;
 
   const isFormValid =
-    hasValidRecipient && hasValidAmount && hasValidInterval && selectedToken && feeToken;
+    hasValidRecipient &&
+    hasValidAmount &&
+    hasValidInterval &&
+    selectedToken &&
+    feeToken &&
+    !!contractAddress;
 
   const handleAmountChange = useCallback((raw: string) => {
     const cleaned = raw.replace(/[^0-9.]/g, '');
@@ -545,7 +560,7 @@ function CreateSubscriptionDialog({
 
     try {
       const feeTokenAddress = feeToken.address;
-      const contractAddress = RECURRING_PAYMENTS_ADDRESS;
+      if (!contractAddress) throw new Error('Contract address not loaded');
       if (!walletClient) throw new Error('Wallet not connected');
 
       // Step 1: Approve token spend FIRST (so the relayer can pull funds immediately)
@@ -653,6 +668,7 @@ function CreateSubscriptionDialog({
     parsedMaxPayments,
     label,
     approveToken,
+    contractAddress,
   ]);
 
   const formattedAmount = parsedAmount > 0n ? formatAmount(parsedAmount, tokenDecimals, 2) : '0.00';

@@ -8,7 +8,8 @@ const contractsRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
  * Returns contract addresses and chain info
  */
 contractsRouter.get('/', c => {
-  const { chain, rpcUrl, explorerUrl, passkeyRegistryAddress } = c.get('networkConfig');
+  const { chain, rpcUrl, explorerUrl, passkeyRegistryAddress, recurringPaymentsAddress } =
+    c.get('networkConfig');
 
   return c.json({
     success: true,
@@ -31,6 +32,12 @@ contractsRouter.get('/', c => {
           name: 'AccountKeychain',
           description: 'Precompile for account key management',
           explorerUrl: `${explorerUrl}/address/0xaAAAaaAA00000000000000000000000000000000`,
+        },
+        recurringPayments: {
+          address: recurringPaymentsAddress,
+          name: 'RecurringPayments',
+          description: 'On-chain recurring payment subscriptions',
+          explorerUrl: `${explorerUrl}/address/${recurringPaymentsAddress}`,
         },
       },
     },

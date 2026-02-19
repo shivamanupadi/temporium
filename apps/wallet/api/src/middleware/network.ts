@@ -35,6 +35,11 @@ export async function networkMiddleware(
       ? c.env.MAINNET_PASSKEY_REGISTRY_ADDRESS
       : c.env.TESTNET_PASSKEY_REGISTRY_ADDRESS;
 
+  const recurringPaymentsAddress =
+    network === 'mainnet'
+      ? c.env.MAINNET_RECURRING_PAYMENTS_ADDRESS
+      : c.env.TESTNET_RECURRING_PAYMENTS_ADDRESS;
+
   const relayerPrivateKey =
     network === 'mainnet' ? c.env.MAINNET_RELAYER_PRIVATE_KEY : c.env.TESTNET_RELAYER_PRIVATE_KEY;
 
@@ -44,6 +49,7 @@ export async function networkMiddleware(
     rpcUrl,
     explorerUrl,
     passkeyRegistryAddress,
+    recurringPaymentsAddress,
     relayerPrivateKey,
   };
 

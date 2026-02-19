@@ -89,11 +89,9 @@ export const TIMING = {
 export const ACCOUNT_KEYCHAIN_ADDRESS = '0xaAAAaaAA00000000000000000000000000000000' as Address;
 
 /**
- * RecurringPayments contract address
- * Deploy via: forge script script/DeployRecurringPayments.s.sol
+ * RecurringPayments contract address — loaded dynamically from API via /contracts endpoint.
+ * @deprecated Use getRecurringPaymentsContractAddress() from recurring-payments.ts instead.
  */
-export const RECURRING_PAYMENTS_ADDRESS = (import.meta.env.VITE_RECURRING_PAYMENTS_ADDRESS ||
-  '0x0000000000000000000000000000000000000000') as Address;
 
 /**
  * Recurring payment interval presets (in seconds)
