@@ -50,9 +50,10 @@ const navSections = [
     label: 'Payments',
     items: [
       { to: '/portal/send', label: 'Send', icon: Send },
-      { to: '/portal/batch-send', label: 'Batch Send', icon: ListPlus },
       { to: '/portal/receive', label: 'Receive', icon: QrCode },
-      { to: '/portal/recurring-payments', label: 'Recurring', icon: RefreshCw },
+      { to: '/portal/batch-payments', label: 'Batch Payments', icon: ListPlus },
+      { to: '/portal/recurring-payments', label: 'Recurring Payments', icon: RefreshCw },
+      { to: '/portal/scheduled-payments', label: 'Scheduled Payments', icon: Clock },
     ],
   },
   {
@@ -67,7 +68,6 @@ const navSections = [
     items: [
       { to: '/portal/tip403-factory', label: 'TIP403 Factory', icon: Shield },
       { to: '/portal/access-keys', label: 'Access Keys', icon: Key },
-      { to: '/portal/scheduled-txns', label: 'Scheduled Txns', icon: Clock },
       { to: '/portal/token-approvals', label: 'Token Approvals', icon: ShieldCheck },
     ],
   },

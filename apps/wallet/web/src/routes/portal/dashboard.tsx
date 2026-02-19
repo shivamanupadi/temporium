@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   Gift,
   ListPlus,
+  RefreshCw,
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
@@ -61,18 +62,32 @@ const quickActionSections = [
         description: 'Transfer tokens',
       },
       {
-        to: '/portal/batch-send',
-        label: 'Batch Send',
-        icon: ListPlus,
-        color: '#E07A5F',
-        description: 'Send to many',
-      },
-      {
         to: '/portal/receive',
         label: 'Receive',
         icon: QrCode,
         color: '#5B9A6F',
         description: 'Get your address',
+      },
+      {
+        to: '/portal/batch-payments',
+        label: 'Batch Payments',
+        icon: ListPlus,
+        color: '#E07A5F',
+        description: 'Send to many',
+      },
+      {
+        to: '/portal/recurring-payments',
+        label: 'Recurring Payments',
+        icon: RefreshCw,
+        color: '#9B72CF',
+        description: 'Automated transfers',
+      },
+      {
+        to: '/portal/scheduled-payments',
+        label: 'Scheduled Payments',
+        icon: Clock,
+        color: '#D4A574',
+        description: 'Timed transactions',
       },
     ],
   },
@@ -111,13 +126,6 @@ const quickActionSections = [
         icon: Key,
         color: '#D4A574',
         description: 'Manage keys',
-      },
-      {
-        to: '/portal/scheduled-txns',
-        label: 'Scheduled',
-        icon: Clock,
-        color: '#D4A574',
-        description: 'Scheduled payments',
       },
       {
         to: '/portal/token-approvals',

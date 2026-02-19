@@ -18,7 +18,7 @@ import { Route as PortalTip403FactoryRouteImport } from './routes/portal/tip403-
 import { Route as PortalTip20StudioRouteImport } from './routes/portal/tip20-studio';
 import { Route as PortalSettingsRouteImport } from './routes/portal/settings';
 import { Route as PortalSendRouteImport } from './routes/portal/send';
-import { Route as PortalScheduledTxnsRouteImport } from './routes/portal/scheduled-txns';
+import { Route as PortalScheduledPaymentsRouteImport } from './routes/portal/scheduled-payments';
 import { Route as PortalRewardsRouteImport } from './routes/portal/rewards';
 import { Route as PortalRecurringPaymentsRouteImport } from './routes/portal/recurring-payments';
 import { Route as PortalReceiveRouteImport } from './routes/portal/receive';
@@ -27,7 +27,7 @@ import { Route as PortalFeeAmmLiquidityRouteImport } from './routes/portal/fee-a
 import { Route as PortalDashboardRouteImport } from './routes/portal/dashboard';
 import { Route as PortalContactsRouteImport } from './routes/portal/contacts';
 import { Route as PortalConnectedAppsRouteImport } from './routes/portal/connected-apps';
-import { Route as PortalBatchSendRouteImport } from './routes/portal/batch-send';
+import { Route as PortalBatchPaymentsRouteImport } from './routes/portal/batch-payments';
 import { Route as PortalAccessKeysRouteImport } from './routes/portal/access-keys';
 import { Route as PortalTip403FactoryIndexRouteImport } from './routes/portal/tip403-factory.index';
 import { Route as PortalTip20StudioIndexRouteImport } from './routes/portal/tip20-studio.index';
@@ -82,9 +82,9 @@ const PortalSendRoute = PortalSendRouteImport.update({
   path: '/send',
   getParentRoute: () => PortalRoute,
 } as any);
-const PortalScheduledTxnsRoute = PortalScheduledTxnsRouteImport.update({
-  id: '/scheduled-txns',
-  path: '/scheduled-txns',
+const PortalScheduledPaymentsRoute = PortalScheduledPaymentsRouteImport.update({
+  id: '/scheduled-payments',
+  path: '/scheduled-payments',
   getParentRoute: () => PortalRoute,
 } as any);
 const PortalRewardsRoute = PortalRewardsRouteImport.update({
@@ -127,9 +127,9 @@ const PortalConnectedAppsRoute = PortalConnectedAppsRouteImport.update({
   path: '/connected-apps',
   getParentRoute: () => PortalRoute,
 } as any);
-const PortalBatchSendRoute = PortalBatchSendRouteImport.update({
-  id: '/batch-send',
-  path: '/batch-send',
+const PortalBatchPaymentsRoute = PortalBatchPaymentsRouteImport.update({
+  id: '/batch-payments',
+  path: '/batch-payments',
   getParentRoute: () => PortalRoute,
 } as any);
 const PortalAccessKeysRoute = PortalAccessKeysRouteImport.update({
@@ -180,7 +180,7 @@ export interface FileRoutesByFullPath {
   '/portal': typeof PortalRouteWithChildren;
   '/sign': typeof SignRoute;
   '/portal/access-keys': typeof PortalAccessKeysRoute;
-  '/portal/batch-send': typeof PortalBatchSendRoute;
+  '/portal/batch-payments': typeof PortalBatchPaymentsRoute;
   '/portal/connected-apps': typeof PortalConnectedAppsRoute;
   '/portal/contacts': typeof PortalContactsRoute;
   '/portal/dashboard': typeof PortalDashboardRoute;
@@ -189,7 +189,7 @@ export interface FileRoutesByFullPath {
   '/portal/receive': typeof PortalReceiveRoute;
   '/portal/recurring-payments': typeof PortalRecurringPaymentsRoute;
   '/portal/rewards': typeof PortalRewardsRoute;
-  '/portal/scheduled-txns': typeof PortalScheduledTxnsRoute;
+  '/portal/scheduled-payments': typeof PortalScheduledPaymentsRoute;
   '/portal/send': typeof PortalSendRoute;
   '/portal/settings': typeof PortalSettingsRoute;
   '/portal/tip20-studio': typeof PortalTip20StudioRouteWithChildren;
@@ -209,7 +209,7 @@ export interface FileRoutesByTo {
   '/portal': typeof PortalRouteWithChildren;
   '/sign': typeof SignRoute;
   '/portal/access-keys': typeof PortalAccessKeysRoute;
-  '/portal/batch-send': typeof PortalBatchSendRoute;
+  '/portal/batch-payments': typeof PortalBatchPaymentsRoute;
   '/portal/connected-apps': typeof PortalConnectedAppsRoute;
   '/portal/contacts': typeof PortalContactsRoute;
   '/portal/dashboard': typeof PortalDashboardRoute;
@@ -218,7 +218,7 @@ export interface FileRoutesByTo {
   '/portal/receive': typeof PortalReceiveRoute;
   '/portal/recurring-payments': typeof PortalRecurringPaymentsRoute;
   '/portal/rewards': typeof PortalRewardsRoute;
-  '/portal/scheduled-txns': typeof PortalScheduledTxnsRoute;
+  '/portal/scheduled-payments': typeof PortalScheduledPaymentsRoute;
   '/portal/send': typeof PortalSendRoute;
   '/portal/settings': typeof PortalSettingsRoute;
   '/portal/token-approvals': typeof PortalTokenApprovalsRoute;
@@ -237,7 +237,7 @@ export interface FileRoutesById {
   '/portal': typeof PortalRouteWithChildren;
   '/sign': typeof SignRoute;
   '/portal/access-keys': typeof PortalAccessKeysRoute;
-  '/portal/batch-send': typeof PortalBatchSendRoute;
+  '/portal/batch-payments': typeof PortalBatchPaymentsRoute;
   '/portal/connected-apps': typeof PortalConnectedAppsRoute;
   '/portal/contacts': typeof PortalContactsRoute;
   '/portal/dashboard': typeof PortalDashboardRoute;
@@ -246,7 +246,7 @@ export interface FileRoutesById {
   '/portal/receive': typeof PortalReceiveRoute;
   '/portal/recurring-payments': typeof PortalRecurringPaymentsRoute;
   '/portal/rewards': typeof PortalRewardsRoute;
-  '/portal/scheduled-txns': typeof PortalScheduledTxnsRoute;
+  '/portal/scheduled-payments': typeof PortalScheduledPaymentsRoute;
   '/portal/send': typeof PortalSendRoute;
   '/portal/settings': typeof PortalSettingsRoute;
   '/portal/tip20-studio': typeof PortalTip20StudioRouteWithChildren;
@@ -268,7 +268,7 @@ export interface FileRouteTypes {
     | '/portal'
     | '/sign'
     | '/portal/access-keys'
-    | '/portal/batch-send'
+    | '/portal/batch-payments'
     | '/portal/connected-apps'
     | '/portal/contacts'
     | '/portal/dashboard'
@@ -277,7 +277,7 @@ export interface FileRouteTypes {
     | '/portal/receive'
     | '/portal/recurring-payments'
     | '/portal/rewards'
-    | '/portal/scheduled-txns'
+    | '/portal/scheduled-payments'
     | '/portal/send'
     | '/portal/settings'
     | '/portal/tip20-studio'
@@ -297,7 +297,7 @@ export interface FileRouteTypes {
     | '/portal'
     | '/sign'
     | '/portal/access-keys'
-    | '/portal/batch-send'
+    | '/portal/batch-payments'
     | '/portal/connected-apps'
     | '/portal/contacts'
     | '/portal/dashboard'
@@ -306,7 +306,7 @@ export interface FileRouteTypes {
     | '/portal/receive'
     | '/portal/recurring-payments'
     | '/portal/rewards'
-    | '/portal/scheduled-txns'
+    | '/portal/scheduled-payments'
     | '/portal/send'
     | '/portal/settings'
     | '/portal/token-approvals'
@@ -324,7 +324,7 @@ export interface FileRouteTypes {
     | '/portal'
     | '/sign'
     | '/portal/access-keys'
-    | '/portal/batch-send'
+    | '/portal/batch-payments'
     | '/portal/connected-apps'
     | '/portal/contacts'
     | '/portal/dashboard'
@@ -333,7 +333,7 @@ export interface FileRouteTypes {
     | '/portal/receive'
     | '/portal/recurring-payments'
     | '/portal/rewards'
-    | '/portal/scheduled-txns'
+    | '/portal/scheduled-payments'
     | '/portal/send'
     | '/portal/settings'
     | '/portal/tip20-studio'
@@ -420,11 +420,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalSendRouteImport;
       parentRoute: typeof PortalRoute;
     };
-    '/portal/scheduled-txns': {
-      id: '/portal/scheduled-txns';
-      path: '/scheduled-txns';
-      fullPath: '/portal/scheduled-txns';
-      preLoaderRoute: typeof PortalScheduledTxnsRouteImport;
+    '/portal/scheduled-payments': {
+      id: '/portal/scheduled-payments';
+      path: '/scheduled-payments';
+      fullPath: '/portal/scheduled-payments';
+      preLoaderRoute: typeof PortalScheduledPaymentsRouteImport;
       parentRoute: typeof PortalRoute;
     };
     '/portal/rewards': {
@@ -483,11 +483,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalConnectedAppsRouteImport;
       parentRoute: typeof PortalRoute;
     };
-    '/portal/batch-send': {
-      id: '/portal/batch-send';
-      path: '/batch-send';
-      fullPath: '/portal/batch-send';
-      preLoaderRoute: typeof PortalBatchSendRouteImport;
+    '/portal/batch-payments': {
+      id: '/portal/batch-payments';
+      path: '/batch-payments';
+      fullPath: '/portal/batch-payments';
+      preLoaderRoute: typeof PortalBatchPaymentsRouteImport;
       parentRoute: typeof PortalRoute;
     };
     '/portal/access-keys': {
@@ -604,7 +604,7 @@ const PortalTip403FactoryRouteWithChildren = PortalTip403FactoryRoute._addFileCh
 
 interface PortalRouteChildren {
   PortalAccessKeysRoute: typeof PortalAccessKeysRoute;
-  PortalBatchSendRoute: typeof PortalBatchSendRoute;
+  PortalBatchPaymentsRoute: typeof PortalBatchPaymentsRoute;
   PortalConnectedAppsRoute: typeof PortalConnectedAppsRoute;
   PortalContactsRoute: typeof PortalContactsRoute;
   PortalDashboardRoute: typeof PortalDashboardRoute;
@@ -613,7 +613,7 @@ interface PortalRouteChildren {
   PortalReceiveRoute: typeof PortalReceiveRoute;
   PortalRecurringPaymentsRoute: typeof PortalRecurringPaymentsRoute;
   PortalRewardsRoute: typeof PortalRewardsRoute;
-  PortalScheduledTxnsRoute: typeof PortalScheduledTxnsRoute;
+  PortalScheduledPaymentsRoute: typeof PortalScheduledPaymentsRoute;
   PortalSendRoute: typeof PortalSendRoute;
   PortalSettingsRoute: typeof PortalSettingsRoute;
   PortalTip20StudioRoute: typeof PortalTip20StudioRouteWithChildren;
@@ -623,7 +623,7 @@ interface PortalRouteChildren {
 
 const PortalRouteChildren: PortalRouteChildren = {
   PortalAccessKeysRoute: PortalAccessKeysRoute,
-  PortalBatchSendRoute: PortalBatchSendRoute,
+  PortalBatchPaymentsRoute: PortalBatchPaymentsRoute,
   PortalConnectedAppsRoute: PortalConnectedAppsRoute,
   PortalContactsRoute: PortalContactsRoute,
   PortalDashboardRoute: PortalDashboardRoute,
@@ -632,7 +632,7 @@ const PortalRouteChildren: PortalRouteChildren = {
   PortalReceiveRoute: PortalReceiveRoute,
   PortalRecurringPaymentsRoute: PortalRecurringPaymentsRoute,
   PortalRewardsRoute: PortalRewardsRoute,
-  PortalScheduledTxnsRoute: PortalScheduledTxnsRoute,
+  PortalScheduledPaymentsRoute: PortalScheduledPaymentsRoute,
   PortalSendRoute: PortalSendRoute,
   PortalSettingsRoute: PortalSettingsRoute,
   PortalTip20StudioRoute: PortalTip20StudioRouteWithChildren,

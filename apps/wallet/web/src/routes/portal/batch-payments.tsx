@@ -35,8 +35,8 @@ import {
 } from '@/lib/utils';
 import { getExplorerTxUrl } from '@/lib/tempo-client';
 
-export const Route = createFileRoute('/portal/batch-send')({
-  component: BatchSendPage,
+export const Route = createFileRoute('/portal/batch-payments')({
+  component: BatchPaymentsPage,
 });
 
 type FlowStep = 'form' | 'confirm' | 'sending' | 'success';
@@ -53,7 +53,7 @@ function createRow(): RecipientRow {
 
 // Component
 
-function BatchSendPage(): ReactElement | null {
+function BatchPaymentsPage(): ReactElement | null {
   const { address, isConnected, batchSend } = useTempo();
   const { tokens } = useTokenList();
   const { preferredFeeToken } = useFeePreference();
@@ -149,7 +149,7 @@ function BatchSendPage(): ReactElement | null {
 
       setTxHash(hash);
       setStep('success');
-      toast.success(`Batch sent to ${transfers.length} recipients`);
+      toast.success(`Batch payment sent to ${transfers.length} recipients`);
     } catch (err) {
       console.error('Batch send failed:', err);
       const message = err instanceof Error ? err.message : 'Transaction failed';
@@ -198,7 +198,7 @@ function BatchSendPage(): ReactElement | null {
     <div className="max-w-2xl">
       {/* Page header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#2D3436] tracking-tight">Batch Send</h1>
+        <h1 className="text-2xl font-bold text-[#2D3436] tracking-tight">Batch Payments</h1>
         <p className="text-[14px] text-[#6B6560] mt-1">
           Send tokens to multiple recipients in a single transaction
         </p>
@@ -343,7 +343,7 @@ function BatchSendPage(): ReactElement | null {
             onClick={handleReview}
             className="w-full h-12 rounded-xl text-[14px] font-semibold bg-[#E07A5F] hover:bg-[#D4694F] text-white transition-all"
           >
-            Review Batch Send
+            Review Batch Payment
             <ArrowRight className="w-4 h-4 ml-1.5" />
           </Button>
         </div>
@@ -372,7 +372,7 @@ function BatchSendPage(): ReactElement | null {
               >
                 <div className="px-6 pt-6 pb-4">
                   <DialogTitle className="text-lg font-bold text-[#2D3436]">
-                    Confirm Batch Send
+                    Confirm Batch Payment
                   </DialogTitle>
                   <DialogDescription className="text-[13px] text-[#9B9590] mt-1">
                     Sending to {validCount} recipients in one transaction
@@ -442,7 +442,7 @@ function BatchSendPage(): ReactElement | null {
               >
                 <DialogTitle className="sr-only">Processing</DialogTitle>
                 <DialogDescription className="sr-only">
-                  Your batch send is being processed
+                  Your batch payment is being processed
                 </DialogDescription>
 
                 <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -468,7 +468,7 @@ function BatchSendPage(): ReactElement | null {
                     </motion.div>
                   </div>
                   <p className="text-[12px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2">
-                    Sending Batch
+                    Sending Batch Payment
                   </p>
                   <p className="text-3xl font-bold text-[#2D3436] tracking-tight">
                     {formattedTotal}
@@ -493,7 +493,7 @@ function BatchSendPage(): ReactElement | null {
                 transition={{ duration: 0.3 }}
                 className="relative overflow-hidden"
               >
-                <DialogTitle className="sr-only">Batch Sent</DialogTitle>
+                <DialogTitle className="sr-only">Batch Payment Sent</DialogTitle>
                 <DialogDescription className="sr-only">
                   Your batch payment has been completed
                 </DialogDescription>
@@ -533,7 +533,7 @@ function BatchSendPage(): ReactElement | null {
                     transition={{ delay: 0.35 }}
                     className="text-[15px] font-bold text-[#2D3436] mb-1"
                   >
-                    Batch Sent
+                    Batch Payment Sent
                   </motion.p>
 
                   <motion.div

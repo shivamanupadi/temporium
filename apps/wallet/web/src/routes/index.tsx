@@ -26,6 +26,7 @@ import {
   ShieldCheck,
   Gift,
   ListPlus,
+  RefreshCw,
   type LucideIcon,
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
@@ -49,6 +50,13 @@ const features = [
   },
   { icon: Send, label: 'Send', desc: 'Transfer tokens instantly', color: '#E07A5F' },
   { icon: QrCode, label: 'Receive', desc: 'Generate payment QR codes', color: '#5B9A6F' },
+  { icon: ListPlus, label: 'Batch Payments', desc: 'Send to many at once', color: '#5B9A6F' },
+  {
+    icon: Clock,
+    label: 'Recurring Payments',
+    desc: 'Automated scheduled transfers',
+    color: '#C27BA0',
+  },
   {
     icon: CircleDollarSign,
     label: 'TIP20 Studio',
@@ -62,10 +70,8 @@ const features = [
     color: '#9B72CF',
   },
   { icon: Key, label: 'Access Keys', desc: 'Manage signing permissions', color: '#D4A574' },
-  { icon: Clock, label: 'Scheduled Txns', desc: 'Recurring & timed payments', color: '#C27BA0' },
   { icon: Repeat, label: 'Fee AMM', desc: 'Rebalance swaps at fixed rates', color: '#E07A5F' },
   { icon: Droplets, label: 'Liquidity', desc: 'Provide LP & earn fees', color: '#9B72CF' },
-  { icon: ListPlus, label: 'Bulk Payments', desc: 'Send to many at once', color: '#5B9A6F' },
   { icon: ShieldCheck, label: 'Token Approvals', desc: 'Manage allowances', color: '#E07A5F' },
   { icon: Gift, label: 'TIP20 Rewards', desc: 'Claim token rewards', color: '#9B72CF' },
   { icon: Users, label: 'Contacts', desc: 'Save & organize addresses', color: '#5B9A6F' },
@@ -104,15 +110,21 @@ const featureSections: {
       },
       {
         icon: ListPlus,
-        title: 'Bulk Payments',
+        title: 'Batch Payments',
         desc: 'Send tokens to multiple recipients in a single transaction. Perfect for payroll, airdrops, and batch distributions.',
         color: '#E07A5F',
       },
       {
+        icon: RefreshCw,
+        title: 'Recurring Payments',
+        desc: 'Automated token transfers on a schedule. Set frequency, amount, and let the protocol handle the rest.',
+        color: '#9B72CF',
+      },
+      {
         icon: Clock,
         title: 'Scheduled Payments',
-        desc: 'Set up one-time or recurring payments on a schedule. Payroll, subscriptions, and installments on autopilot.',
-        color: '#9B72CF',
+        desc: 'Schedule one-time payments for a future time. Perfect for timed releases, payroll, and planned distributions.',
+        color: '#D4A574',
       },
     ],
   },
@@ -520,7 +532,7 @@ function LandingPage(): ReactElement {
               ))}
             </div>
 
-            {/* Third row — 2 wide cards: Access Keys & Scheduled Txns */}
+            {/* Third row — 2 wide cards */}
             <div className="grid grid-cols-2 gap-3">
               {features.slice(5, 7).map(f => (
                 <motion.div

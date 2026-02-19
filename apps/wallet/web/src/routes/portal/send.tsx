@@ -1013,7 +1013,7 @@ function SendPage(): ReactElement | null {
                       Explorer
                     </Button>
                   ) : (
-                    <Link to="/portal/scheduled-txns" className="flex-1">
+                    <Link to="/portal/scheduled-payments" className="flex-1">
                       <Button
                         variant="outline"
                         className="w-full h-11 rounded-xl border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"

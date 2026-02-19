@@ -31,7 +31,7 @@ interface ScheduledSearchParams {
   filter?: StatusFilter;
 }
 
-export const Route = createFileRoute('/portal/scheduled-txns')({
+export const Route = createFileRoute('/portal/scheduled-payments')({
   component: ScheduledPage,
   validateSearch: (search: Record<string, unknown>): ScheduledSearchParams => {
     const f = search.filter;
@@ -67,7 +67,7 @@ function ScheduledPage(): ReactElement {
   const setFilter = useCallback(
     (next: StatusFilter) => {
       navigate({
-        to: '/portal/scheduled-txns',
+        to: '/portal/scheduled-payments',
         search: { filter: next === 'pending' ? undefined : next },
         replace: true,
       } as any);
@@ -158,9 +158,7 @@ function ScheduledPage(): ReactElement {
         className="flex items-center justify-between shrink-0"
       >
         <div>
-          <h1 className="text-2xl font-bold text-[#2D3436] tracking-tight">
-            Scheduled Transactions
-          </h1>
+          <h1 className="text-2xl font-bold text-[#2D3436] tracking-tight">Scheduled Payments</h1>
           <p className="text-[14px] text-[#6B6560] mt-1">
             Manage your time-locked and scheduled transfers
           </p>
@@ -242,7 +240,7 @@ function ScheduledPage(): ReactElement {
             </div>
             <h3 className="text-[16px] font-semibold text-[#2D3436]">
               {filter === 'all'
-                ? 'No Scheduled Transactions'
+                ? 'No Scheduled Payments'
                 : `No ${FILTERS.find(f => f.key === filter)?.label} Transactions`}
             </h3>
             <p className="text-[13px] text-[#9B9590] mt-1.5 max-w-sm mx-auto leading-relaxed">
