@@ -81,7 +81,7 @@ export interface RecurringPayment {
   failReason?: string;
 }
 
-export type RecurringPaymentStatus = 'active' | 'paused' | 'completed' | 'cancelled' | 'failed';
+export type RecurringPaymentStatus = 'active' | 'completed' | 'cancelled' | 'failed';
 
 /**
  * Recurring Payment Execution (individual payment record)

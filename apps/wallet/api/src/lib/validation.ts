@@ -220,6 +220,7 @@ export type CreateRecurringPaymentRequest = z.infer<typeof createRecurringPaymen
 
 export const recurringPaymentQuerySchema = z.object({
   status: recurringPaymentStatusSchema.optional(),
+  network: z.enum(['testnet', 'mainnet']).optional(),
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(50).default(20),
 });

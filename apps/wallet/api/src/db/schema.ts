@@ -125,13 +125,7 @@ export const accessKeys = sqliteTable(
 );
 
 // ============ Recurring Payments ============
-export const recurringPaymentStatusValues = [
-  'active',
-  'paused',
-  'completed',
-  'cancelled',
-  'failed',
-] as const;
+export const recurringPaymentStatusValues = ['active', 'completed', 'cancelled', 'failed'] as const;
 export type RecurringPaymentStatus = (typeof recurringPaymentStatusValues)[number];
 
 export const recurringPayments = sqliteTable(

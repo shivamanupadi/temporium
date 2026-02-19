@@ -25,12 +25,16 @@ recurringPaymentsRouter.use('/*', jwtAuth);
 recurringPaymentsRouter.get('/', zValidator('query', recurringPaymentQuerySchema), async c => {
   const db = createDb(c.env.DB);
   const owner = getWalletAddress(c);
-  const { status, cursor, limit } = c.req.valid('query');
+  const { status, network, cursor, limit } = c.req.valid('query');
 
   const conditions = [eq(recurringPayments.owner, owner)];
 
   if (status) {
     conditions.push(eq(recurringPayments.status, status));
+  }
+
+  if (network) {
+    conditions.push(eq(recurringPayments.network, network));
   }
 
   if (cursor) {
@@ -83,12 +87,19 @@ recurringPaymentsRouter.get(
   async c => {
     const db = createDb(c.env.DB);
     const owner = getWalletAddress(c);
+    const network = c.get('networkConfig').network;
     const { status } = c.req.valid('param');
 
     const result = await db
       .select()
       .from(recurringPayments)
-      .where(and(eq(recurringPayments.owner, owner), eq(recurringPayments.status, status)))
+      .where(
+        and(
+          eq(recurringPayments.owner, owner),
+          eq(recurringPayments.status, status),
+          eq(recurringPayments.network, network)
+        )
+      )
       .orderBy(desc(recurringPayments.createdAt));
 
     return success(c, result);
@@ -222,7 +233,7 @@ recurringPaymentsRouter.delete('/:id', zValidator('param', idParamSchema), async
     throw new NotFoundError('Recurring payment not found');
   }
 
-  if (existing[0].status !== 'active' && existing[0].status !== 'paused') {
+  if (existing[0].status !== 'active') {
     throw new BadRequestError(
       `Cannot cancel recurring payment with status '${existing[0].status}'`
     );

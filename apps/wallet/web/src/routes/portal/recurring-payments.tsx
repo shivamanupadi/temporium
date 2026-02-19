@@ -15,7 +15,6 @@ import {
   ArrowRight,
   ArrowLeft,
   ChevronDown,
-  PauseCircle,
   Plus,
   Clock,
   Repeat,
@@ -58,6 +57,7 @@ import {
 } from '@/lib/tempo-client';
 import {
   TIMING,
+  TEMPO_NETWORK,
   RECURRING_PAYMENTS_ADDRESS,
   RECURRING_INTERVAL_PRESETS,
   LINKS,
@@ -210,6 +210,7 @@ function RecurringPaymentsPage(): ReactElement {
       try {
         const res: PaginatedRecurringPaymentResponse = await getRecurringPayments({
           status: filter === 'all' ? undefined : filter,
+          network: TEMPO_NETWORK,
           cursor,
           limit: PAGE_SIZE,
         });
@@ -547,7 +548,32 @@ function CreateSubscriptionDialog({
       const contractAddress = RECURRING_PAYMENTS_ADDRESS;
       if (!walletClient) throw new Error('Wallet not connected');
 
-      // Step 1: Create on-chain subscription (no allowance check needed at creation)
+      // Step 1: Approve token spend FIRST (so the relayer can pull funds immediately)
+      setProcessingStatus('Checking token allowance...');
+      const currentAllowance = await Actions.token.getAllowance(tempoPublicClient, {
+        token: selectedToken.address,
+        spender: contractAddress,
+        account: address as Address,
+      });
+
+      // For unlimited subscriptions, approve max uint256; for bounded ones, approve total cost
+      const totalNeeded =
+        parsedMaxPayments > 0
+          ? parsedAmount * BigInt(parsedMaxPayments)
+          : BigInt('0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff');
+
+      if (currentAllowance < totalNeeded) {
+        setProcessingStatus('Approving token spend...');
+        const approveHash = await approveToken({
+          token: selectedToken.address,
+          spender: contractAddress,
+          amount: totalNeeded,
+          feeToken: feeTokenAddress,
+        });
+        await waitForTx(approveHash as `0x${string}`);
+      }
+
+      // Step 2: Create on-chain subscription
       setProcessingStatus('Creating subscription on-chain...');
 
       const contractArgs = {
@@ -587,28 +613,6 @@ function CreateSubscriptionDialog({
         // Fallback: could not parse event
       }
 
-      // Step 2: Approve token spend (if not already sufficient)
-      setProcessingStatus('Checking token allowance...');
-      const currentAllowance = await Actions.token.getAllowance(tempoPublicClient, {
-        token: selectedToken.address,
-        spender: contractAddress,
-        account: address as Address,
-      });
-
-      const totalNeeded =
-        parsedMaxPayments > 0 ? parsedAmount * BigInt(parsedMaxPayments) : parsedAmount * 1000n;
-
-      if (currentAllowance < totalNeeded) {
-        setProcessingStatus('Approving token spend...');
-        const approveHash = await approveToken({
-          token: selectedToken.address,
-          spender: contractAddress,
-          amount: totalNeeded,
-          feeToken: feeTokenAddress,
-        });
-        await waitForTx(approveHash as `0x${string}`);
-      }
-
       // Step 3: Register with API + Durable Object
       setProcessingStatus('Setting up recurring schedule...');
       const nextPaymentAt = new Date(Date.now() + effectiveInterval * 1000).toISOString();
@@ -641,6 +645,7 @@ function CreateSubscriptionDialog({
     isFormValid,
     selectedToken,
     feeToken,
+    walletClient,
     address,
     recipient,
     parsedAmount,
@@ -933,13 +938,13 @@ function CreateSubscriptionDialog({
                     <div className="flex items-start gap-2">
                       <ShieldCheck className="w-3.5 h-3.5 text-sage/70 mt-0.5 shrink-0" />
                       <p className="text-[12px] text-sage/80 leading-relaxed">
-                        Approve the contract to spend your {selectedToken.symbol}
+                        Approve the contract to spend your {selectedToken.symbol} (if needed)
                       </p>
                     </div>
                     <div className="flex items-start gap-2">
                       <Repeat className="w-3.5 h-3.5 text-sage/70 mt-0.5 shrink-0" />
                       <p className="text-[12px] text-sage/80 leading-relaxed">
-                        Create the subscription on-chain (1 signature)
+                        Create the subscription on-chain
                       </p>
                     </div>
                     <div className="flex items-start gap-2">
@@ -1190,12 +1195,6 @@ const STATUS_CONFIG: Record<
     bgClass: 'bg-[#5B9A6F]/8',
     ringClass: 'ring-[#5B9A6F]/15',
   },
-  paused: {
-    icon: PauseCircle,
-    iconClass: 'text-[#D4A574]',
-    bgClass: 'bg-[#D4A574]/8',
-    ringClass: 'ring-[#D4A574]/15',
-  },
   completed: {
     icon: CheckCircle,
     iconClass: 'text-[#9B72CF]',
@@ -1218,7 +1217,6 @@ const STATUS_CONFIG: Record<
 
 const STATUS_LABELS: Record<RecurringPaymentStatus, string> = {
   active: 'Active',
-  paused: 'Paused',
   completed: 'Completed',
   cancelled: 'Cancelled',
   failed: 'Failed',
@@ -1273,7 +1271,8 @@ function PaymentRow({
       await deleteRecurringPayment(payment.id);
       setConfirmCancel(false);
       onCancelled();
-    } catch {
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to cancel subscription');
       setIsCancelling(false);
     }
   };
@@ -1452,7 +1451,7 @@ function PaymentRow({
                         <span className="text-[11px] text-[#B5B0AA]">
                           {formatTimeAgo(new Date(exec.executedAt).getTime() / 1000)}
                         </span>
-                        {exec.txHash && (
+                        {exec.txHash && exec.txHash.startsWith('0x') ? (
                           <a
                             href={getExplorerTxUrl(exec.txHash)}
                             target="_blank"
@@ -1461,7 +1460,9 @@ function PaymentRow({
                           >
                             <ExternalLink className="w-3 h-3" />
                           </a>
-                        )}
+                        ) : exec.txHash === 'synced-from-chain' ? (
+                          <span className="text-[10px] text-[#B5B0AA] italic">synced</span>
+                        ) : null}
                       </div>
                     </div>
                   ))}

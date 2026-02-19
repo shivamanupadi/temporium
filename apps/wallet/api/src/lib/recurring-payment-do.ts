@@ -1,6 +1,8 @@
 import { createTempoPublicClient, createTempoWalletClient } from './viem';
 import { getTempoChain, getRpcUrl } from './chain';
 import { createId } from '@paralleldrive/cuid2';
+import { privateKeyToAccount } from 'viem/accounts';
+import { randomNonceKey } from './nonce';
 import type { Env } from '../types/env';
 
 const MAX_RETRIES_PER_INTERVAL = 3;
@@ -175,9 +177,7 @@ export class RecurringPaymentDO implements DurableObject {
           ? this.env.TESTNET_RELAYER_PRIVATE_KEY
           : this.env.MAINNET_RELAYER_PRIVATE_KEY;
 
-      const relayerAccount = (await import('viem/accounts')).privateKeyToAccount(
-        relayerKey as `0x${string}`
-      );
+      const relayerAccount = privateKeyToAccount(relayerKey as `0x${string}`);
 
       try {
         await publicClient.simulateContract({
@@ -231,7 +231,9 @@ export class RecurringPaymentDO implements DurableObject {
           abi: EXECUTE_PAYMENT_ABI,
           functionName: 'executePayment',
           args: [BigInt(subscriptionId)],
-        });
+          nonceKey: randomNonceKey(),
+          nonce: 0,
+        } as any);
 
         await publicClient.waitForTransactionReceipt({ hash: txHash });
 

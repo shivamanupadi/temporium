@@ -23,6 +23,7 @@ export interface PaginatedRecurringPaymentResponse {
 
 interface ListRecurringPaymentParams {
   status?: string;
+  network?: string;
   cursor?: string;
   limit?: number;
 }
@@ -38,6 +39,7 @@ export function getRecurringPayments(
 ): Promise<PaginatedRecurringPaymentResponse> {
   const query = new URLSearchParams();
   if (params?.status) query.set('status', params.status);
+  if (params?.network) query.set('network', params.network);
   if (params?.cursor) query.set('cursor', params.cursor);
   if (params?.limit) query.set('limit', String(params.limit));
   const qs = query.toString();

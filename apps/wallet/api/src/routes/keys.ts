@@ -12,6 +12,7 @@ import {
   type PublicClient,
   type WalletClient,
 } from '../lib/viem';
+import { randomNonceKey } from '../lib/nonce';
 import { PasskeyRegistryABI } from '../lib/passkey-registry';
 import { generateToken } from '../lib/jwt';
 import {
@@ -198,7 +199,9 @@ class KeysService implements Kv.Kv {
         abi: PasskeyRegistryABI,
         functionName: 'register',
         args: [credentialIdHash, normalizedPublicKey],
-      });
+        nonceKey: randomNonceKey(),
+        nonce: 0,
+      } as any);
 
       console.log(`Transaction submitted: ${hash}`);
 
