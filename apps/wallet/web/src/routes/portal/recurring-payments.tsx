@@ -38,6 +38,7 @@ import {
   createRecurringPayment,
   getRecurringPaymentExecutions,
   getRecurringPaymentsContractAddress,
+  reactivateRecurringPayment,
   type PaginatedRecurringPaymentResponse,
 } from '@/lib/recurring-payments';
 import type { Token } from '@/lib/tokenlist';
@@ -1249,18 +1250,38 @@ function PaymentRow({
   payment: RecurringPayment;
   onCancelled: () => void;
 }): ReactElement {
-  const cfg = STATUS_CONFIG[payment.status];
-  const StatusIcon = cfg.icon;
   const isActive = payment.status === 'active';
   const isFailed = payment.status === 'failed';
+  const isWarning = isActive && !!payment.failReason;
+  const cfg = isWarning
+    ? {
+        icon: AlertTriangle,
+        iconClass: 'text-[#D4A574]',
+        bgClass: 'bg-[#D4A574]/8',
+        ringClass: 'ring-[#D4A574]/15',
+      }
+    : STATUS_CONFIG[payment.status];
+  const StatusIcon = cfg.icon;
   const explorerUrl = payment.txHash ? getExplorerTxUrl(payment.txHash) : null;
 
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
-  const [showError, setShowError] = useState(false);
+  const [isReactivating, setIsReactivating] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [executions, setExecutions] = useState<RecurringPaymentExecution[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+
+  const fetchExecutions = useCallback(async () => {
+    setLoadingHistory(true);
+    try {
+      const data = await getRecurringPaymentExecutions(payment.id);
+      setExecutions(data);
+    } catch {
+      // ignore
+    } finally {
+      setLoadingHistory(false);
+    }
+  }, [payment.id]);
 
   const toggleHistory = useCallback(async () => {
     if (showHistory) {
@@ -1268,18 +1289,8 @@ function PaymentRow({
       return;
     }
     setShowHistory(true);
-    if (executions.length === 0) {
-      setLoadingHistory(true);
-      try {
-        const data = await getRecurringPaymentExecutions(payment.id);
-        setExecutions(data);
-      } catch {
-        // ignore
-      } finally {
-        setLoadingHistory(false);
-      }
-    }
-  }, [showHistory, executions.length, payment.id]);
+    fetchExecutions();
+  }, [showHistory, fetchExecutions]);
 
   const handleCancel = async (): Promise<void> => {
     setIsCancelling(true);
@@ -1290,6 +1301,19 @@ function PaymentRow({
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Failed to cancel subscription');
       setIsCancelling(false);
+    }
+  };
+
+  const handleReactivate = async (): Promise<void> => {
+    setIsReactivating(true);
+    try {
+      await reactivateRecurringPayment(payment.id);
+      toast.success('Recurring payment reactivated');
+      onCancelled(); // refreshes the list
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Failed to reactivate');
+    } finally {
+      setIsReactivating(false);
     }
   };
 
@@ -1340,9 +1364,15 @@ function PaymentRow({
           <div className="flex flex-col items-end gap-1.5 shrink-0">
             {isActive && (
               <>
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#5B9A6F]/6 ring-1 ring-[#5B9A6F]/10">
-                  <Clock className="w-3.5 h-3.5 text-[#5B9A6F]/70" />
-                  <span className="text-[12px] font-semibold text-[#5B9A6F]/80">
+                <div
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${isWarning ? 'bg-[#D4A574]/6 ring-1 ring-[#D4A574]/10' : 'bg-[#5B9A6F]/6 ring-1 ring-[#5B9A6F]/10'}`}
+                >
+                  <Clock
+                    className={`w-3.5 h-3.5 ${isWarning ? 'text-[#D4A574]/70' : 'text-[#5B9A6F]/70'}`}
+                  />
+                  <span
+                    className={`text-[12px] font-semibold ${isWarning ? 'text-[#D4A574]/80' : 'text-[#5B9A6F]/80'}`}
+                  >
                     Next {formatNextPayment(payment.nextPaymentAt)}
                   </span>
                 </div>
@@ -1366,6 +1396,53 @@ function PaymentRow({
             )}
           </div>
         </div>
+
+        {isWarning && (
+          <div className="mt-3 px-3.5 py-2.5 rounded-xl bg-[#D4A574]/[0.06] border border-[#D4A574]/15">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="w-3.5 h-3.5 text-[#D4A574] shrink-0 mt-0.5" />
+              <div className="min-w-0 flex-1">
+                <p className="text-[12px] font-semibold text-[#D4A574]">Payment failing</p>
+                <p className="text-[11px] text-[#D4A574]/70 mt-0.5 leading-relaxed break-words">
+                  {payment.failReason}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isFailed && (
+          <div className="mt-3 px-3.5 py-3 rounded-xl bg-coral/[0.04] border border-coral/12">
+            <div className="flex items-start gap-2.5">
+              <XCircle className="w-4 h-4 text-coral shrink-0 mt-0.5" />
+              <div className="min-w-0 flex-1">
+                <p className="text-[12px] font-semibold text-coral/90">Subscription stopped</p>
+                {payment.failReason && (
+                  <p className="text-[11px] text-coral/60 mt-0.5 leading-relaxed break-words font-mono">
+                    {payment.failReason}
+                  </p>
+                )}
+                <button
+                  onClick={handleReactivate}
+                  disabled={isReactivating}
+                  className="mt-2.5 inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-[12px] font-semibold bg-[#5B9A6F] hover:bg-[#5B9A6F]/90 text-white transition-colors disabled:opacity-50"
+                >
+                  {isReactivating ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  )}
+                  {isReactivating ? 'Reactivating...' : 'Reactivate Payment'}
+                </button>
+                <p className="text-[10px] text-[#9B9590] mt-1.5">
+                  {payment.failReason
+                    ? 'Fix the issue above, then click to resume. Balance and allowance are checked before reactivation.'
+                    : 'Click to resume this payment. Balance and allowance are checked before reactivation.'}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center flex-wrap gap-2 mt-3 pt-3 border-t border-[#EDE9E3]/70">
           <Repeat className="w-3 h-3 text-[#D6D1CC] shrink-0" />
@@ -1396,34 +1473,16 @@ function PaymentRow({
               </a>
             </>
           )}
-          {isFailed && payment.failReason && (
-            <>
-              <span className="text-[8px] text-[#D6D1CC]">&middot;</span>
-              <button
-                onClick={() => setShowError(!showError)}
-                className="inline-flex items-center gap-1 text-[11px] font-medium text-coral/70 hover:text-coral transition-colors"
-              >
-                Error details
-                <ChevronDown
-                  className={`w-2.5 h-2.5 transition-transform duration-200 ${showError ? 'rotate-180' : ''}`}
-                />
-              </button>
-            </>
-          )}
-          {payment.paymentsMade > 0 && (
-            <>
-              <span className="text-[8px] text-[#D6D1CC]">&middot;</span>
-              <button
-                onClick={toggleHistory}
-                className="inline-flex items-center gap-1 text-[11px] font-medium text-[#9B72CF]/70 hover:text-[#9B72CF] transition-colors"
-              >
-                History
-                <ChevronDown
-                  className={`w-2.5 h-2.5 transition-transform duration-200 ${showHistory ? 'rotate-180' : ''}`}
-                />
-              </button>
-            </>
-          )}
+          <span className="text-[8px] text-[#D6D1CC]">&middot;</span>
+          <button
+            onClick={toggleHistory}
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-[#9B72CF]/70 hover:text-[#9B72CF] transition-colors"
+          >
+            History
+            <ChevronDown
+              className={`w-2.5 h-2.5 transition-transform duration-200 ${showHistory ? 'rotate-180' : ''}`}
+            />
+          </button>
         </div>
       </div>
 
@@ -1449,62 +1508,60 @@ function PaymentRow({
                 <p className="text-[12px] text-[#9B9590] py-1">No executions recorded yet.</p>
               ) : (
                 <div className="space-y-1.5">
-                  {executions.map(exec => (
-                    <div
-                      key={exec.id}
-                      className="flex items-center justify-between gap-2 py-1.5 border-b border-[#EDE9E3]/40 last:border-0"
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] font-medium text-[#6B6560]">
-                          #{exec.paymentNumber}
-                        </span>
-                        <span className="text-[11px] text-[#9B9590]">
-                          {formatAmount(exec.amount, payment.tokenDecimals, 2)}{' '}
-                          {payment.tokenSymbol}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-[#B5B0AA]">
-                          {formatTimeAgo(new Date(exec.executedAt).getTime() / 1000)}
-                        </span>
-                        {exec.txHash && exec.txHash.startsWith('0x') ? (
-                          <a
-                            href={getExplorerTxUrl(exec.txHash)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-[#9B72CF]/60 hover:text-[#9B72CF] transition-colors"
+                  {executions.map(exec => {
+                    const isFailed = exec.status === 'failed';
+                    return (
+                      <div
+                        key={exec.id}
+                        className={`flex items-center justify-between gap-2 py-1.5 border-b border-[#EDE9E3]/40 last:border-0 ${isFailed ? 'opacity-80' : ''}`}
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          {isFailed ? (
+                            <XCircle className="w-3.5 h-3.5 text-coral shrink-0" />
+                          ) : (
+                            <CheckCircle className="w-3.5 h-3.5 text-[#5B9A6F]/60 shrink-0" />
+                          )}
+                          <span
+                            className={`text-[11px] font-medium ${isFailed ? 'text-coral/70' : 'text-[#6B6560]'}`}
                           >
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        ) : exec.txHash === 'synced-from-chain' ? (
-                          <span className="text-[10px] text-[#B5B0AA] italic">synced</span>
-                        ) : null}
+                            #{exec.paymentNumber}
+                          </span>
+                          {isFailed ? (
+                            <span
+                              className="text-[11px] text-coral/60 truncate max-w-[180px]"
+                              title={exec.failReason}
+                            >
+                              {exec.failReason ?? 'Failed'}
+                            </span>
+                          ) : (
+                            <span className="text-[11px] text-[#9B9590]">
+                              {formatAmount(exec.amount, payment.tokenDecimals, 2)}{' '}
+                              {payment.tokenSymbol}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-[11px] text-[#B5B0AA]">
+                            {formatTimeAgo(new Date(exec.executedAt).getTime() / 1000)}
+                          </span>
+                          {exec.txHash && exec.txHash.startsWith('0x') ? (
+                            <a
+                              href={getExplorerTxUrl(exec.txHash)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[#9B72CF]/60 hover:text-[#9B72CF] transition-colors"
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                            </a>
+                          ) : exec.txHash === 'synced-from-chain' ? (
+                            <span className="text-[10px] text-[#B5B0AA] italic">synced</span>
+                          ) : null}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {isFailed && showError && payment.failReason && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.15 }}
-            className="overflow-hidden"
-          >
-            <div className="mx-5 mb-4 px-3.5 py-2.5 rounded-xl bg-coral/[0.03] border border-coral/10">
-              <p className="text-[11px] font-semibold text-coral/60 uppercase tracking-wider mb-1">
-                Error Details
-              </p>
-              <p className="text-[12px] text-coral/80 leading-relaxed break-words whitespace-pre-wrap font-mono">
-                {payment.failReason}
-              </p>
             </div>
           </motion.div>
         )}

@@ -60,6 +60,10 @@ export function deleteRecurringPayment(id: string): Promise<void> {
   return apiDelete(`/v1/recurring-payments/${id}`);
 }
 
+export function reactivateRecurringPayment(id: string): Promise<RecurringPayment> {
+  return apiPost<RecurringPayment>(`/v1/recurring-payments/${id}/reactivate`, {});
+}
+
 let cachedContractAddress: `0x${string}` | null = null;
 
 export async function getRecurringPaymentsContractAddress(): Promise<`0x${string}`> {

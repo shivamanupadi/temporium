@@ -42,7 +42,15 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
 
   if (!response.ok) {
     const text = await response.text();
-    throw new ApiClientError(text || `Request failed (${response.status})`, response.status);
+    let message = text || `Request failed (${response.status})`;
+    try {
+      const parsed = JSON.parse(text);
+      if (parsed?.error?.message) message = parsed.error.message;
+      else if (typeof parsed?.error === 'string') message = parsed.error;
+    } catch {
+      // not JSON — use raw text
+    }
+    throw new ApiClientError(message, response.status);
   }
 
   // 204 No Content (e.g. DELETE)

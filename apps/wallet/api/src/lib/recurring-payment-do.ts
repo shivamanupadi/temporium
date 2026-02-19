@@ -1,5 +1,6 @@
 import { createTempoPublicClient, createTempoWalletClient } from './viem';
 import { getTempoChain, getRpcUrl } from './chain';
+import { EXECUTE_PAYMENT_ABI } from './recurring-payment-abi';
 import { createId } from '@paralleldrive/cuid2';
 import { privateKeyToAccount } from 'viem/accounts';
 import { randomNonceKey } from './nonce';
@@ -24,45 +25,6 @@ function isSkippableError(message: string): boolean {
   const lower = message.toLowerCase();
   return SKIP_TO_NEXT_PATTERNS.some(p => lower.includes(p.toLowerCase()));
 }
-
-const EXECUTE_PAYMENT_ABI = [
-  {
-    type: 'function',
-    name: 'executePayment',
-    inputs: [{ name: 'subscriptionId', type: 'uint256' }],
-    outputs: [],
-    stateMutability: 'nonpayable',
-  },
-  {
-    type: 'function',
-    name: 'isDue',
-    inputs: [{ name: 'subscriptionId', type: 'uint256' }],
-    outputs: [{ name: '', type: 'bool' }],
-    stateMutability: 'view',
-  },
-  {
-    type: 'function',
-    name: 'getSubscription',
-    inputs: [{ name: 'subscriptionId', type: 'uint256' }],
-    outputs: [
-      {
-        type: 'tuple',
-        components: [
-          { name: 'subscriber', type: 'address' },
-          { name: 'recipient', type: 'address' },
-          { name: 'token', type: 'address' },
-          { name: 'amount', type: 'uint256' },
-          { name: 'interval', type: 'uint256' },
-          { name: 'nextPayment', type: 'uint256' },
-          { name: 'maxPayments', type: 'uint256' },
-          { name: 'paymentsMade', type: 'uint256' },
-          { name: 'active', type: 'bool' },
-        ],
-      },
-    ],
-    stateMutability: 'view',
-  },
-] as const;
 
 interface RecurringPaymentPayload {
   recordId: string;
@@ -317,6 +279,20 @@ export class RecurringPaymentDO implements DurableObject {
       failedIntervals: nextFailedIntervals,
       lastFailReason: reason,
     });
+
+    // Record the failed execution attempt
+    const d1Result = await this.env.DB.prepare(
+      'SELECT payments_made FROM recurring_payments WHERE id = ?'
+    )
+      .bind(recordId)
+      .first<{ payments_made: number }>();
+    const attemptedPaymentNumber = (d1Result?.payments_made ?? 0) + 1;
+    const now = Math.floor(Date.now() / 1000);
+    await this.env.DB.prepare(
+      'INSERT INTO recurring_payment_executions (id, recurring_payment_id, payment_number, tx_hash, amount, status, executed_at, fail_reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    )
+      .bind(createId(), recordId, attemptedPaymentNumber, 'none', '0', 'failed', now, reason)
+      .run();
 
     if (nextFailedIntervals >= MAX_CONSECUTIVE_FAILED_INTERVALS) {
       await this.updateD1Failed(

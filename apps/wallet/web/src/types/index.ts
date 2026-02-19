@@ -94,6 +94,7 @@ export interface RecurringPaymentExecution {
   amount: string;
   status: string;
   executedAt: string; // ISO datetime
+  failReason?: string;
 }
 
 /**

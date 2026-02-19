@@ -11,6 +11,10 @@ import {
   idParamSchema,
 } from '../lib/validation';
 import { success, paginated, noContent } from '../lib/response';
+import { createTempoPublicClient } from '../lib/viem';
+import { getTempoChain, getRpcUrl } from '../lib/chain';
+import { EXECUTE_PAYMENT_ABI } from '../lib/recurring-payment-abi';
+import { privateKeyToAccount } from 'viem/accounts';
 import type { Env, Variables } from '../types/env';
 
 const recurringPaymentsRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
@@ -212,6 +216,122 @@ recurringPaymentsRouter.get('/:id/executions', zValidator('param', idParamSchema
     .orderBy(desc(recurringPaymentExecutions.executedAt));
 
   return success(c, executions);
+});
+
+/**
+ * POST /v1/recurring-payments/:id/reactivate
+ * Reactivate a failed recurring payment. Verifies on-chain subscription is still active
+ * and simulates execution before re-initializing the DO.
+ */
+recurringPaymentsRouter.post('/:id/reactivate', zValidator('param', idParamSchema), async c => {
+  const db = createDb(c.env.DB);
+  const owner = getWalletAddress(c);
+  const { id } = c.req.valid('param');
+
+  // 1. Fetch and verify ownership
+  const existing = await db
+    .select()
+    .from(recurringPayments)
+    .where(and(eq(recurringPayments.id, id), eq(recurringPayments.owner, owner)))
+    .limit(1);
+
+  if (existing.length === 0) {
+    throw new NotFoundError('Recurring payment not found');
+  }
+
+  const record = existing[0];
+
+  if (record.status !== 'failed') {
+    throw new BadRequestError('Only failed recurring payments can be reactivated');
+  }
+
+  if (!record.subscriptionId && record.subscriptionId !== 0) {
+    throw new BadRequestError('No on-chain subscription ID found');
+  }
+
+  // 2. Read on-chain subscription state
+  const networkConfig = c.get('networkConfig');
+  const chain = getTempoChain(networkConfig.network);
+  const rpcUrl = getRpcUrl(chain);
+  const publicClient = createTempoPublicClient(rpcUrl, chain);
+  const addr = record.contractAddress as `0x${string}`;
+
+  const sub = (await publicClient.readContract({
+    address: addr,
+    abi: EXECUTE_PAYMENT_ABI,
+    functionName: 'getSubscription',
+    args: [BigInt(record.subscriptionId!)],
+  })) as {
+    active: boolean;
+    nextPayment: bigint;
+    paymentsMade: bigint;
+    maxPayments: bigint;
+    amount: bigint;
+  };
+
+  if (!sub.active) {
+    throw new BadRequestError('On-chain subscription is no longer active');
+  }
+
+  // 3. Simulate executePayment to verify it will succeed
+  const relayerKey = networkConfig.relayerPrivateKey;
+  const relayerAccount = privateKeyToAccount(relayerKey as `0x${string}`);
+
+  try {
+    await publicClient.simulateContract({
+      address: addr,
+      abi: EXECUTE_PAYMENT_ABI,
+      functionName: 'executePayment',
+      args: [BigInt(record.subscriptionId!)],
+      account: relayerAccount,
+    });
+  } catch (simError) {
+    const reason = simError instanceof Error ? simError.message : 'Simulation failed';
+    throw new BadRequestError(
+      `Cannot reactivate: payment would fail. Fix the underlying issue first. Reason: ${reason}`
+    );
+  }
+
+  // 4. Update D1: reactivate record
+  const paymentsMade = Number(sub.paymentsMade);
+  const nextPaymentUnix = Number(sub.nextPayment);
+
+  await db
+    .update(recurringPayments)
+    .set({
+      status: 'active',
+      failReason: null,
+      paymentsMade,
+      nextPaymentAt: new Date(nextPaymentUnix * 1000),
+    })
+    .where(eq(recurringPayments.id, id));
+
+  // 5. Re-initialize DO
+  const doId = c.env.RECURRING_PAYMENT.idFromName(id);
+  const doStub = c.env.RECURRING_PAYMENT.get(doId);
+
+  await doStub.fetch(
+    new Request('http://do/schedule', {
+      method: 'POST',
+      body: JSON.stringify({
+        recordId: id,
+        subscriptionId: record.subscriptionId,
+        contractAddress: record.contractAddress,
+        network: networkConfig.network,
+        intervalMs: record.intervalSeconds * 1000,
+        nextPaymentAt: nextPaymentUnix * 1000,
+      }),
+    })
+  );
+
+  // 6. Return updated record
+  const updated = await db
+    .select()
+    .from(recurringPayments)
+    .where(eq(recurringPayments.id, id))
+    .limit(1);
+
+  return success(c, updated[0]);
 });
 
 /**

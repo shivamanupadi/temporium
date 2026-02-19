@@ -175,6 +175,7 @@ export const recurringPaymentExecutions = sqliteTable(
     amount: text('amount').notNull(),
     status: text('status').notNull().default('confirmed'),
     executedAt: integer('executed_at', { mode: 'timestamp' }).notNull(),
+    failReason: text('fail_reason'),
   },
   table => [
     index('rpe_recurring_id_idx').on(table.recurringPaymentId),
