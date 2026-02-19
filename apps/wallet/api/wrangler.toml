@@ -32,6 +32,7 @@ new_sqlite_classes = ["RecurringPaymentDO"]
 
 # Single worker serving both testnet and mainnet via X-Tempo-Network header
 [vars]
+TESTNET_RECURRING_PAYMENTS_ADDRESS = "0xe957A294Cd7aA177D374460F7B6A26D83368A7D5"
 ALLOWED_ORIGINS = "*"
 JWT_EXPIRATION = "24h"
 TESTNET_PASSKEY_REGISTRY_ADDRESS = "0x4AF321C210AF0cbf15d8ed955007f2Dd57540057"
