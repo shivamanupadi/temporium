@@ -183,6 +183,24 @@ export const recurringPaymentExecutions = sqliteTable(
   ]
 );
 
+// ============ Watched Spenders ============
+export const watchedSpenders = sqliteTable(
+  'watched_spenders',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    owner: text('owner').notNull(), // Wallet address that owns this record
+    address: text('address').notNull(), // Spender contract address
+    label: text('label'), // Optional user-friendly label
+    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  },
+  table => [
+    uniqueIndex('watched_spenders_owner_address_idx').on(table.owner, table.address),
+    index('watched_spenders_owner_idx').on(table.owner),
+  ]
+);
+
 // ============ TIP-403 Policies ============
 export const policyTypeValues = ['whitelist', 'blacklist'] as const;
 export type PolicyType = (typeof policyTypeValues)[number];

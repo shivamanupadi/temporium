@@ -229,6 +229,15 @@ export const recurringPaymentStatusParamSchema = z.object({
   status: recurringPaymentStatusSchema,
 });
 
+// ============ Watched Spenders Schemas ============
+
+export const createWatchedSpenderSchema = z.object({
+  address: ethereumAddress,
+  label: z.string().max(50, 'Label must be 50 characters or less').trim().optional(),
+});
+
+export type CreateWatchedSpenderRequest = z.infer<typeof createWatchedSpenderSchema>;
+
 // ============ Pagination Schemas ============
 
 export const scheduledTxQuerySchema = z.object({
