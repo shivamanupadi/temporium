@@ -1,5 +1,12 @@
 import { type ReactElement, useState, useRef, useEffect } from 'react';
-import { createFileRoute, Outlet, Link, useLocation, useNavigate } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  Outlet,
+  Link,
+  useLocation,
+  useNavigate,
+  redirect,
+} from '@tanstack/react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -35,9 +42,16 @@ import { useTempo } from '@/hooks/useTempo';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { formatAddress, copyToClipboard } from '@/lib/utils';
 import { LINKS, TIMING } from '@/lib/constants';
+import { isAccessTokenExpired, clearAuthToken } from '@/lib/auth-storage';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 
 export const Route = createFileRoute('/portal')({
+  beforeLoad: () => {
+    if (isAccessTokenExpired()) {
+      clearAuthToken();
+      throw redirect({ to: '/' });
+    }
+  },
   component: PortalLayout,
 });
 
@@ -147,7 +161,8 @@ function PortalLayout(): ReactElement | null {
     }
   };
 
-  if (!isConnected) {
+  if (!isConnected || isAccessTokenExpired()) {
+    navigate({ to: '/' });
     return null;
   }
 

@@ -36,6 +36,7 @@ import { CreateWalletModal } from '@temporium/shared-ui';
 import { useTempo } from '@/hooks/useTempo';
 import { getWalletApiUrl, TEMPO_NETWORK } from '@/lib/api';
 import { copyToClipboard } from '@/lib/utils';
+import { isAccessTokenExpired } from '@/lib/auth-storage';
 
 export const Route = createFileRoute('/')({
   component: LandingPage,
@@ -227,7 +228,7 @@ function LandingPage(): ReactElement {
   const [copiedContract, setCopiedContract] = useState(false);
 
   useEffect(() => {
-    if (isConnected) {
+    if (isConnected && !isAccessTokenExpired()) {
       navigate({ to: '/portal/dashboard' });
     }
   }, [isConnected, navigate]);
