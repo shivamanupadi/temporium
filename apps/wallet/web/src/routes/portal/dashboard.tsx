@@ -17,7 +17,6 @@ import {
   Clock,
   Key,
   Users,
-  Link2,
   ShieldCheck,
   Gift,
   ListPlus,
@@ -25,11 +24,13 @@ import {
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
+import { ReceiveModal } from '@/components/ReceiveModal';
 import { useTempo } from '@/hooks/useTempo';
 import { useTokensWithBalances } from '@/hooks/useTokenList';
 import { getTokenColors } from '@/lib/tokenlist';
-import { isTestnet, TIMING } from '@/lib/constants';
+import { isTestnet, TIMING, LINKS } from '@/lib/constants';
 import { formatAmount, formatAddress, copyToClipboard, cn } from '@/lib/utils';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { fundFromFaucet, getExplorerAddressUrl } from '@/lib/tempo-client';
 
 export const Route = createFileRoute('/portal/dashboard')({
@@ -50,130 +51,20 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.4, 0, 0.2, 1] as const } },
 };
 
-const quickActionSections = [
-  {
-    label: 'Payments',
-    items: [
-      {
-        to: '/portal/send',
-        label: 'Send',
-        icon: Send,
-        color: '#E07A5F',
-        description: 'Transfer tokens',
-      },
-      {
-        to: '/portal/receive',
-        label: 'Receive',
-        icon: QrCode,
-        color: '#5B9A6F',
-        description: 'Get your address',
-      },
-      {
-        to: '/portal/batch-payments',
-        label: 'Batch Payments',
-        icon: ListPlus,
-        color: '#E07A5F',
-        description: 'Send to many',
-      },
-      {
-        to: '/portal/recurring-payments',
-        label: 'Recurring Payments',
-        icon: RefreshCw,
-        color: '#9B72CF',
-        description: 'Automated transfers',
-      },
-      {
-        to: '/portal/scheduled-payments',
-        label: 'Scheduled Payments',
-        icon: Clock,
-        color: '#D4A574',
-        description: 'Timed transactions',
-      },
-    ],
-  },
-  {
-    label: 'TIP20 Manager',
-    items: [
-      {
-        to: '/portal/tip20-studio',
-        label: 'TIP20 Studio',
-        icon: CircleDollarSign,
-        color: '#E07A5F',
-        description: 'Manage stablecoins',
-      },
-      {
-        to: '/portal/rewards',
-        label: 'Rewards',
-        icon: Gift,
-        color: '#5B9A6F',
-        description: 'Claim rewards',
-      },
-    ],
-  },
-  {
-    label: 'Tools',
-    items: [
-      {
-        to: '/portal/tip403-factory',
-        label: 'TIP403',
-        icon: Shield,
-        color: '#E07A5F',
-        description: 'Transfer policies',
-      },
-      {
-        to: '/portal/access-keys',
-        label: 'Access Keys',
-        icon: Key,
-        color: '#D4A574',
-        description: 'Manage keys',
-      },
-      {
-        to: '/portal/token-approvals',
-        label: 'Approvals',
-        icon: ShieldCheck,
-        color: '#5B9A6F',
-        description: 'Token allowances',
-      },
-    ],
-  },
-  {
-    label: 'Fee AMM',
-    items: [
-      {
-        to: '/portal/fee-amm-swap',
-        label: 'Fee AMM Swap',
-        icon: Repeat,
-        color: '#6B8EAD',
-        description: 'Swap via Fee AMM',
-      },
-      {
-        to: '/portal/fee-amm-liquidity',
-        label: 'Fee AMM Liquidity',
-        icon: Droplets,
-        color: '#6B8EAD',
-        description: 'Provide liquidity',
-      },
-    ],
-  },
-  {
-    label: 'Manage',
-    items: [
-      {
-        to: '/portal/contacts',
-        label: 'Contacts',
-        icon: Users,
-        color: '#5B9A6F',
-        description: 'Address book',
-      },
-      {
-        to: '/portal/connected-apps',
-        label: 'Apps',
-        icon: Link2,
-        color: '#5B9A6F',
-        description: 'Connected apps',
-      },
-    ],
-  },
+const quickActions = [
+  { to: '/portal/send', label: 'Send', icon: Send },
+  { to: '/portal/receive', label: 'Receive', icon: QrCode },
+  { to: '/portal/batch-payments', label: 'Batch', icon: ListPlus },
+  { to: '/portal/recurring-payments', label: 'Recurring', icon: RefreshCw },
+  { to: '/portal/scheduled-payments', label: 'Scheduled', icon: Clock },
+  { to: '/portal/tip20-studio', label: 'TIP20', icon: CircleDollarSign },
+  { to: '/portal/rewards', label: 'Rewards', icon: Gift },
+  { to: '/portal/tip403-factory', label: 'TIP403', icon: Shield },
+  { to: '/portal/access-keys', label: 'Keys', icon: Key },
+  { to: '/portal/token-approvals', label: 'Approvals', icon: ShieldCheck },
+  { to: '/portal/fee-amm-swap', label: 'Swap', icon: Repeat },
+  { to: '/portal/fee-amm-liquidity', label: 'Liquidity', icon: Droplets },
+  { to: '/portal/contacts', label: 'Contacts', icon: Users },
 ] as const;
 
 function DashboardPage(): ReactElement {
@@ -187,6 +78,7 @@ function DashboardPage(): ReactElement {
 
   const [copied, setCopied] = useState(false);
   const [isFaucetLoading, setIsFaucetLoading] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
 
   const handleCopyAddress = useCallback(async (): Promise<void> => {
     if (!address) return;
@@ -236,7 +128,7 @@ function DashboardPage(): ReactElement {
       </motion.div>
 
       {/* Two-column layout: stacks on mobile */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:items-start">
         {/* Left Column */}
         <div className="space-y-6">
           {/* Balance & Address Card */}
@@ -244,13 +136,10 @@ function DashboardPage(): ReactElement {
             variants={itemVariants}
             className="rounded-2xl border border-[#EDE9E3] bg-white p-6"
           >
-            <div className="flex items-start justify-between mb-1">
+            <div className="mb-1">
               <p className="text-[12px] font-semibold text-[#9B9590] uppercase tracking-wider">
                 Total Balance
               </p>
-              <div className="w-8 h-8 rounded-lg bg-[#E07A5F]/10 flex items-center justify-center">
-                <DollarSign className="w-4 h-4 text-[#E07A5F]" />
-              </div>
             </div>
 
             {isBalanceLoading && tokens.length === 0 ? (
@@ -275,8 +164,8 @@ function DashboardPage(): ReactElement {
             <div className="border-t border-[#EDE9E3]/60 mt-5 pt-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-[#9B72CF]/10 flex items-center justify-center shrink-0">
-                    <Wallet className="w-5 h-5 text-[#9B72CF]" />
+                  <div className="w-10 h-10 rounded-xl bg-[#E07A5F]/10 flex items-center justify-center shrink-0">
+                    <Wallet className="w-5 h-5 text-[#E07A5F]" />
                   </div>
                   <div className="min-w-0">
                     <p className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
@@ -287,28 +176,47 @@ function DashboardPage(): ReactElement {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleCopyAddress}
-                    className="w-9 h-9 rounded-lg text-[#9B9590] hover:text-[#2D3436] hover:bg-[#F5F2ED]"
-                  >
-                    {copied ? (
-                      <Check className="w-4 h-4 text-[#5B9A6F]" />
-                    ) : (
-                      <Copy className="w-4 h-4" />
-                    )}
-                  </Button>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={() => setShowQrModal(true)}
+                        className="w-8 h-8 rounded-full bg-[#F5F2ED] flex items-center justify-center text-[#6B6560] hover:bg-[#EDE9E3] transition-colors"
+                      >
+                        <QrCode className="w-3.5 h-3.5" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>Receive</TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        onClick={handleCopyAddress}
+                        className="w-8 h-8 rounded-full bg-[#F5F2ED] flex items-center justify-center text-[#6B6560] hover:bg-[#EDE9E3] transition-colors"
+                      >
+                        {copied ? (
+                          <Check className="w-3.5 h-3.5 text-[#6B8F71]" />
+                        ) : (
+                          <Copy className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>{copied ? 'Copied!' : 'Copy address'}</TooltipContent>
+                  </Tooltip>
                   {explorerUrl && (
-                    <a
-                      href={explorerUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-9 h-9 rounded-lg flex items-center justify-center text-[#9B9590] hover:text-[#2D3436] hover:bg-[#F5F2ED] transition-colors"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <a
+                          href={explorerUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="w-8 h-8 rounded-full bg-[#F5F2ED] flex items-center justify-center text-[#6B6560] hover:bg-[#EDE9E3] transition-colors"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent>View on Explorer</TooltipContent>
+                    </Tooltip>
                   )}
                 </div>
               </div>
@@ -316,180 +224,179 @@ function DashboardPage(): ReactElement {
           </motion.div>
 
           {/* Testnet Faucet */}
+          {isTestnet && (
+            <motion.div
+              variants={itemVariants}
+              className="rounded-2xl border border-[#EDE9E3] bg-white p-5"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-[#6B8F71]/10 flex items-center justify-center shrink-0">
+                    <Droplets className="w-5 h-5 text-[#6B8F71]" />
+                  </div>
+                  <div>
+                    <p className="text-[14px] font-semibold text-[#2D3436]">Testnet Faucet</p>
+                    <p className="text-[12px] text-[#9B9590]">
+                      Get free testnet tokens to try things out
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  onClick={handleFaucet}
+                  disabled={isFaucetLoading || !address}
+                  className="h-10 px-5 rounded-xl text-[13px] font-semibold bg-[#6B8F71] hover:bg-[#5A7D60] text-white"
+                >
+                  {isFaucetLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
+                      Requesting...
+                    </>
+                  ) : (
+                    'Get Tokens'
+                  )}
+                </Button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Quick Actions */}
           <motion.div
             variants={itemVariants}
             className="rounded-2xl border border-[#EDE9E3] bg-white p-5"
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-[#5B9A6F]/10 flex items-center justify-center shrink-0">
-                  <Droplets className="w-5 h-5 text-[#5B9A6F]" />
-                </div>
-                <div>
-                  <p className="text-[14px] font-semibold text-[#2D3436]">Testnet Faucet</p>
-                  <p className="text-[12px] text-[#9B9590]">
-                    Get free testnet tokens to try things out
-                  </p>
-                </div>
-              </div>
-              <Button
-                onClick={handleFaucet}
-                disabled={isFaucetLoading || !address}
-                className="h-10 px-5 rounded-xl text-[13px] font-semibold bg-[#5B9A6F] hover:bg-[#4E8A62] text-white"
-              >
-                {isFaucetLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
-                    Requesting...
-                  </>
-                ) : (
-                  'Get Tokens'
-                )}
-              </Button>
+            <p className="text-[13px] font-semibold text-[#2D3436] mb-4">Quick Actions</p>
+            <div className="grid grid-cols-4 sm:grid-cols-5 gap-y-5 gap-x-2">
+              {quickActions.map(action => {
+                const Icon = action.icon;
+                return (
+                  <Link
+                    key={action.to}
+                    to={action.to}
+                    className="group flex flex-col items-center gap-1.5"
+                  >
+                    <div className="w-10 h-10 rounded-full bg-[#F5F2ED] group-hover:bg-[#6B8F71]/10 flex items-center justify-center transition-colors">
+                      <Icon
+                        className="w-[18px] h-[18px] text-[#6B6560] group-hover:text-[#6B8F71] transition-colors"
+                        strokeWidth={1.75}
+                      />
+                    </div>
+                    <span className="text-[11px] font-medium text-[#6B6560] text-center leading-tight">
+                      {action.label}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
           </motion.div>
+        </div>
 
-          {/* Assets */}
+        {/* Right Column — Assets */}
+        <div className="lg:sticky lg:top-0 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
           <motion.div
             variants={itemVariants}
-            className="rounded-2xl border border-[#EDE9E3] bg-white overflow-hidden"
+            className="rounded-2xl border border-[#EDE9E3] bg-white"
           >
-            <div className="px-5 py-4">
+            {/* Header */}
+            <div className="px-5 py-4 flex items-center justify-between">
               <p className="text-[13px] font-semibold text-[#2D3436]">Assets</p>
+              {tokens.length > 0 && (
+                <span className="text-[11px] font-medium text-[#B5B0AA] bg-[#F5F2ED] px-2 py-0.5 rounded-full">
+                  {tokens.length}
+                </span>
+              )}
             </div>
 
-            <div className="mx-5 border-t border-[#EDE9E3]/60" />
-
-            <div>
-              {isBalanceLoading && tokens.length === 0 ? (
-                Array.from({ length: 3 }).map((_, index) => (
-                  <div
-                    key={index}
-                    className={cn(
-                      'flex items-center justify-between px-5 py-4',
-                      index < 2 && 'border-b border-[#EDE9E3]/40'
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[#F5F2ED] animate-pulse" />
-                      <div>
-                        <div className="h-4 w-16 bg-[#F5F2ED] rounded-md animate-pulse mb-1.5" />
-                        <div className="h-3 w-24 bg-[#FAF8F5] rounded-md animate-pulse" />
-                      </div>
+            {/* Token list */}
+            {isBalanceLoading && tokens.length === 0 ? (
+              <div className="px-5 pb-2">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="flex items-center gap-3 py-3 border-t border-[#F5F2ED]">
+                    <div className="w-8 h-8 rounded-full bg-[#F5F2ED] animate-pulse shrink-0" />
+                    <div className="flex-1">
+                      <div className="h-3.5 w-12 bg-[#F5F2ED] rounded animate-pulse" />
                     </div>
-                    <div className="text-right">
-                      <div className="h-4 w-16 bg-[#F5F2ED] rounded-md animate-pulse mb-1.5" />
-                      <div className="h-3 w-12 bg-[#FAF8F5] rounded-md animate-pulse" />
-                    </div>
+                    <div className="h-3.5 w-20 bg-[#F5F2ED] rounded animate-pulse" />
                   </div>
-                ))
-              ) : tokens.length === 0 ? (
-                <div className="px-5 py-10 text-center">
-                  <div className="w-12 h-12 rounded-2xl bg-[#F5F2ED] flex items-center justify-center mx-auto mb-3">
-                    <DollarSign className="w-6 h-6 text-[#B5B0AA]" />
-                  </div>
-                  <p className="text-[13px] font-medium text-[#6B6560]">No assets yet</p>
-                  <p className="text-[12px] text-[#9B9590] mt-1">
-                    {isTestnet ? 'Use the faucet to get test tokens' : 'Send tokens to get started'}
-                  </p>
-                </div>
-              ) : (
-                tokens.map((token, index) => {
+                ))}
+              </div>
+            ) : tokens.length === 0 ? (
+              <div className="px-5 pb-8 pt-4 text-center border-t border-[#F5F2ED]">
+                <p className="text-[13px] text-[#9B9590]">No assets yet</p>
+                <p className="text-[12px] text-[#B5B0AA] mt-0.5">
+                  {isTestnet ? 'Use the faucet above' : 'Send tokens to get started'}
+                </p>
+              </div>
+            ) : (
+              <div className="px-5 pb-2">
+                {tokens.map((token, index) => {
                   const colors = getTokenColors(token.symbol);
-                  const isLast = index === tokens.length - 1;
-
                   return (
                     <motion.div
                       key={token.address}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      transition={{ duration: 0.25, delay: index * 0.03 }}
                       className={cn(
-                        'flex items-center justify-between px-5 py-4 hover:bg-[#FDFBF8] transition-colors',
-                        !isLast && 'border-b border-[#EDE9E3]/40'
+                        'group flex items-center gap-3 py-3',
+                        index > 0 && 'border-t border-[#F5F2ED]'
                       )}
                     >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className="w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden"
-                          style={{ backgroundColor: colors.bg }}
-                        >
-                          {token.logoURI ? (
-                            <img
-                              src={token.logoURI}
-                              alt={token.symbol}
-                              className="w-10 h-10 rounded-xl object-cover"
-                              onError={e => {
-                                e.currentTarget.style.display = 'none';
-                                e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                              }}
-                            />
-                          ) : null}
-                          <DollarSign
-                            className={cn('h-5 w-5', token.logoURI && 'hidden')}
-                            style={{ color: colors.text }}
-                          />
-                        </div>
-                        <div>
-                          <p className="text-[14px] font-semibold text-[#2D3436]">{token.symbol}</p>
-                          <p className="text-[12px] text-[#9B9590]">{token.name}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[14px] font-semibold text-[#2D3436] tabular-nums">
-                          {formatAmount(token.balance.toString(), token.decimals)}
-                        </p>
-                        <p className="text-[12px] text-[#9B9590]">{token.symbol}</p>
-                      </div>
-                    </motion.div>
-                  );
-                })
-              )}
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Right Column */}
-        <motion.div
-          variants={itemVariants}
-          className="rounded-2xl border border-[#EDE9E3] bg-white overflow-hidden"
-        >
-          {quickActionSections.map((section, sectionIdx) => (
-            <div key={section.label}>
-              {sectionIdx > 0 && <div className="mx-5 border-t border-[#EDE9E3]/60" />}
-              <div className="px-5 pt-4 pb-1.5">
-                <p className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">
-                  {section.label}
-                </p>
-              </div>
-              <div className="px-3 pb-2.5 grid grid-cols-2 gap-x-2 gap-y-2">
-                {section.items.map(action => {
-                  const Icon = action.icon;
-                  return (
-                    <Link key={action.to} to={action.to} className="block">
-                      <motion.div
-                        whileTap={{ scale: 0.97 }}
-                        transition={{ duration: 0.1 }}
-                        className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-[#FAF8F5] hover:bg-[#F5F2ED] transition-colors"
+                      {/* Icon */}
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden shrink-0"
+                        style={{ backgroundColor: colors.bg }}
                       >
-                        <div
-                          className="w-9 h-9 rounded-lg flex items-center justify-center shrink-0"
-                          style={{ backgroundColor: `${action.color}12` }}
-                        >
-                          <Icon className="w-[18px] h-[18px]" style={{ color: action.color }} />
-                        </div>
-                        <p className="text-[13px] font-semibold text-[#2D3436] truncate">
-                          {action.label}
+                        {token.logoURI ? (
+                          <img
+                            src={token.logoURI}
+                            alt={token.symbol}
+                            className="w-8 h-8 rounded-full object-cover"
+                            onError={e => {
+                              e.currentTarget.style.display = 'none';
+                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                            }}
+                          />
+                        ) : null}
+                        <DollarSign
+                          className={cn('h-3.5 w-3.5', token.logoURI && 'hidden')}
+                          style={{ color: colors.text }}
+                        />
+                      </div>
+
+                      {/* Name */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-medium text-[#2D3436] leading-none">
+                          {token.symbol}
                         </p>
-                      </motion.div>
-                    </Link>
+                        <p className="text-[11px] text-[#B5B0AA] mt-0.5 leading-none truncate">
+                          {token.name}
+                        </p>
+                      </div>
+
+                      {/* Balance */}
+                      <p className="text-[13px] font-semibold text-[#2D3436] tabular-nums shrink-0">
+                        <span className="text-[#9B9590] font-normal">$</span>
+                        {formatAmount(token.balance.toString(), token.decimals)}
+                      </p>
+
+                      <a
+                        href={`${LINKS.explorer}/token/${token.address}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] text-[#B5B0AA] hover:text-[#6B6560] transition-colors shrink-0"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </motion.div>
                   );
                 })}
               </div>
-            </div>
-          ))}
-        </motion.div>
+            )}
+          </motion.div>
+        </div>
       </div>
+
+      <ReceiveModal open={showQrModal} onOpenChange={setShowQrModal} address={address} />
     </motion.div>
   );
 }

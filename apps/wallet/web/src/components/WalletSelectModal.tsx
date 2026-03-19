@@ -29,7 +29,7 @@ export function WalletSelectModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-[360px] p-0 gap-0 overflow-hidden rounded-2xl">
+      <DialogContent className="max-w-[360px] p-0 gap-0 rounded-2xl">
         {/* Header */}
         <div className="px-6 pt-6 pb-4">
           <DialogTitle className="text-lg font-semibold text-[#2D3436] mb-2">Sign In</DialogTitle>

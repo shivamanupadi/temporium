@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, type ReactElement } from 'rea
 import { Loader2, ExternalLink, ShieldCheck, ShieldX } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { isAddress, type Address } from 'viem';
+import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
@@ -32,6 +33,7 @@ export function ModifyListModal({
   onSuccess,
   onClose,
 }: ModifyListModalProps): ReactElement {
+  const { address: walletAddress } = useAccount();
   const { modifyWhitelist, modifyBlacklist } = usePolicies();
   const { tokens } = useTokenList();
 
@@ -154,11 +156,17 @@ export function ModifyListModal({
             </div>
 
             <div className="px-6 pb-4">
-              <ContactPicker value={address} onChange={setAddress} label="Address" />
+              <ContactPicker
+                value={address}
+                onChange={setAddress}
+                label="Address"
+                selfAddress={walletAddress}
+              />
             </div>
 
             {feeToken && tokens.length > 0 && (
-              <div className="px-6 pb-4">
+              <div className="px-6 pb-4 flex items-center justify-between">
+                <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
                 <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
               </div>
             )}

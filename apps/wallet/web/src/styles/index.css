@@ -7,6 +7,16 @@
  * Warm neutral theme — matches wallet aesthetic
  */
 
+button,
+a,
+[role='button'],
+input[type='submit'],
+input[type='button'],
+select,
+summary {
+  cursor: pointer;
+}
+
 :root {
   --radius: 0.5rem;
   /* Warm neutral palette */
@@ -32,7 +42,7 @@
   /* Chart colors */
   --chart-1: #e07a5f;
   --chart-2: #9b72cf;
-  --chart-3: #5b9a6f;
+  --chart-3: #6b8f71;
   --chart-4: #d4a574;
   --chart-5: #6b8ead;
   /* Sidebar */
@@ -89,15 +99,15 @@
   /* Brand accents */
   --color-coral: #e07a5f;
   --color-lavender: #9b72cf;
-  --color-sage: #5b9a6f;
+  --color-sage: #6b8f71;
 
   /* Token colors */
-  --color-token-usd: #5b9a6f;
+  --color-token-usd: #6b8f71;
   --color-token-usdc: #2775ca;
   --color-token-usdt: #26a17b;
 
   /* Semantic */
-  --color-success: #5b9a6f;
+  --color-success: #6b8f71;
   --color-warning: #d4a574;
   --color-info: #6b8ead;
 

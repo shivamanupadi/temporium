@@ -25,20 +25,20 @@ export function ResultDisplay({ result }: ResultDisplayProps): ReactElement | nu
 
   if (result.success) {
     return (
-      <div className="mt-3 rounded-xl border border-[#5B9A6F]/20 bg-[#5B9A6F]/5 p-4">
+      <div className="mt-3 rounded-xl border border-[#6B8F71]/20 bg-[#6B8F71]/5 p-4">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <CheckCircle className="w-4 h-4 text-[#5B9A6F]" />
-            <span className="text-[12px] font-semibold text-[#5B9A6F]">Success</span>
+            <CheckCircle className="w-4 h-4 text-[#6B8F71]" />
+            <span className="text-[12px] font-semibold text-[#6B8F71]">Success</span>
           </div>
           <button
             onClick={handleCopy}
-            className="p-1 hover:bg-[#5B9A6F]/10 rounded-md transition-colors"
+            className="p-1 hover:bg-[#6B8F71]/10 rounded-md transition-colors"
           >
             {copied ? (
-              <Check className="w-3.5 h-3.5 text-[#5B9A6F]" />
+              <Check className="w-3.5 h-3.5 text-[#6B8F71]" />
             ) : (
-              <Copy className="w-3.5 h-3.5 text-[#5B9A6F]/60" />
+              <Copy className="w-3.5 h-3.5 text-[#6B8F71]/60" />
             )}
           </button>
         </div>

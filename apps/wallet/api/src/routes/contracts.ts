@@ -8,8 +8,9 @@ const contractsRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
  * Returns contract addresses and chain info
  */
 contractsRouter.get('/', c => {
-  const { chain, rpcUrl, explorerUrl, passkeyRegistryAddress, recurringPaymentsAddress } =
-    c.get('networkConfig');
+  const { chain, rpcUrl, explorerUrl, recurringPaymentsAddress } = c.get('networkConfig');
+  const passkeyRegistryAddress = c.env.MAINNET_PASSKEY_REGISTRY_ADDRESS;
+  const mainnetExplorerUrl = 'https://explore.tempo.xyz';
 
   return c.json({
     success: true,
@@ -24,8 +25,8 @@ contractsRouter.get('/', c => {
         passkeyRegistry: {
           address: passkeyRegistryAddress,
           name: 'PasskeyRegistry',
-          description: 'Stores WebAuthn/Passkey public keys on-chain',
-          explorerUrl: `${explorerUrl}/address/${passkeyRegistryAddress}`,
+          description: 'Stores WebAuthn/Passkey public keys on-chain (mainnet)',
+          explorerUrl: `${mainnetExplorerUrl}/address/${passkeyRegistryAddress}`,
         },
         accountKeychain: {
           address: '0xaAAAaaAA00000000000000000000000000000000',

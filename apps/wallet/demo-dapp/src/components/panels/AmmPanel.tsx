@@ -47,7 +47,7 @@ export function AmmPanel(): ReactElement {
       {/* Add Liquidity */}
       <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3]">
         <div className="flex items-center gap-2 mb-3">
-          <Droplets className="w-4 h-4 text-[#5B9A6F]" />
+          <Droplets className="w-4 h-4 text-[#6B8F71]" />
           <span className="text-[13px] font-semibold text-[#2D3436]">Actions.amm.mint</span>
           <span className="text-[11px] text-[#9B9590]">userToken, validatorToken, amount</span>
         </div>
@@ -73,7 +73,7 @@ export function AmmPanel(): ReactElement {
       {/* Remove Liquidity */}
       <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3]">
         <div className="flex items-center gap-2 mb-3">
-          <Droplets className="w-4 h-4 text-[#5B9A6F]" />
+          <Droplets className="w-4 h-4 text-[#6B8F71]" />
           <span className="text-[13px] font-semibold text-[#2D3436]">Actions.amm.burn</span>
           <span className="text-[11px] text-[#9B9590]">userToken, validatorToken, liquidity</span>
         </div>

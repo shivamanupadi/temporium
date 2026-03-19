@@ -5,6 +5,7 @@ import { isAddress, type Address } from 'viem';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
+import { TokenAddressPicker } from '@/components/TokenAddressPicker';
 import { Actions, tempoPublicClient, getExplorerTxUrl } from '@/lib/tempo-client';
 import { usePolicies } from '@/hooks/usePolicies';
 import { useTokenList } from '@/hooks/useTokenList';
@@ -155,34 +156,22 @@ export function UnlinkTokenModal({
             </div>
 
             <div className="px-6 pb-4">
-              <div>
-                <label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2 block">
-                  Token Address
-                </label>
-                <input
-                  type="text"
-                  placeholder="0x..."
-                  value={tokenAddress}
-                  onChange={e => {
-                    setTokenAddress(e.target.value);
-                    setError(null);
-                  }}
-                  className="w-full px-4 py-3 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] font-mono placeholder:text-[#B5B0AA] focus:border-lavender/40 focus:outline-none transition-colors"
-                />
-                {error && (
-                  <div className="flex items-center gap-1.5 mt-2 text-coral">
-                    <AlertCircle className="h-3.5 w-3.5" />
-                    <span className="text-[12px]">{error}</span>
-                  </div>
-                )}
-              </div>
+              <TokenAddressPicker
+                value={tokenAddress}
+                onChange={v => {
+                  setTokenAddress(v);
+                  setError(null);
+                }}
+                label="Token Address"
+                showValidation={false}
+              />
+              {error && (
+                <div className="flex items-center gap-1.5 mt-2 text-red-500">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  <span className="text-[12px]">{error}</span>
+                </div>
+              )}
             </div>
-
-            {feeToken && tokens.length > 0 && (
-              <div className="px-6 pb-4">
-                <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
-              </div>
-            )}
 
             <div className="px-6 pb-6 flex gap-3">
               <Button
@@ -254,6 +243,13 @@ export function UnlinkTokenModal({
                   <span className="text-[13px] font-medium text-[#9B9590]">No restrictions</span>
                 </div>
               </div>
+
+              {feeToken && tokens.length > 0 && (
+                <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#FDFBF8] border border-[#EDE9E3]">
+                  <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
+                  <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
+                </div>
+              )}
 
               {/* Warning box */}
               <div className="bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/30 rounded-xl p-3">

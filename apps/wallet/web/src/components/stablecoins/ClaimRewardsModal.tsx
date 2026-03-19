@@ -209,7 +209,8 @@ export function ClaimRewardsModal({
 
             {/* Fee token picker */}
             {feeToken && tokens.length > 0 && (
-              <div className="px-6 pb-4">
+              <div className="px-6 pb-4 flex items-center justify-between">
+                <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
                 <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
               </div>
             )}

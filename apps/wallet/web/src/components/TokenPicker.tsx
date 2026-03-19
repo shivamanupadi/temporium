@@ -1,6 +1,6 @@
 import { type ReactElement, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DollarSign, Check } from 'lucide-react';
+import { DollarSign } from 'lucide-react';
 import type { Address } from 'viem';
 import type { Token } from '@/lib/tokenlist';
 import { getTokenColors } from '@/lib/tokenlist';
@@ -11,7 +11,6 @@ export interface TokenPickerProps {
   tokens: Token[];
   disabledAddresses?: Address[];
   onChange: (token: Token) => void;
-  accentColor?: string;
 }
 
 function TokenIcon({ token, size = 'sm' }: { token: Token; size?: 'sm' | 'xs' }): ReactElement {
@@ -48,7 +47,6 @@ export function TokenPicker({
   tokens,
   disabledAddresses = [],
   onChange,
-  accentColor = '#9B72CF',
 }: TokenPickerProps): ReactElement {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -69,7 +67,7 @@ export function TokenPicker({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 h-10 px-3.5 rounded-xl bg-white border border-[#EDE9E3] hover:border-[#D5D0CA] transition-colors min-w-[130px]"
+        className="flex items-center gap-2 h-12 px-3.5 rounded-xl bg-white border border-[#EDE9E3] hover:border-[#D5D0CA] transition-colors min-w-[130px]"
       >
         <TokenIcon token={token} size="sm" />
         <span className="text-[13px] font-semibold text-[#2D3436]">{token.symbol}</span>
@@ -106,22 +104,15 @@ export function TokenPicker({
                   }}
                   className={`flex items-center gap-2.5 w-full px-3.5 py-2.5 text-left text-[13px] transition-colors ${
                     isActive
-                      ? 'font-semibold'
+                      ? 'font-semibold bg-[#F5F2ED] text-[#2D3436]'
                       : isDisabled
                         ? 'opacity-40 cursor-not-allowed text-[#9B9590]'
-                        : 'text-[#2D3436] hover:bg-[#F5F2ED]'
+                        : 'text-[#2D3436] hover:bg-[#FDFBF8]'
                   }`}
-                  style={
-                    isActive
-                      ? { backgroundColor: `${accentColor}14`, color: accentColor }
-                      : undefined
-                  }
                 >
                   <TokenIcon token={t} size="xs" />
                   <span>{t.symbol}</span>
-                  {isActive && (
-                    <Check className="w-3.5 h-3.5 ml-auto" style={{ color: accentColor }} />
-                  )}
+                  {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[#2D3436] ml-auto" />}
                 </button>
               );
             })}

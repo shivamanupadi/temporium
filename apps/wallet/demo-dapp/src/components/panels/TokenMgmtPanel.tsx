@@ -53,7 +53,7 @@ export function TokenMgmtPanel(): ReactElement {
       {/* Approve Token */}
       <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3]">
         <div className="flex items-center gap-2 mb-3">
-          <ShieldCheck className="w-4 h-4 text-[#5B9A6F]" />
+          <ShieldCheck className="w-4 h-4 text-[#6B8F71]" />
           <span className="text-[13px] font-semibold text-[#2D3436]">Actions.token.approve</span>
           <span className="text-[11px] text-[#9B9590]">token, spender, amount</span>
         </div>
@@ -74,7 +74,7 @@ export function TokenMgmtPanel(): ReactElement {
       {/* Create Token */}
       <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3]">
         <div className="flex items-center gap-2 mb-3">
-          <Sparkles className="w-4 h-4 text-[#5B9A6F]" />
+          <Sparkles className="w-4 h-4 text-[#6B8F71]" />
           <span className="text-[13px] font-semibold text-[#2D3436]">Actions.token.createSync</span>
           <span className="text-[11px] text-[#9B9590]">name, symbol, currency, admin?, quoteToken?</span>
         </div>
@@ -105,7 +105,7 @@ export function TokenMgmtPanel(): ReactElement {
       {/* Mint Token */}
       <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3]">
         <div className="flex items-center gap-2 mb-3">
-          <CirclePlus className="w-4 h-4 text-[#5B9A6F]" />
+          <CirclePlus className="w-4 h-4 text-[#6B8F71]" />
           <span className="text-[13px] font-semibold text-[#2D3436]">Actions.token.mint</span>
           <span className="text-[11px] text-[#9B9590]">token, to, amount</span>
         </div>

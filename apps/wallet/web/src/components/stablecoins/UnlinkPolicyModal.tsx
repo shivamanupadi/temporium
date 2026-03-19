@@ -129,7 +129,8 @@ export function UnlinkPolicyModal({
             </div>
 
             {feeToken && tokens.length > 0 && (
-              <div className="px-6 pb-4">
+              <div className="px-6 pb-4 flex items-center justify-between">
+                <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
                 <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
               </div>
             )}
@@ -143,7 +144,7 @@ export function UnlinkPolicyModal({
                 Cancel
               </Button>
               <Button
-                className="flex-1 h-11 rounded-xl font-semibold bg-lavender hover:bg-lavender/80 text-white"
+                className="flex-1 h-11 rounded-xl font-semibold bg-coral hover:bg-coral/80 text-white"
                 onClick={handleContinue}
               >
                 Continue

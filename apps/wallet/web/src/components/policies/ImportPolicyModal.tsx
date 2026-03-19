@@ -151,7 +151,7 @@ export function ImportPolicyModal({
                     setError(null);
                   }}
                   onKeyDown={handleKeyDown}
-                  className="w-full px-4 py-3 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] font-mono placeholder:text-[#B5B0AA] focus:border-lavender/40 focus:outline-none transition-colors"
+                  className="w-full px-4 py-3 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] font-mono placeholder:text-[#B5B0AA] focus:border-coral/40 focus:outline-none transition-colors"
                 />
                 {error && (
                   <div className="flex items-center gap-1.5 mt-2 text-coral">
@@ -171,7 +171,7 @@ export function ImportPolicyModal({
                 Cancel
               </Button>
               <Button
-                className="flex-1 h-11 rounded-xl font-semibold bg-lavender hover:bg-lavender/80 text-white"
+                className="flex-1 h-11 rounded-xl font-semibold bg-coral hover:bg-coral/80 text-white"
                 onClick={handleLookup}
                 disabled={isValidating || !policyIdInput.trim()}
               >

@@ -33,6 +33,8 @@ import { Route as PortalTip403FactoryIndexRouteImport } from './routes/portal/ti
 import { Route as PortalTip20StudioIndexRouteImport } from './routes/portal/tip20-studio.index';
 import { Route as PortalTip403FactoryPolicyIdRouteImport } from './routes/portal/tip403-factory.$policyId';
 import { Route as PortalTip20StudioAddressRouteImport } from './routes/portal/tip20-studio.$address';
+import { Route as PortalSettingsFeeTokenRouteImport } from './routes/portal/settings.fee-token';
+import { Route as PortalSettingsCustomTokensRouteImport } from './routes/portal/settings.custom-tokens';
 import { Route as PortalTip403FactoryPolicyIdOverviewRouteImport } from './routes/portal/tip403-factory.$policyId.overview';
 import { Route as PortalTip20StudioAddressRewardsRouteImport } from './routes/portal/tip20-studio.$address.rewards';
 import { Route as PortalTip20StudioAddressOverviewRouteImport } from './routes/portal/tip20-studio.$address.overview';
@@ -157,6 +159,16 @@ const PortalTip20StudioAddressRoute = PortalTip20StudioAddressRouteImport.update
   path: '/$address',
   getParentRoute: () => PortalTip20StudioRoute,
 } as any);
+const PortalSettingsFeeTokenRoute = PortalSettingsFeeTokenRouteImport.update({
+  id: '/fee-token',
+  path: '/fee-token',
+  getParentRoute: () => PortalSettingsRoute,
+} as any);
+const PortalSettingsCustomTokensRoute = PortalSettingsCustomTokensRouteImport.update({
+  id: '/custom-tokens',
+  path: '/custom-tokens',
+  getParentRoute: () => PortalSettingsRoute,
+} as any);
 const PortalTip403FactoryPolicyIdOverviewRoute =
   PortalTip403FactoryPolicyIdOverviewRouteImport.update({
     id: '/overview',
@@ -191,10 +203,12 @@ export interface FileRoutesByFullPath {
   '/portal/rewards': typeof PortalRewardsRoute;
   '/portal/scheduled-payments': typeof PortalScheduledPaymentsRoute;
   '/portal/send': typeof PortalSendRoute;
-  '/portal/settings': typeof PortalSettingsRoute;
+  '/portal/settings': typeof PortalSettingsRouteWithChildren;
   '/portal/tip20-studio': typeof PortalTip20StudioRouteWithChildren;
   '/portal/tip403-factory': typeof PortalTip403FactoryRouteWithChildren;
   '/portal/token-approvals': typeof PortalTokenApprovalsRoute;
+  '/portal/settings/custom-tokens': typeof PortalSettingsCustomTokensRoute;
+  '/portal/settings/fee-token': typeof PortalSettingsFeeTokenRoute;
   '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRouteWithChildren;
   '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRouteWithChildren;
   '/portal/tip20-studio/': typeof PortalTip20StudioIndexRoute;
@@ -220,8 +234,10 @@ export interface FileRoutesByTo {
   '/portal/rewards': typeof PortalRewardsRoute;
   '/portal/scheduled-payments': typeof PortalScheduledPaymentsRoute;
   '/portal/send': typeof PortalSendRoute;
-  '/portal/settings': typeof PortalSettingsRoute;
+  '/portal/settings': typeof PortalSettingsRouteWithChildren;
   '/portal/token-approvals': typeof PortalTokenApprovalsRoute;
+  '/portal/settings/custom-tokens': typeof PortalSettingsCustomTokensRoute;
+  '/portal/settings/fee-token': typeof PortalSettingsFeeTokenRoute;
   '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRouteWithChildren;
   '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRouteWithChildren;
   '/portal/tip20-studio': typeof PortalTip20StudioIndexRoute;
@@ -248,10 +264,12 @@ export interface FileRoutesById {
   '/portal/rewards': typeof PortalRewardsRoute;
   '/portal/scheduled-payments': typeof PortalScheduledPaymentsRoute;
   '/portal/send': typeof PortalSendRoute;
-  '/portal/settings': typeof PortalSettingsRoute;
+  '/portal/settings': typeof PortalSettingsRouteWithChildren;
   '/portal/tip20-studio': typeof PortalTip20StudioRouteWithChildren;
   '/portal/tip403-factory': typeof PortalTip403FactoryRouteWithChildren;
   '/portal/token-approvals': typeof PortalTokenApprovalsRoute;
+  '/portal/settings/custom-tokens': typeof PortalSettingsCustomTokensRoute;
+  '/portal/settings/fee-token': typeof PortalSettingsFeeTokenRoute;
   '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRouteWithChildren;
   '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRouteWithChildren;
   '/portal/tip20-studio/': typeof PortalTip20StudioIndexRoute;
@@ -283,6 +301,8 @@ export interface FileRouteTypes {
     | '/portal/tip20-studio'
     | '/portal/tip403-factory'
     | '/portal/token-approvals'
+    | '/portal/settings/custom-tokens'
+    | '/portal/settings/fee-token'
     | '/portal/tip20-studio/$address'
     | '/portal/tip403-factory/$policyId'
     | '/portal/tip20-studio/'
@@ -310,6 +330,8 @@ export interface FileRouteTypes {
     | '/portal/send'
     | '/portal/settings'
     | '/portal/token-approvals'
+    | '/portal/settings/custom-tokens'
+    | '/portal/settings/fee-token'
     | '/portal/tip20-studio/$address'
     | '/portal/tip403-factory/$policyId'
     | '/portal/tip20-studio'
@@ -339,6 +361,8 @@ export interface FileRouteTypes {
     | '/portal/tip20-studio'
     | '/portal/tip403-factory'
     | '/portal/token-approvals'
+    | '/portal/settings/custom-tokens'
+    | '/portal/settings/fee-token'
     | '/portal/tip20-studio/$address'
     | '/portal/tip403-factory/$policyId'
     | '/portal/tip20-studio/'
@@ -525,6 +549,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalTip20StudioAddressRouteImport;
       parentRoute: typeof PortalTip20StudioRoute;
     };
+    '/portal/settings/fee-token': {
+      id: '/portal/settings/fee-token';
+      path: '/fee-token';
+      fullPath: '/portal/settings/fee-token';
+      preLoaderRoute: typeof PortalSettingsFeeTokenRouteImport;
+      parentRoute: typeof PortalSettingsRoute;
+    };
+    '/portal/settings/custom-tokens': {
+      id: '/portal/settings/custom-tokens';
+      path: '/custom-tokens';
+      fullPath: '/portal/settings/custom-tokens';
+      preLoaderRoute: typeof PortalSettingsCustomTokensRouteImport;
+      parentRoute: typeof PortalSettingsRoute;
+    };
     '/portal/tip403-factory/$policyId/overview': {
       id: '/portal/tip403-factory/$policyId/overview';
       path: '/overview';
@@ -548,6 +586,20 @@ declare module '@tanstack/react-router' {
     };
   }
 }
+
+interface PortalSettingsRouteChildren {
+  PortalSettingsCustomTokensRoute: typeof PortalSettingsCustomTokensRoute;
+  PortalSettingsFeeTokenRoute: typeof PortalSettingsFeeTokenRoute;
+}
+
+const PortalSettingsRouteChildren: PortalSettingsRouteChildren = {
+  PortalSettingsCustomTokensRoute: PortalSettingsCustomTokensRoute,
+  PortalSettingsFeeTokenRoute: PortalSettingsFeeTokenRoute,
+};
+
+const PortalSettingsRouteWithChildren = PortalSettingsRoute._addFileChildren(
+  PortalSettingsRouteChildren
+);
 
 interface PortalTip20StudioAddressRouteChildren {
   PortalTip20StudioAddressOverviewRoute: typeof PortalTip20StudioAddressOverviewRoute;
@@ -615,7 +667,7 @@ interface PortalRouteChildren {
   PortalRewardsRoute: typeof PortalRewardsRoute;
   PortalScheduledPaymentsRoute: typeof PortalScheduledPaymentsRoute;
   PortalSendRoute: typeof PortalSendRoute;
-  PortalSettingsRoute: typeof PortalSettingsRoute;
+  PortalSettingsRoute: typeof PortalSettingsRouteWithChildren;
   PortalTip20StudioRoute: typeof PortalTip20StudioRouteWithChildren;
   PortalTip403FactoryRoute: typeof PortalTip403FactoryRouteWithChildren;
   PortalTokenApprovalsRoute: typeof PortalTokenApprovalsRoute;
@@ -634,7 +686,7 @@ const PortalRouteChildren: PortalRouteChildren = {
   PortalRewardsRoute: PortalRewardsRoute,
   PortalScheduledPaymentsRoute: PortalScheduledPaymentsRoute,
   PortalSendRoute: PortalSendRoute,
-  PortalSettingsRoute: PortalSettingsRoute,
+  PortalSettingsRoute: PortalSettingsRouteWithChildren,
   PortalTip20StudioRoute: PortalTip20StudioRouteWithChildren,
   PortalTip403FactoryRoute: PortalTip403FactoryRouteWithChildren,
   PortalTokenApprovalsRoute: PortalTokenApprovalsRoute,

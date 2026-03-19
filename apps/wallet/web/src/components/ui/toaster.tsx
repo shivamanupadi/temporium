@@ -9,9 +9,9 @@ import { subscribe, type ToastData } from '@/lib/toast';
 // ---------------------------------------------------------------------------
 
 const TOAST_CONFIG: Record<ToastData['type'], { icon: typeof CheckCircle2; accent: string }> = {
-  success: { icon: CheckCircle2, accent: '#5B9A6F' },
+  success: { icon: CheckCircle2, accent: '#6B8F71' },
   error: { icon: XCircle, accent: '#E5484D' },
-  info: { icon: Info, accent: '#9B72CF' },
+  info: { icon: Info, accent: '#E07A5F' },
   warning: { icon: AlertTriangle, accent: '#D4A574' },
 };
 

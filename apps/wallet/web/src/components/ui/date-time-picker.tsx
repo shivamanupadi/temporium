@@ -10,12 +10,12 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 
 const colorMap = {
   coral: {
-    ring: 'focus:ring-coral/30 focus:border-coral',
-    activeBorder: 'border-coral/40 bg-coral/[0.03]',
+    ring: 'focus:ring-[#EDE9E3] focus:border-[#D5D0C9]',
+    activeBorder: 'border-[#D5D0C9] bg-[#FDFBF8]',
   },
   lavender: {
-    ring: 'focus:ring-lavender/30 focus:border-lavender',
-    activeBorder: 'border-lavender/40 bg-lavender/[0.03]',
+    ring: 'focus:ring-[#EDE9E3] focus:border-[#D5D0C9]',
+    activeBorder: 'border-[#D5D0C9] bg-[#FDFBF8]',
   },
   sage: {
     ring: 'focus:ring-sage/30 focus:border-sage',
@@ -35,7 +35,7 @@ interface DateTimePickerProps {
 function DateTimePicker({
   date,
   onDateChange,
-  color = 'lavender',
+  color = 'coral',
   placeholder = 'Pick date & time',
   disabled,
   className,

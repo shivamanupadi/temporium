@@ -5,7 +5,7 @@ import type { AccentColor } from '@/components/ui/calendar';
 
 const timeColorMap = {
   coral: 'bg-coral/15 hover:bg-coral/20 text-coral',
-  lavender: 'bg-lavender/15 hover:bg-lavender/20 text-lavender',
+  lavender: 'bg-coral/15 hover:bg-coral/20 text-coral',
   sage: 'bg-sage/15 hover:bg-sage/20 text-sage',
 } as const;
 
@@ -18,7 +18,7 @@ interface TimePickerProps {
 const HOURS = Array.from({ length: 12 }, (_, i) => i + 1);
 const MINUTES = Array.from({ length: 12 }, (_, i) => i * 5);
 
-function TimePicker({ date, setDate, color = 'lavender' }: TimePickerProps) {
+function TimePicker({ date, setDate, color = 'coral' }: TimePickerProps) {
   const handleTimeChange = (type: 'hour' | 'minute' | 'ampm', value: string) => {
     const newDate = new Date(date ?? new Date());
     if (type === 'hour') {
@@ -109,7 +109,7 @@ function TimeButton({
   selected,
   onClick,
   children,
-  color = 'lavender',
+  color = 'coral',
 }: {
   selected: boolean;
   onClick: () => void;

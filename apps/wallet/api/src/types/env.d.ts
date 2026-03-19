@@ -8,7 +8,6 @@ export interface NetworkConfig {
   chain: Chain;
   rpcUrl: string;
   explorerUrl: string;
-  passkeyRegistryAddress: string;
   recurringPaymentsAddress: string;
   relayerPrivateKey: string;
 }
@@ -30,8 +29,7 @@ export interface Env {
   // JWT config (shared across networks)
   JWT_EXPIRATION: string;
 
-  // Per-network passkey registry addresses
-  TESTNET_PASSKEY_REGISTRY_ADDRESS: string;
+  // Passkey registry (mainnet only — identity is network-agnostic)
   MAINNET_PASSKEY_REGISTRY_ADDRESS: string;
 
   // Per-network recurring payments contract addresses

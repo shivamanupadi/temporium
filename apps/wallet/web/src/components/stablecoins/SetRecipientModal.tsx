@@ -217,6 +217,7 @@ export function SetRecipientModal({
                     value={recipient}
                     onChange={setRecipientAddress}
                     label="Reward Recipient"
+                    selfAddress={userAddress}
                   />
                   {userAddress && recipient.toLowerCase() === userAddress.toLowerCase() && (
                     <p className="text-[11px] text-[var(--color-sage)] mt-1">
@@ -229,7 +230,8 @@ export function SetRecipientModal({
 
             {/* Fee token picker */}
             {feeToken && tokens.length > 0 && (
-              <div className="px-6 pb-4">
+              <div className="px-6 pb-4 flex items-center justify-between">
+                <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
                 <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
               </div>
             )}

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, type ReactElement } from 'rea
 import { Loader2, ExternalLink, AlertTriangle } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { isAddress, type Address } from 'viem';
+import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
@@ -32,6 +33,7 @@ export function TransferAdminModal({
   onSuccess,
   onClose,
 }: TransferAdminModalProps): ReactElement {
+  const { address } = useAccount();
   const isWhitelist = policyType === 'whitelist';
   const { transferAdmin } = usePolicies();
   const { tokens } = useTokenList();
@@ -131,15 +133,14 @@ export function TransferAdminModal({
                   </p>
                 </div>
 
-                <ContactPicker value={newAdmin} onChange={setNewAdmin} label="New Admin Address" />
+                <ContactPicker
+                  value={newAdmin}
+                  onChange={setNewAdmin}
+                  label="New Admin Address"
+                  selfAddress={address}
+                />
               </div>
             </div>
-
-            {feeToken && tokens.length > 0 && (
-              <div className="px-6 pb-4">
-                <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
-              </div>
-            )}
 
             <div className="px-6 pb-6 flex gap-3">
               <Button
@@ -210,6 +211,13 @@ export function TransferAdminModal({
                   </span>
                 </div>
               </div>
+
+              {feeToken && tokens.length > 0 && (
+                <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#FDFBF8] border border-[#EDE9E3] mt-3">
+                  <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
+                  <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
+                </div>
+              )}
             </div>
 
             <div className="px-6 pb-6 flex gap-3">

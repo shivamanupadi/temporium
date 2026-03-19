@@ -1,4 +1,4 @@
-import { type ReactElement, useState, useCallback, useMemo } from 'react';
+import { type ReactElement, useState, useCallback, useMemo, useEffect } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -32,8 +32,13 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { formatAddress, copyToClipboard } from '@/lib/utils';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
+import { FeeTokenPicker } from '@/components/FeeTokenPicker';
 import { useTempo } from '@/hooks/useTempo';
 import { useAccessKeys } from '@/hooks/useAccessKeys';
+import { useTokenList } from '@/hooks/useTokenList';
+import { useFeePreference } from '@/hooks/useFeePreference';
+import { tempoChain } from '@/lib/tempo-client';
+import type { Token } from '@/lib/tokenlist';
 import { apiPost, apiDelete } from '@/lib/api-client';
 import {
   generateSecp256k1Key,
@@ -154,7 +159,7 @@ function KeyIdWithCopy({ keyId }: { keyId: string }): ReactElement {
         className="shrink-0 text-[#B5B0AA] hover:text-[#6B6560] transition-colors"
       >
         {copied ? (
-          <Check className="w-3.5 h-3.5 text-[#5B9A6F]" />
+          <Check className="w-3.5 h-3.5 text-[#6B8F71]" />
         ) : (
           <Copy className="w-3.5 h-3.5" />
         )}
@@ -179,6 +184,21 @@ function AccessKeysPage(): ReactElement {
     getRemainingLimit,
     refresh,
   } = useAccessKeys();
+
+  const { tokens: allTokens } = useTokenList();
+  const { preferredFeeToken } = useFeePreference();
+  const [feeToken, setFeeToken] = useState<Token | null>(null);
+
+  useEffect(() => {
+    if (allTokens.length === 0 || feeToken) return;
+    const preferred = preferredFeeToken
+      ? allTokens.find(t => t.address.toLowerCase() === preferredFeeToken.toLowerCase())
+      : null;
+    const chainDefault = allTokens.find(
+      t => t.address.toLowerCase() === tempoChain.feeToken.toLowerCase()
+    );
+    setFeeToken(preferred ?? chainDefault ?? allTokens[0]);
+  }, [allTokens, preferredFeeToken, feeToken]);
 
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [revokingKeyId, setRevokingKeyId] = useState<string | null>(null);
@@ -396,6 +416,7 @@ function AccessKeysPage(): ReactElement {
         expiry,
         enforceLimits,
         limits,
+        feeToken: feeToken?.address,
       });
 
       setIsAddDialogOpen(false);
@@ -661,11 +682,11 @@ function AccessKeysPage(): ReactElement {
 
                         {/* Key metadata */}
                         <div className="flex flex-wrap gap-1.5 mt-2">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-lavender/10 text-[11px] font-medium text-lavender">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-coral/10 text-[11px] font-medium text-coral">
                             {key.signatureType}
                           </span>
                           {key.enforceLimits && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#9B72CF]/10 text-[11px] font-medium text-[#9B72CF]">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#E07A5F]/10 text-[11px] font-medium text-[#E07A5F]">
                               <Shield className="w-3 h-3" />
                               limits
                             </span>
@@ -673,7 +694,7 @@ function AccessKeysPage(): ReactElement {
                           <span
                             className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium ${
                               status === 'active'
-                                ? 'bg-[#5B9A6F]/10 text-[#5B9A6F]'
+                                ? 'bg-[#6B8F71]/10 text-[#6B8F71]'
                                 : status === 'expired'
                                   ? 'bg-[#E07A5F]/10 text-[#E07A5F]'
                                   : 'bg-[#B5B0AA]/10 text-[#B5B0AA]'
@@ -750,7 +771,7 @@ function AccessKeysPage(): ReactElement {
           if (!open && !revokingKeyId) setRevokeConfirmKeyId(null);
         }}
       >
-        <DialogContent className="p-0 gap-0 max-w-[380px] overflow-hidden">
+        <DialogContent className="p-0 gap-0 max-w-[380px] ">
           <div className="px-6 pt-6 pb-4">
             <DialogTitle className="text-[18px] font-bold text-[#2D3436]">Revoke Key</DialogTitle>
             <DialogDescription className="text-[13px] text-[#9B9590] mt-1">
@@ -812,7 +833,7 @@ function AccessKeysPage(): ReactElement {
           }
         }}
       >
-        <DialogContent className="p-0 gap-0 max-w-[420px] overflow-hidden">
+        <DialogContent className="p-0 gap-0 max-w-[420px] ">
           <div className="px-6 pt-6 pb-4">
             <DialogTitle className="text-[18px] font-bold text-[#2D3436]">
               Import Access Key
@@ -892,7 +913,7 @@ function AccessKeysPage(): ReactElement {
           if (!open && !isDeleting) setDeleteConfirmKey(null);
         }}
       >
-        <DialogContent className="p-0 gap-0 max-w-[380px] overflow-hidden">
+        <DialogContent className="p-0 gap-0 max-w-[380px] ">
           <div className="px-6 pt-6 pb-4">
             <DialogTitle className="text-[18px] font-bold text-[#2D3436]">Remove Key</DialogTitle>
             <DialogDescription className="text-[13px] text-[#9B9590] mt-1">
@@ -1119,7 +1140,7 @@ function AccessKeysPage(): ReactElement {
           setIsAddDialogOpen(open);
         }}
       >
-        <DialogContent className="p-0 gap-0 max-w-[420px] overflow-hidden">
+        <DialogContent className="p-0 gap-0 max-w-[420px] ">
           {/* Header with step indicator */}
           <div className="px-6 pt-6 pb-4">
             <DialogTitle className="text-[18px] font-bold text-[#2D3436]">
@@ -1494,7 +1515,7 @@ function AccessKeysPage(): ReactElement {
                   transition={{ duration: 0.15 }}
                   className="space-y-4"
                 >
-                  <div className="rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] overflow-hidden">
+                  <div className="rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] ">
                     <div className="px-4 py-2.5 border-b border-[#EDE9E3]/60">
                       <p className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
                         Summary
@@ -1557,9 +1578,16 @@ function AccessKeysPage(): ReactElement {
                       )}
                   </div>
 
-                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#9B72CF]/[0.06] border border-[#9B72CF]/15">
-                    <Shield className="w-4 h-4 text-[#9B72CF] shrink-0 mt-0.5" />
-                    <p className="text-[12px] text-[#9B72CF]/80 leading-relaxed">
+                  {feeToken && allTokens.length > 0 && (
+                    <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#FDFBF8] border border-[#EDE9E3]">
+                      <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
+                      <FeeTokenPicker value={feeToken} tokens={allTokens} onChange={setFeeToken} />
+                    </div>
+                  )}
+
+                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#E07A5F]/[0.06] border border-[#E07A5F]/15">
+                    <Shield className="w-4 h-4 text-[#E07A5F] shrink-0 mt-0.5" />
+                    <p className="text-[12px] text-[#E07A5F]/80 leading-relaxed">
                       Clicking &ldquo;Authorize Key&rdquo; will send a transaction to the
                       AccountKeychain precompile. Your wallet will prompt you to sign.
                     </p>

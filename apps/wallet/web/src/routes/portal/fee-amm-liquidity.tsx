@@ -88,7 +88,7 @@ function LiquidityPage(): ReactElement | null {
 
   // Fee token priority: user on-chain preference > chain default > first token
   useEffect(() => {
-    if (tokens.length === 0) return;
+    if (tokens.length === 0 || feeToken) return;
     const preferred = preferredFeeToken
       ? tokens.find(t => t.address.toLowerCase() === preferredFeeToken.toLowerCase())
       : null;
@@ -96,7 +96,7 @@ function LiquidityPage(): ReactElement | null {
       t => t.address.toLowerCase() === tempoChain.feeToken.toLowerCase()
     );
     setFeeToken(preferred ?? chainDefault ?? tokens[0]);
-  }, [tokens, preferredFeeToken]);
+  }, [tokens, preferredFeeToken, feeToken]);
 
   // Form state
   const [addAmount, setAddAmount] = useState('');
@@ -387,8 +387,8 @@ function LiquidityPage(): ReactElement | null {
   // Render
   // ---------------------------------------------------------------------------
 
-  const accentColor = lastAction === 'add' ? '#5B9A6F' : '#E07A5F';
-  const accentHover = lastAction === 'add' ? '#4E8A62' : '#D06A4F';
+  const accentColor = lastAction === 'add' ? '#6B8F71' : '#E07A5F';
+  const accentHover = lastAction === 'add' ? '#5A7D60' : '#D06A4F';
 
   return (
     <div className="max-w-3xl space-y-6">
@@ -442,7 +442,6 @@ function LiquidityPage(): ReactElement | null {
                       tokens={tokens}
                       disabledAddresses={[validatorToken.address]}
                       onChange={handleUserTokenChange}
-                      accentColor="#5B9A6F"
                     />
                   </div>
                   <div className="flex-1">
@@ -452,7 +451,6 @@ function LiquidityPage(): ReactElement | null {
                       tokens={tokens}
                       disabledAddresses={[userToken.address]}
                       onChange={handleValidatorTokenChange}
-                      accentColor="#5B9A6F"
                     />
                   </div>
                 </div>
@@ -465,7 +463,7 @@ function LiquidityPage(): ReactElement | null {
               {/* Pool Info */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-2.5">
-                  <Droplets className="w-3.5 h-3.5 text-[#5B9A6F]" />
+                  <Droplets className="w-3.5 h-3.5 text-[#6B8F71]" />
                   <span className="text-[12px] font-semibold text-[#2D3436]">
                     {userToken.symbol} / {validatorToken.symbol} Pool
                   </span>
@@ -521,13 +519,13 @@ function LiquidityPage(): ReactElement | null {
             {/* Add Liquidity Section */}
             <div className="rounded-2xl border border-[#EDE9E3] bg-white p-5 flex flex-col gap-3">
               <div className="flex items-center gap-2">
-                <Plus className="w-4 h-4 text-[#5B9A6F]" />
+                <Plus className="w-4 h-4 text-[#6B8F71]" />
                 <span className="text-[13px] font-semibold text-[#2D3436]">Add Liquidity</span>
               </div>
 
               {/* Info callout */}
-              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#5B9A6F]/[0.05] border border-[#5B9A6F]/[0.12]">
-                <Info className="w-4 h-4 text-[#5B9A6F] shrink-0 mt-0.5" />
+              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#6B8F71]/[0.05] border border-[#6B8F71]/[0.12]">
+                <Info className="w-4 h-4 text-[#6B8F71] shrink-0 mt-0.5" />
                 <p className="text-[12px] text-[#6B6560] leading-relaxed">
                   Deposit {validatorToken.symbol} to provide liquidity. User token reserves are
                   filled automatically through fee conversions. You earn 0.3% on each conversion.
@@ -543,7 +541,7 @@ function LiquidityPage(): ReactElement | null {
                   <button
                     type="button"
                     onClick={handleSetMaxAdd}
-                    className="text-[11px] text-[#9B9590] hover:text-[#5B9A6F] transition-colors"
+                    className="text-[11px] text-[#9B9590] hover:text-[#6B8F71] transition-colors"
                   >
                     Balance:{' '}
                     {isLoadingValidatorBalance
@@ -586,7 +584,7 @@ function LiquidityPage(): ReactElement | null {
               <Button
                 onClick={handleAddSubmit}
                 disabled={!isValidAdd}
-                className="w-full h-12 rounded-xl text-[14px] font-semibold text-white bg-[#5B9A6F] hover:bg-[#4E8A62] disabled:bg-[#EDE9E3] disabled:text-[#B5B0AA] mt-auto"
+                className="w-full h-12 rounded-xl text-[14px] font-semibold text-white bg-[#6B8F71] hover:bg-[#5A7D60] disabled:bg-[#EDE9E3] disabled:text-[#B5B0AA] mt-auto"
               >
                 {!addAmount || parsedAddAmount === 0n ? (
                   'Enter an amount'
@@ -619,7 +617,7 @@ function LiquidityPage(): ReactElement | null {
                 </div>
                 <div className="flex justify-between text-[12px]">
                   <span className="text-[#9B9590]">Pool Share</span>
-                  <span className="font-semibold text-[#5B9A6F]">
+                  <span className="font-semibold text-[#6B8F71]">
                     {poolSharePct > 0
                       ? `${poolSharePct < 0.01 ? '<0.01' : poolSharePct.toFixed(2)}%`
                       : '—'}
@@ -962,7 +960,7 @@ function LiquidityPage(): ReactElement | null {
                         Pool
                       </span>
                       <span className="text-[12px] font-medium text-[#2D3436] flex items-center gap-1.5">
-                        <Droplets className="w-3 h-3 text-[#5B9A6F]" />
+                        <Droplets className="w-3 h-3 text-[#6B8F71]" />
                         {userToken?.symbol} / {validatorToken?.symbol}
                       </span>
                     </div>
@@ -1004,7 +1002,7 @@ function LiquidityPage(): ReactElement | null {
                           title="Copy transaction hash"
                         >
                           {copied ? (
-                            <Check className="w-3 h-3 text-[#5B9A6F]" />
+                            <Check className="w-3 h-3 text-[#6B8F71]" />
                           ) : (
                             <Copy className="w-3 h-3 text-[#9B9590]" />
                           )}

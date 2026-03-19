@@ -1,11 +1,17 @@
 import { tempoModerato, tempo } from 'viem/chains';
-import type { Chain } from 'viem';
+import type { Chain, Address } from 'viem';
 
 type TempoNetwork = 'testnet' | 'mainnet';
 
+/**
+ * pathUSD is the chain default fee token on both networks.
+ * Users can override per-account via FeeManager.setUserToken.
+ */
+const DEFAULT_FEE_TOKEN: Address = '0x20c0000000000000000000000000000000000000';
+
 const chains: Record<TempoNetwork, Chain> = {
-  testnet: tempoModerato,
-  mainnet: tempo,
+  testnet: tempoModerato.extend({ feeToken: DEFAULT_FEE_TOKEN }),
+  mainnet: tempo.extend({ feeToken: DEFAULT_FEE_TOKEN }),
 };
 
 /**

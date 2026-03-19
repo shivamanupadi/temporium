@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, type ReactElement } from 'react';
 import { Loader2, ExternalLink, AlertTriangle } from 'lucide-react';
 import { toast } from '@/lib/toast';
+import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
@@ -25,6 +26,7 @@ export function SendTokensModal({
   onSuccess,
   onClose,
 }: SendTokensModalProps): ReactElement {
+  const { address } = useAccount();
   const { sendTokens } = useStablecoins();
   const { tokens } = useTokenList();
 
@@ -137,7 +139,7 @@ export function SendTokensModal({
                   </span>
                   <button
                     onClick={() => window.open(getExplorerTxUrl(txHash), '_blank')}
-                    className="flex items-center gap-1 text-[13px] text-lavender hover:text-lavender/80 transition-colors cursor-pointer"
+                    className="flex items-center gap-1 text-[13px] text-coral hover:text-coral/80 transition-colors cursor-pointer"
                   >
                     <span className="font-mono">
                       {txHash.slice(0, 8)}...{txHash.slice(-4)}
@@ -185,7 +187,7 @@ export function SendTokensModal({
                 </div>
               )}
               <div className="space-y-3">
-                <ContactPicker value={recipient} onChange={setRecipient} />
+                <ContactPicker value={recipient} onChange={setRecipient} selfAddress={address} />
                 <div>
                   <label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2 block">
                     Amount
@@ -196,14 +198,15 @@ export function SendTokensModal({
                     onChange={e => setAmount(e.target.value)}
                     type="text"
                     inputMode="decimal"
-                    className="w-full px-4 py-3 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] placeholder:text-[#B5B0AA] focus:border-lavender/40 focus:outline-none transition-colors"
+                    className="w-full px-4 py-3 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] placeholder:text-[#B5B0AA] focus:border-coral/40 focus:outline-none transition-colors"
                   />
                 </div>
               </div>
             </div>
 
             {feeToken && tokens.length > 0 && (
-              <div className="px-6 pb-4">
+              <div className="px-6 pb-4 flex items-center justify-between">
+                <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
                 <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
               </div>
             )}
@@ -218,7 +221,7 @@ export function SendTokensModal({
                 Cancel
               </Button>
               <Button
-                className="flex-1 h-11 rounded-xl font-semibold bg-lavender hover:bg-lavender/80 text-white"
+                className="flex-1 h-11 rounded-xl font-semibold bg-coral hover:bg-coral/80 text-white"
                 onClick={handleSubmit}
                 disabled={isSubmitting || !recipient || !amount || selectedCoin?.metadata?.paused}
               >

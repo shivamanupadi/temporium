@@ -21,6 +21,7 @@ import {
   BadRequestError,
   ConflictError,
 } from '../middleware/error';
+import { getTempoChain, getRpcUrl } from '../lib/chain';
 import type { Env, Variables, NetworkConfig } from '../types/env';
 
 /**
@@ -72,18 +73,30 @@ class KeysService implements Kv.Kv {
   private registryAddress: Address;
   private chain: NetworkConfig['chain'];
 
+  /**
+   * Always uses mainnet PasskeyRegistry — passkey identity is network-agnostic.
+   * Users register once on mainnet and can use any network.
+   */
   constructor(
-    private networkConfig: NetworkConfig,
-    private env: Pick<Env, 'JWT_SECRET' | 'JWT_EXPIRATION'>
+    private env: Pick<
+      Env,
+      | 'JWT_SECRET'
+      | 'JWT_EXPIRATION'
+      | 'MAINNET_PASSKEY_REGISTRY_ADDRESS'
+      | 'MAINNET_RELAYER_PRIVATE_KEY'
+    >
   ) {
-    this.registryAddress = networkConfig.passkeyRegistryAddress as Address;
-    this.chain = networkConfig.chain;
-    this.publicClient = createTempoPublicClient(networkConfig.rpcUrl, this.chain);
+    const mainnetChain = getTempoChain('mainnet');
+    const mainnetRpcUrl = getRpcUrl(mainnetChain);
 
-    if (networkConfig.relayerPrivateKey) {
+    this.registryAddress = env.MAINNET_PASSKEY_REGISTRY_ADDRESS as Address;
+    this.chain = mainnetChain;
+    this.publicClient = createTempoPublicClient(mainnetRpcUrl, this.chain);
+
+    if (env.MAINNET_RELAYER_PRIVATE_KEY) {
       this.walletClient = createTempoWalletClient(
-        networkConfig.rpcUrl,
-        networkConfig.relayerPrivateKey,
+        mainnetRpcUrl,
+        env.MAINNET_RELAYER_PRIVATE_KEY,
         this.chain
       );
     }
@@ -280,7 +293,7 @@ const keysRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
  * Handle all /keys/* requests via tempo.ts Handler.keyManager
  */
 keysRouter.all('/*', async c => {
-  const keysService = new KeysService(c.get('networkConfig'), c.env);
+  const keysService = new KeysService(c.env);
 
   // Create tempo.ts key manager handler
   const keysHandler = Handler.keyManager({

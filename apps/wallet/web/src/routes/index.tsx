@@ -3,7 +3,6 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Fingerprint,
-  Wallet,
   ArrowRight,
   Loader2,
   LayoutDashboard,
@@ -47,11 +46,11 @@ const features = [
     icon: LayoutDashboard,
     label: 'Dashboard',
     desc: 'Portfolio overview & analytics',
-    color: '#9B72CF',
+    color: '#E07A5F',
   },
   { icon: Send, label: 'Send', desc: 'Transfer tokens instantly', color: '#E07A5F' },
-  { icon: QrCode, label: 'Receive', desc: 'Generate payment QR codes', color: '#5B9A6F' },
-  { icon: ListPlus, label: 'Batch Payments', desc: 'Send to many at once', color: '#5B9A6F' },
+  { icon: QrCode, label: 'Receive', desc: 'Generate payment QR codes', color: '#6B8F71' },
+  { icon: ListPlus, label: 'Batch Payments', desc: 'Send to many at once', color: '#6B8F71' },
   {
     icon: Clock,
     label: 'Recurring Payments',
@@ -68,14 +67,14 @@ const features = [
     icon: Shield,
     label: 'TIP403 Factory',
     desc: 'Deploy access-controlled tokens',
-    color: '#9B72CF',
+    color: '#E07A5F',
   },
   { icon: Key, label: 'Access Keys', desc: 'Manage signing permissions', color: '#D4A574' },
   { icon: Repeat, label: 'Fee AMM', desc: 'Rebalance swaps at fixed rates', color: '#E07A5F' },
-  { icon: Droplets, label: 'Liquidity', desc: 'Provide LP & earn fees', color: '#9B72CF' },
+  { icon: Droplets, label: 'Liquidity', desc: 'Provide LP & earn fees', color: '#E07A5F' },
   { icon: ShieldCheck, label: 'Token Approvals', desc: 'Manage allowances', color: '#E07A5F' },
-  { icon: Gift, label: 'TIP20 Rewards', desc: 'Claim token rewards', color: '#9B72CF' },
-  { icon: Users, label: 'Contacts', desc: 'Save & organize addresses', color: '#5B9A6F' },
+  { icon: Gift, label: 'TIP20 Rewards', desc: 'Claim token rewards', color: '#E07A5F' },
+  { icon: Users, label: 'Contacts', desc: 'Save & organize addresses', color: '#6B8F71' },
 ];
 
 interface FeatureDetail {
@@ -107,7 +106,7 @@ const featureSections: {
         icon: QrCode,
         title: 'QR Receive',
         desc: 'Generate a payment QR code with a pre-filled amount. Share it with anyone for one-tap payments.',
-        color: '#5B9A6F',
+        color: '#6B8F71',
       },
       {
         icon: ListPlus,
@@ -119,7 +118,7 @@ const featureSections: {
         icon: RefreshCw,
         title: 'Recurring Payments',
         desc: 'Automated token transfers on a schedule. Set frequency, amount, and let the protocol handle the rest.',
-        color: '#9B72CF',
+        color: '#E07A5F',
       },
       {
         icon: Clock,
@@ -145,7 +144,7 @@ const featureSections: {
         icon: Droplets,
         title: 'Provide Liquidity',
         desc: 'Deposit validator tokens into Fee AMM pools and earn 0.3% on every protocol fee conversion. Withdraw anytime.',
-        color: '#5B9A6F',
+        color: '#6B8F71',
       },
     ],
   },
@@ -165,19 +164,19 @@ const featureSections: {
         icon: Shield,
         title: 'TIP403 Factory',
         desc: 'Deploy tokens with built-in access controls. Define policies for transfers, minting, and burning with granular permissions.',
-        color: '#9B72CF',
+        color: '#E07A5F',
       },
       {
         icon: ShieldCheck,
         title: 'Token Approvals',
         desc: 'View and manage token spending allowances. Grant approvals to spenders or revoke them instantly.',
-        color: '#5B9A6F',
+        color: '#6B8F71',
       },
       {
         icon: Gift,
         title: 'TIP20 Rewards',
         desc: 'Claim accumulated token rewards from opted-in TIP20 tokens. Track claimable balances across all your holdings.',
-        color: '#5B9A6F',
+        color: '#6B8F71',
       },
       {
         icon: Coins,
@@ -203,7 +202,7 @@ const featureSections: {
         icon: Users,
         title: 'Contacts',
         desc: 'Save wallet addresses with names and labels. Pick contacts when sending instead of copy-pasting addresses every time.',
-        color: '#5B9A6F',
+        color: '#6B8F71',
       },
       {
         icon: Link2,
@@ -217,8 +216,7 @@ const featureSections: {
 
 function LandingPage(): ReactElement {
   const navigate = useNavigate();
-  const { isConnected, isConnecting, hasInjectedWallet, signUp, signIn, connectInjected } =
-    useTempo();
+  const { isConnected, isConnecting, signUp, signIn } = useTempo();
 
   const [showSignIn, setShowSignIn] = useState(false);
   const [showCreateWallet, setShowCreateWallet] = useState(false);
@@ -276,20 +274,8 @@ function LandingPage(): ReactElement {
     }
   };
 
-  const handleConnectInjected = async (): Promise<void> => {
-    setConnectingType('injected');
-    setShowSignIn(false);
-    try {
-      await connectInjected();
-    } catch (err) {
-      toast.error('Connection failed', { description: (err as Error).message });
-    } finally {
-      setConnectingType(null);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-[#FDFBF8] flex flex-col relative overflow-hidden">
+    <div className="min-h-screen bg-[#FDFBF8] flex flex-col relative ">
       {/* Lightweight background — radial gradients only, no blur/filters */}
       <div className="fixed inset-0 pointer-events-none">
         <div
@@ -433,7 +419,7 @@ function LandingPage(): ReactElement {
               transition={{ duration: 0.5, delay: 0.5 }}
               className="mt-8 flex items-center gap-2 text-[12px] text-[#B5B0AA]"
             >
-              <Fingerprint className="w-3.5 h-3.5 text-[#9B72CF]/60" />
+              <Fingerprint className="w-3.5 h-3.5 text-[#E07A5F]/60" />
               <span>Secured by passkeys, no seed phrases</span>
             </motion.div>
           </section>
@@ -654,7 +640,7 @@ function LandingPage(): ReactElement {
                 icon: Fingerprint,
                 title: 'Passkey Auth',
                 desc: 'Sign in with Face ID, Touch ID, or your device PIN. No passwords or seed phrases to remember.',
-                color: '#9B72CF',
+                color: '#E07A5F',
                 step: '01',
               },
               {
@@ -668,7 +654,7 @@ function LandingPage(): ReactElement {
                 icon: Shield,
                 title: 'Permanent Access',
                 desc: 'Recover your wallet anytime through the blockchain. Your key never leaves your device.',
-                color: '#5B9A6F',
+                color: '#6B8F71',
                 step: '03',
               },
             ].map((step, i) => (
@@ -705,8 +691,8 @@ function LandingPage(): ReactElement {
               className="mt-6 rounded-2xl border border-[#EDE9E3]/80 bg-white p-5 flex flex-col sm:flex-row sm:items-center gap-4"
             >
               <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-[#9B72CF]/8 flex items-center justify-center shrink-0">
-                  <Database className="w-4 h-4 text-[#9B72CF]" strokeWidth={1.7} />
+                <div className="w-9 h-9 rounded-xl bg-[#E07A5F]/8 flex items-center justify-center shrink-0">
+                  <Database className="w-4 h-4 text-[#E07A5F]" strokeWidth={1.7} />
                 </div>
                 <div className="min-w-0">
                   <p className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">
@@ -723,7 +709,7 @@ function LandingPage(): ReactElement {
                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#EDE9E3] text-[12px] font-medium text-[#6B6560] hover:bg-[#F5F2ED] hover:text-[#2D3436] transition-all"
                 >
                   {copiedContract ? (
-                    <Check className="w-3.5 h-3.5 text-[#5B9A6F]" />
+                    <Check className="w-3.5 h-3.5 text-[#6B8F71]" />
                   ) : (
                     <Copy className="w-3.5 h-3.5" />
                   )}
@@ -855,7 +841,7 @@ function LandingPage(): ReactElement {
 
       {/* Sign In Modal */}
       <Dialog open={showSignIn} onOpenChange={setShowSignIn}>
-        <DialogContent className="max-w-[380px] p-0 gap-0 overflow-hidden rounded-2xl">
+        <DialogContent className="max-w-[380px] p-0 gap-0 rounded-2xl">
           <DialogTitle className="sr-only">Sign In</DialogTitle>
           <DialogDescription className="sr-only">
             Choose how to connect your wallet
@@ -871,10 +857,10 @@ function LandingPage(): ReactElement {
             <button
               onClick={handleSignIn}
               disabled={!!connectingType}
-              className="flex items-center gap-3.5 w-full p-4 rounded-xl border border-[#EDE9E3] hover:border-[#9B72CF]/30 hover:bg-[#9B72CF]/4 transition-all text-left group cursor-pointer"
+              className="flex items-center gap-3.5 w-full p-4 rounded-xl border border-[#EDE9E3] hover:border-[#6B8F71]/30 hover:bg-[#6B8F71]/4 transition-all text-left group cursor-pointer"
             >
-              <div className="w-10 h-10 rounded-xl bg-[#9B72CF]/10 flex items-center justify-center shrink-0">
-                <Fingerprint className="w-5 h-5 text-[#9B72CF]" />
+              <div className="w-10 h-10 rounded-xl bg-[#6B8F71]/10 flex items-center justify-center shrink-0">
+                <Fingerprint className="w-5 h-5 text-[#6B8F71]" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[14px] font-semibold text-[#2D3436]">Passkey</p>
@@ -883,37 +869,13 @@ function LandingPage(): ReactElement {
                 </p>
               </div>
               {connectingType === 'passkey' ? (
-                <Loader2 className="w-4 h-4 animate-spin text-[#9B72CF]" />
+                <Loader2 className="w-4 h-4 animate-spin text-[#6B8F71]" />
               ) : (
-                <ArrowRight className="w-4 h-4 text-[#B5B0AA] group-hover:text-[#9B72CF] transition-colors" />
+                <ArrowRight className="w-4 h-4 text-[#B5B0AA] group-hover:text-[#6B8F71] transition-colors" />
               )}
             </button>
 
-            {/* Browser Wallet */}
-            <button
-              onClick={handleConnectInjected}
-              disabled={!!connectingType || !hasInjectedWallet}
-              className={`flex items-center gap-3.5 w-full p-4 rounded-xl border border-[#EDE9E3] transition-all text-left group cursor-pointer ${
-                hasInjectedWallet
-                  ? 'hover:border-[#E07A5F]/30 hover:bg-[#E07A5F]/4'
-                  : 'opacity-50 cursor-not-allowed'
-              }`}
-            >
-              <div className="w-10 h-10 rounded-xl bg-[#E07A5F]/10 flex items-center justify-center shrink-0">
-                <Wallet className="w-5 h-5 text-[#E07A5F]" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-semibold text-[#2D3436]">Browser Wallet</p>
-                <p className="text-[12px] text-[#9B9590] mt-0.5">
-                  {hasInjectedWallet ? 'Connect MetaMask, Brave, etc.' : 'No wallet detected'}
-                </p>
-              </div>
-              {connectingType === 'injected' ? (
-                <Loader2 className="w-4 h-4 animate-spin text-[#E07A5F]" />
-              ) : (
-                <ArrowRight className="w-4 h-4 text-[#B5B0AA] group-hover:text-[#E07A5F] transition-colors" />
-              )}
-            </button>
+            {/* Browser Wallet — hidden for now */}
           </div>
 
           {/* Footer */}
@@ -925,7 +887,7 @@ function LandingPage(): ReactElement {
                   setShowSignIn(false);
                   setShowCreateWallet(true);
                 }}
-                className="font-semibold text-[#E07A5F] hover:text-[#D4694F] transition-colors cursor-pointer"
+                className="font-semibold text-[#6B8F71] hover:text-[#5A7D60] transition-colors cursor-pointer"
               >
                 Create one
               </button>

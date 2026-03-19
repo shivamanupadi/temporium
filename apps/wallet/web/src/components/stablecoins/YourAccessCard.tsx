@@ -36,8 +36,8 @@ function getRoleLabel(role: TokenRole): string {
 
 function getRoleColor(role: TokenRole): string {
   const colors: Record<TokenRole, string> = {
-    defaultAdmin: 'bg-[var(--color-lavender)]/15 text-[var(--color-lavender)]',
-    issuer: 'bg-[var(--color-lavender)]/15 text-[var(--color-lavender)]',
+    defaultAdmin: 'bg-[var(--color-coral)]/15 text-[var(--color-coral)]',
+    issuer: 'bg-[var(--color-coral)]/15 text-[var(--color-coral)]',
     pause: 'bg-[var(--color-warning)]/15 text-[var(--color-warning)]',
     unpause: 'bg-[var(--color-sage)]/15 text-[var(--color-sage)]',
     burnBlocked: 'bg-coral/10 text-coral',
@@ -164,7 +164,7 @@ export function YourAccessCard({ tokenAddress }: YourAccessCardProps): ReactElem
               {availableRoles.length > 0 && (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <button className="flex items-center gap-1 text-[11px] font-medium text-lavender hover:text-lavender/80 transition-colors cursor-pointer">
+                    <button className="flex items-center gap-1 text-[11px] font-medium text-coral hover:text-coral/80 transition-colors cursor-pointer">
                       <Plus className="h-3 w-3" />
                       Add Role
                     </button>
@@ -240,7 +240,7 @@ export function YourAccessCard({ tokenAddress }: YourAccessCardProps): ReactElem
                     </span>
                     <button
                       onClick={() => window.open(getExplorerTxUrl(roleTxHash), '_blank')}
-                      className="flex items-center gap-1 text-[13px] text-lavender hover:text-lavender/80 transition-colors cursor-pointer"
+                      className="flex items-center gap-1 text-[13px] text-coral hover:text-coral/80 transition-colors cursor-pointer"
                     >
                       <span className="font-mono">
                         {roleTxHash.slice(0, 8)}...{roleTxHash.slice(-4)}
@@ -252,7 +252,7 @@ export function YourAccessCard({ tokenAddress }: YourAccessCardProps): ReactElem
               </div>
               <div className="px-6 pb-6">
                 <Button
-                  className="w-full h-11 rounded-xl font-semibold bg-lavender hover:bg-lavender/80 text-white"
+                  className="w-full h-11 rounded-xl font-semibold bg-coral hover:bg-coral/80 text-white"
                   onClick={handleDialogClose}
                 >
                   Done
@@ -303,7 +303,8 @@ export function YourAccessCard({ tokenAddress }: YourAccessCardProps): ReactElem
               </div>
 
               {roleConfirm?.action === 'grant' && roleFeeToken && tokens.length > 0 && (
-                <div className="px-6 pb-4">
+                <div className="px-6 pb-4 flex items-center justify-between">
+                  <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
                   <FeeTokenPicker value={roleFeeToken} tokens={tokens} onChange={setRoleFeeToken} />
                 </div>
               )}
@@ -321,7 +322,7 @@ export function YourAccessCard({ tokenAddress }: YourAccessCardProps): ReactElem
                   className={`flex-1 h-11 rounded-xl font-semibold text-white ${
                     roleConfirm?.action === 'revoke'
                       ? 'bg-coral hover:bg-coral/80'
-                      : 'bg-lavender hover:bg-lavender/80'
+                      : 'bg-coral hover:bg-coral/80'
                   }`}
                   onClick={confirmRoleAction}
                   disabled={isConfirming}

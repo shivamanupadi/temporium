@@ -152,7 +152,7 @@ export function ImportStablecoinModal({
                 Cancel
               </Button>
               <Button
-                className="flex-1 h-11 rounded-xl font-semibold bg-lavender hover:bg-lavender/80 text-white"
+                className="flex-1 h-11 rounded-xl font-semibold bg-coral hover:bg-coral/80 text-white"
                 onClick={handleValidate}
                 disabled={isValidating || !tokenAddress.trim()}
               >
@@ -226,7 +226,7 @@ export function ImportStablecoinModal({
                 Back
               </Button>
               <Button
-                className="flex-1 h-11 rounded-xl font-semibold bg-lavender hover:bg-lavender/80 text-white"
+                className="flex-1 h-11 rounded-xl font-semibold bg-coral hover:bg-coral/80 text-white"
                 onClick={handleImport}
                 disabled={isImporting}
               >

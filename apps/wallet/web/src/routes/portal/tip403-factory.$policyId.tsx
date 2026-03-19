@@ -90,7 +90,7 @@ function Tip403FactoryLayout(): ReactElement {
           <p className="text-muted-foreground mb-4">This policy is not in your list</p>
           <Button
             onClick={() => navigate({ to: '/portal/tip403-factory' })}
-            className="rounded-xl font-semibold bg-lavender hover:bg-lavender/80 text-white"
+            className="rounded-xl font-semibold bg-coral hover:bg-coral/80 text-white"
           >
             Back to TIP403 Factory
           </Button>

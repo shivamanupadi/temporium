@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Plus, Trash2, Copy, Check, Search, Loader2, X, ExternalLink } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 import { apiGet, apiPost, apiDelete } from '@/lib/api-client';
 import { formatAddress, copyToClipboard, isValidAddress } from '@/lib/utils';
@@ -180,12 +181,12 @@ function ContactsPage(): ReactElement {
       <motion.div variants={itemVariants}>
         <div className="relative">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#B5B0AA]" />
-          <input
+          <Input
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search by name or address..."
-            className="w-full h-11 pl-10 pr-4 rounded-xl border border-[#EDE9E3] bg-white text-[14px] text-[#2D3436] placeholder:text-[#B5B0AA] focus:outline-none focus:border-[#E07A5F]/40 focus:ring-2 focus:ring-[#E07A5F]/10 transition-all"
+            className="pl-10 pr-4 bg-white text-[14px]"
           />
           {searchQuery && (
             <button
@@ -261,7 +262,7 @@ function ContactsPage(): ReactElement {
                             {formatAddress(contact.address, 6)}
                           </p>
                           {copiedId === contact.id ? (
-                            <Check className="w-3 h-3 text-[#5B9A6F] shrink-0" />
+                            <Check className="w-3 h-3 text-[#6B8F71] shrink-0" />
                           ) : (
                             <Copy className="w-3 h-3 text-[#B5B0AA] group-hover:text-[#6B6560] shrink-0 transition-colors" />
                           )}
@@ -273,7 +274,7 @@ function ContactsPage(): ReactElement {
                         href={`${LINKS.explorer}/address/${contact.address}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-9 h-9 rounded-lg flex items-center justify-center text-[#B5B0AA] hover:text-[#9B72CF] hover:bg-[#9B72CF]/6 transition-colors"
+                        className="w-9 h-9 rounded-lg flex items-center justify-center text-[#B5B0AA] hover:text-[#E07A5F] hover:bg-[#E07A5F]/6 transition-colors"
                       >
                         <ExternalLink className="w-4 h-4" />
                       </a>
@@ -318,14 +319,14 @@ function ContactsPage(): ReactElement {
               >
                 Name
               </label>
-              <input
+              <Input
                 id="contact-name"
                 type="text"
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
                 placeholder="e.g. Alice"
                 maxLength={50}
-                className="w-full h-11 px-3.5 rounded-xl border border-[#EDE9E3] bg-white text-[14px] text-[#2D3436] placeholder:text-[#B5B0AA] focus:outline-none focus:border-[#E07A5F]/40 focus:ring-2 focus:ring-[#E07A5F]/10 transition-all"
+                className="px-3.5 bg-white text-[14px]"
               />
             </div>
 
@@ -336,13 +337,13 @@ function ContactsPage(): ReactElement {
               >
                 Address
               </label>
-              <input
+              <Input
                 id="contact-address"
                 type="text"
                 value={newAddress}
                 onChange={e => setNewAddress(e.target.value)}
                 placeholder="0x..."
-                className="w-full h-11 px-3.5 rounded-xl border border-[#EDE9E3] bg-white text-[14px] font-mono text-[#2D3436] placeholder:text-[#B5B0AA] focus:outline-none focus:border-[#E07A5F]/40 focus:ring-2 focus:ring-[#E07A5F]/10 transition-all"
+                className="h-11 px-3.5 bg-white text-[14px] font-mono"
               />
               {newAddress && !isValidAddress(newAddress) && (
                 <p className="text-[12px] text-red-500 mt-1.5">

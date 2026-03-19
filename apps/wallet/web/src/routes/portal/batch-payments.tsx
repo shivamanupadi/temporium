@@ -71,7 +71,7 @@ function BatchPaymentsPage(): ReactElement | null {
   }, [tokens, selectedToken]);
 
   useEffect(() => {
-    if (tokens.length === 0) return;
+    if (tokens.length === 0 || feeToken) return;
     const preferred = preferredFeeToken
       ? tokens.find(t => t.address.toLowerCase() === preferredFeeToken.toLowerCase())
       : null;
@@ -79,7 +79,7 @@ function BatchPaymentsPage(): ReactElement | null {
       t => t.address.toLowerCase() === tempoChain.feeToken.toLowerCase()
     );
     setFeeToken(preferred ?? chainDefault ?? tokens[0]);
-  }, [tokens, preferredFeeToken]);
+  }, [tokens, preferredFeeToken, feeToken]);
 
   const balance = useTokenBalance(selectedToken?.address, address);
 
@@ -149,7 +149,6 @@ function BatchPaymentsPage(): ReactElement | null {
 
       setTxHash(hash);
       setStep('success');
-      toast.success(`Batch payment sent to ${transfers.length} recipients`);
     } catch (err) {
       console.error('Batch send failed:', err);
       const message = err instanceof Error ? err.message : 'Transaction failed';
@@ -209,25 +208,19 @@ function BatchPaymentsPage(): ReactElement | null {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="bg-white rounded-2xl border border-[#EDE9E3] shadow-sm"
+        className="bg-white rounded-2xl border border-[#EDE9E3]"
       >
         <div className="p-5 space-y-5">
           {/* Token selector + balance */}
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
-                Token
-              </label>
-              <span className="text-[11px] font-medium text-[#9B9590]">
-                Balance: {balanceDisplay} {selectedToken.symbol}
-              </span>
-            </div>
-            <TokenPicker
-              token={selectedToken}
-              tokens={tokens}
-              onChange={setSelectedToken}
-              accentColor="#E07A5F"
-            />
+            <label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2 block">
+              Token
+            </label>
+            <TokenPicker token={selectedToken} tokens={tokens} onChange={setSelectedToken} />
+            <p className="text-[12px] text-[#9B9590] mt-2">
+              Available <span className="font-semibold text-[#2D3436]">{balanceDisplay}</span>{' '}
+              {selectedToken.symbol}
+            </p>
           </div>
 
           {/* Recipients */}
@@ -248,7 +241,7 @@ function BatchPaymentsPage(): ReactElement | null {
                   >
                     <div className="bg-[#FDFBF8] rounded-xl border border-[#EDE9E3] p-3">
                       <div className="flex items-center gap-3">
-                        <span className="text-[11px] font-semibold text-[#B5B0AA] shrink-0 w-5 text-center leading-10">
+                        <span className="text-[11px] font-semibold text-[#B5B0AA] shrink-0 w-5 text-center">
                           #{idx + 1}
                         </span>
                         <div className="flex-1 min-w-0">
@@ -268,7 +261,7 @@ function BatchPaymentsPage(): ReactElement | null {
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                               updateRecipient(row.id, 'amount', e.target.value)
                             }
-                            className="text-[14px] font-semibold h-10 rounded-xl border-[#EDE9E3] bg-white focus:border-[#E07A5F] focus:ring-1 focus:ring-[#E07A5F]/20 transition-all"
+                            className="text-[14px] font-semibold bg-white"
                           />
                         </div>
                         {recipients.length > 2 ? (
@@ -283,6 +276,13 @@ function BatchPaymentsPage(): ReactElement | null {
                           <div className="w-[26px] shrink-0" />
                         )}
                       </div>
+                      {address &&
+                        row.address &&
+                        row.address.toLowerCase() === address.toLowerCase() && (
+                          <p className="text-[11px] font-medium text-[#9B9590] mt-1.5 ml-8">
+                            Sending to <span className="text-[#2D3436]">Self</span>
+                          </p>
+                        )}
                     </div>
                   </motion.div>
                 ))}
@@ -292,15 +292,12 @@ function BatchPaymentsPage(): ReactElement | null {
             <button
               type="button"
               onClick={addRecipient}
-              className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-[#EDE9E3] text-[13px] font-medium text-[#9B9590] hover:border-[#E07A5F]/40 hover:text-[#E07A5F] hover:bg-[#E07A5F]/[0.03] transition-all"
+              className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-[#EDE9E3] text-[13px] font-medium text-[#9B9590] hover:border-[#D5D0C9] hover:text-[#6B6560] hover:bg-[#FDFBF8] transition-all"
             >
               <Plus className="w-3.5 h-3.5" />
               Add Recipient
             </button>
           </div>
-
-          {/* Fee token */}
-          <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
 
           {/* Summary */}
           {totalAmount > 0n && (
@@ -334,14 +331,11 @@ function BatchPaymentsPage(): ReactElement | null {
             </motion.div>
           )}
 
-          {/* Divider */}
-          <div className="border-t border-[#EDE9E3]" />
-
           {/* Submit */}
           <Button
             disabled={!isFormValid}
             onClick={handleReview}
-            className="w-full h-12 rounded-xl text-[14px] font-semibold bg-[#E07A5F] hover:bg-[#D4694F] text-white transition-all"
+            className="w-full h-12 text-[14px] font-semibold bg-[#E07A5F] hover:bg-[#D4694F] text-white shadow-lg shadow-[#E07A5F]/15 hover:shadow-xl hover:shadow-[#E07A5F]/20"
           >
             Review Batch Payment
             <ArrowRight className="w-4 h-4 ml-1.5" />
@@ -392,6 +386,12 @@ function BatchPaymentsPage(): ReactElement | null {
                     </p>
                   </div>
 
+                  {/* Fee token */}
+                  <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#FDFBF8] border border-[#EDE9E3]">
+                    <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
+                    <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
+                  </div>
+
                   <div className="bg-[#FDFBF8] rounded-xl border border-[#EDE9E3] divide-y divide-[#EDE9E3]">
                     {parsedRecipients
                       .filter(r => r.validAddress && r.validAmount)
@@ -415,13 +415,13 @@ function BatchPaymentsPage(): ReactElement | null {
                   <Button
                     variant="outline"
                     onClick={() => setStep('form')}
-                    className="flex-1 h-11 rounded-xl border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
+                    className="flex-1 h-12 border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
                   >
                     Back
                   </Button>
                   <Button
                     onClick={handleConfirmSend}
-                    className="flex-1 h-11 rounded-xl font-semibold bg-[#E07A5F] hover:bg-[#D4694F] text-white"
+                    className="flex-1 h-12 font-semibold bg-[#E07A5F] hover:bg-[#D4694F] text-white shadow-lg shadow-[#E07A5F]/15"
                   >
                     <ListPlus className="w-3.5 h-3.5 mr-1.5" />
                     Send All
@@ -505,7 +505,7 @@ function BatchPaymentsPage(): ReactElement | null {
                     transition={{ type: 'spring', stiffness: 200, damping: 15 }}
                     className="inline-flex items-center justify-center mb-6"
                   >
-                    <div className="w-16 h-16 rounded-full flex items-center justify-center bg-[#5B9A6F]">
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center bg-[#6B8F71]">
                       <svg
                         width="32"
                         height="32"
@@ -571,7 +571,7 @@ function BatchPaymentsPage(): ReactElement | null {
                           className="p-1 rounded-md hover:bg-[#F5F2ED] transition-colors"
                         >
                           {copied ? (
-                            <Check className="w-3 h-3 text-[#5B9A6F]" />
+                            <Check className="w-3 h-3 text-[#6B8F71]" />
                           ) : (
                             <Copy className="w-3 h-3 text-[#9B9590]" />
                           )}

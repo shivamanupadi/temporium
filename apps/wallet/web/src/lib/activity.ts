@@ -79,7 +79,7 @@ export function getActivityTypeLabel(type: ActivityType): string {
 export function getActivityStatusColor(status: ActivityStatus): string {
   switch (status) {
     case 'success':
-      return 'text-[#5B9A6F] bg-[#5B9A6F]/8';
+      return 'text-[#6B8F71] bg-[#6B8F71]/8';
     case 'failed':
       return 'text-red-500 bg-red-500/8';
     case 'rejected':

@@ -22,13 +22,13 @@ export function Header(): ReactElement {
         <div className="flex items-center gap-3">
           {isConnected && address ? (
             <>
-              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#5B9A6F]/8 border border-[#5B9A6F]/15">
-                <div className="w-2 h-2 rounded-full bg-[#5B9A6F]" />
-                <span className="text-[12px] font-mono text-[#5B9A6F] font-medium">
+              <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#6B8F71]/8 border border-[#6B8F71]/15">
+                <div className="w-2 h-2 rounded-full bg-[#6B8F71]" />
+                <span className="text-[12px] font-mono text-[#6B8F71] font-medium">
                   {formatAddress(address, 4)}
                 </span>
                 {chainId && (
-                  <span className="text-[10px] text-[#5B9A6F]/60">#{chainId}</span>
+                  <span className="text-[10px] text-[#6B8F71]/60">#{chainId}</span>
                 )}
               </div>
               <button

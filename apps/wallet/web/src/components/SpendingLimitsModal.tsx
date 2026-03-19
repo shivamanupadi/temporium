@@ -19,7 +19,11 @@ import { Label } from '@/components/ui/label';
 import { formatAddress } from '@/lib/utils';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 import { TokenAddressPicker } from '@/components/TokenAddressPicker';
+import { FeeTokenPicker } from '@/components/FeeTokenPicker';
 import { getTokens, type Token } from '@/lib/tokenlist';
+import { useTokenList } from '@/hooks/useTokenList';
+import { useFeePreference } from '@/hooks/useFeePreference';
+import { tempoChain } from '@/lib/tempo-client';
 import type { TokenMetadata } from '@/types';
 
 // ---------------------------------------------------------------------------
@@ -60,6 +64,21 @@ export function SpendingLimitsModal({
   getRemainingLimit,
   onUpdated,
 }: SpendingLimitsModalProps): ReactElement {
+  const { tokens: allTokens } = useTokenList();
+  const { preferredFeeToken } = useFeePreference();
+  const [feeToken, setFeeToken] = useState<Token | null>(null);
+
+  useEffect(() => {
+    if (allTokens.length === 0) return;
+    const preferred = preferredFeeToken
+      ? allTokens.find(t => t.address.toLowerCase() === preferredFeeToken.toLowerCase())
+      : null;
+    const chainDefault = allTokens.find(
+      t => t.address.toLowerCase() === tempoChain.feeToken.toLowerCase()
+    );
+    setFeeToken(preferred ?? chainDefault ?? allTokens[0]);
+  }, [allTokens, preferredFeeToken]);
+
   // Fetched spending limits
   const [spendingLimits, setSpendingLimits] = useState<SpendingLimitDisplay[]>([]);
   const [loadingLimits, setLoadingLimits] = useState(false);
@@ -208,6 +227,7 @@ export function SpendingLimitsModal({
         keyId: keyId as Address,
         token: tlAddress.trim() as Address,
         newLimit: BigInt(Math.floor(parseFloat(tlAmount) * 10 ** decimals)),
+        feeToken: feeToken?.address,
       });
       toast.success('Spending limit added', {
         description: `${tlMetadata.symbol} limit set for key ${formatAddress(keyId, 6)}.`,
@@ -251,6 +271,7 @@ export function SpendingLimitsModal({
         keyId: keyId as Address,
         token: editingLimit.token as Address,
         newLimit: BigInt(Math.floor(parseFloat(editAmount) * 10 ** decimals)),
+        feeToken: feeToken?.address,
       });
       toast.success('Spending limit updated', {
         description: `${editingLimit.symbol || formatAddress(editingLimit.token, 4)} limit updated.`,
@@ -276,6 +297,7 @@ export function SpendingLimitsModal({
           keyId: keyId as Address,
           token: sl.token as Address,
           newLimit: 0n,
+          feeToken: feeToken?.address,
         });
         toast.success('Spending limit removed', {
           description: `${sl.symbol || formatAddress(sl.token, 4)} limit removed.`,
@@ -315,7 +337,7 @@ export function SpendingLimitsModal({
         if (!open) handleClose();
       }}
     >
-      <DialogContent className="p-0 gap-0 max-w-[420px] overflow-hidden">
+      <DialogContent className="p-0 gap-0 max-w-[420px] overflow-visible">
         <div className="px-6 pt-6 pb-4">
           <DialogTitle className="text-[18px] font-bold text-[#2D3436]">{title}</DialogTitle>
           <DialogDescription className="text-[13px] text-[#9B9590] mt-1">
@@ -370,13 +392,20 @@ export function SpendingLimitsModal({
                 />
               </div>
 
-              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#9B72CF]/[0.06] border border-[#9B72CF]/15">
-                <Shield className="w-4 h-4 text-[#9B72CF] shrink-0 mt-0.5" />
-                <p className="text-[12px] text-[#9B72CF]/80 leading-relaxed">
+              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#E07A5F]/[0.06] border border-[#E07A5F]/15">
+                <Shield className="w-4 h-4 text-[#E07A5F] shrink-0 mt-0.5" />
+                <p className="text-[12px] text-[#E07A5F]/80 leading-relaxed">
                   This will send a transaction to update the spending limit on-chain.
                 </p>
               </div>
             </div>
+
+            {feeToken && allTokens.length > 0 && (
+              <div className="px-6 pb-3 flex items-center justify-between">
+                <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
+                <FeeTokenPicker value={feeToken} tokens={allTokens} onChange={setFeeToken} />
+              </div>
+            )}
 
             <div className="px-6 pb-6 pt-0 flex gap-3">
               <Button
@@ -483,6 +512,13 @@ export function SpendingLimitsModal({
               </div>
             )}
 
+            {tlStep === 'amount' && feeToken && allTokens.length > 0 && (
+              <div className="px-6 pb-3 flex items-center justify-between">
+                <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
+                <FeeTokenPicker value={feeToken} tokens={allTokens} onChange={setFeeToken} />
+              </div>
+            )}
+
             <div className="px-6 pb-6 pt-0 flex gap-3">
               <Button
                 variant="outline"
@@ -566,8 +602,8 @@ export function SpendingLimitsModal({
                       key={sl.token}
                       className="flex items-center gap-3 p-3 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8]"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-[#9B72CF]/10 flex items-center justify-center shrink-0">
-                        <Coins className="w-4 h-4 text-[#9B72CF]" />
+                      <div className="w-8 h-8 rounded-lg bg-[#E07A5F]/10 flex items-center justify-center shrink-0">
+                        <Coins className="w-4 h-4 text-[#E07A5F]" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-semibold text-[#2D3436]">
@@ -585,7 +621,7 @@ export function SpendingLimitsModal({
                           variant="ghost"
                           size="icon"
                           onClick={() => openEdit(sl)}
-                          className="w-8 h-8 rounded-lg text-[#B5B0AA] hover:text-[#9B72CF] hover:bg-[#9B72CF]/10"
+                          className="w-8 h-8 rounded-lg text-[#B5B0AA] hover:text-[#E07A5F] hover:bg-[#E07A5F]/10"
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </Button>

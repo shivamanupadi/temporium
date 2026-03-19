@@ -79,7 +79,7 @@ function PoolSwapPage(): ReactElement | null {
   // Fee token priority: user on-chain preference > chain default (AlphaUSD) > first token
   // Re-run whenever preferredFeeToken resolves so we pick up the user's saved preference
   useEffect(() => {
-    if (tokens.length === 0) return;
+    if (tokens.length === 0 || feeToken) return;
     const preferred = preferredFeeToken
       ? tokens.find(t => t.address.toLowerCase() === preferredFeeToken.toLowerCase())
       : null;
@@ -87,7 +87,7 @@ function PoolSwapPage(): ReactElement | null {
       t => t.address.toLowerCase() === tempoChain.feeToken.toLowerCase()
     );
     setFeeToken(preferred ?? chainDefault ?? tokens[0]);
-  }, [tokens, preferredFeeToken]);
+  }, [tokens, preferredFeeToken, feeToken]);
 
   // Form state
   const [amountOut, setAmountOut] = useState('');
@@ -400,7 +400,7 @@ function PoolSwapPage(): ReactElement | null {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
-                  className="w-14 h-14 rounded-full bg-[#5B9A6F] flex items-center justify-center mx-auto mb-5"
+                  className="w-14 h-14 rounded-full bg-[#6B8F71] flex items-center justify-center mx-auto mb-5"
                 >
                   <CheckCircle className="w-7 h-7 text-white" />
                 </motion.div>
@@ -445,7 +445,7 @@ function PoolSwapPage(): ReactElement | null {
                 )}
                 <div className="flex items-center justify-between">
                   <span className="text-[12px] text-[#9B9590]">Bonus (0.15%)</span>
-                  <span className="text-[12px] font-medium text-[#5B9A6F]">
+                  <span className="text-[12px] font-medium text-[#6B8F71]">
                     {effectiveCost !== null && effectiveAmountOut > effectiveCost
                       ? `+${formatAmount(effectiveAmountOut - effectiveCost, userDecimals)} ${userToken.symbol}`
                       : '—'}
@@ -648,7 +648,7 @@ function PoolSwapPage(): ReactElement | null {
                       )}
                       <div className="flex items-center justify-between">
                         <span className="text-[12px] text-[#9B9590]">Bonus (0.15%)</span>
-                        <span className="text-[12px] font-medium text-[#5B9A6F]">
+                        <span className="text-[12px] font-medium text-[#6B8F71]">
                           +{formatAmount(effectiveAmountOut - effectiveCost, userDecimals)}{' '}
                           {userToken.symbol}
                         </span>

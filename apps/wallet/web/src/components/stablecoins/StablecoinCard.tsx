@@ -22,8 +22,8 @@ export function StablecoinCard({ coin }: StablecoinCardProps): ReactElement {
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-xl bg-lavender/8 flex items-center justify-center shrink-0">
-            <CircleDollarSign className="h-5 w-5 text-lavender" />
+          <div className="w-10 h-10 rounded-xl bg-coral/8 flex items-center justify-center shrink-0">
+            <CircleDollarSign className="h-5 w-5 text-coral" />
           </div>
           <div>
             <div className="flex items-center gap-2">

@@ -2,12 +2,28 @@ import type { Address } from 'viem';
 import { tempoModerato, tempo } from 'viem/chains';
 
 /**
- * Network selection (env-driven)
+ * Network selection (localStorage → env fallback)
  */
-export const TEMPO_NETWORK = (import.meta.env.VITE_TEMPO_NETWORK || 'testnet') as
-  | 'testnet'
-  | 'mainnet';
+const NETWORK_STORAGE_KEY = 'temporium_network';
+
+function getStoredNetwork(): 'testnet' | 'mainnet' {
+  try {
+    const stored = localStorage.getItem(NETWORK_STORAGE_KEY);
+    if (stored === 'testnet' || stored === 'mainnet') return stored;
+  } catch {
+    /* localStorage unavailable */
+  }
+  return (import.meta.env.VITE_TEMPO_NETWORK || 'testnet') as 'testnet' | 'mainnet';
+}
+
+export const TEMPO_NETWORK = getStoredNetwork();
 export const isTestnet = TEMPO_NETWORK !== 'mainnet';
+
+export function switchNetwork(network: 'testnet' | 'mainnet'): void {
+  if (network === TEMPO_NETWORK) return;
+  localStorage.setItem(NETWORK_STORAGE_KEY, network);
+  window.location.reload();
+}
 
 /**
  * Selected chain from viem/chains
@@ -15,9 +31,10 @@ export const isTestnet = TEMPO_NETWORK !== 'mainnet';
 export const tempoBaseChain = TEMPO_NETWORK === 'mainnet' ? tempo : tempoModerato;
 
 /**
- * Default fee token address (AlphaUSD)
+ * Default fee token address — pathUSD is the chain default on both networks.
+ * Users can override per-account via FeeManager.setUserToken (Settings page).
  */
-export const DEFAULT_FEE_TOKEN_ADDRESS = '0x20c0000000000000000000000000000000000001' as Address;
+export const DEFAULT_FEE_TOKEN_ADDRESS = '0x20c0000000000000000000000000000000000000' as Address;
 
 /**
  * Scheduling presets (in seconds)

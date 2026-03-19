@@ -53,7 +53,7 @@ function formatRelativeTime(timestamp: number): string {
 function getStatusIcon(status: string): ReactElement {
   switch (status) {
     case 'success':
-      return <CheckCircle2 className="w-3.5 h-3.5 text-[#5B9A6F]" />;
+      return <CheckCircle2 className="w-3.5 h-3.5 text-[#6B8F71]" />;
     case 'failed':
       return <XCircle className="w-3.5 h-3.5 text-red-500" />;
     case 'rejected':
@@ -68,9 +68,9 @@ function getStatusIcon(status: string): ReactElement {
 function getPermissionColor(perm: string): string {
   switch (perm) {
     case 'connect':
-      return 'bg-[#5B9A6F]/8 text-[#5B9A6F]';
+      return 'bg-[#6B8F71]/8 text-[#6B8F71]';
     case 'sign':
-      return 'bg-[#9B72CF]/8 text-[#9B72CF]';
+      return 'bg-[#E07A5F]/8 text-[#E07A5F]';
     case 'send':
       return 'bg-[#E07A5F]/8 text-[#E07A5F]';
     default:
@@ -134,8 +134,8 @@ function ConnectedAppsPage(): ReactElement {
 
       {/* TODO Notice */}
       <div className="text-center py-16 bg-white border border-[#EDE9E3] rounded-2xl">
-        <div className="w-12 h-12 rounded-2xl bg-[#9B72CF]/8 flex items-center justify-center mx-auto mb-3">
-          <Link2 className="w-5 h-5 text-[#9B72CF]" />
+        <div className="w-12 h-12 rounded-2xl bg-[#E07A5F]/8 flex items-center justify-center mx-auto mb-3">
+          <Link2 className="w-5 h-5 text-[#E07A5F]" />
         </div>
         <p className="text-[14px] font-medium text-[#2D3436]">Coming Soon</p>
         <p className="text-[13px] text-[#9B9590] mt-1 max-w-sm mx-auto">
@@ -187,7 +187,7 @@ function ConnectedAppsPage(): ReactElement {
                     >
                       <div className="flex items-start gap-3.5">
                         {/* App Icon */}
-                        <div className="w-11 h-11 rounded-xl bg-[#9B72CF]/8 flex items-center justify-center overflow-hidden shrink-0">
+                        <div className="w-11 h-11 rounded-xl bg-[#E07A5F]/8 flex items-center justify-center overflow-hidden shrink-0">
                           {app.icon ? (
                             <img
                               src={app.icon}
@@ -198,7 +198,7 @@ function ConnectedAppsPage(): ReactElement {
                               }}
                             />
                           ) : (
-                            <Globe className="w-5 h-5 text-[#9B72CF]" />
+                            <Globe className="w-5 h-5 text-[#E07A5F]" />
                           )}
                         </div>
 
@@ -321,7 +321,7 @@ function ConnectedAppsPage(): ReactElement {
                   </div>
 
                   {/* Table */}
-                  <div className="bg-white rounded-2xl border border-[#EDE9E3] overflow-hidden">
+                  <div className="bg-white rounded-2xl border border-[#EDE9E3] ">
                     {/* Header */}
                     <div className="grid grid-cols-[1fr_100px_100px_80px] gap-3 px-5 py-3 border-b border-[#EDE9E3]/60">
                       <span className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">
@@ -415,7 +415,7 @@ function ConnectedAppsPage(): ReactElement {
               if (!open) setRevokeTarget(null);
             }}
           >
-            <DialogContent className="max-w-[360px] p-0 gap-0 overflow-hidden rounded-2xl">
+            <DialogContent className="max-w-[360px] p-0 gap-0 rounded-2xl">
               <div className="px-6 pt-6 pb-4">
                 <DialogTitle className="text-lg font-semibold text-[#2D3436] mb-2">
                   Revoke Access
@@ -445,7 +445,7 @@ function ConnectedAppsPage(): ReactElement {
 
           {/* Clear Activity Confirm Dialog */}
           <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
-            <DialogContent className="max-w-[360px] p-0 gap-0 overflow-hidden rounded-2xl">
+            <DialogContent className="max-w-[360px] p-0 gap-0 rounded-2xl">
               <div className="px-6 pt-6 pb-4">
                 <DialogTitle className="text-lg font-semibold text-[#2D3436] mb-2">
                   Clear Activity

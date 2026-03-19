@@ -21,7 +21,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { TokenPicker } from '@/components/TokenPicker';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
 import { ContactPicker } from '@/components/ContactPicker';
@@ -109,9 +108,10 @@ function SendPage(): ReactElement | null {
     if (tokens.length > 0 && !selectedToken) setSelectedToken(tokens[0]);
   }, [tokens, selectedToken]);
 
-  // Fee token priority: user on-chain preference > chain default (AlphaUSD) > first token
+  // Fee token priority: user on-chain preference > chain default (pathUSD) > first token
+  // Only initialize — don't override user's manual selection
   useEffect(() => {
-    if (tokens.length === 0) return;
+    if (tokens.length === 0 || feeToken) return;
     const preferred = preferredFeeToken
       ? tokens.find(t => t.address.toLowerCase() === preferredFeeToken.toLowerCase())
       : null;
@@ -119,7 +119,7 @@ function SendPage(): ReactElement | null {
       t => t.address.toLowerCase() === tempoChain.feeToken.toLowerCase()
     );
     setFeeToken(preferred ?? chainDefault ?? tokens[0]);
-  }, [tokens, preferredFeeToken]);
+  }, [tokens, preferredFeeToken, feeToken]);
 
   const balance = useTokenBalance(selectedToken?.address, address);
 
@@ -263,7 +263,6 @@ function SendPage(): ReactElement | null {
           })
         );
         setStep('success');
-        toast.success('Payment scheduled successfully');
       } else {
         const hash = await sendPayment({
           to: form.recipient as Address,
@@ -276,7 +275,6 @@ function SendPage(): ReactElement | null {
         await waitForTx(hash as `0x${string}`);
         setTxHash(hash);
         setStep('success');
-        toast.success('Payment sent');
       }
     } catch (err) {
       console.error('Send failed:', err);
@@ -361,36 +359,33 @@ function SendPage(): ReactElement | null {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="bg-white rounded-2xl border border-[#EDE9E3] shadow-sm"
+        className="bg-white rounded-2xl border border-[#EDE9E3]"
       >
         {/* Tabs: Instant / Scheduled */}
-        <div className="p-5 pb-0">
-          <Tabs
-            value={mode}
-            onValueChange={(v: string) => setMode(v as SendMode)}
-            className="w-full"
+        {/* Tabs */}
+        <div className="flex border-b border-[#EDE9E3] mx-5 mt-5">
+          <button
+            onClick={() => setMode('instant')}
+            className={`flex-1 flex items-center justify-center gap-1.5 pb-3 pt-1 text-[13px] font-medium transition-colors border-b-2 -mb-px ${
+              mode === 'instant'
+                ? 'border-[#E07A5F] text-[#2D3436]'
+                : 'border-transparent text-[#B5B0AA] hover:text-[#9B9590]'
+            }`}
           >
-            <TabsList className="w-full bg-[#F5F2ED] h-10 rounded-xl p-1">
-              <TabsTrigger
-                value="instant"
-                className="flex-1 rounded-lg text-[13px] font-medium data-[state=active]:bg-white data-[state=active]:text-[#2D3436] data-[state=active]:shadow-sm text-[#9B9590]"
-              >
-                <Send className="w-3.5 h-3.5 mr-1.5" />
-                Instant
-              </TabsTrigger>
-              <TabsTrigger
-                value="scheduled"
-                className="flex-1 rounded-lg text-[13px] font-medium data-[state=active]:bg-white data-[state=active]:text-[#2D3436] data-[state=active]:shadow-sm text-[#9B9590]"
-              >
-                <Clock className="w-3.5 h-3.5 mr-1.5" />
-                Scheduled
-              </TabsTrigger>
-            </TabsList>
-
-            {/* Shared form content (rendered outside TabsContent for both tabs) */}
-            <TabsContent value="instant" className="mt-0" />
-            <TabsContent value="scheduled" className="mt-0" />
-          </Tabs>
+            <Send className="w-3.5 h-3.5" />
+            Instant
+          </button>
+          <button
+            onClick={() => setMode('scheduled')}
+            className={`flex-1 flex items-center justify-center gap-1.5 pb-3 pt-1 text-[13px] font-medium transition-colors border-b-2 -mb-px ${
+              mode === 'scheduled'
+                ? 'border-[#6B8F71] text-[#2D3436]'
+                : 'border-transparent text-[#B5B0AA] hover:text-[#9B9590]'
+            }`}
+          >
+            <Clock className="w-3.5 h-3.5" />
+            Scheduled
+          </button>
         </div>
 
         <div className="p-5 space-y-5">
@@ -403,18 +398,9 @@ function SendPage(): ReactElement | null {
 
           {/* Amount */}
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
-                Amount
-              </label>
-              <button
-                type="button"
-                onClick={handleMaxAmount}
-                className="text-[11px] font-medium text-[#E07A5F] hover:text-[#E07A5F]/80 transition-colors"
-              >
-                Balance: {balanceDisplay} {selectedToken.symbol}
-              </button>
-            </div>
+            <label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2 block">
+              Amount
+            </label>
             <div className="flex items-center gap-2">
               <div className="relative flex-1">
                 <Input
@@ -426,7 +412,7 @@ function SendPage(): ReactElement | null {
                     handleAmountChange(e.target.value)
                   }
                   className={cn(
-                    'text-[18px] font-semibold h-12 rounded-xl border-[#EDE9E3] bg-[#FDFBF8] focus:border-[#E07A5F] focus:ring-1 focus:ring-[#E07A5F]/20 transition-all',
+                    'text-[18px] font-semibold bg-[#FDFBF8]',
                     form.amount &&
                       hasValidAmount &&
                       !hasSufficientBalance &&
@@ -434,12 +420,20 @@ function SendPage(): ReactElement | null {
                   )}
                 />
               </div>
-              <TokenPicker
-                token={selectedToken}
-                tokens={tokens}
-                onChange={setSelectedToken}
-                accentColor="#E07A5F"
-              />
+              <TokenPicker token={selectedToken} tokens={tokens} onChange={setSelectedToken} />
+            </div>
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-[12px] text-[#9B9590]">
+                Available <span className="font-semibold text-[#2D3436]">{balanceDisplay}</span>{' '}
+                {selectedToken.symbol}
+              </p>
+              <button
+                type="button"
+                onClick={handleMaxAmount}
+                className="text-[11px] font-medium text-[#9B9590] hover:text-[#2D3436] transition-colors px-2 py-0.5 rounded bg-[#F5F2ED] hover:bg-[#EDE9E3]"
+              >
+                Max
+              </button>
             </div>
             {form.amount && hasValidAmount && !hasSufficientBalance && (
               <motion.p
@@ -468,12 +462,9 @@ function SendPage(): ReactElement | null {
                 updateField('memo', e.target.value)
               }
               maxLength={32}
-              className="text-[13px] h-10 rounded-xl border-[#EDE9E3] bg-[#FDFBF8] focus:border-[#E07A5F] focus:ring-1 focus:ring-[#E07A5F]/20 transition-all"
+              className="text-[13px] bg-[#FDFBF8]"
             />
           </div>
-
-          {/* Fee token */}
-          <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
 
           {/* Schedule presets (visible only in scheduled mode) */}
           <AnimatePresence mode="wait">
@@ -507,8 +498,8 @@ function SendPage(): ReactElement | null {
                               className={cn(
                                 'px-4 py-2 rounded-xl text-[13px] font-medium transition-all border',
                                 isActive
-                                  ? 'bg-[#9B72CF] text-white border-[#9B72CF] shadow-sm'
-                                  : 'bg-[#FDFBF8] text-[#6B6560] border-[#EDE9E3] hover:border-[#9B72CF]/40 hover:bg-[#9B72CF]/5'
+                                  ? 'bg-[#6B8F71] text-white border-[#6B8F71] shadow-sm'
+                                  : 'bg-[#FDFBF8] text-[#6B6560] border-[#EDE9E3] hover:border-[#6B8F71]/40 hover:bg-[#6B8F71]/5'
                               )}
                             >
                               <Clock className="w-3 h-3 inline-block mr-1 -mt-0.5" />
@@ -538,12 +529,12 @@ function SendPage(): ReactElement | null {
                         setCustomDateTime(d);
                         setScheduleSeconds(null);
                       }}
-                      color="lavender"
+                      color="coral"
                       placeholder="Select date & time"
                       disabled={date => date < new Date(new Date().setHours(0, 0, 0, 0))}
                     />
                     {isCustomMode && customTimestamp && (
-                      <p className="text-[12px] text-[#9B72CF] font-medium">
+                      <p className="text-[12px] text-[#6B8F71] font-medium">
                         {format(new Date(customTimestamp * 1000), "EEEE, MMM d 'at' h:mm a")}
                       </p>
                     )}
@@ -565,18 +556,15 @@ function SendPage(): ReactElement | null {
             )}
           </AnimatePresence>
 
-          {/* Divider */}
-          <div className="border-t border-[#EDE9E3]" />
-
           {/* Submit button */}
           <Button
             disabled={!isFormValid}
             onClick={handleReview}
             className={cn(
-              'w-full h-12 rounded-xl text-[14px] font-semibold transition-all',
+              'w-full h-12 text-[14px] font-semibold',
               mode === 'instant'
-                ? 'bg-[#E07A5F] hover:bg-[#D4694F] text-white'
-                : 'bg-[#9B72CF] hover:bg-[#8A62BE] text-white'
+                ? 'bg-[#E07A5F] hover:bg-[#D4694F] text-white shadow-lg shadow-[#E07A5F]/15 hover:shadow-xl hover:shadow-[#E07A5F]/20'
+                : 'bg-[#6B8F71] hover:bg-[#5A7D60] text-white shadow-lg shadow-[#6B8F71]/15 hover:shadow-xl hover:shadow-[#6B8F71]/20'
             )}
           >
             {mode === 'instant' ? 'Review Payment' : 'Review Scheduled Payment'}
@@ -596,7 +584,7 @@ function SendPage(): ReactElement | null {
       >
         <DialogContent
           hideClose={step === 'sending'}
-          className="sm:max-w-[400px] p-0 gap-0 overflow-hidden rounded-2xl"
+          className="sm:max-w-[400px] p-0 gap-0 rounded-2xl"
         >
           <AnimatePresence mode="wait">
             {/* ─── Confirm Step ───────────────────────────────────── */}
@@ -651,17 +639,23 @@ function SendPage(): ReactElement | null {
                     </div>
                   )}
 
+                  {/* Fee token */}
+                  <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#FDFBF8] border border-[#EDE9E3]">
+                    <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
+                    <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
+                  </div>
+
                   {/* Schedule info */}
                   {mode === 'scheduled' && (
-                    <div className="bg-[#9B72CF]/5 rounded-xl p-4 border border-[#9B72CF]/15">
+                    <div className="bg-[#6B8F71]/5 rounded-xl p-4 border border-[#6B8F71]/15">
                       <div className="flex items-center gap-2">
                         {isCustomMode ? (
-                          <CalendarIcon className="w-4 h-4 text-[#9B72CF]" />
+                          <CalendarIcon className="w-4 h-4 text-[#6B8F71]" />
                         ) : (
-                          <Clock className="w-4 h-4 text-[#9B72CF]" />
+                          <Clock className="w-4 h-4 text-[#6B8F71]" />
                         )}
                         <div>
-                          <p className="text-[11px] font-semibold text-[#9B72CF] uppercase tracking-wider">
+                          <p className="text-[11px] font-semibold text-[#6B8F71] uppercase tracking-wider">
                             Scheduled Delivery
                           </p>
                           <p className="text-[13px] font-medium text-[#2D3436] mt-0.5">
@@ -691,17 +685,17 @@ function SendPage(): ReactElement | null {
                   <Button
                     variant="outline"
                     onClick={() => setStep('form')}
-                    className="flex-1 h-11 rounded-xl border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
+                    className="flex-1 h-12 border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
                   >
                     Back
                   </Button>
                   <Button
                     onClick={handleConfirmSend}
                     className={cn(
-                      'flex-1 h-11 rounded-xl font-semibold',
+                      'flex-1 h-12 font-semibold',
                       mode === 'instant'
-                        ? 'bg-[#E07A5F] hover:bg-[#D4694F] text-white'
-                        : 'bg-[#9B72CF] hover:bg-[#8A62BE] text-white'
+                        ? 'bg-[#E07A5F] hover:bg-[#D4694F] text-white shadow-lg shadow-[#E07A5F]/15'
+                        : 'bg-[#6B8F71] hover:bg-[#5A7D60] text-white shadow-lg shadow-[#6B8F71]/15'
                     )}
                   >
                     {mode === 'instant' ? 'Send Now' : 'Schedule Payment'}
@@ -802,13 +796,13 @@ function SendPage(): ReactElement | null {
                       }}
                       className={cn(
                         'w-12 h-12 rounded-full flex items-center justify-center',
-                        mode === 'instant' ? 'bg-[#E07A5F]/10' : 'bg-[#9B72CF]/10'
+                        mode === 'instant' ? 'bg-[#E07A5F]/10' : 'bg-[#6B8F71]/10'
                       )}
                     >
                       <Loader2
                         className={cn(
                           'w-5 h-5 animate-spin',
-                          mode === 'instant' ? 'text-[#E07A5F]' : 'text-[#9B72CF]'
+                          mode === 'instant' ? 'text-[#E07A5F]' : 'text-[#6B8F71]'
                         )}
                       />
                     </motion.div>
@@ -875,7 +869,7 @@ function SendPage(): ReactElement | null {
                     }}
                     className="inline-flex items-center justify-center mb-6"
                   >
-                    <div className="w-16 h-16 rounded-full flex items-center justify-center bg-[#5B9A6F]">
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center bg-[#6B8F71]">
                       <svg
                         width="32"
                         height="32"
@@ -961,7 +955,7 @@ function SendPage(): ReactElement | null {
                         <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
                           Will execute at
                         </span>
-                        <span className="text-[12px] font-medium text-[#9B72CF] flex items-center gap-1">
+                        <span className="text-[12px] font-medium text-[#6B8F71] flex items-center gap-1">
                           <Clock className="w-3 h-3" />
                           {scheduledForTime}
                         </span>
@@ -985,7 +979,7 @@ function SendPage(): ReactElement | null {
                             title="Copy transaction hash"
                           >
                             {copied ? (
-                              <Check className="w-3 h-3 text-[#5B9A6F]" />
+                              <Check className="w-3 h-3 text-[#6B8F71]" />
                             ) : (
                               <Copy className="w-3 h-3 text-[#9B9590]" />
                             )}

@@ -171,7 +171,7 @@ export function CreateAndLinkPolicyModal({
                     Policy Type
                   </label>
                   <Select value={policyType} onValueChange={v => setPolicyType(v as PolicyType)}>
-                    <SelectTrigger className="w-full !h-[46px] px-4 rounded-xl border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] shadow-none focus:border-lavender/40 transition-colors">
+                    <SelectTrigger className="w-full !h-[46px] px-4 rounded-xl border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] shadow-none focus:border-coral/40 transition-colors">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -204,7 +204,7 @@ export function CreateAndLinkPolicyModal({
                     placeholder={'0x1234...\n0x5678...'}
                     value={addresses}
                     onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setAddresses(e.target.value)}
-                    className="w-full min-h-[80px] px-4 py-3 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] text-[13px] text-[#2D3436] font-mono placeholder:text-[#B5B0AA] focus:border-lavender/40 focus:outline-none transition-colors resize-none"
+                    className="w-full min-h-[80px] px-4 py-3 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] text-[13px] text-[#2D3436] font-mono placeholder:text-[#B5B0AA] focus:border-coral/40 focus:outline-none transition-colors resize-none"
                   />
                   <p className="text-[11px] text-[#9B9590] mt-1">
                     Enter addresses separated by commas or new lines
@@ -214,7 +214,8 @@ export function CreateAndLinkPolicyModal({
             </div>
 
             {feeToken && tokens.length > 0 && (
-              <div className="px-6 pb-4">
+              <div className="px-6 pb-4 flex items-center justify-between">
+                <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
                 <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
               </div>
             )}
@@ -228,7 +229,7 @@ export function CreateAndLinkPolicyModal({
                 Cancel
               </Button>
               <Button
-                className="flex-1 h-11 rounded-xl font-semibold bg-lavender hover:bg-lavender/80 text-white"
+                className="flex-1 h-11 rounded-xl font-semibold bg-coral hover:bg-coral/80 text-white"
                 onClick={handleReview}
               >
                 Continue
@@ -315,7 +316,7 @@ export function CreateAndLinkPolicyModal({
                 Back
               </Button>
               <Button
-                className="flex-1 h-11 rounded-xl font-semibold bg-lavender hover:bg-lavender/80 text-white"
+                className="flex-1 h-11 rounded-xl font-semibold bg-coral hover:bg-coral/80 text-white"
                 onClick={handleSubmit}
               >
                 Create & Link
@@ -337,7 +338,7 @@ export function CreateAndLinkPolicyModal({
             </div>
 
             <div className="px-6 pb-6 flex flex-col items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 text-lavender animate-spin" />
+              <Loader2 className="h-8 w-8 text-coral animate-spin" />
               <p className="text-[13px] text-[#9B9590] mt-4 text-center">
                 {modalState === 'creating'
                   ? 'Creating your new policy on-chain...'

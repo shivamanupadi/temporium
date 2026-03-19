@@ -63,10 +63,10 @@ function Tip403FactoryIndexPage(): ReactElement {
           </Button>
           <Button
             onClick={() => setShowCreateModal(true)}
-            className="h-10 px-5 rounded-xl text-[13px] font-semibold bg-[#2D3436] hover:bg-[#3D4446] text-white"
+            className="h-10 px-5 text-[13px] font-semibold bg-[#E07A5F] hover:bg-[#D4694F] text-white shadow-lg shadow-[#E07A5F]/15"
           >
             <Plus className="w-3.5 h-3.5 mr-1.5" />
-            Create
+            Create Policy
           </Button>
         </div>
       </motion.div>

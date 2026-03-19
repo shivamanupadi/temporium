@@ -5,7 +5,8 @@ set -e
 TESTNET_RPC_URL="https://rpc.moderato.tempo.xyz"
 TESTNET_CHAIN_ID=42431
 MAINNET_RPC_URL="https://rpc.tempo.xyz"
-MAINNET_CHAIN_ID=42420
+MAINNET_CHAIN_ID=4217
+FEE_TOKEN="0x20c0000000000000000000000000000000000000"  # pathUSD (chain default)
 
 # File paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -29,12 +30,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --testnet|-t)
             NETWORK="testnet"
-            OP_ITEM="Temporium Wallet Contract Owner Development"
             shift
             ;;
         --mainnet|-m)
             NETWORK="mainnet"
-            OP_ITEM="Temporium Wallet Contract Owner Production"
             shift
             ;;
         --help|-h)
@@ -68,6 +67,13 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+# Select 1Password item based on deploy target (dev wallet for local, prod wallet for deploy)
+if [ "$DEPLOY_TARGET" = "dev" ]; then
+    OP_ITEM="Temporium Wallet Contract Owner Development"
+elif [ "$DEPLOY_TARGET" = "deploy" ]; then
+    OP_ITEM="Temporium Wallet Contract Owner Production"
+fi
+
 # Require both flags
 if [ -z "$DEPLOY_TARGET" ] || [ -z "$NETWORK" ]; then
     echo "Error: You must specify both target and network"
@@ -86,13 +92,11 @@ if [ "$NETWORK" = "testnet" ]; then
     RPC_URL="$TESTNET_RPC_URL"
     CHAIN_ID="$TESTNET_CHAIN_ID"
     NETWORK_LABEL="Testnet (Moderato)"
-    REGISTRY_VAR="TESTNET_PASSKEY_REGISTRY_ADDRESS"
     RELAYER_SECRET="TESTNET_RELAYER_PRIVATE_KEY"
 else
     RPC_URL="$MAINNET_RPC_URL"
     CHAIN_ID="$MAINNET_CHAIN_ID"
     NETWORK_LABEL="Mainnet"
-    REGISTRY_VAR="MAINNET_PASSKEY_REGISTRY_ADDRESS"
     RELAYER_SECRET="MAINNET_RELAYER_PRIVATE_KEY"
 fi
 
@@ -129,16 +133,16 @@ echo ""
 # Deploy the contract using forge create (works reliably on Tempo)
 echo "Deploying PasskeyRegistry..."
 cd "$SCRIPT_DIR"
-DEPLOY_OUTPUT=$(forge create src/PasskeyRegistry.sol:PasskeyRegistry \
+DEPLOY_LOG=$(mktemp)
+forge create src/PasskeyRegistry.sol:PasskeyRegistry \
     --rpc-url "$RPC_URL" \
     --private-key "$PRIVATE_KEY" \
-    --legacy \
-    --broadcast 2>&1)
-
-echo "$DEPLOY_OUTPUT"
+    --tempo.fee-token "$FEE_TOKEN" \
+    --broadcast 2>&1 | tee "$DEPLOY_LOG"
 
 # Extract contract address from output
-CONTRACT_ADDRESS=$(echo "$DEPLOY_OUTPUT" | grep -oE "Deployed to: 0x[a-fA-F0-9]{40}" | cut -d' ' -f3)
+CONTRACT_ADDRESS=$(grep -oE "Deployed to: 0x[a-fA-F0-9]{40}" "$DEPLOY_LOG" | cut -d' ' -f3)
+rm -f "$DEPLOY_LOG"
 
 if [ -z "$CONTRACT_ADDRESS" ]; then
     echo ""
@@ -159,10 +163,10 @@ if [ "$DEPLOY_TARGET" = "dev" ]; then
     touch "$DEV_VARS_FILE"
 
     # Update per-network PASSKEY_REGISTRY_ADDRESS
-    if grep -q "^${REGISTRY_VAR}=" "$DEV_VARS_FILE"; then
-        sed -i '' "s|^${REGISTRY_VAR}=.*|${REGISTRY_VAR}=\"$CONTRACT_ADDRESS\"|" "$DEV_VARS_FILE"
+    if grep -q "^MAINNET_PASSKEY_REGISTRY_ADDRESS=" "$DEV_VARS_FILE"; then
+        sed -i '' "s|^MAINNET_PASSKEY_REGISTRY_ADDRESS=.*|MAINNET_PASSKEY_REGISTRY_ADDRESS=\"$CONTRACT_ADDRESS\"|" "$DEV_VARS_FILE"
     else
-        echo "${REGISTRY_VAR}=\"$CONTRACT_ADDRESS\"" >> "$DEV_VARS_FILE"
+        echo "MAINNET_PASSKEY_REGISTRY_ADDRESS=\"$CONTRACT_ADDRESS\"" >> "$DEV_VARS_FILE"
     fi
 
     # Update per-network RELAYER_PRIVATE_KEY
@@ -173,7 +177,7 @@ if [ "$DEPLOY_TARGET" = "dev" ]; then
     fi
 
     echo "Updated .dev.vars:"
-    echo "  ${REGISTRY_VAR}=$CONTRACT_ADDRESS"
+    echo "  MAINNET_PASSKEY_REGISTRY_ADDRESS=$CONTRACT_ADDRESS"
     echo "  ${RELAYER_SECRET}=<updated>"
 
 elif [ "$DEPLOY_TARGET" = "deploy" ]; then
@@ -186,10 +190,10 @@ elif [ "$DEPLOY_TARGET" = "deploy" ]; then
     fi
 
     # Update per-network PASSKEY_REGISTRY_ADDRESS under [vars]
-    sed -i '' "s|^${REGISTRY_VAR} = \".*\"|${REGISTRY_VAR} = \"$CONTRACT_ADDRESS\"|" "$WRANGLER_FILE"
+    sed -i '' "s|^MAINNET_PASSKEY_REGISTRY_ADDRESS = \".*\"|MAINNET_PASSKEY_REGISTRY_ADDRESS = \"$CONTRACT_ADDRESS\"|" "$WRANGLER_FILE"
 
     echo "Updated wrangler.toml [vars]:"
-    echo "  ${REGISTRY_VAR} = \"$CONTRACT_ADDRESS\""
+    echo "  MAINNET_PASSKEY_REGISTRY_ADDRESS = \"$CONTRACT_ADDRESS\""
 
     # Set secret (no -e flag — single worker)
     echo ""

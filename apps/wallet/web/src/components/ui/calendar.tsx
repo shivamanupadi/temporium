@@ -14,10 +14,9 @@ const accentColorMap = {
       'aria-selected:bg-coral aria-selected:text-white aria-selected:hover:bg-coral aria-selected:hover:text-white',
   },
   lavender: {
-    selected:
-      'bg-lavender text-white hover:bg-lavender hover:text-white focus:bg-lavender focus:text-white',
+    selected: 'bg-coral text-white hover:bg-coral hover:text-white focus:bg-coral focus:text-white',
     dayButton:
-      'aria-selected:bg-lavender aria-selected:text-white aria-selected:hover:bg-lavender aria-selected:hover:text-white',
+      'aria-selected:bg-coral aria-selected:text-white aria-selected:hover:bg-coral aria-selected:hover:text-white',
   },
   sage: {
     selected: 'bg-sage text-white hover:bg-sage hover:text-white focus:bg-sage focus:text-white',
@@ -30,7 +29,7 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
-  accentColor = 'lavender',
+  accentColor = 'coral',
   ...props
 }: React.ComponentProps<typeof DayPicker> & { accentColor?: AccentColor }) {
   const colors = accentColorMap[accentColor];

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, type ReactElement } from 'rea
 import { Loader2, ShieldCheck, ShieldX } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { isAddress, type Address } from 'viem';
+import { useAccount } from 'wagmi';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
 import { ContactPicker } from '@/components/ContactPicker';
@@ -24,6 +25,7 @@ export function CheckAuthorizationModal({
   policyType,
   onClose,
 }: CheckAuthorizationModalProps): ReactElement {
+  const { address: walletAddress } = useAccount();
   const { checkAuthorization } = usePolicies();
 
   const [address, setAddress] = useState('');
@@ -115,7 +117,12 @@ export function CheckAuthorizationModal({
             </div>
 
             <div className="px-6 pb-4">
-              <ContactPicker value={address} onChange={setAddress} label="Address" />
+              <ContactPicker
+                value={address}
+                onChange={setAddress}
+                label="Address"
+                selfAddress={walletAddress}
+              />
             </div>
 
             <div className="px-6 pb-6 flex gap-3">

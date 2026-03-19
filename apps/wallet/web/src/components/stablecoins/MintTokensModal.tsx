@@ -1,7 +1,9 @@
 import { useState, useEffect, useCallback, useRef, type ReactElement } from 'react';
+import { useAccount } from 'wagmi';
 import { Loader2, ExternalLink } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
 import { ContactPicker } from '@/components/ContactPicker';
@@ -27,6 +29,7 @@ export function MintTokensModal({
   onSuccess,
   onClose,
 }: MintTokensModalProps): ReactElement {
+  const { address } = useAccount();
   const { mintTokens } = useStablecoins();
   const { tokens } = useTokenList();
 
@@ -37,15 +40,22 @@ export function MintTokensModal({
   const [txHash, setTxHash] = useState<string | null>(null);
   const isSubmittingRef = useRef(false);
 
+  // Reset form when modal opens
+  const prevOpenRef = useRef(false);
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !prevOpenRef.current) {
       setAmount('');
       setMintTo(defaultMintTo);
-      setFeeToken(tokens[0] ?? null);
       setTxHash(null);
       setIsSubmitting(false);
     }
-  }, [isOpen, defaultMintTo, tokens]);
+    prevOpenRef.current = isOpen;
+  }, [isOpen, defaultMintTo]);
+
+  // Set fee token when tokens load
+  useEffect(() => {
+    if (tokens.length > 0 && !feeToken) setFeeToken(tokens[0]);
+  }, [tokens, feeToken]);
 
   const handleSubmit = useCallback(async (): Promise<void> => {
     if (!selectedCoin || !amount || !mintTo) {
@@ -131,7 +141,7 @@ export function MintTokensModal({
                   </span>
                   <button
                     onClick={() => window.open(getExplorerTxUrl(txHash), '_blank')}
-                    className="flex items-center gap-1 text-[13px] text-lavender hover:text-lavender/80 transition-colors cursor-pointer"
+                    className="flex items-center gap-1 text-[13px] text-coral hover:text-coral/80 transition-colors cursor-pointer"
                   >
                     <span className="font-mono">
                       {txHash.slice(0, 8)}...{txHash.slice(-4)}
@@ -168,26 +178,31 @@ export function MintTokensModal({
                 Issue new tokens to an address
               </DialogDescription>
             </div>
-            <div className="px-6 pb-4">
-              <div className="space-y-3">
-                <ContactPicker value={mintTo} onChange={setMintTo} label="Mint To" />
-                <div>
-                  <label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2 block">
-                    Amount
-                  </label>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="0.00"
-                    value={amount}
-                    onChange={e => setAmount(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] placeholder:text-[#B5B0AA] focus:border-lavender/40 focus:outline-none transition-colors"
-                  />
-                </div>
+            <div className="px-6 pb-4 space-y-3">
+              <ContactPicker
+                value={mintTo}
+                onChange={setMintTo}
+                label="Mint To"
+                selfAddress={address}
+                matchLabel="Minting to"
+              />
+              <div>
+                <label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2 block">
+                  Amount
+                </label>
+                <Input
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="0.00"
+                  value={amount}
+                  onChange={e => setAmount(e.target.value)}
+                  className="text-[14px] bg-[#FDFBF8]"
+                />
               </div>
             </div>
             {feeToken && tokens.length > 0 && (
-              <div className="px-6 pb-4">
+              <div className="px-6 pb-4 flex items-center justify-between">
+                <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
                 <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
               </div>
             )}
@@ -201,7 +216,7 @@ export function MintTokensModal({
                 Cancel
               </Button>
               <Button
-                className="flex-1 h-11 rounded-xl font-semibold bg-lavender hover:bg-lavender/80 text-white"
+                className="flex-1 h-11 rounded-xl font-semibold bg-coral hover:bg-coral/80 text-white"
                 onClick={handleSubmit}
                 disabled={isSubmitting || !amount || !mintTo}
               >

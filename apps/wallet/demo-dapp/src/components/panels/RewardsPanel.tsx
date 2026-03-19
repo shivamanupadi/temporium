@@ -28,7 +28,7 @@ export function RewardsPanel(): ReactElement {
     <div className="space-y-4">
       <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3]">
         <div className="flex items-center gap-2 mb-3">
-          <Gift className="w-4 h-4 text-[#5B9A6F]" />
+          <Gift className="w-4 h-4 text-[#6B8F71]" />
           <span className="text-[13px] font-semibold text-[#2D3436]">Actions.reward.claim</span>
           <span className="text-[11px] text-[#9B9590]">token</span>
         </div>

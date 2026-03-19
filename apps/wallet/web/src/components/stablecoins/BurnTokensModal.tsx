@@ -119,7 +119,7 @@ export function BurnTokensModal({
                   </span>
                   <button
                     onClick={() => window.open(getExplorerTxUrl(txHash), '_blank')}
-                    className="flex items-center gap-1 text-[13px] text-lavender hover:text-lavender/80 transition-colors cursor-pointer"
+                    className="flex items-center gap-1 text-[13px] text-coral hover:text-coral/80 transition-colors cursor-pointer"
                   >
                     <span className="font-mono">
                       {txHash.slice(0, 8)}...{txHash.slice(-4)}
@@ -168,13 +168,14 @@ export function BurnTokensModal({
                     placeholder="0.00"
                     value={amount}
                     onChange={e => setAmount(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] placeholder:text-[#B5B0AA] focus:border-lavender/40 focus:outline-none transition-colors"
+                    className="w-full px-4 py-3 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] placeholder:text-[#B5B0AA] focus:border-coral/40 focus:outline-none transition-colors"
                   />
                 </div>
               </div>
             </div>
             {feeToken && tokens.length > 0 && (
-              <div className="px-6 pb-4">
+              <div className="px-6 pb-4 flex items-center justify-between">
+                <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
                 <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
               </div>
             )}

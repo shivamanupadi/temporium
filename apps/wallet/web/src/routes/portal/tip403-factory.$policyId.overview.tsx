@@ -83,7 +83,7 @@ function Tip403FactoryOverview(): ReactElement {
   if (isLoading || !policy) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-8 w-8 text-[#9B72CF] animate-spin" />
+        <Loader2 className="h-8 w-8 text-[#E07A5F] animate-spin" />
       </div>
     );
   }
@@ -99,16 +99,16 @@ function Tip403FactoryOverview(): ReactElement {
         <div className="lg:flex-[3]">
           {/* Hero Section */}
           <div
-            className={`rounded-2xl overflow-hidden mb-6 ${isWhitelist ? 'bg-[var(--color-sage)]/5' : 'bg-coral/5'}`}
+            className={`rounded-2xl overflow-hidden mb-6 ${isWhitelist ? 'bg-[#6B8F71]/5' : 'bg-coral/5'}`}
           >
             <div className="p-6">
               <div className="flex items-start gap-4 mb-5">
                 {/* Icon */}
                 <div
-                  className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${isWhitelist ? 'bg-[var(--color-sage)]/10' : 'bg-coral/8'}`}
+                  className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${isWhitelist ? 'bg-[#6B8F71]/8' : 'bg-coral/8'}`}
                 >
                   {isWhitelist ? (
-                    <ShieldCheck className="h-7 w-7 text-[var(--color-sage)]" />
+                    <ShieldCheck className="h-7 w-7 text-[#6B8F71]" />
                   ) : (
                     <ShieldX className="h-7 w-7 text-coral" />
                   )}
@@ -121,17 +121,13 @@ function Tip403FactoryOverview(): ReactElement {
                       Policy #{policy.policyId}
                     </h1>
                     <span
-                      className={`text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full ${
-                        isWhitelist
-                          ? 'text-[var(--color-sage)] bg-[var(--color-sage)]/12'
-                          : 'text-coral bg-coral/10'
-                      }`}
+                      className={`text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full ${isWhitelist ? 'text-[#6B8F71] bg-[#6B8F71]/10' : 'text-coral bg-coral/10'}`}
                     >
                       {isWhitelist ? 'Whitelist' : 'Blacklist'}
                     </span>
                     {isAdmin && (
                       <span
-                        className={`text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full ${isWhitelist ? 'text-[var(--color-sage)] bg-[var(--color-sage)]/12' : 'text-coral bg-coral/10'}`}
+                        className={`text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1 rounded-full ${isWhitelist ? 'text-[#6B8F71] bg-[#6B8F71]/10' : 'text-coral bg-coral/10'}`}
                       >
                         Admin
                       </span>
@@ -146,11 +142,13 @@ function Tip403FactoryOverview(): ReactElement {
                   {/* Copyable ID */}
                   <button
                     onClick={copyPolicyId}
-                    className="mt-2.5 inline-flex items-center gap-1.5 text-[11px] text-[#B5B0AA] hover:text-[#6B6560] font-mono bg-[#F5F2ED] hover:bg-[#EDE9E3] px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
+                    className={`mt-2.5 inline-flex items-center gap-1.5 text-[11px] font-mono px-2.5 py-1 rounded-lg transition-colors cursor-pointer ${isWhitelist ? 'text-[#6B8F71]/70 hover:text-[#6B8F71] bg-[#6B8F71]/8 hover:bg-[#6B8F71]/12' : 'text-coral/70 hover:text-coral bg-coral/8 hover:bg-coral/12'}`}
                   >
                     ID: {policyId}
                     {copied ? (
-                      <Check className="h-3 w-3 text-[var(--color-sage)]" />
+                      <Check
+                        className={`h-3 w-3 ${isWhitelist ? 'text-[#6B8F71]' : 'text-coral'}`}
+                      />
                     ) : (
                       <Copy className="h-3 w-3" />
                     )}
@@ -162,13 +160,14 @@ function Tip403FactoryOverview(): ReactElement {
               <div className="flex gap-3">
                 <Button
                   onClick={() => setActiveModal('add-address')}
-                  className={`flex-1 h-11 rounded-xl text-[13px] font-semibold text-white shadow-sm ${isWhitelist ? 'bg-[var(--color-sage)] hover:bg-[var(--color-sage)]/85' : 'bg-coral hover:bg-coral/85'}`}
+                  className={`flex-1 h-11 text-[13px] font-semibold text-white shadow-lg ${isWhitelist ? 'bg-[#6B8F71] hover:bg-[#5A7D60] shadow-[#6B8F71]/15' : 'bg-[#E07A5F] hover:bg-[#D4694F] shadow-[#E07A5F]/15'}`}
                 >
                   <UserPlus className="h-4 w-4 mr-2" /> Add Address
                 </Button>
                 <Button
                   onClick={() => setActiveModal('check-auth')}
-                  className={`flex-1 h-11 rounded-xl text-[13px] font-medium bg-white border shadow-sm ${isWhitelist ? 'border-[var(--color-sage)]/20 text-[var(--color-sage)] hover:bg-[var(--color-sage)]/5' : 'border-coral/20 text-coral hover:bg-coral/5'}`}
+                  variant="outline"
+                  className="flex-1 h-11 text-[13px] font-medium border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
                 >
                   <Search className="h-4 w-4 mr-2" /> Check Address
                 </Button>

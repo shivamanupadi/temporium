@@ -44,7 +44,7 @@ export function CreatePolicyModal({
   // Reset form only when modal opens (not when tokens refetch)
   useEffect(() => {
     if (isOpen) {
-      setPolicyType('whitelist');
+      setPolicyType('blacklist');
       setAddressesInput('');
       setFeeToken(tokens[0] ?? null);
       setModalState('form');
@@ -140,7 +140,7 @@ export function CreatePolicyModal({
                     Policy Type
                   </label>
                   <Select value={policyType} onValueChange={v => setPolicyType(v as PolicyType)}>
-                    <SelectTrigger className="w-full !h-[46px] px-4 rounded-xl border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] shadow-none focus:border-lavender/40 transition-colors">
+                    <SelectTrigger className="w-full !h-[46px] px-4 rounded-xl border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] shadow-none focus:border-coral/40 transition-colors">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -168,17 +168,11 @@ export function CreatePolicyModal({
                     value={addressesInput}
                     onChange={e => setAddressesInput(e.target.value)}
                     rows={3}
-                    className="w-full px-4 py-3 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] font-mono placeholder:text-[#B5B0AA] focus:border-lavender/40 focus:outline-none transition-colors resize-none"
+                    className="w-full px-4 py-3 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] font-mono placeholder:text-[#B5B0AA] focus:border-coral/40 focus:outline-none transition-colors resize-none"
                   />
                 </div>
               </div>
             </div>
-
-            {feeToken && tokens.length > 0 && (
-              <div className="px-6 pb-4">
-                <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
-              </div>
-            )}
 
             <div className="px-6 pb-6 flex gap-3">
               <Button
@@ -243,17 +237,14 @@ export function CreatePolicyModal({
                   </span>
                   <span className="text-[13px] font-medium text-[#2D3436]">{addresses.length}</span>
                 </div>
-                {feeToken && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
-                      Fee Token
-                    </span>
-                    <span className="text-[13px] font-medium text-[#2D3436]">
-                      {feeToken.symbol}
-                    </span>
-                  </div>
-                )}
               </div>
+
+              {feeToken && tokens.length > 0 && (
+                <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#FDFBF8] border border-[#EDE9E3]">
+                  <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
+                  <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
+                </div>
+              )}
             </div>
 
             <div className="px-6 pb-6 flex gap-3">

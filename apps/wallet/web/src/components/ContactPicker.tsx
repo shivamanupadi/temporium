@@ -2,6 +2,7 @@ import { type ReactElement, useState, useEffect, useRef, useCallback } from 'rea
 import { createPortal } from 'react-dom';
 import { Users, ChevronDown, AlertTriangle } from 'lucide-react';
 import { apiGet } from '@/lib/api-client';
+import { Input } from '@/components/ui/input';
 import { formatAddress, isValidAddress, cn } from '@/lib/utils';
 import type { Contact } from '@/types';
 
@@ -13,6 +14,7 @@ export interface ContactPickerProps {
   showValidation?: boolean;
   compact?: boolean;
   selfAddress?: string;
+  matchLabel?: string;
 }
 
 export function ContactPicker({
@@ -23,25 +25,25 @@ export function ContactPicker({
   showValidation = true,
   compact = false,
   selfAddress,
+  matchLabel = 'Sending to',
 }: ContactPickerProps): ReactElement {
   const [showContacts, setShowContacts] = useState(false);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [contactsLoaded, setContactsLoaded] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const portalRef = useRef<HTMLDivElement>(null);
   const [portalPos, setPortalPos] = useState<{ top: number; left: number } | null>(null);
 
   const isInvalid = showValidation && value && !isValidAddress(value);
 
-  // Load contacts on first open
   const loadContacts = useCallback(async () => {
     if (contactsLoaded) return;
     try {
       const data = await apiGet<Contact[]>('/v1/contacts');
       setContacts(data);
     } catch {
-      // silently fail — contacts are optional
+      // silently fail
     } finally {
       setContactsLoaded(true);
     }
@@ -53,13 +55,13 @@ export function ContactPicker({
     if (next) loadContacts();
   }, [showContacts, loadContacts]);
 
-  // Position the portal dropdown above the trigger in compact mode
+  // Position portal dropdown in compact mode
   useEffect(() => {
     if (!compact || !showContacts || !triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
     setPortalPos({
       top: rect.top + window.scrollY,
-      left: rect.right - 240, // w-60 = 240px, align right edge
+      left: rect.right - 260,
     });
   }, [compact, showContacts]);
 
@@ -69,10 +71,9 @@ export function ContactPicker({
     const handler = (e: MouseEvent): void => {
       const target = e.target as Node;
       if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(target) &&
-        portalRef.current &&
-        !portalRef.current.contains(target)
+        containerRef.current &&
+        !containerRef.current.contains(target) &&
+        (!portalRef.current || !portalRef.current.contains(target))
       ) {
         setShowContacts(false);
       }
@@ -89,89 +90,79 @@ export function ContactPicker({
     [onChange]
   );
 
-  // Find matching contact for current value
-  const matchedContact = contacts.find(c => c.address.toLowerCase() === value.toLowerCase());
-
-  // Show "Self" entry if selfAddress is provided and not already in contacts
   const hasSelfInContacts = selfAddress
     ? contacts.some(c => c.address.toLowerCase() === selfAddress.toLowerCase())
     : true;
 
-  const renderContactRow = (contact: Contact, isLast: boolean): ReactElement => {
-    const isSelected = contact.address.toLowerCase() === value.toLowerCase();
-    return (
-      <button
-        key={contact.id}
-        type="button"
-        onClick={() => selectContact(contact)}
-        className={cn(
-          'flex items-center gap-2.5 w-full px-3 py-2.5 text-left transition-colors cursor-pointer',
-          isSelected ? 'bg-coral/5' : 'hover:bg-[#F5F2ED]',
-          !isLast && 'border-b border-[#EDE9E3]/40'
-        )}
-      >
-        <div
-          className={cn(
-            'w-8 h-8 rounded-full flex items-center justify-center shrink-0',
-            isSelected ? 'bg-coral/10' : 'bg-lavender/10'
-          )}
-        >
-          <span
-            className={cn('text-[11px] font-bold', isSelected ? 'text-coral' : 'text-lavender')}
-          >
-            {contact.name
-              .split(' ')
-              .map(w => w[0])
-              .join('')
-              .slice(0, 2)
-              .toUpperCase()}
-          </span>
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-medium text-[#2D3436] truncate">{contact.name}</p>
-          <p className="text-[11px] text-[#9B9590] font-mono truncate">
-            {formatAddress(contact.address, 6)}
-          </p>
-        </div>
-      </button>
-    );
-  };
+  const allContacts: Contact[] = [
+    ...(selfAddress && !hasSelfInContacts
+      ? [
+          {
+            id: '__self__',
+            name: 'Self',
+            address: selfAddress as `0x${string}`,
+            createdAt: '',
+            updatedAt: '',
+          },
+        ]
+      : []),
+    ...contacts,
+  ];
+
+  const matchedContact = allContacts.find(c => c.address.toLowerCase() === value.toLowerCase());
 
   const dropdownContent = (
-    <div className="max-h-[200px] overflow-y-auto">
+    <div className="max-h-[220px] overflow-y-auto py-1">
       {!contactsLoaded ? (
-        <div className="px-4 py-3 text-[12px] text-[#9B9590]">Loading contacts...</div>
-      ) : contacts.length === 0 && hasSelfInContacts ? (
+        <div className="px-4 py-4 text-[12px] text-[#9B9590] text-center">Loading...</div>
+      ) : allContacts.length === 0 ? (
         <div className="px-4 py-6 text-center">
-          <div className="w-9 h-9 rounded-full bg-[#F5F2ED] flex items-center justify-center mx-auto mb-2">
-            <Users className="w-4 h-4 text-[#B5B0AA]" />
+          <div className="w-8 h-8 rounded-full bg-[#F5F2ED] flex items-center justify-center mx-auto mb-2">
+            <Users className="w-3.5 h-3.5 text-[#B5B0AA]" />
           </div>
           <p className="text-[12px] text-[#9B9590]">No contacts yet</p>
         </div>
       ) : (
-        <>
-          {selfAddress &&
-            !hasSelfInContacts &&
-            renderContactRow(
-              {
-                id: '__self__',
-                name: 'Self',
-                address: selfAddress as `0x${string}`,
-                createdAt: '',
-                updatedAt: '',
-              },
-              contacts.length === 0
-            )}
-          {contacts.map((contact, index) =>
-            renderContactRow(contact, index === contacts.length - 1)
-          )}
-        </>
+        allContacts.map(contact => {
+          const isSelected = contact.address.toLowerCase() === value.toLowerCase();
+          const initials = contact.name
+            .split(' ')
+            .map(w => w[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase();
+          return (
+            <button
+              key={contact.id}
+              type="button"
+              onMouseDown={e => {
+                e.preventDefault();
+                selectContact(contact);
+              }}
+              className={cn(
+                'flex items-center gap-2.5 w-full px-3 py-2 text-left transition-colors',
+                isSelected ? 'bg-[#F5F2ED]' : 'hover:bg-[#FDFBF8]'
+              )}
+            >
+              <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-[#F5F2ED]">
+                <span className="text-[10px] font-bold text-[#9B9590]">{initials}</span>
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[13px] font-medium text-[#2D3436] truncate">{contact.name}</p>
+                <p className="text-[10px] text-[#B5B0AA] font-mono truncate">
+                  {formatAddress(contact.address, 6)}
+                </p>
+              </div>
+              {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-[#2D3436] shrink-0" />}
+            </button>
+          );
+        })
       )}
     </div>
   );
 
-  const inlineDropdown = showContacts && (
-    <div className="absolute right-0 top-full mt-1.5 w-60 rounded-xl border border-[#EDE9E3] bg-white z-50 overflow-hidden shadow-lg shadow-black/[0.06]">
+  const dropdown = showContacts && (
+    <div className="absolute right-0 top-full mt-1 w-64 rounded-xl border border-[#EDE9E3] bg-white z-50 overflow-hidden shadow-lg shadow-black/[0.06]">
       {dropdownContent}
     </div>
   );
@@ -182,7 +173,7 @@ export function ContactPicker({
     createPortal(
       <div
         ref={portalRef}
-        className="fixed w-60 rounded-xl border border-[#EDE9E3] bg-white z-[9999] overflow-hidden shadow-lg shadow-black/[0.06]"
+        className="fixed w-64 rounded-xl border border-[#EDE9E3] bg-white z-[9999] overflow-hidden shadow-lg shadow-black/[0.06]"
         style={{
           top: portalPos.top - 8,
           left: portalPos.left,
@@ -195,75 +186,79 @@ export function ContactPicker({
     );
 
   return (
-    <div>
-      {/* Label row with Contacts toggle (full mode) */}
+    <div ref={containerRef}>
+      {/* Label row */}
       {!compact && (
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-3">
           <label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
             {label}
           </label>
-          <div ref={dropdownRef} className="relative">
+          <div className="relative">
             <button
               type="button"
               onClick={toggleDropdown}
               className={cn(
-                'flex items-center gap-1 text-[11px] font-medium transition-colors cursor-pointer',
-                showContacts ? 'text-coral' : 'text-[#9B9590] hover:text-[#6B6560]'
+                'flex items-center gap-1.5 text-[11px] font-medium transition-colors px-2.5 py-1 rounded-lg',
+                showContacts
+                  ? 'text-[#2D3436] bg-[#EDE9E3]'
+                  : 'text-[#9B9590] bg-[#F5F2ED] hover:bg-[#EDE9E3] hover:text-[#6B6560]'
               )}
             >
               <Users className="h-3 w-3" />
               Contacts
               <ChevronDown
-                className={cn('h-3 w-3 transition-transform', showContacts && 'rotate-180')}
+                className={cn(
+                  'h-3 w-3 transition-transform duration-200',
+                  showContacts && 'rotate-180'
+                )}
               />
             </button>
-            {inlineDropdown}
+            {dropdown}
           </div>
         </div>
       )}
 
       {/* Address input */}
       <div className="relative">
-        <input
+        <Input
           type="text"
           placeholder={placeholder}
           value={value}
           onChange={e => onChange(e.target.value.trim())}
           className={cn(
-            'w-full rounded-xl border border-[#EDE9E3] text-[14px] text-[#2D3436] font-mono placeholder:text-[#B5B0AA] focus:border-coral/40 focus:outline-none transition-colors',
-            compact ? 'h-10 px-3 pr-9 bg-white' : 'px-4 py-3 bg-[#FDFBF8]',
-            isInvalid && 'border-coral/50 bg-coral/[0.03]'
+            'text-[14px] font-mono',
+            compact ? 'px-3 pr-9 bg-white' : 'px-4 bg-[#FDFBF8]',
+            isInvalid && 'border-red-300 bg-red-50/30'
           )}
         />
-        {compact ? (
-          <div ref={dropdownRef} className="absolute right-2 top-1/2 -translate-y-1/2">
+        {compact && (
+          <div className="absolute right-2 top-1/2 -translate-y-1/2">
             <button
               ref={triggerRef}
               type="button"
               onClick={toggleDropdown}
               className={cn(
-                'p-1 rounded-md transition-colors cursor-pointer',
+                'p-1.5 rounded-lg transition-colors',
                 showContacts
-                  ? 'text-coral bg-coral/5'
-                  : 'text-[#B5B0AA] hover:text-[#6B6560] hover:bg-[#F5F2ED]'
+                  ? 'text-[#2D3436] bg-[#EDE9E3]'
+                  : 'text-[#B5B0AA] bg-[#F5F2ED] hover:bg-[#EDE9E3] hover:text-[#6B6560]'
               )}
             >
               <Users className="h-3.5 w-3.5" />
             </button>
             {portalDropdown}
           </div>
-        ) : (
-          matchedContact && (
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-medium text-coral bg-coral/8 px-2 py-0.5 rounded-full">
-              {matchedContact.name}
-            </span>
-          )
         )}
       </div>
+      {!compact && matchedContact && (
+        <p className="text-[11px] font-medium text-[#9B9590] mt-1.5">
+          {matchLabel} <span className="text-[#2D3436]">{matchedContact.name}</span>
+        </p>
+      )}
 
       {/* Validation error */}
       {isInvalid && !compact && (
-        <p className="text-[11px] text-coral mt-1.5 flex items-center gap-1">
+        <p className="text-[11px] text-red-500 mt-1.5 flex items-center gap-1">
           <AlertTriangle className="w-3 h-3" />
           Invalid address format
         </p>

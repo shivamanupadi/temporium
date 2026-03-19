@@ -106,7 +106,7 @@ function StatusRow({ label, value, highlight, mono }: { label: string; value: st
       <span className="text-[12px] text-[#9B9590]">{label}</span>
       <span
         className={`text-[12px] font-medium ${mono ? 'font-mono' : ''} ${
-          highlight ? 'text-[#5B9A6F]' : 'text-[#2D3436]'
+          highlight ? 'text-[#6B8F71]' : 'text-[#2D3436]'
         }`}
       >
         {mono && value.startsWith('0x') && value.length > 16

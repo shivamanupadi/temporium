@@ -7,7 +7,7 @@ import { Actions, tempoPublicClient, waitForTx } from '@/lib/tempo-client';
 interface UseFeePreferenceReturn {
   preferredFeeToken: Address | null;
   isLoading: boolean;
-  setFeePreference: (tokenAddress: Address) => Promise<string>;
+  setFeePreference: (tokenAddress: Address, feeToken?: Address) => Promise<string>;
   isSetting: boolean;
 }
 
@@ -33,9 +33,12 @@ export function useFeePreference(): UseFeePreferenceReturn {
   });
 
   const setFeePreference = useCallback(
-    async (tokenAddress: Address): Promise<string> => {
+    async (tokenAddress: Address, feeToken?: Address): Promise<string> => {
       if (!walletClient) throw new Error('Wallet not connected');
-      const hash = await Actions.fee.setUserToken(walletClient, { token: tokenAddress });
+      const hash = await Actions.fee.setUserToken(walletClient, {
+        token: tokenAddress,
+        ...(feeToken ? { feeToken } : {}),
+      });
       await waitForTx(hash);
       await queryClient.invalidateQueries({ queryKey: ['feePreference', address] });
       return hash;

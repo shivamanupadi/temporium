@@ -138,7 +138,7 @@ function Tip20StudioOverview(): ReactElement {
   if (isLoading || !stablecoin) {
     return (
       <div className="flex items-center justify-center py-16">
-        <Loader2 className="h-8 w-8 text-lavender animate-spin" />
+        <Loader2 className="h-8 w-8 text-coral animate-spin" />
       </div>
     );
   }
@@ -153,11 +153,11 @@ function Tip20StudioOverview(): ReactElement {
         {/* Left Column - Main Content */}
         <div className="lg:flex-[3]">
           {/* Hero Section */}
-          <div className="bg-lavender/5 rounded-2xl p-6 mb-6">
+          <div className="bg-coral/5 rounded-2xl p-6 mb-6">
             <div className="flex items-start justify-between mb-6">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-2xl bg-card shadow-sm flex items-center justify-center">
-                  <CircleDollarSign className="h-8 w-8 text-lavender" />
+                  <CircleDollarSign className="h-8 w-8 text-coral" />
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
@@ -191,7 +191,7 @@ function Tip20StudioOverview(): ReactElement {
                       href={getExplorerTokenUrl(tokenAddress)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-[12px] text-lavender hover:text-lavender/80 transition-colors"
+                      className="text-[12px] text-coral hover:text-coral/80 transition-colors"
                     >
                       <ExternalLink className="h-3.5 w-3.5" />
                     </a>
@@ -204,7 +204,7 @@ function Tip20StudioOverview(): ReactElement {
             <div className="flex gap-3">
               <Button
                 onClick={() => setActiveModal('mint')}
-                className="flex-1 h-11 rounded-xl font-semibold bg-lavender hover:bg-lavender/80 text-white"
+                className="flex-1 h-11 rounded-xl font-semibold bg-coral hover:bg-coral/80 text-white"
               >
                 <Plus className="h-4 w-4 mr-2" /> Mint
               </Button>
@@ -569,11 +569,11 @@ function TransferPolicyCard({
       };
     }
     return {
-      icon: <Shield className="h-5 w-5 text-lavender" />,
+      icon: <Shield className="h-5 w-5 text-coral" />,
       label: 'Custom Policy',
       description: 'Transfer restrictions apply',
-      color: 'text-lavender',
-      bgColor: 'bg-lavender/10',
+      color: 'text-coral',
+      bgColor: 'bg-coral/10',
     };
   };
 
@@ -636,14 +636,14 @@ function TransferPolicyCard({
               <div className="flex gap-2">
                 <button
                   onClick={handleCreate}
-                  className="flex items-center justify-center gap-2 flex-1 h-9 rounded-lg text-[12px] font-medium text-white bg-lavender hover:bg-lavender/80 transition-colors cursor-pointer"
+                  className="flex items-center justify-center gap-2 flex-1 h-9 rounded-lg text-[12px] font-medium text-white bg-coral hover:bg-coral/80 transition-colors cursor-pointer"
                 >
                   <Shield className="h-3.5 w-3.5" />
                   Create Policy
                 </button>
                 <button
                   onClick={handleLink}
-                  className="flex items-center justify-center gap-2 flex-1 h-9 rounded-lg text-[12px] font-medium text-lavender bg-lavender/5 hover:bg-lavender/10 transition-colors cursor-pointer"
+                  className="flex items-center justify-center gap-2 flex-1 h-9 rounded-lg text-[12px] font-medium text-coral bg-coral/5 hover:bg-coral/10 transition-colors cursor-pointer"
                 >
                   <Shield className="h-3.5 w-3.5" />
                   Link Existing
@@ -720,7 +720,7 @@ function TransferPolicyCard({
                 <Link
                   to="/portal/tip403-factory"
                   search={{ policyId: policyId.toString() }}
-                  className="flex items-center justify-center gap-2 flex-1 h-9 rounded-lg text-[12px] font-medium text-lavender bg-lavender/5 hover:bg-lavender/10 transition-colors"
+                  className="flex items-center justify-center gap-2 flex-1 h-9 rounded-lg text-[12px] font-medium text-coral bg-coral/5 hover:bg-coral/10 transition-colors"
                 >
                   <Shield className="h-3.5 w-3.5" />
                   View Policy

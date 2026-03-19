@@ -126,7 +126,7 @@ export function CreateStablecoinModal({
                     placeholder="My Token"
                     value={name}
                     onChange={e => setName(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] placeholder:text-[#B5B0AA] focus:border-lavender/40 focus:outline-none transition-colors"
+                    className="w-full px-4 py-3 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] placeholder:text-[#B5B0AA] focus:border-coral/40 focus:outline-none transition-colors"
                   />
                 </div>
                 <div>
@@ -139,7 +139,7 @@ export function CreateStablecoinModal({
                     value={symbol}
                     onChange={e => setSymbol(e.target.value.toUpperCase())}
                     maxLength={6}
-                    className="w-full px-4 py-3 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] placeholder:text-[#B5B0AA] focus:border-lavender/40 focus:outline-none transition-colors"
+                    className="w-full px-4 py-3 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] placeholder:text-[#B5B0AA] focus:border-coral/40 focus:outline-none transition-colors"
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -148,7 +148,7 @@ export function CreateStablecoinModal({
                       Currency
                     </label>
                     <Select value={currency} onValueChange={setCurrency}>
-                      <SelectTrigger className="w-full !h-[46px] px-4 rounded-xl border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] shadow-none focus:border-lavender/40 transition-colors">
+                      <SelectTrigger className="w-full !h-[46px] px-4 rounded-xl border-[#EDE9E3] bg-[#FDFBF8] text-[14px] text-[#2D3436] shadow-none focus:border-coral/40 transition-colors">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -173,10 +173,6 @@ export function CreateStablecoinModal({
                     />
                   </div>
                 </div>
-
-                {feeToken && tokens.length > 0 && (
-                  <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
-                )}
               </div>
             </div>
 
@@ -189,7 +185,7 @@ export function CreateStablecoinModal({
                 Cancel
               </Button>
               <Button
-                className="flex-1 h-11 rounded-xl font-semibold bg-lavender hover:bg-lavender/80 text-white"
+                className="flex-1 h-11 rounded-xl font-semibold bg-coral hover:bg-coral/80 text-white"
                 onClick={handleReview}
                 disabled={!name || !symbol}
               >
@@ -231,17 +227,14 @@ export function CreateStablecoinModal({
                   </span>
                   <span className="text-[13px] font-medium text-[#2D3436]">6</span>
                 </div>
-                {feeToken && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
-                      Fee Token
-                    </span>
-                    <span className="text-[13px] font-medium text-[#2D3436]">
-                      {feeToken.symbol}
-                    </span>
-                  </div>
-                )}
               </div>
+
+              {feeToken && tokens.length > 0 && (
+                <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#FDFBF8] border border-[#EDE9E3]">
+                  <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
+                  <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
+                </div>
+              )}
             </div>
 
             <div className="px-6 pb-6 flex gap-3">
@@ -254,7 +247,7 @@ export function CreateStablecoinModal({
                 Back
               </Button>
               <Button
-                className="flex-1 h-11 rounded-xl font-semibold bg-lavender hover:bg-lavender/80 text-white"
+                className="flex-1 h-11 rounded-xl font-semibold bg-coral hover:bg-coral/80 text-white"
                 onClick={handleSubmit}
                 disabled={isCreating}
               >

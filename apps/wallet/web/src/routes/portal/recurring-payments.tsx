@@ -24,7 +24,6 @@ import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 import { TokenPicker } from '@/components/TokenPicker';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
@@ -298,7 +297,7 @@ function RecurringPaymentsPage(): ReactElement {
                 href={`${LINKS.explorer}/address/${contractAddress}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[11px] font-mono text-[#9B72CF]/70 hover:text-[#9B72CF] transition-colors"
+                className="text-[11px] font-mono text-[#6B6560] hover:text-[#2D3436] transition-colors"
               >
                 {formatAddress(contractAddress, 6)}
                 <ExternalLink className="w-2.5 h-2.5 inline ml-1 -mt-0.5" />
@@ -320,7 +319,7 @@ function RecurringPaymentsPage(): ReactElement {
           </Button>
           <Button
             onClick={() => setShowCreate(true)}
-            className="h-10 px-5 rounded-xl text-[13px] font-semibold bg-sage hover:bg-sage/80 text-white"
+            className="h-10 px-5 rounded-xl text-[13px] font-semibold bg-coral hover:bg-coral/80 text-white"
           >
             <Plus className="w-3.5 h-3.5 mr-1.5" />
             New Subscription
@@ -329,23 +328,21 @@ function RecurringPaymentsPage(): ReactElement {
       </motion.div>
 
       {/* Filter tabs */}
-      <Tabs
-        value={filter}
-        onValueChange={(v: string) => setFilter(v as StatusFilter)}
-        className="shrink-0"
-      >
-        <TabsList className="bg-[#F5F2ED] rounded-xl p-1">
-          {FILTERS.map(f => (
-            <TabsTrigger
-              key={f.key}
-              value={f.key}
-              className="rounded-lg text-[13px] data-[state=active]:bg-white data-[state=active]:shadow-sm data-[state=active]:text-[#2D3436] text-[#9B9590] px-4"
-            >
-              {f.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
+      <div className="flex gap-1 p-1 bg-[#F5F2ED] rounded-lg shrink-0">
+        {FILTERS.map(f => (
+          <button
+            key={f.key}
+            onClick={() => setFilter(f.key)}
+            className={`px-4 py-2 text-[13px] font-medium rounded-md transition-colors ${
+              filter === f.key
+                ? 'bg-white text-[#2D3436] shadow-sm'
+                : 'text-[#9B9590] hover:text-[#6B6560]'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
 
       {/* Content */}
       <div className="flex-1 min-h-0 overflow-y-auto pr-1 pb-2">
@@ -516,7 +513,7 @@ function CreateSubscriptionDialog({
 
   // Set fee token
   useEffect(() => {
-    if (tokens.length === 0) return;
+    if (tokens.length === 0 || feeToken) return;
     const preferred = preferredFeeToken
       ? tokens.find(t => t.address.toLowerCase() === preferredFeeToken.toLowerCase())
       : null;
@@ -524,7 +521,7 @@ function CreateSubscriptionDialog({
       t => t.address.toLowerCase() === tempoChain.feeToken.toLowerCase()
     );
     setFeeToken(preferred ?? chainDefault ?? tokens[0]);
-  }, [tokens, preferredFeeToken]);
+  }, [tokens, preferredFeeToken, feeToken]);
 
   const balance = useTokenBalance(selectedToken?.address, address as Address);
   const tokenDecimals = selectedToken?.decimals ?? 6;
@@ -650,7 +647,6 @@ function CreateSubscriptionDialog({
 
       setResultTxHash(txHash);
       setStep('success');
-      toast.success('Recurring payment created');
     } catch (err) {
       console.error('Create recurring payment failed:', err);
       const message = err instanceof Error ? err.message : 'Failed to create subscription';
@@ -690,7 +686,7 @@ function CreateSubscriptionDialog({
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent
         hideClose={step === 'processing'}
-        className="sm:max-w-[440px] p-0 gap-0 overflow-hidden rounded-2xl"
+        className="sm:max-w-[440px] p-0 gap-0 rounded-2xl"
       >
         <AnimatePresence mode="wait">
           {/* ─── Form Step ─────────────────────────────────────── */}
@@ -736,14 +732,13 @@ function CreateSubscriptionDialog({
                       placeholder="0.00"
                       value={amount}
                       onChange={e => handleAmountChange(e.target.value)}
-                      className="text-[16px] font-semibold h-11 rounded-xl border-[#EDE9E3] bg-[#FDFBF8] focus:border-sage focus:ring-1 focus:ring-sage/20 flex-1"
+                      className="text-[16px] font-semibold h-11 rounded-xl border-[#EDE9E3] bg-[#FDFBF8] focus:border-coral focus:ring-1 focus:ring-coral/20 flex-1"
                     />
                     {selectedToken && (
                       <TokenPicker
                         token={selectedToken}
                         tokens={tokens}
                         onChange={setSelectedToken}
-                        accentColor="#5B9A6F"
                       />
                     )}
                   </div>
@@ -768,8 +763,8 @@ function CreateSubscriptionDialog({
                           className={cn(
                             'px-4 py-2 rounded-xl text-[13px] font-medium transition-all border',
                             isActive
-                              ? 'bg-sage text-white border-sage shadow-sm'
-                              : 'bg-[#FDFBF8] text-[#6B6560] border-[#EDE9E3] hover:border-sage/40 hover:bg-sage/5'
+                              ? 'bg-coral text-white border-coral shadow-sm'
+                              : 'bg-[#FDFBF8] text-[#6B6560] border-[#EDE9E3] hover:border-[#E07A5F]/40 hover:bg-[#E07A5F]/5'
                           )}
                         >
                           {preset.label}
@@ -782,8 +777,8 @@ function CreateSubscriptionDialog({
                       className={cn(
                         'px-4 py-2 rounded-xl text-[13px] font-medium transition-all border',
                         isCustomInterval
-                          ? 'bg-sage text-white border-sage shadow-sm'
-                          : 'bg-[#FDFBF8] text-[#6B6560] border-[#EDE9E3] hover:border-sage/40 hover:bg-sage/5'
+                          ? 'bg-coral text-white border-coral shadow-sm'
+                          : 'bg-[#FDFBF8] text-[#6B6560] border-[#EDE9E3] hover:border-[#E07A5F]/40 hover:bg-[#E07A5F]/5'
                       )}
                     >
                       Custom
@@ -810,7 +805,7 @@ function CreateSubscriptionDialog({
                             className={cn(
                               'px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all',
                               customIntervalUnit === unit
-                                ? 'bg-sage text-white'
+                                ? 'bg-coral text-white'
                                 : 'bg-[#F5F2ED] text-[#6B6560]'
                             )}
                           >
@@ -834,28 +829,23 @@ function CreateSubscriptionDialog({
                     placeholder="0"
                     value={maxPayments}
                     onChange={e => setMaxPayments(e.target.value)}
-                    className="w-32 h-9 rounded-xl text-[13px] border-[#EDE9E3] bg-[#FDFBF8]"
+                    className="w-32 text-[13px] bg-[#FDFBF8]"
                   />
                 </div>
 
-                {/* Label */}
+                {/* Memo */}
                 <div>
                   <Label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2 block">
-                    Label <span className="font-normal normal-case text-[#B5B0AA]">(optional)</span>
+                    Memo <span className="font-normal normal-case text-[#B5B0AA]">(optional)</span>
                   </Label>
                   <Input
-                    placeholder="e.g. Rent, Salary, Subscription..."
+                    placeholder="What's this for?"
                     value={label}
                     onChange={e => setLabel(e.target.value)}
                     maxLength={100}
-                    className="h-9 rounded-xl text-[13px] border-[#EDE9E3] bg-[#FDFBF8]"
+                    className="text-[13px] bg-[#FDFBF8]"
                   />
                 </div>
-
-                {/* Fee token */}
-                {feeToken && (
-                  <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
-                )}
               </div>
 
               {/* Actions */}
@@ -870,7 +860,7 @@ function CreateSubscriptionDialog({
                 <Button
                   disabled={!isFormValid}
                   onClick={() => setStep('confirm')}
-                  className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-sage hover:bg-sage/80 text-white gap-2"
+                  className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-coral hover:bg-coral/80 text-white gap-2"
                 >
                   Review
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -940,33 +930,41 @@ function CreateSubscriptionDialog({
                   )}
                   {label && (
                     <div className="flex items-center justify-between">
-                      <span className="text-[12px] text-[#9B9590]">Label</span>
-                      <span className="text-[12px] text-[#2D3436] italic">{label}</span>
+                      <span className="text-[12px] text-[#9B9590]">Memo</span>
+                      <span className="text-[12px] text-[#2D3436]">{label}</span>
                     </div>
                   )}
                 </div>
 
+                {/* Fee token */}
+                {feeToken && (
+                  <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#FDFBF8] border border-[#EDE9E3]">
+                    <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
+                    <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
+                  </div>
+                )}
+
                 {/* What happens info */}
-                <div className="rounded-xl bg-sage/[0.06] border border-sage/15 p-3 space-y-2">
-                  <p className="text-[11px] font-semibold text-sage uppercase tracking-wider">
+                <div className="rounded-xl bg-coral/[0.06] border border-coral/15 p-3 space-y-2">
+                  <p className="text-[11px] font-semibold text-coral uppercase tracking-wider">
                     What will happen
                   </p>
                   <div className="space-y-1.5">
                     <div className="flex items-start gap-2">
-                      <ShieldCheck className="w-3.5 h-3.5 text-sage/70 mt-0.5 shrink-0" />
-                      <p className="text-[12px] text-sage/80 leading-relaxed">
+                      <ShieldCheck className="w-3.5 h-3.5 text-coral/70 mt-0.5 shrink-0" />
+                      <p className="text-[12px] text-coral/80 leading-relaxed">
                         Approve the contract to spend your {selectedToken.symbol} (if needed)
                       </p>
                     </div>
                     <div className="flex items-start gap-2">
-                      <Repeat className="w-3.5 h-3.5 text-sage/70 mt-0.5 shrink-0" />
-                      <p className="text-[12px] text-sage/80 leading-relaxed">
+                      <Repeat className="w-3.5 h-3.5 text-coral/70 mt-0.5 shrink-0" />
+                      <p className="text-[12px] text-coral/80 leading-relaxed">
                         Create the subscription on-chain
                       </p>
                     </div>
                     <div className="flex items-start gap-2">
-                      <Clock className="w-3.5 h-3.5 text-sage/70 mt-0.5 shrink-0" />
-                      <p className="text-[12px] text-sage/80 leading-relaxed">
+                      <Clock className="w-3.5 h-3.5 text-coral/70 mt-0.5 shrink-0" />
+                      <p className="text-[12px] text-coral/80 leading-relaxed">
                         Payments execute automatically — tokens stay in your wallet until each
                         payment is due
                       </p>
@@ -986,7 +984,7 @@ function CreateSubscriptionDialog({
                 </Button>
                 <Button
                   onClick={handleSubmit}
-                  className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-sage hover:bg-sage/80 text-white gap-2"
+                  className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-coral hover:bg-coral/80 text-white gap-2"
                 >
                   <Repeat className="w-3.5 h-3.5" />
                   Create Subscription
@@ -1003,7 +1001,7 @@ function CreateSubscriptionDialog({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.98 }}
               transition={{ duration: 0.2 }}
-              className="relative overflow-hidden"
+              className="relative "
             >
               <DialogTitle className="sr-only">Processing</DialogTitle>
               <DialogDescription className="sr-only">
@@ -1044,9 +1042,9 @@ function CreateSubscriptionDialog({
                   <motion.div
                     animate={{ scale: [1, 1.06, 1] }}
                     transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                    className="w-12 h-12 rounded-full bg-sage/10 flex items-center justify-center"
+                    className="w-12 h-12 rounded-full bg-coral/10 flex items-center justify-center"
                   >
-                    <Loader2 className="w-5 h-5 animate-spin text-sage" />
+                    <Loader2 className="w-5 h-5 animate-spin text-coral" />
                   </motion.div>
                 </div>
 
@@ -1076,7 +1074,7 @@ function CreateSubscriptionDialog({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.96 }}
               transition={{ duration: 0.3 }}
-              className="relative overflow-hidden"
+              className="relative "
             >
               <DialogTitle className="sr-only">Subscription Created</DialogTitle>
               <DialogDescription className="sr-only">
@@ -1090,7 +1088,7 @@ function CreateSubscriptionDialog({
                   transition={{ type: 'spring', stiffness: 200, damping: 15 }}
                   className="inline-flex items-center justify-center mb-6"
                 >
-                  <div className="w-16 h-16 rounded-full bg-[#5B9A6F] flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-[#E07A5F] flex items-center justify-center">
                     <svg
                       width="32"
                       height="32"
@@ -1156,7 +1154,7 @@ function CreateSubscriptionDialog({
                     <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
                       Next payment
                     </span>
-                    <span className="text-[12px] text-sage font-medium flex items-center gap-1">
+                    <span className="text-[12px] text-coral font-medium flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       {formatInterval(effectiveInterval)} from now
                     </span>
@@ -1184,7 +1182,7 @@ function CreateSubscriptionDialog({
                   onClick={() => {
                     onCreated();
                   }}
-                  className="flex-1 h-11 rounded-xl font-semibold bg-sage hover:bg-sage/80 text-white"
+                  className="flex-1 h-11 rounded-xl font-semibold bg-coral hover:bg-coral/80 text-white"
                 >
                   <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
                   Done
@@ -1208,15 +1206,15 @@ const STATUS_CONFIG: Record<
 > = {
   active: {
     icon: Repeat,
-    iconClass: 'text-[#5B9A6F]',
-    bgClass: 'bg-[#5B9A6F]/8',
-    ringClass: 'ring-[#5B9A6F]/15',
+    iconClass: 'text-[#E07A5F]',
+    bgClass: 'bg-[#E07A5F]/8',
+    ringClass: 'ring-[#E07A5F]/15',
   },
   completed: {
     icon: CheckCircle,
-    iconClass: 'text-[#9B72CF]',
-    bgClass: 'bg-[#9B72CF]/8',
-    ringClass: 'ring-[#9B72CF]/15',
+    iconClass: 'text-[#E07A5F]',
+    bgClass: 'bg-[#E07A5F]/8',
+    ringClass: 'ring-[#E07A5F]/15',
   },
   cancelled: {
     icon: XCircle,
@@ -1323,7 +1321,7 @@ function PaymentRow({
       : `${payment.paymentsMade} payments`;
 
   return (
-    <div className="bg-white border border-[#EDE9E3] rounded-2xl hover:border-[#DDD8D2] hover:shadow-[0_1px_4px_rgba(0,0,0,0.04)] transition-all duration-200 overflow-hidden">
+    <div className="bg-white border border-[#EDE9E3] rounded-2xl hover:border-[#DDD8D2] hover:shadow-[0_1px_4px_rgba(0,0,0,0.04)] transition-all duration-200 ">
       <div className="px-5 py-4">
         <div className="flex items-start gap-3.5">
           <div
@@ -1365,13 +1363,13 @@ function PaymentRow({
             {isActive && (
               <>
                 <div
-                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${isWarning ? 'bg-[#D4A574]/6 ring-1 ring-[#D4A574]/10' : 'bg-[#5B9A6F]/6 ring-1 ring-[#5B9A6F]/10'}`}
+                  className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg ${isWarning ? 'bg-[#D4A574]/6 ring-1 ring-[#D4A574]/10' : 'bg-[#E07A5F]/6 ring-1 ring-[#E07A5F]/10'}`}
                 >
                   <Clock
-                    className={`w-3.5 h-3.5 ${isWarning ? 'text-[#D4A574]/70' : 'text-[#5B9A6F]/70'}`}
+                    className={`w-3.5 h-3.5 ${isWarning ? 'text-[#D4A574]/70' : 'text-[#E07A5F]/70'}`}
                   />
                   <span
-                    className={`text-[12px] font-semibold ${isWarning ? 'text-[#D4A574]/80' : 'text-[#5B9A6F]/80'}`}
+                    className={`text-[12px] font-semibold ${isWarning ? 'text-[#D4A574]/80' : 'text-[#E07A5F]/80'}`}
                   >
                     Next {formatNextPayment(payment.nextPaymentAt)}
                   </span>
@@ -1425,7 +1423,7 @@ function PaymentRow({
                 <button
                   onClick={handleReactivate}
                   disabled={isReactivating}
-                  className="mt-2.5 inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-[12px] font-semibold bg-[#5B9A6F] hover:bg-[#5B9A6F]/90 text-white transition-colors disabled:opacity-50"
+                  className="mt-2.5 inline-flex items-center gap-1.5 h-8 px-3.5 rounded-lg text-[12px] font-semibold bg-[#E07A5F] hover:bg-[#E07A5F]/90 text-white transition-colors disabled:opacity-50"
                 >
                   {isReactivating ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1466,7 +1464,7 @@ function PaymentRow({
                 href={explorerUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-[11px] font-medium text-[#9B72CF] hover:text-[#8562BF] transition-colors"
+                className="inline-flex items-center gap-1 text-[11px] font-medium text-[#E07A5F] hover:text-[#D4694F] transition-colors"
               >
                 View tx
                 <ExternalLink className="w-2.5 h-2.5" />
@@ -1476,7 +1474,7 @@ function PaymentRow({
           <span className="text-[8px] text-[#D6D1CC]">&middot;</span>
           <button
             onClick={toggleHistory}
-            className="inline-flex items-center gap-1 text-[11px] font-medium text-[#9B72CF]/70 hover:text-[#9B72CF] transition-colors"
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-[#E07A5F]/70 hover:text-[#E07A5F] transition-colors"
           >
             History
             <ChevronDown
@@ -1493,15 +1491,15 @@ function PaymentRow({
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="overflow-hidden"
+            className=""
           >
-            <div className="mx-5 mb-4 px-3.5 py-2.5 rounded-xl bg-[#9B72CF]/[0.03] border border-[#9B72CF]/10">
-              <p className="text-[11px] font-semibold text-[#9B72CF]/60 uppercase tracking-wider mb-2">
+            <div className="mx-5 mb-4 px-3.5 py-2.5 rounded-xl bg-[#E07A5F]/[0.03] border border-[#E07A5F]/10">
+              <p className="text-[11px] font-semibold text-[#E07A5F]/60 uppercase tracking-wider mb-2">
                 Payment History
               </p>
               {loadingHistory ? (
                 <div className="flex items-center gap-2 py-2">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#9B72CF]/40" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[#E07A5F]/40" />
                   <span className="text-[12px] text-[#9B9590]">Loading...</span>
                 </div>
               ) : executions.length === 0 ? (
@@ -1519,7 +1517,7 @@ function PaymentRow({
                           {isFailed ? (
                             <XCircle className="w-3.5 h-3.5 text-coral shrink-0" />
                           ) : (
-                            <CheckCircle className="w-3.5 h-3.5 text-[#5B9A6F]/60 shrink-0" />
+                            <CheckCircle className="w-3.5 h-3.5 text-[#E07A5F]/60 shrink-0" />
                           )}
                           <span
                             className={`text-[11px] font-medium ${isFailed ? 'text-coral/70' : 'text-[#6B6560]'}`}
@@ -1549,7 +1547,7 @@ function PaymentRow({
                               href={getExplorerTxUrl(exec.txHash)}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-[#9B72CF]/60 hover:text-[#9B72CF] transition-colors"
+                              className="text-[#E07A5F]/60 hover:text-[#E07A5F] transition-colors"
                             >
                               <ExternalLink className="w-3 h-3" />
                             </a>
@@ -1573,7 +1571,7 @@ function PaymentRow({
           if (!open && !isCancelling) setConfirmCancel(false);
         }}
       >
-        <DialogContent className="p-0 gap-0 max-w-[380px] overflow-hidden">
+        <DialogContent className="p-0 gap-0 max-w-[380px] ">
           <div className="px-6 pt-6 pb-4">
             <DialogTitle className="text-[18px] font-bold text-[#2D3436]">
               Cancel Subscription
