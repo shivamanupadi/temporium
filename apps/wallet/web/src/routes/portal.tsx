@@ -46,6 +46,7 @@ import {
   TEMPO_NETWORK,
   isTestnet,
   isMainnetEnabled,
+  MAINNET_INVITE_CODES,
   switchNetwork,
 } from '@/lib/constants';
 import { isAccessTokenExpired, clearAuthToken } from '@/lib/auth-storage';
@@ -127,6 +128,8 @@ function PortalLayout(): ReactElement | null {
   const [copied, setCopied] = useState(false);
   const [showReceiveModal, setShowReceiveModal] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
+  const [inviteCode, setInviteCode] = useState('');
+  const [inviteError, setInviteError] = useState(false);
   const networkDropdownRef = useRef<HTMLDivElement>(null);
   const walletDropdownRef = useRef<HTMLDivElement>(null);
   const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -632,7 +635,11 @@ function PortalLayout(): ReactElement | null {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm"
-            onClick={() => setShowComingSoon(false)}
+            onClick={() => {
+              setShowComingSoon(false);
+              setInviteCode('');
+              setInviteError(false);
+            }}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 8 }}
@@ -646,14 +653,66 @@ function PortalLayout(): ReactElement | null {
                 <Globe className="w-7 h-7 text-[#6B8F71]" />
               </div>
               <h2 className="text-[18px] font-bold text-[#2D3436] mb-2">Mainnet Coming Soon</h2>
-              <p className="text-[14px] text-[#6B6560] leading-relaxed mb-6">
+              <p className="text-[14px] text-[#6B6560] leading-relaxed mb-4">
                 Tempo Mainnet (Presto) is not yet available. Stay tuned for the official launch!
               </p>
+              {MAINNET_INVITE_CODES && (
+                <div className="mb-4">
+                  <p className="text-[12px] text-[#9B9590] mb-2">Have an invite code?</p>
+                  <input
+                    type="text"
+                    value={inviteCode}
+                    onChange={e => {
+                      setInviteCode(e.target.value);
+                      setInviteError(false);
+                    }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && inviteCode.trim()) {
+                        if (MAINNET_INVITE_CODES.includes(inviteCode.trim().toUpperCase())) {
+                          switchNetwork('mainnet');
+                        } else {
+                          setInviteError(true);
+                        }
+                      }
+                    }}
+                    placeholder="Enter invite code"
+                    className={`w-full px-3 py-2.5 rounded-xl border text-[13px] text-center outline-none transition-colors ${
+                      inviteError
+                        ? 'border-[#E07A5F] bg-[#E07A5F]/5 focus:border-[#E07A5F]'
+                        : 'border-[#EDE9E3] bg-[#FDFBF8] focus:border-[#5B9A6F]'
+                    }`}
+                  />
+                  {inviteError && (
+                    <p className="text-[11px] text-[#E07A5F] mt-1.5">Invalid invite code</p>
+                  )}
+                  <button
+                    onClick={() => {
+                      if (MAINNET_INVITE_CODES.includes(inviteCode.trim().toUpperCase())) {
+                        switchNetwork('mainnet');
+                      } else {
+                        setInviteError(true);
+                      }
+                    }}
+                    disabled={!inviteCode.trim()}
+                    className="w-full mt-2 py-2.5 px-4 rounded-xl bg-[#5B9A6F] text-white text-[13px] font-semibold hover:bg-[#4E8760] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Unlock Mainnet
+                  </button>
+                </div>
+              )}
               <button
-                onClick={() => setShowComingSoon(false)}
-                className="w-full py-2.5 px-4 rounded-xl bg-[#5B9A6F] text-white text-[13px] font-semibold hover:bg-[#4E8760] transition-colors"
+                onClick={() => {
+                  setShowComingSoon(false);
+                  setInviteCode('');
+                  setInviteError(false);
+                }}
+                className={`w-full py-2.5 px-4 rounded-xl text-[13px] font-semibold transition-colors ${
+                  MAINNET_INVITE_CODES
+                    ? 'border border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]'
+                    : 'bg-[#5B9A6F] text-white hover:bg-[#4E8760]'
+                }`}
               >
-                Got it
+                {MAINNET_INVITE_CODES ? 'Cancel' : 'Got it'}
               </button>
             </motion.div>
           </motion.div>
