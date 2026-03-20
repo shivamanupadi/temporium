@@ -18,6 +18,7 @@ function getStoredNetwork(): 'testnet' | 'mainnet' {
 
 export const TEMPO_NETWORK = getStoredNetwork();
 export const isTestnet = TEMPO_NETWORK !== 'mainnet';
+export const isMainnetEnabled = import.meta.env.VITE_MAINNET_ENABLED === 'true';
 
 export function switchNetwork(network: 'testnet' | 'mainnet'): void {
   if (network === TEMPO_NETWORK) return;

@@ -40,7 +40,14 @@ import {
 import { useTempo } from '@/hooks/useTempo';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { formatAddress, copyToClipboard } from '@/lib/utils';
-import { LINKS, TIMING, TEMPO_NETWORK, isTestnet, switchNetwork } from '@/lib/constants';
+import {
+  LINKS,
+  TIMING,
+  TEMPO_NETWORK,
+  isTestnet,
+  isMainnetEnabled,
+  switchNetwork,
+} from '@/lib/constants';
 import { isAccessTokenExpired, clearAuthToken } from '@/lib/auth-storage';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { ReceiveModal } from '@/components/ReceiveModal';
@@ -119,6 +126,7 @@ function PortalLayout(): ReactElement | null {
   const [showWalletMenu, setShowWalletMenu] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showReceiveModal, setShowReceiveModal] = useState(false);
+  const [showComingSoon, setShowComingSoon] = useState(false);
   const networkDropdownRef = useRef<HTMLDivElement>(null);
   const walletDropdownRef = useRef<HTMLDivElement>(null);
   const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -292,6 +300,9 @@ function PortalLayout(): ReactElement | null {
                           onClick={() => {
                             if (isActive) {
                               setShowNetworkMenu(false);
+                            } else if (net.id === 'mainnet' && !isMainnetEnabled) {
+                              setShowNetworkMenu(false);
+                              setShowComingSoon(true);
                             } else {
                               switchNetwork(net.id);
                             }
@@ -613,6 +624,41 @@ function PortalLayout(): ReactElement | null {
           </div>
         </main>
       </div>
+      {/* Mainnet Coming Soon Modal */}
+      <AnimatePresence>
+        {showComingSoon && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm"
+            onClick={() => setShowComingSoon(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ type: 'spring', duration: 0.35, bounce: 0.15 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white rounded-2xl border border-[#EDE9E3] shadow-2xl shadow-black/10 p-8 max-w-sm w-full mx-4 text-center"
+            >
+              <div className="w-14 h-14 rounded-2xl bg-[#6B8F71]/10 flex items-center justify-center mx-auto mb-5">
+                <Globe className="w-7 h-7 text-[#6B8F71]" />
+              </div>
+              <h2 className="text-[18px] font-bold text-[#2D3436] mb-2">Mainnet Coming Soon</h2>
+              <p className="text-[14px] text-[#6B6560] leading-relaxed mb-6">
+                Tempo Mainnet (Presto) is not yet available. Stay tuned for the official launch!
+              </p>
+              <button
+                onClick={() => setShowComingSoon(false)}
+                className="w-full py-2.5 px-4 rounded-xl bg-[#5B9A6F] text-white text-[13px] font-semibold hover:bg-[#4E8760] transition-colors"
+              >
+                Got it
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <ReceiveModal open={showReceiveModal} onOpenChange={setShowReceiveModal} address={address} />
     </div>
   );
