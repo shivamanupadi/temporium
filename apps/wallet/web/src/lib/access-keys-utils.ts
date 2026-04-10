@@ -1,48 +1,6 @@
-import { keccak256 } from 'viem';
-import { privateKeyToAddress } from 'viem/accounts';
-import { Secp256k1 as TempoSecp256k1, P256 as TempoP256 } from 'viem/tempo';
-import * as OxSecp256k1 from 'ox/Secp256k1';
-import * as OxP256 from 'ox/P256';
-import * as PublicKey from 'ox/PublicKey';
+import { Account, Secp256k1 as TempoSecp256k1, P256 as TempoP256 } from 'viem/tempo';
 import type { Address, Hex } from 'viem';
 import type { AccessKeyType } from '@/types';
-
-/**
- * Normalize a P256 public key to the format expected by the PasskeyRegistry contract.
- *
- * Expected format: 64 bytes (128 hex chars) without the 0x04 uncompressed prefix
- *
- * Input formats handled:
- * - 0x04... (65 bytes / 130 hex chars) - uncompressed with prefix -> strip prefix
- * - 0x... (64 bytes / 128 hex chars) - already normalized -> return as-is
- */
-export function normalizeP256PublicKey(publicKey: Hex): Hex {
-  const hexPart = publicKey.slice(2); // Remove 0x prefix
-
-  // If 130 chars (65 bytes with 0x04 prefix), strip the 04 prefix
-  if (hexPart.length === 130 && hexPart.startsWith('04')) {
-    return `0x${hexPart.slice(2)}` as Hex;
-  }
-
-  // If already 128 chars (64 bytes), return as-is
-  if (hexPart.length === 128) {
-    return publicKey;
-  }
-
-  throw new Error(
-    `Invalid P256 public key length: expected 64 or 65 bytes, got ${hexPart.length / 2} bytes`
-  );
-}
-
-/**
- * Derive wallet address from a P256 public key.
- * Uses keccak256 hash and takes last 20 bytes - same as PasskeyRegistry contract.
- */
-export function deriveWalletFromPublicKey(publicKey: Hex): Address {
-  const normalized = normalizeP256PublicKey(publicKey);
-  const hash = keccak256(normalized);
-  return `0x${hash.slice(-40)}`.toLowerCase() as Address;
-}
 
 /** Generated Secp256k1 key pair */
 export interface Secp256k1KeyPair {
@@ -64,39 +22,33 @@ export type GeneratedKey = Secp256k1KeyPair | P256KeyPair;
 
 /**
  * Generate a random Secp256k1 key pair.
- * The keyId is derived as the Ethereum address from the public key.
+ * Uses viem/tempo Account.fromSecp256k1 for key derivation.
  */
 export function generateSecp256k1Key(): Secp256k1KeyPair {
   const privateKey = TempoSecp256k1.randomPrivateKey();
-  const publicKey = OxSecp256k1.getPublicKey({ privateKey });
-  const keyId = privateKeyToAddress(privateKey);
-  const publicKeyHex = PublicKey.toHex(publicKey);
+  const account = Account.fromSecp256k1(privateKey);
 
   return {
     type: 'secp256k1',
     privateKey,
-    publicKey: publicKeyHex,
-    keyId,
+    publicKey: account.publicKey,
+    keyId: account.address,
   };
 }
 
 /**
  * Generate a random P256 key pair.
- * The keyId is derived by hashing the normalized public key (64 bytes without 0x04 prefix).
+ * Uses viem/tempo Account.fromP256 for key derivation.
  */
 export function generateP256Key(): P256KeyPair {
   const privateKey = TempoP256.randomPrivateKey();
-  const publicKey = OxP256.getPublicKey({ privateKey });
-  const publicKeyHex = PublicKey.toHex(publicKey);
-
-  const normalizedPublicKey = normalizeP256PublicKey(publicKeyHex);
-  const keyId = deriveWalletFromPublicKey(normalizedPublicKey);
+  const account = Account.fromP256(privateKey);
 
   return {
     type: 'p256',
     privateKey,
-    publicKey: normalizedPublicKey,
-    keyId,
+    publicKey: account.publicKey,
+    keyId: account.address,
   };
 }
 
