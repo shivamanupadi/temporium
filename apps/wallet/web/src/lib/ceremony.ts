@@ -12,8 +12,8 @@ export function createCeremony(): ReturnType<typeof WebAuthnCeremony.from> {
   const server = WebAuthnCeremony.server({ url: KEYS_API_URL });
 
   return WebAuthnCeremony.from({
-    getRegistrationOptions: (params) => server.getRegistrationOptions(params),
-    getAuthenticationOptions: (params) => server.getAuthenticationOptions(params),
+    getRegistrationOptions: params => server.getRegistrationOptions(params),
+    getAuthenticationOptions: params => server.getAuthenticationOptions(params),
 
     async verifyRegistration(credential) {
       const result = await server.verifyRegistration(credential);

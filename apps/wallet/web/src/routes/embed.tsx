@@ -31,7 +31,9 @@ const REQUEST_LABELS: Record<string, string> = {
  */
 function EmbedPage(): ReactElement {
   const remoteRef = useRef<ReturnType<typeof Remote.create> | null>(null);
-  const [status, setStatus] = useState<'loading' | 'idle' | 'pending' | 'signing' | 'success' | 'error'>('loading');
+  const [status, setStatus] = useState<
+    'loading' | 'idle' | 'pending' | 'signing' | 'success' | 'error'
+  >('loading');
   const [pendingRequest, setPendingRequest] = useState<RpcRequest | null>(null);
   const [error, setError] = useState<string | null>(null);
   const initRef = useRef(false);
