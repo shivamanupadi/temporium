@@ -1,4 +1,4 @@
-const AUTH_STORAGE_KEY = 'temporium_auth';
+import { Storage } from 'accounts';
 
 export interface AuthToken {
   accessToken: string;
@@ -6,39 +6,53 @@ export interface AuthToken {
   expiresAt: number;
 }
 
-export function saveAuthToken(token: Omit<AuthToken, 'expiresAt'>): void {
+/**
+ * Auth token storage backed by accounts SDK Storage.
+ * Uses combined IDB + localStorage for resilience — reads return
+ * first non-null result, writes propagate to both.
+ */
+const storage = Storage.combine(
+  Storage.idb({ key: 'temporium' }),
+  Storage.localStorage({ key: 'temporium' })
+);
+
+const AUTH_KEY = 'auth';
+
+export async function saveAuthToken(token: Omit<AuthToken, 'expiresAt'>): Promise<void> {
   const authData: AuthToken = {
     ...token,
     expiresAt: Date.now() + token.expiresIn * 1000,
   };
-  localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authData));
+  await storage.setItem(AUTH_KEY, authData);
+  // Mirror to raw localStorage for cross-tab detection via StorageEvent
+  localStorage.setItem('temporium_auth', JSON.stringify(authData));
 }
 
-export function getAuthToken(): AuthToken | null {
+export async function getAuthToken(): Promise<AuthToken | null> {
   try {
-    const data = localStorage.getItem(AUTH_STORAGE_KEY);
-    if (!data) return null;
-    return JSON.parse(data) as AuthToken;
+    const data = await storage.getItem<AuthToken>(AUTH_KEY);
+    return data ?? null;
   } catch {
     return null;
   }
 }
 
-export function getAccessToken(): string | null {
-  const token = getAuthToken();
+export async function getAccessToken(): Promise<string | null> {
+  const token = await getAuthToken();
   if (!token) return null;
   if (Date.now() >= token.expiresAt - 60000) return null;
   return token.accessToken;
 }
 
-export function isAccessTokenExpired(): boolean {
-  const token = getAuthToken();
+export async function isAccessTokenExpired(): Promise<boolean> {
+  const token = await getAuthToken();
   if (!token) return true;
   return Date.now() >= token.expiresAt - 60000;
 }
 
-export function clearAuthToken(): void {
-  localStorage.removeItem(AUTH_STORAGE_KEY);
+export async function clearAuthToken(): Promise<void> {
+  await storage.removeItem(AUTH_KEY);
+  localStorage.removeItem('temporium_auth');
 }
 
 // Aliases

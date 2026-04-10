@@ -17,12 +17,12 @@ interface ApiResponse<T> {
 }
 
 export async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  if (isAccessTokenExpired()) {
-    clearAuthToken();
+  if (await isAccessTokenExpired()) {
+    await clearAuthToken();
     throw new ApiClientError('Session expired. Please sign in again.', 401);
   }
 
-  const accessToken = getAccessToken();
+  const accessToken = await getAccessToken();
   const url = `${getWalletApiUrl()}${endpoint}`;
 
   const response = await fetch(url, {
@@ -36,7 +36,7 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
   });
 
   if (response.status === 401) {
-    clearAuthToken();
+    await clearAuthToken();
     throw new ApiClientError('Session expired. Please sign in again.', 401);
   }
 

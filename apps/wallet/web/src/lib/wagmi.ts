@@ -26,7 +26,7 @@ const ceremony = (() => {
       // Extract JWT injected by the server's onRegister hook
       const data = result as Record<string, unknown>;
       if (data.accessToken && data.expiresIn) {
-        saveAuthToken({
+        await saveAuthToken({
           accessToken: data.accessToken as string,
           expiresIn: data.expiresIn as number,
         });
@@ -45,7 +45,7 @@ const ceremony = (() => {
       // Extract JWT injected by the server's onAuthenticate hook
       const data = result as Record<string, unknown>;
       if (data.accessToken && data.expiresIn) {
-        saveAuthToken({
+        await saveAuthToken({
           accessToken: data.accessToken as string,
           expiresIn: data.expiresIn as number,
         });

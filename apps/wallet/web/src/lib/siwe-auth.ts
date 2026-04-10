@@ -48,7 +48,7 @@ export async function signInWithEthereum(walletClient: WalletClient): Promise<Au
   const verifyResult = (await verifyResponse.json()) as VerifyResponse;
   const { accessToken, expiresIn } = verifyResult.data;
 
-  saveAuthToken({ accessToken, expiresIn });
+  await saveAuthToken({ accessToken, expiresIn });
 
   return {
     accessToken,

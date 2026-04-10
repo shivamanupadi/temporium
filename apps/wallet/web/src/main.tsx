@@ -25,7 +25,7 @@ const queryClient = new QueryClient({
     onError: error => {
       if (error instanceof ApiClientError && error.status === 401 && !isLoggingOut) {
         isLoggingOut = true;
-        clearAuthTokens();
+        void clearAuthTokens();
         queryClient.clear();
         router.navigate({ to: '/' });
         isLoggingOut = false;

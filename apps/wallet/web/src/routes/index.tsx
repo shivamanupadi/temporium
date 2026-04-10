@@ -229,8 +229,10 @@ function LandingPage(): ReactElement {
   const [copiedContract, setCopiedContract] = useState(false);
 
   useEffect(() => {
-    if (isConnected && !isAccessTokenExpired()) {
-      navigate({ to: '/portal/dashboard' });
+    if (isConnected) {
+      isAccessTokenExpired().then(expired => {
+        if (!expired) navigate({ to: '/portal/dashboard' });
+      });
     }
   }, [isConnected, navigate]);
 

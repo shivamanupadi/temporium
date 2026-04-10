@@ -15,10 +15,10 @@ export function useAuthGuard(): void {
   const handleExpiredToken = useCallback(async () => {
     if (!walletType) return;
 
-    const token = getAuthToken();
+    const token = await getAuthToken();
     if (!token) return;
 
-    if (isAccessTokenExpired()) {
+    if (await isAccessTokenExpired()) {
       console.log('[AuthGuard] JWT expired, logging out...');
       await disconnect();
       navigate({ to: '/' });

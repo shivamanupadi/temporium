@@ -223,7 +223,7 @@ export function useTempo(): UseTempoReturn {
   }, [address, disconnectAsync]);
 
   const disconnect = useCallback(async () => {
-    clearAuthTokens();
+    await clearAuthTokens();
     queryClient.clear();
     if (isConnected) {
       await disconnectAsync();

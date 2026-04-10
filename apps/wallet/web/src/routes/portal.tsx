@@ -54,9 +54,9 @@ import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip
 import { ReceiveModal } from '@/components/ReceiveModal';
 
 export const Route = createFileRoute('/portal')({
-  beforeLoad: () => {
-    if (isAccessTokenExpired()) {
-      clearAuthToken();
+  beforeLoad: async () => {
+    if (await isAccessTokenExpired()) {
+      await clearAuthToken();
       throw redirect({ to: '/' });
     }
   },
@@ -172,7 +172,13 @@ function PortalLayout(): ReactElement | null {
     }
   };
 
-  const shouldRedirect = !isConnected || isAccessTokenExpired();
+  const [tokenExpired, setTokenExpired] = useState(false);
+
+  useEffect(() => {
+    isAccessTokenExpired().then(setTokenExpired);
+  }, []);
+
+  const shouldRedirect = !isConnected || tokenExpired;
 
   useEffect(() => {
     if (shouldRedirect) {
