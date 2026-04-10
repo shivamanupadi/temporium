@@ -5,7 +5,7 @@ export * from './wallet-connect';
 /**
  * Wallet connection type
  */
-export type WalletType = 'passkey' | 'injected' | null;
+export type WalletType = 'passkey' | 'injected' | 'tempo' | null;
 
 /**
  * Contact

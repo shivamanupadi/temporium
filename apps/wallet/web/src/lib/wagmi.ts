@@ -1,6 +1,7 @@
 import { createConfig, http } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import { webAuthn, KeyManager } from 'wagmi/tempo';
+import { dialog } from 'accounts/wagmi';
 import { tempoChain } from './tempo-client';
 import { KEYS_API_URL, TEMPO_NETWORK } from './api';
 import { saveAuthToken } from './auth-storage';
@@ -126,9 +127,14 @@ export const injectedConnector = injected({
   shimDisconnect: true,
 });
 
+export const tempoWalletConnector = dialog({
+  rdns: 'xyz.tempo.wallet',
+  name: 'Tempo Wallet',
+});
+
 export const wagmiConfig = createConfig({
   chains: [tempoChain] as const,
-  connectors: [tempoPasskeyConnector, injectedConnector],
+  connectors: [tempoPasskeyConnector, injectedConnector, tempoWalletConnector],
   transports: {
     [tempoChain.id]: http(tempoChain.rpcUrls.default.http[0]),
   } as Record<number, ReturnType<typeof http>>,

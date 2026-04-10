@@ -3,7 +3,7 @@ import { useAccount, useConnect, useDisconnect, useWalletClient, useConnectors }
 import { getWalletClient } from '@wagmi/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type Address, encodeFunctionData } from 'viem';
-import { tempoPasskeyConnector, injectedConnector, wagmiConfig } from '@/lib/wagmi';
+import { tempoPasskeyConnector, injectedConnector, tempoWalletConnector, wagmiConfig } from '@/lib/wagmi';
 import { tempoChain, tempoPublicClient, waitForTx } from '@/lib/tempo-client';
 import { stringToBytes32, Actions, getTokenBalance } from '@/lib/tempo-client';
 import { DEFAULT_FEE_TOKEN_ADDRESS, TIMING } from '@/lib/constants';
@@ -54,6 +54,7 @@ interface UseTempoReturn {
   signUp: (label?: string) => Promise<void>;
   signIn: () => Promise<void>;
   connectInjected: () => Promise<void>;
+  connectTempoWallet: () => Promise<void>;
   disconnect: () => Promise<void>;
   // Transactions
   sendPayment: (params: SendPaymentParams) => Promise<string>;
@@ -96,9 +97,11 @@ export function useTempo(): UseTempoReturn {
 
   // Determine wallet type
   const walletType: WalletType = isConnected
-    ? connector?.type === 'injected'
-      ? 'injected'
-      : 'passkey'
+    ? connector?.id === 'xyz.tempo.wallet'
+      ? 'tempo'
+      : connector?.type === 'injected'
+        ? 'injected'
+        : 'passkey'
     : null;
 
   const signUp = useCallback(
@@ -143,6 +146,36 @@ export function useTempo(): UseTempoReturn {
     try {
       const result = await connectAsync({
         connector: injectedConnector,
+        chainId: tempoChain.id,
+      });
+
+      const client = await getWalletClient(wagmiConfig, {
+        account: result.accounts[0],
+        chainId: tempoChain.id,
+      });
+
+      if (!client) throw new Error('Failed to get wallet client after connection');
+
+      await signInWithEthereum(client);
+    } catch (err) {
+      setError(err as Error);
+      try {
+        await disconnectAsync();
+      } catch {
+        /* ignore */
+      }
+      throw err;
+    } finally {
+      setIsConnecting(false);
+    }
+  }, [connectAsync, disconnectAsync]);
+
+  const connectTempoWallet = useCallback(async () => {
+    setIsConnecting(true);
+    setError(null);
+    try {
+      const result = await connectAsync({
+        connector: tempoWalletConnector,
         chainId: tempoChain.id,
       });
 
@@ -409,6 +442,7 @@ export function useTempo(): UseTempoReturn {
     signUp,
     signIn,
     connectInjected,
+    connectTempoWallet,
     disconnect,
     sendPayment,
     signScheduledPayment,

@@ -1,5 +1,5 @@
 import { type ReactElement } from 'react';
-import { Fingerprint, Sparkles, Wallet } from 'lucide-react';
+import { Fingerprint, Globe, Sparkles, Wallet } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 
 interface WalletSelectModalProps {
@@ -9,6 +9,7 @@ interface WalletSelectModalProps {
   onSelectPasskey: () => void;
   onCreateWallet?: () => void;
   onInjectedConnect?: () => void;
+  onTempoWalletConnect?: () => void;
   hasInjectedWallet?: boolean;
 }
 
@@ -19,6 +20,7 @@ export function WalletSelectModal({
   onSelectPasskey,
   onCreateWallet,
   onInjectedConnect,
+  onTempoWalletConnect,
   hasInjectedWallet,
 }: WalletSelectModalProps): ReactElement {
   const handleClose = (open: boolean): void => {
@@ -54,6 +56,23 @@ export function WalletSelectModal({
               <p className="text-[12px] text-[#9B9590]">Use Face ID or Touch ID</p>
             </div>
           </button>
+
+          {/* Tempo Wallet Option */}
+          {onTempoWalletConnect && (
+            <button
+              onClick={onTempoWalletConnect}
+              disabled={isLoading}
+              className="w-full flex items-center gap-3 p-4 rounded-xl border border-[#EDE9E3] hover:border-[#9B72CF]/30 hover:bg-[#F5F2ED] transition-all cursor-pointer disabled:opacity-50"
+            >
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 bg-[#9B72CF]/8">
+                <Globe className="h-5 w-5 text-[#9B72CF]" />
+              </div>
+              <div className="flex-1 text-left">
+                <p className="text-[14px] font-medium text-[#2D3436]">Tempo Wallet</p>
+                <p className="text-[12px] text-[#9B9590]">Connect your Tempo account</p>
+              </div>
+            </button>
+          )}
 
           {/* Injected Wallet Option */}
           {hasInjectedWallet && onInjectedConnect && (

@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Fingerprint,
+  Globe,
   ArrowRight,
   Loader2,
   LayoutDashboard,
@@ -216,7 +217,7 @@ const featureSections: {
 
 function LandingPage(): ReactElement {
   const navigate = useNavigate();
-  const { isConnected, isConnecting, signUp, signIn } = useTempo();
+  const { isConnected, isConnecting, signUp, signIn, connectTempoWallet } = useTempo();
 
   const [showSignIn, setShowSignIn] = useState(false);
   const [showCreateWallet, setShowCreateWallet] = useState(false);
@@ -269,6 +270,18 @@ function LandingPage(): ReactElement {
       await signIn();
     } catch (err) {
       toast.error('Sign in failed', { description: (err as Error).message });
+    } finally {
+      setConnectingType(null);
+    }
+  };
+
+  const handleTempoWalletConnect = async (): Promise<void> => {
+    setConnectingType('tempo');
+    setShowSignIn(false);
+    try {
+      await connectTempoWallet();
+    } catch (err) {
+      toast.error('Connection failed', { description: (err as Error).message });
     } finally {
       setConnectingType(null);
     }
@@ -872,6 +885,28 @@ function LandingPage(): ReactElement {
                 <Loader2 className="w-4 h-4 animate-spin text-[#6B8F71]" />
               ) : (
                 <ArrowRight className="w-4 h-4 text-[#B5B0AA] group-hover:text-[#6B8F71] transition-colors" />
+              )}
+            </button>
+
+            {/* Tempo Wallet */}
+            <button
+              onClick={handleTempoWalletConnect}
+              disabled={!!connectingType}
+              className="flex items-center gap-3.5 w-full p-4 rounded-xl border border-[#EDE9E3] hover:border-[#9B72CF]/30 hover:bg-[#9B72CF]/4 transition-all text-left group cursor-pointer"
+            >
+              <div className="w-10 h-10 rounded-xl bg-[#9B72CF]/10 flex items-center justify-center shrink-0">
+                <Globe className="w-5 h-5 text-[#9B72CF]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-semibold text-[#2D3436]">Tempo Wallet</p>
+                <p className="text-[12px] text-[#9B9590] mt-0.5">
+                  Connect your Tempo account
+                </p>
+              </div>
+              {connectingType === 'tempo' ? (
+                <Loader2 className="w-4 h-4 animate-spin text-[#9B72CF]" />
+              ) : (
+                <ArrowRight className="w-4 h-4 text-[#B5B0AA] group-hover:text-[#9B72CF] transition-colors" />
               )}
             </button>
 

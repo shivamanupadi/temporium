@@ -55,7 +55,7 @@ const PERMISSIONS = [
 ];
 
 function ConnectPage(): ReactElement {
-  const { isConnected, isConnecting, address, signUp, signIn, connectInjected, hasInjectedWallet } =
+  const { isConnected, isConnecting, address, signUp, signIn, connectInjected, connectTempoWallet, hasInjectedWallet } =
     useTempo();
 
   const [pendingRequest, setPendingRequest] = useState<PendingRequest | null>(null);
@@ -328,6 +328,18 @@ function ConnectPage(): ReactElement {
     try {
       setPendingAction('connect');
       await connectInjected();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Connection failed';
+      toast.error(message.includes('rejected') ? 'Connection cancelled' : message);
+      setPendingAction(null);
+    }
+  };
+
+  const handleTempoWalletConnect = async (): Promise<void> => {
+    setShowWalletSelectModal(false);
+    try {
+      setPendingAction('connect');
+      await connectTempoWallet();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Connection failed';
       toast.error(message.includes('rejected') ? 'Connection cancelled' : message);
@@ -668,6 +680,7 @@ function ConnectPage(): ReactElement {
         onSelectPasskey={handlePasskeySignIn}
         onCreateWallet={() => setShowCreateWalletModal(true)}
         onInjectedConnect={handleInjectedConnect}
+        onTempoWalletConnect={handleTempoWalletConnect}
         hasInjectedWallet={hasInjectedWallet}
       />
     </>
