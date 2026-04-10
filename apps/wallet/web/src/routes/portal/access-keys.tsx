@@ -581,7 +581,7 @@ function AccessKeysPage(): ReactElement {
             className="h-10 px-5 rounded-xl text-[13px] font-semibold bg-coral hover:bg-coral/80 text-white gap-2"
           >
             <Plus className="w-4 h-4" />
-            Add Access Key
+            Create Access Key
           </Button>
         </div>
       </motion.div>
