@@ -26,8 +26,8 @@
     "@remix-run/session": "^0.4.0",
     "drizzle-orm": "^0.38.3",
     "hono": "^4.6.16",
-    "tempo.ts": "^0.14.0",
-    "viem": "^2.45.2",
+    "tempo.ts": "^0.14.2",
+    "viem": "^2.47.10",
     "zod": "^3.24.1"
   },
   "devDependencies": {
