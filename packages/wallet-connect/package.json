@@ -23,6 +23,7 @@
     "clean": "rimraf dist node_modules .turbo"
   },
   "dependencies": {
+    "accounts": "^0.5.8",
     "viem": "^2.47.10"
   },
   "devDependencies": {

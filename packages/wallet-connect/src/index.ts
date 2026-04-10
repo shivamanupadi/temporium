@@ -2,7 +2,7 @@
  * @temporium/wallet-connect
  *
  * SDK for connecting to Temporium Wallet from Tempo apps.
- * Exposes a standard viem WalletClient for use with Actions.* from viem/tempo.
+ * Uses the accounts SDK Dialog adapter for secure cross-origin communication.
  *
  * @example
  * ```typescript
@@ -29,11 +29,8 @@ export { WalletConnect } from './client';
 export type {
   WalletConnectConfig,
   ConnectionResult,
-  ConnectionState,
   ConnectionEventType,
   ConnectionEventListener,
-  SignMessageResult,
-  SignTransactionResult,
   // Tempo SDK compatible types
   SendPaymentParams,
   SendScheduledPaymentParams,
@@ -50,4 +47,3 @@ export type {
   BatchTransfer,
   AppPermission,
 } from './types';
-export { WALLET_CONNECT_VERSION, WalletConnectErrorCode, WalletConnectError } from './types';

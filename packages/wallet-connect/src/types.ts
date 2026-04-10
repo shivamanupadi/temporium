@@ -1,11 +1,6 @@
 import type { Address, Chain, Hex } from 'viem';
 
 /**
- * Wallet Connect Protocol Version
- */
-export const WALLET_CONNECT_VERSION = '1.0.0';
-
-/**
  * App permissions
  */
 export type AppPermission = 'connect' | 'sign' | 'send';
@@ -304,93 +299,4 @@ export interface AmmSwapParams {
   amountOut: bigint;
   /** Token to pay fees with (defaults to USD) */
   feeToken?: Address;
-}
-
-// ============================================================================
-// Internal Protocol Types
-// ============================================================================
-
-/**
- * Wallet Connect Request (internal)
- */
-export interface WalletConnectRequest {
-  id: string;
-  method: string;
-  origin: string;
-  timestamp: number;
-  params?: unknown;
-}
-
-/**
- * Error codes for better error handling in consuming apps
- */
-export enum WalletConnectErrorCode {
-  // Connection errors
-  NOT_CONNECTED = 'NOT_CONNECTED',
-  CONNECTION_REVOKED = 'CONNECTION_REVOKED',
-  CONNECTION_TIMEOUT = 'CONNECTION_TIMEOUT',
-  POPUP_BLOCKED = 'POPUP_BLOCKED',
-
-  // Permission errors
-  PERMISSION_DENIED = 'PERMISSION_DENIED',
-  SIGN_PERMISSION_REQUIRED = 'SIGN_PERMISSION_REQUIRED',
-  SEND_PERMISSION_REQUIRED = 'SEND_PERMISSION_REQUIRED',
-
-  // Validation errors
-  INVALID_ADDRESS = 'INVALID_ADDRESS',
-  INVALID_AMOUNT = 'INVALID_AMOUNT',
-  INVALID_PARAMS = 'INVALID_PARAMS',
-  MISSING_REQUIRED_FIELD = 'MISSING_REQUIRED_FIELD',
-
-  // Transaction errors
-  INSUFFICIENT_BALANCE = 'INSUFFICIENT_BALANCE',
-  TRANSACTION_FAILED = 'TRANSACTION_FAILED',
-  GAS_ESTIMATION_FAILED = 'GAS_ESTIMATION_FAILED',
-  NONCE_CONFLICT = 'NONCE_CONFLICT',
-
-  // User actions
-  USER_REJECTED = 'USER_REJECTED',
-  REQUEST_TIMEOUT = 'REQUEST_TIMEOUT',
-
-  // Network errors
-  NETWORK_ERROR = 'NETWORK_ERROR',
-  WALLET_NOT_READY = 'WALLET_NOT_READY',
-
-  // Unknown
-  UNKNOWN = 'UNKNOWN',
-}
-
-/**
- * Wallet Connect error with code for programmatic handling
- */
-export class WalletConnectError extends Error {
-  code: WalletConnectErrorCode;
-  details?: Record<string, unknown>;
-
-  constructor(code: WalletConnectErrorCode, message: string, details?: Record<string, unknown>) {
-    super(message);
-    this.name = 'WalletConnectError';
-    this.code = code;
-    this.details = details;
-  }
-}
-
-/**
- * Wallet Connect Response (internal)
- */
-export interface WalletConnectResponse {
-  id: string;
-  success: boolean;
-  error?: string;
-  errorCode?: WalletConnectErrorCode;
-  result?: unknown;
-}
-
-/**
- * Message format for postMessage communication (internal)
- */
-export interface WalletConnectMessage {
-  type: 'TEMPO_WALLET_REQUEST' | 'TEMPO_WALLET_RESPONSE' | 'TEMPO_WALLET_READY';
-  version: string;
-  payload?: WalletConnectRequest | WalletConnectResponse;
 }

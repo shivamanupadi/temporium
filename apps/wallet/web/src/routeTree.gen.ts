@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SignRouteImport } from './routes/sign'
 import { Route as PortalRouteImport } from './routes/portal'
+import { Route as EmbedRouteImport } from './routes/embed'
 import { Route as ConnectRouteImport } from './routes/connect'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PortalTokenApprovalsRouteImport } from './routes/portal/token-approvals'
@@ -47,6 +48,11 @@ const SignRoute = SignRouteImport.update({
 const PortalRoute = PortalRouteImport.update({
   id: '/portal',
   path: '/portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EmbedRoute = EmbedRouteImport.update({
+  id: '/embed',
+  path: '/embed',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConnectRoute = ConnectRouteImport.update({
@@ -195,6 +201,7 @@ const PortalTip20StudioAddressOverviewRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/connect': typeof ConnectRoute
+  '/embed': typeof EmbedRoute
   '/portal': typeof PortalRouteWithChildren
   '/sign': typeof SignRoute
   '/portal/access-keys': typeof PortalAccessKeysRoute
@@ -226,6 +233,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/connect': typeof ConnectRoute
+  '/embed': typeof EmbedRoute
   '/portal': typeof PortalRouteWithChildren
   '/sign': typeof SignRoute
   '/portal/access-keys': typeof PortalAccessKeysRoute
@@ -256,6 +264,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/connect': typeof ConnectRoute
+  '/embed': typeof EmbedRoute
   '/portal': typeof PortalRouteWithChildren
   '/sign': typeof SignRoute
   '/portal/access-keys': typeof PortalAccessKeysRoute
@@ -289,6 +298,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/connect'
+    | '/embed'
     | '/portal'
     | '/sign'
     | '/portal/access-keys'
@@ -320,6 +330,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/connect'
+    | '/embed'
     | '/portal'
     | '/sign'
     | '/portal/access-keys'
@@ -349,6 +360,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/connect'
+    | '/embed'
     | '/portal'
     | '/sign'
     | '/portal/access-keys'
@@ -381,6 +393,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ConnectRoute: typeof ConnectRoute
+  EmbedRoute: typeof EmbedRoute
   PortalRoute: typeof PortalRouteWithChildren
   SignRoute: typeof SignRoute
 }
@@ -399,6 +412,13 @@ declare module '@tanstack/react-router' {
       path: '/portal'
       fullPath: '/portal'
       preLoaderRoute: typeof PortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/embed': {
+      id: '/embed'
+      path: '/embed'
+      fullPath: '/embed'
+      preLoaderRoute: typeof EmbedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/connect': {
@@ -710,6 +730,7 @@ const PortalRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ConnectRoute: ConnectRoute,
+  EmbedRoute: EmbedRoute,
   PortalRoute: PortalRouteWithChildren,
   SignRoute: SignRoute,
 }
