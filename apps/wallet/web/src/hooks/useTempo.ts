@@ -59,8 +59,9 @@ interface UseTempoReturn {
   signUp: (label?: string) => Promise<void>;
   signIn: () => Promise<void>;
   connectInjected: () => Promise<void>;
-  connectTempoWallet: () => Promise<void>;
-  signTempoWallet: () => Promise<void>;
+  connectTempoWallet: (chainId?: number) => Promise<unknown>;
+  signTempoWallet: (chainId?: number) => Promise<void>;
+
   disconnect: () => Promise<void>;
   // Transactions
   sendPayment: (params: SendPaymentParams) => Promise<string>;
@@ -178,34 +179,37 @@ export function useTempo(): UseTempoReturn {
     }
   }, [connectAsync, disconnectAsync]);
 
-  const connectTempoWallet = useCallback(async () => {
-    setIsConnecting(true);
-    setError(null);
-    try {
-      await connectAsync({
-        connector: tempoWalletConnector,
-        chainId: tempoChain.id,
-      });
-    } catch (err) {
-      setError(err as Error);
+  const connectTempoWallet = useCallback(
+    async (chainId?: number) => {
+      setIsConnecting(true);
+      setError(null);
       try {
-        await disconnectAsync();
-      } catch {
-        /* ignore */
+        const result = await connectAsync({
+          connector: tempoWalletConnector,
+          chainId: chainId ?? tempoChain.id,
+        });
+        return result;
+      } catch (err) {
+        setError(err as Error);
+        try {
+          await disconnectAsync();
+        } catch {
+          /* ignore */
+        }
+        throw err;
+      } finally {
+        setIsConnecting(false);
       }
-      throw err;
-    } finally {
-      setIsConnecting(false);
-    }
-  }, [connectAsync, disconnectAsync]);
+    },
+    [connectAsync, disconnectAsync]
+  );
 
-  const signTempoWallet = useCallback(async () => {
+  const signTempoWallet = useCallback(async (chainId?: number) => {
     setIsConnecting(true);
     setError(null);
     try {
       const client = await getWalletClient(wagmiConfig, {
-        account: address,
-        chainId: tempoChain.id,
+        chainId: chainId ?? tempoChain.id,
       });
 
       if (!client) throw new Error('Failed to get wallet client');
@@ -213,16 +217,11 @@ export function useTempo(): UseTempoReturn {
       await signInWithEthereum(client);
     } catch (err) {
       setError(err as Error);
-      try {
-        await disconnectAsync();
-      } catch {
-        /* ignore */
-      }
       throw err;
     } finally {
       setIsConnecting(false);
     }
-  }, [address, disconnectAsync]);
+  }, []);
 
   const disconnect = useCallback(async () => {
     await clearAuthTokens();

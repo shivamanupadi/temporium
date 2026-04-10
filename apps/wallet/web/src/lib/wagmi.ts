@@ -1,8 +1,9 @@
 import { createConfig, http } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import { webAuthn, dialog } from 'accounts/wagmi';
-import { Dialog } from 'accounts';
+
 import { tempoChain } from './tempo-client';
+import { isTestnet } from './constants';
 import { createCeremony } from './ceremony';
 
 export const tempoPasskeyConnector = webAuthn({
@@ -16,7 +17,7 @@ export const injectedConnector = injected({
 export const tempoWalletConnector = dialog({
   rdns: 'xyz.tempo.wallet',
   name: 'Tempo Wallet',
-  dialog: Dialog.popup({ size: { width: 420, height: 600 } }),
+  testnet: isTestnet,
 });
 
 export const wagmiConfig = createConfig({

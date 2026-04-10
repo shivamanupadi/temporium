@@ -38,18 +38,11 @@ import {
   RefreshCw,
   ArrowLeftRight,
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 import { useTempo } from '@/hooks/useTempo';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
 import { formatAddress, copyToClipboard } from '@/lib/utils';
-import {
-  LINKS,
-  TIMING,
-  TEMPO_NETWORK,
-  isTestnet,
-  isMainnetEnabled,
-  MAINNET_INVITE_CODES,
-  switchNetwork,
-} from '@/lib/constants';
+import { LINKS, TIMING, TEMPO_NETWORK, isTestnet, switchNetwork } from '@/lib/constants';
 import { isAccessTokenExpired, clearAuthToken } from '@/lib/auth-storage';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { ReceiveModal } from '@/components/ReceiveModal';
@@ -123,7 +116,7 @@ function getInitialCollapsed(): boolean {
 }
 
 function PortalLayout(): ReactElement | null {
-  const { isConnected, address, disconnect } = useTempo();
+  const { isConnected, address, disconnect, walletType } = useTempo();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -132,9 +125,7 @@ function PortalLayout(): ReactElement | null {
   const [showWalletMenu, setShowWalletMenu] = useState(false);
   const [copied, setCopied] = useState(false);
   const [showReceiveModal, setShowReceiveModal] = useState(false);
-  const [showComingSoon, setShowComingSoon] = useState(false);
-  const [inviteCode, setInviteCode] = useState('');
-  const [inviteError, setInviteError] = useState(false);
+  const [pendingNetworkSwitch, setPendingNetworkSwitch] = useState<string | null>(null);
   const networkDropdownRef = useRef<HTMLDivElement>(null);
   const walletDropdownRef = useRef<HTMLDivElement>(null);
   const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -227,7 +218,7 @@ function PortalLayout(): ReactElement | null {
           className={`flex items-start py-4 ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}
         >
           <div className="flex items-center gap-2.5">
-            <img src="/logo-dark.png" alt="Temporium" className="w-6 h-6 shrink-0" />
+            <img src="/logo-dark.png" alt="Temporium" className="w-6 h-6 shrink-0 rounded-full" />
             {!collapsed && (
               <span className="text-[15px] font-bold text-[#2D3436] tracking-tight leading-none">
                 Temporium
@@ -314,9 +305,9 @@ function PortalLayout(): ReactElement | null {
                           onClick={() => {
                             if (isActive) {
                               setShowNetworkMenu(false);
-                            } else if (net.id === 'mainnet' && !isMainnetEnabled) {
+                            } else if (walletType === 'tempo') {
                               setShowNetworkMenu(false);
-                              setShowComingSoon(true);
+                              setPendingNetworkSwitch(net.id);
                             } else {
                               switchNetwork(net.id);
                             }
@@ -543,7 +534,7 @@ function PortalLayout(): ReactElement | null {
         {/* Mobile header */}
         <header className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-[#EDE9E3] bg-white">
           <div className="flex items-center gap-2.5">
-            <img src="/logo-dark.png" alt="Temporium" className="w-6 h-6" />
+            <img src="/logo-dark.png" alt="Temporium" className="w-6 h-6 rounded-full" />
             <span className="text-[14px] font-bold text-[#2D3436]">Temporium</span>
             <span className="text-[14px] font-medium text-[#B5B0AA]">| Wallet</span>
           </div>
@@ -639,96 +630,43 @@ function PortalLayout(): ReactElement | null {
         </main>
       </div>
       {/* Mainnet Coming Soon Modal */}
-      <AnimatePresence>
-        {showComingSoon && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm"
-            onClick={() => {
-              setShowComingSoon(false);
-              setInviteCode('');
-              setInviteError(false);
-            }}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 8 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 8 }}
-              transition={{ type: 'spring', duration: 0.35, bounce: 0.15 }}
-              onClick={e => e.stopPropagation()}
-              className="bg-white rounded-2xl border border-[#EDE9E3] shadow-2xl shadow-black/10 p-8 max-w-sm w-full mx-4 text-center"
+      {/* Network Switch Confirmation (Tempo wallet only) */}
+      <Dialog
+        open={!!pendingNetworkSwitch}
+        onOpenChange={open => {
+          if (!open) setPendingNetworkSwitch(null);
+        }}
+      >
+        <DialogContent className="max-w-sm p-7 rounded-2xl text-center" hideClose>
+          <div className="w-12 h-12 rounded-2xl bg-[#D4A574]/10 flex items-center justify-center mx-auto mb-4">
+            <Globe className="w-6 h-6 text-[#D4A574]" />
+          </div>
+          <DialogTitle className="text-[16px] font-bold text-[#2D3436] mb-2">
+            Switch Network
+          </DialogTitle>
+          <DialogDescription className="text-[13px] text-[#6B6560] leading-relaxed mb-5">
+            Switching to{' '}
+            <span className="font-semibold text-[#2D3436]">
+              {pendingNetworkSwitch === 'mainnet' ? 'Mainnet' : 'Testnet'}
+            </span>{' '}
+            will sign you out. You&apos;ll need to connect your wallet again.
+          </DialogDescription>
+          <div className="flex gap-3">
+            <button
+              onClick={() => setPendingNetworkSwitch(null)}
+              className="flex-1 py-2.5 px-4 rounded-xl text-[13px] font-semibold border border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED] transition-colors cursor-pointer"
             >
-              <div className="w-14 h-14 rounded-2xl bg-[#6B8F71]/10 flex items-center justify-center mx-auto mb-5">
-                <Globe className="w-7 h-7 text-[#6B8F71]" />
-              </div>
-              <h2 className="text-[18px] font-bold text-[#2D3436] mb-2">Mainnet Coming Soon</h2>
-              <p className="text-[14px] text-[#6B6560] leading-relaxed mb-4">
-                Tempo Mainnet (Presto) is not yet available. Stay tuned for the official launch!
-              </p>
-              {MAINNET_INVITE_CODES && (
-                <div className="mb-4">
-                  <p className="text-[12px] text-[#9B9590] mb-2">Have an invite code?</p>
-                  <input
-                    type="text"
-                    value={inviteCode}
-                    onChange={e => {
-                      setInviteCode(e.target.value);
-                      setInviteError(false);
-                    }}
-                    onKeyDown={e => {
-                      if (e.key === 'Enter' && inviteCode.trim()) {
-                        if (MAINNET_INVITE_CODES.includes(inviteCode.trim().toUpperCase())) {
-                          switchNetwork('mainnet');
-                        } else {
-                          setInviteError(true);
-                        }
-                      }
-                    }}
-                    placeholder="Enter invite code"
-                    className={`w-full px-3 py-2.5 rounded-xl border text-[13px] text-center outline-none transition-colors ${
-                      inviteError
-                        ? 'border-[#E07A5F] bg-[#E07A5F]/5 focus:border-[#E07A5F]'
-                        : 'border-[#EDE9E3] bg-[#FDFBF8] focus:border-[#5B9A6F]'
-                    }`}
-                  />
-                  {inviteError && (
-                    <p className="text-[11px] text-[#E07A5F] mt-1.5">Invalid invite code</p>
-                  )}
-                  <button
-                    onClick={() => {
-                      if (MAINNET_INVITE_CODES.includes(inviteCode.trim().toUpperCase())) {
-                        switchNetwork('mainnet');
-                      } else {
-                        setInviteError(true);
-                      }
-                    }}
-                    disabled={!inviteCode.trim()}
-                    className="w-full mt-2 py-2.5 px-4 rounded-xl bg-[#5B9A6F] text-white text-[13px] font-semibold hover:bg-[#4E8760] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                  >
-                    Unlock Mainnet
-                  </button>
-                </div>
-              )}
-              <button
-                onClick={() => {
-                  setShowComingSoon(false);
-                  setInviteCode('');
-                  setInviteError(false);
-                }}
-                className={`w-full py-2.5 px-4 rounded-xl text-[13px] font-semibold transition-colors ${
-                  MAINNET_INVITE_CODES
-                    ? 'border border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]'
-                    : 'bg-[#5B9A6F] text-white hover:bg-[#4E8760]'
-                }`}
-              >
-                {MAINNET_INVITE_CODES ? 'Cancel' : 'Got it'}
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+              Cancel
+            </button>
+            <button
+              onClick={() => switchNetwork(pendingNetworkSwitch as 'testnet' | 'mainnet', true)}
+              className="flex-1 py-2.5 px-4 rounded-xl text-[13px] font-semibold bg-[#E07A5F] text-white hover:bg-[#D06A4F] transition-colors cursor-pointer"
+            >
+              Continue
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <ReceiveModal open={showReceiveModal} onOpenChange={setShowReceiveModal} address={address} />
     </div>
   );

@@ -13,17 +13,51 @@ function getStoredNetwork(): 'testnet' | 'mainnet' {
   } catch {
     /* localStorage unavailable */
   }
-  return (import.meta.env.VITE_TEMPO_NETWORK || 'testnet') as 'testnet' | 'mainnet';
+  return 'mainnet';
 }
 
 export const TEMPO_NETWORK = getStoredNetwork();
 export const isTestnet = TEMPO_NETWORK !== 'mainnet';
-export const isMainnetEnabled = import.meta.env.VITE_MAINNET_ENABLED === 'true';
-export const MAINNET_INVITE_CODES = ['PRESTO', 'GENESIS', 'EARLYBIRD', 'FOUNDERS', 'MAINNET'];
 
-export function switchNetwork(network: 'testnet' | 'mainnet'): void {
+/** Dev mode — enables passkey wallet (hidden from public users). Activated via ?dev=true URL param. */
+export const isDevMode = (() => {
+  try {
+    if (typeof window === 'undefined') return false;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('dev') === 'true') {
+      localStorage.setItem('temporium_dev', 'true');
+      return true;
+    }
+    if (params.get('dev') === 'false') {
+      localStorage.removeItem('temporium_dev');
+      return false;
+    }
+    return localStorage.getItem('temporium_dev') === 'true';
+  } catch {
+    return false;
+  }
+})();
+
+export function switchNetwork(network: 'testnet' | 'mainnet', clearSession = false): void {
   if (network === TEMPO_NETWORK) return;
   localStorage.setItem(NETWORK_STORAGE_KEY, network);
+
+  if (clearSession) {
+    // Clear all session state — forces re-sign-in on the new network
+    localStorage.removeItem('wagmi.store');
+    localStorage.removeItem('temporium_auth');
+    // Clear accounts SDK IDB storage
+    try {
+      const req = indexedDB.deleteDatabase('tempo');
+      req.onsuccess = () => window.location.reload();
+      req.onerror = () => window.location.reload();
+      req.onblocked = () => window.location.reload();
+      return;
+    } catch {
+      // Fall through to reload
+    }
+  }
+
   window.location.reload();
 }
 

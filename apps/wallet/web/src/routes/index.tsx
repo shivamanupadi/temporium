@@ -34,13 +34,318 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 import { CreateWalletModal } from '@temporium/shared-ui';
 import { useTempo } from '@/hooks/useTempo';
-import { getWalletApiUrl, TEMPO_NETWORK } from '@/lib/api';
+import { getWalletApiUrl } from '@/lib/api';
 import { copyToClipboard } from '@/lib/utils';
 import { isAccessTokenExpired } from '@/lib/auth-storage';
+import { isDevMode, TEMPO_NETWORK } from '@/lib/constants';
+import { CheckCircle } from 'lucide-react';
 
 export const Route = createFileRoute('/')({
   component: LandingPage,
 });
+
+// ---------------------------------------------------------------------------
+// Tempo Wallet Connect Modal (public users)
+// ---------------------------------------------------------------------------
+
+type TempoStep = 'network' | 'connecting' | 'verify' | 'success';
+
+const NETWORKS = [
+  {
+    id: 'mainnet' as const,
+    name: 'Tempo Mainnet',
+    subtitle: 'Production network',
+    color: '#5B9A6F',
+  },
+  {
+    id: 'testnet' as const,
+    name: 'Tempo Testnet',
+    subtitle: 'Moderato (test network)',
+    color: '#D4A574',
+  },
+];
+
+function TempoConnectModal({
+  isOpen,
+  onClose,
+  connectTempoWallet,
+  signTempoWallet,
+  onSuccess,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  connectTempoWallet: (chainId?: number) => Promise<unknown>;
+  signTempoWallet: (chainId?: number) => Promise<void>;
+  onSuccess: (network: 'testnet' | 'mainnet') => void;
+}): ReactElement {
+  const [step, setStep] = useState<TempoStep>('network');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedNetwork, setSelectedNetwork] = useState<'testnet' | 'mainnet'>(TEMPO_NETWORK);
+
+  const handleSelectNetwork = useCallback(
+    async (network: 'testnet' | 'mainnet') => {
+      setSelectedNetwork(network);
+      setStep('connecting');
+      setIsLoading(true);
+      setError(null);
+
+      const chainId = network === 'mainnet' ? 4217 : 42431;
+      try {
+        await connectTempoWallet(chainId);
+        setStep('verify');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Connection failed');
+        setStep('network');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [connectTempoWallet, signTempoWallet, onSuccess]
+  );
+
+  const selectedChainId = selectedNetwork === 'mainnet' ? 4217 : 42431;
+
+  const handleVerify = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      await signTempoWallet(selectedChainId);
+      setStep('success');
+      setTimeout(() => onSuccess(selectedNetwork), 1500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Verification failed');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [signTempoWallet, onSuccess, selectedNetwork]);
+
+  const handleClose = useCallback(
+    (open: boolean) => {
+      if (!open && !isLoading) {
+        onClose();
+        setTimeout(() => {
+          setStep('network');
+          setError(null);
+        }, 200);
+      }
+    },
+    [isLoading, onClose]
+  );
+
+  const STEPS: { key: TempoStep; label: string }[] = [
+    { key: 'network', label: 'Network' },
+    { key: 'connecting', label: 'Connect' },
+    { key: 'verify', label: 'Verify' },
+    { key: 'success', label: 'Done' },
+  ];
+
+  const stepIndex = STEPS.findIndex(s => s.key === step);
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="max-w-[400px] min-h-[320px] p-0 gap-0 rounded-2xl flex flex-col">
+        <DialogTitle className="sr-only">Connect Wallet</DialogTitle>
+        <DialogDescription className="sr-only">Connect your Tempo wallet</DialogDescription>
+
+        {/* Step Indicator */}
+        <div className="px-6 pt-16 pb-5 shrink-0">
+          <div className="flex items-center">
+            {STEPS.map((s, i) => {
+              const isCompleted = i < stepIndex;
+              const isCurrent = i === stepIndex;
+              const isSuccess = step === 'success';
+              const activeColor = isSuccess ? '#5B9A6F' : '#E07A5F';
+
+              return (
+                <div key={s.key} className="flex items-center flex-1">
+                  <div className="flex flex-col items-center flex-1 relative">
+                    {/* Dot */}
+                    <div
+                      className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300 border-2"
+                      style={{
+                        borderColor: isCompleted || isCurrent ? activeColor : '#EDE9E3',
+                        backgroundColor: isCompleted
+                          ? activeColor
+                          : isCurrent
+                            ? `${activeColor}15`
+                            : 'white',
+                        color: isCompleted ? 'white' : isCurrent ? activeColor : '#B5B0AA',
+                      }}
+                    >
+                      {isCompleted ? <Check className="w-3.5 h-3.5" /> : i + 1}
+                    </div>
+                    {/* Label */}
+                    <span
+                      className="text-[10px] mt-1.5 transition-colors duration-300 whitespace-nowrap"
+                      style={{
+                        color: isCompleted || isCurrent ? '#2D3436' : '#B5B0AA',
+                        fontWeight: isCurrent ? 600 : 400,
+                      }}
+                    >
+                      {s.label}
+                    </span>
+                  </div>
+                  {/* Connector line */}
+                  {i < STEPS.length - 1 && (
+                    <div
+                      className="h-0.5 flex-1 rounded-full transition-colors duration-300 -mt-4"
+                      style={{
+                        backgroundColor: isCompleted ? activeColor : '#EDE9E3',
+                      }}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex-1 flex flex-col justify-center">
+          <AnimatePresence mode="wait">
+            {/* Step 1: Network Selection */}
+            {step === 'network' && (
+              <motion.div
+                key="network"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.15 }}
+              >
+                <div className="px-6 pb-2">
+                  <p className="text-[15px] font-semibold text-[#2D3436]">Select Network</p>
+                  <p className="text-[12px] text-[#8A8580] mt-0.5">
+                    Choose which Tempo network to use
+                  </p>
+                </div>
+                <div className="px-6 pb-5 pt-2 space-y-2">
+                  {NETWORKS.map(net => (
+                    <button
+                      key={net.id}
+                      onClick={() => handleSelectNetwork(net.id)}
+                      disabled={isLoading}
+                      className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-[#EDE9E3] hover:bg-[#FDFBF8] transition-all text-left cursor-pointer disabled:opacity-50"
+                    >
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: `${net.color}15` }}
+                      >
+                        <Globe className="w-4 h-4" style={{ color: net.color }} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-semibold text-[#2D3436]">{net.name}</p>
+                        <p className="text-[11px] text-[#9B9590]">{net.subtitle}</p>
+                      </div>
+                      <ArrowRight className="w-3.5 h-3.5 text-[#B5B0AA] shrink-0" />
+                    </button>
+                  ))}
+
+                  {error && <p className="text-[12px] text-[#E07A5F] text-center pt-1">{error}</p>}
+
+                  <p className="text-[11px] text-center text-[#9B9590] pt-2">
+                    Don&apos;t have a wallet?{' '}
+                    <a
+                      href="https://wallet.tempo.xyz"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-[#9B72CF] hover:text-[#8A62BF] transition-colors"
+                    >
+                      Create one at Tempo
+                    </a>
+                  </p>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Step 2: Connecting */}
+            {step === 'connecting' && (
+              <motion.div
+                key="connecting"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.15 }}
+              >
+                <div className="px-6 py-8 text-center">
+                  <Loader2 className="w-8 h-8 animate-spin text-[#9B72CF] mx-auto mb-3" />
+                  <p className="text-[14px] font-semibold text-[#2D3436]">
+                    Connecting to {selectedNetwork === 'mainnet' ? 'Mainnet' : 'Testnet'}
+                  </p>
+                  <p className="text-[12px] text-[#9B9590] mt-1">
+                    Approve in the Tempo Wallet popup
+                  </p>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Step 3: Verify */}
+            {step === 'verify' && (
+              <motion.div
+                key="verify"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.15 }}
+              >
+                <div className="px-6 pb-2">
+                  <p className="text-[15px] font-semibold text-[#2D3436]">Verify Ownership</p>
+                  <p className="text-[12px] text-[#8A8580] mt-0.5">
+                    Sign a message to prove you own this wallet
+                  </p>
+                </div>
+                <div className="px-6 pb-5 pt-2 space-y-3">
+                  <button
+                    onClick={handleVerify}
+                    disabled={isLoading}
+                    className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-[#EDE9E3] hover:border-[#9B72CF]/30 hover:bg-[#9B72CF]/4 transition-all text-left cursor-pointer disabled:opacity-50"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-[#9B72CF]/10 flex items-center justify-center shrink-0">
+                      <Globe className="w-4 h-4 text-[#9B72CF]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-semibold text-[#2D3436]">Sign Message</p>
+                      <p className="text-[11px] text-[#9B9590]">Opens your Tempo Wallet to sign</p>
+                    </div>
+                    {isLoading ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#9B72CF] shrink-0" />
+                    ) : (
+                      <ArrowRight className="w-3.5 h-3.5 text-[#B5B0AA] shrink-0" />
+                    )}
+                  </button>
+                  {error && <p className="text-[12px] text-[#E07A5F] text-center">{error}</p>}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Step 4: Success */}
+            {step === 'success' && (
+              <motion.div
+                key="success"
+                initial={{ opacity: 0, scale: 0.96 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div className="px-6 py-8 text-center">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                    className="w-12 h-12 rounded-full bg-[#5B9A6F] flex items-center justify-center mx-auto mb-3"
+                  >
+                    <CheckCircle className="w-6 h-6 text-white" />
+                  </motion.div>
+                  <p className="text-[15px] font-bold text-[#2D3436]">Connected</p>
+                  <p className="text-[12px] text-[#9B9590] mt-1">Redirecting to dashboard...</p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 const features = [
   {
@@ -220,9 +525,8 @@ function LandingPage(): ReactElement {
   const { isConnected, isConnecting, signUp, signIn, connectTempoWallet, signTempoWallet } =
     useTempo();
 
-  const [showSignIn, setShowSignIn] = useState(false);
+  const [showTempoConnectModal, setShowTempoConnectModal] = useState(false);
   const [showCreateWallet, setShowCreateWallet] = useState(false);
-  const [showTempoSign, setShowTempoSign] = useState(false);
   const [connectingType, setConnectingType] = useState<string | null>(null);
   const [contractAddress, setContractAddress] = useState<string | null>(null);
   const [contractExplorerUrl, setContractExplorerUrl] = useState<string | null>(null);
@@ -267,9 +571,8 @@ function LandingPage(): ReactElement {
     }
   };
 
-  const handleSignIn = async (): Promise<void> => {
+  const handlePasskeySignIn = async (): Promise<void> => {
     setConnectingType('passkey');
-    setShowSignIn(false);
     try {
       await signIn();
     } catch (err) {
@@ -279,31 +582,23 @@ function LandingPage(): ReactElement {
     }
   };
 
-  const handleTempoWalletConnect = async (): Promise<void> => {
-    setConnectingType('tempo');
-    setShowSignIn(false);
-    try {
-      await connectTempoWallet();
-      setShowTempoSign(true);
-    } catch (err) {
-      toast.error('Connection failed', { description: (err as Error).message });
-    } finally {
-      setConnectingType(null);
-    }
-  };
+  const handleOpenWizard = useCallback(() => {
+    setShowTempoConnectModal(true);
+  }, []);
 
-  const handleTempoSign = async (): Promise<void> => {
-    setConnectingType('tempo-sign');
-    try {
-      await signTempoWallet();
-      setShowTempoSign(false);
-      navigate({ to: '/portal/dashboard' });
-    } catch (err) {
-      toast.error('Sign in failed', { description: (err as Error).message });
-    } finally {
-      setConnectingType(null);
-    }
-  };
+  const handleWizardSuccess = useCallback(
+    (network: 'testnet' | 'mainnet') => {
+      setShowTempoConnectModal(false);
+      if (network !== TEMPO_NETWORK) {
+        // Switch app network to match what the user connected on
+        localStorage.setItem('temporium_network', network);
+        window.location.href = '/portal/dashboard';
+      } else {
+        navigate({ to: '/portal/dashboard' });
+      }
+    },
+    [navigate]
+  );
 
   return (
     <div className="min-h-screen bg-[#FDFBF8] flex flex-col relative ">
@@ -321,21 +616,23 @@ function LandingPage(): ReactElement {
       {/* Header */}
       <header className="relative z-10 py-5 max-w-5xl mx-auto w-full px-6 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <img src="/logo-dark.png" alt="Temporium" className="w-8 h-8" />
+          <img src="/logo-dark.png" alt="Temporium" className="w-8 h-8 rounded-full" />
           <span className="text-[17px] font-bold text-[#2D3436] tracking-tight">Temporium</span>
         </div>
         <nav className="flex items-center gap-1">
-          <a
-            href="#how-it-works"
-            onClick={e => {
-              e.preventDefault();
-              document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13px] font-medium text-[#6B6560] hover:text-[#2D3436] hover:bg-[#F5F2ED]/80 transition-all"
-          >
-            <Fingerprint className="w-3.5 h-3.5" strokeWidth={1.75} />
-            How it works
-          </a>
+          {isDevMode && (
+            <a
+              href="#how-it-works"
+              onClick={e => {
+                e.preventDefault();
+                document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-[13px] font-medium text-[#6B6560] hover:text-[#2D3436] hover:bg-[#F5F2ED]/80 transition-all"
+            >
+              <Fingerprint className="w-3.5 h-3.5" strokeWidth={1.75} />
+              How it works
+            </a>
+          )}
           <a
             href="#features"
             onClick={e => {
@@ -377,7 +674,7 @@ function LandingPage(): ReactElement {
               <span className="block text-[42px] sm:text-[54px] lg:text-[62px] font-bold text-[#2D3436] leading-[1.05] tracking-[-0.03em]">
                 Your{' '}
                 <span className="relative inline-block">
-                  <span className="relative z-10 text-[#E07A5F]">Wallet</span>
+                  <span className="relative z-10 text-[#E07A5F]">Gateway</span>
                   <motion.span
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: 1 }}
@@ -386,7 +683,7 @@ function LandingPage(): ReactElement {
                   />
                 </span>
                 <br />
-                for Tempo
+                to Tempo
               </span>
             </motion.h1>
 
@@ -397,40 +694,62 @@ function LandingPage(): ReactElement {
               transition={{ duration: 0.5, delay: 0.18 }}
               className="text-[16px] sm:text-[17px] text-[#8A8580] leading-relaxed mb-10 max-w-[420px]"
             >
-              Send, receive, provide liquidity, create tokens, schedule payments, and manage access
-              keys. All with sub-cent fees.
+              The all-in-one toolkit for payments, swaps, and token management on Tempo.
             </motion.p>
 
-            {/* CTA buttons */}
+            {/* Tempo Wallet */}
             <motion.div
               initial={{ opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.28 }}
-              className="flex items-center gap-3.5"
+              className="space-y-3"
             >
               <Button
-                onClick={() => setShowCreateWallet(true)}
+                onClick={handleOpenWizard}
                 disabled={!!connectingType}
                 className="h-[50px] px-7 rounded-2xl text-[14px] font-semibold bg-[#E07A5F] hover:bg-[#D4694F] text-white shadow-lg shadow-[#E07A5F]/15 hover:shadow-xl hover:shadow-[#E07A5F]/20 transition-all duration-300 hover:-translate-y-0.5"
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Wallet
+                <Globe className="w-4 h-4 mr-2" />
+                Connect Tempo Wallet
               </Button>
 
-              <Button
-                onClick={() => setShowSignIn(true)}
-                disabled={!!connectingType}
-                variant="outline"
-                className="h-[50px] px-7 rounded-2xl text-[14px] font-semibold border-[#E2DDD6] bg-white hover:bg-[#FDFBF8] hover:border-[#D5D0C9] text-[#2D3436] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md hover:shadow-black/[0.04]"
-              >
-                Sign In
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+              {/* Passkey Wallet (dev mode) */}
+              {isDevMode && (
+                <div className="pt-4 border-t border-[#EDE9E3]/60">
+                  <p className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-3">
+                    Passkey Wallet (Dev)
+                  </p>
+                  <div className="flex items-center gap-2.5">
+                    <Button
+                      onClick={handlePasskeySignIn}
+                      disabled={!!connectingType}
+                      variant="outline"
+                      className="h-[42px] px-5 rounded-xl text-[13px] font-semibold border-[#E2DDD6] bg-white hover:bg-[#FDFBF8] text-[#2D3436]"
+                    >
+                      {connectingType === 'passkey' ? (
+                        <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                      ) : (
+                        <Fingerprint className="w-3.5 h-3.5 mr-1.5" />
+                      )}
+                      {connectingType === 'passkey' ? 'Signing in...' : 'Sign In'}
+                    </Button>
+                    <Button
+                      onClick={() => setShowCreateWallet(true)}
+                      disabled={!!connectingType}
+                      variant="outline"
+                      className="h-[42px] px-5 rounded-xl text-[13px] font-semibold border-[#E2DDD6] bg-white hover:bg-[#FDFBF8] text-[#2D3436]"
+                    >
+                      <Plus className="w-3.5 h-3.5 mr-1.5" />
+                      Create
+                    </Button>
+                  </div>
+                </div>
+              )}
             </motion.div>
 
             {/* Loading state */}
             <AnimatePresence>
-              {connectingType && (
+              {connectingType && connectingType !== 'passkey' && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -644,124 +963,130 @@ function LandingPage(): ReactElement {
         </div>
       </main>
 
-      {/* How It Works */}
-      <section
-        id="how-it-works"
-        className="relative z-10 border-t border-[#EDE9E3]/60 py-14 px-6 scroll-mt-6"
-      >
-        <div className="max-w-5xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: '-60px' }}
-            transition={{ duration: 0.5 }}
-          >
-            <p className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-[0.12em] mb-2">
-              How It Works
-            </p>
-            <h2 className="text-[22px] sm:text-[26px] font-bold text-[#2D3436] tracking-tight mb-10">
-              Passkey-secured wallets on Tempo
-            </h2>
-          </motion.div>
-
-          {/* Steps */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {[
-              {
-                icon: Fingerprint,
-                title: 'Passkey Auth',
-                desc: 'Sign in with Face ID, Touch ID, or your device PIN. No passwords or seed phrases to remember.',
-                color: '#E07A5F',
-                step: '01',
-              },
-              {
-                icon: Database,
-                title: 'On-Chain Storage',
-                desc: 'Your public key is stored on the Tempo blockchain via a verified smart contract.',
-                color: '#E07A5F',
-                step: '02',
-              },
-              {
-                icon: Shield,
-                title: 'Permanent Access',
-                desc: 'Recover your wallet anytime through the blockchain. Your key never leaves your device.',
-                color: '#6B8F71',
-                step: '03',
-              },
-            ].map((step, i) => (
-              <motion.div
-                key={step.title}
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-40px' }}
-                transition={{ duration: 0.4, delay: i * 0.1 }}
-                className="relative rounded-2xl border border-[#EDE9E3]/80 bg-white p-5 sm:p-6"
-              >
-                <span className="text-[11px] font-bold text-[#E2DDD6] tracking-wider">
-                  {step.step}
-                </span>
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center mt-3 mb-3"
-                  style={{ backgroundColor: `${step.color}0F` }}
-                >
-                  <step.icon className="w-5 h-5" style={{ color: step.color }} strokeWidth={1.7} />
-                </div>
-                <h3 className="text-[14px] font-semibold text-[#2D3436] mb-1">{step.title}</h3>
-                <p className="text-[13px] text-[#8A8580] leading-relaxed">{step.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Contract info */}
-          {contractAddress && (
+      {/* How It Works (dev only) */}
+      {isDevMode && (
+        <section
+          id="how-it-works"
+          className="relative z-10 border-t border-[#EDE9E3]/60 py-14 px-6 scroll-mt-6"
+        >
+          <div className="max-w-5xl mx-auto">
             <motion.div
-              initial={{ opacity: 0, y: 12 }}
+              initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: 0.3 }}
-              className="mt-6 rounded-2xl border border-[#EDE9E3]/80 bg-white p-5 flex flex-col sm:flex-row sm:items-center gap-4"
+              viewport={{ once: true, margin: '-60px' }}
+              transition={{ duration: 0.5 }}
             >
-              <div className="flex items-center gap-3 flex-1 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-[#E07A5F]/8 flex items-center justify-center shrink-0">
-                  <Database className="w-4 h-4 text-[#E07A5F]" strokeWidth={1.7} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">
-                    Passkey Registry Contract
-                  </p>
-                  <p className="text-[13px] font-mono text-[#6B6560] truncate mt-0.5">
-                    {contractAddress}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={handleCopyContract}
-                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#EDE9E3] text-[12px] font-medium text-[#6B6560] hover:bg-[#F5F2ED] hover:text-[#2D3436] transition-all"
+              <p className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-[0.12em] mb-2">
+                How It Works
+              </p>
+              <h2 className="text-[22px] sm:text-[26px] font-bold text-[#2D3436] tracking-tight mb-10">
+                Passkey-secured wallets on Tempo
+              </h2>
+            </motion.div>
+
+            {/* Steps */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {[
+                {
+                  icon: Fingerprint,
+                  title: 'Passkey Auth',
+                  desc: 'Sign in with Face ID, Touch ID, or your device PIN. No passwords or seed phrases to remember.',
+                  color: '#E07A5F',
+                  step: '01',
+                },
+                {
+                  icon: Database,
+                  title: 'On-Chain Storage',
+                  desc: 'Your public key is stored on the Tempo blockchain via a verified smart contract.',
+                  color: '#E07A5F',
+                  step: '02',
+                },
+                {
+                  icon: Shield,
+                  title: 'Permanent Access',
+                  desc: 'Recover your wallet anytime through the blockchain. Your key never leaves your device.',
+                  color: '#6B8F71',
+                  step: '03',
+                },
+              ].map((step, i) => (
+                <motion.div
+                  key={step.title}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-40px' }}
+                  transition={{ duration: 0.4, delay: i * 0.1 }}
+                  className="relative rounded-2xl border border-[#EDE9E3]/80 bg-white p-5 sm:p-6"
                 >
-                  {copiedContract ? (
-                    <Check className="w-3.5 h-3.5 text-[#6B8F71]" />
-                  ) : (
-                    <Copy className="w-3.5 h-3.5" />
-                  )}
-                  {copiedContract ? 'Copied' : 'Copy'}
-                </button>
-                {contractExplorerUrl && (
-                  <a
-                    href={contractExplorerUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <span className="text-[11px] font-bold text-[#E2DDD6] tracking-wider">
+                    {step.step}
+                  </span>
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center mt-3 mb-3"
+                    style={{ backgroundColor: `${step.color}0F` }}
+                  >
+                    <step.icon
+                      className="w-5 h-5"
+                      style={{ color: step.color }}
+                      strokeWidth={1.7}
+                    />
+                  </div>
+                  <h3 className="text-[14px] font-semibold text-[#2D3436] mb-1">{step.title}</h3>
+                  <p className="text-[13px] text-[#8A8580] leading-relaxed">{step.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Contract info */}
+            {contractAddress && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: 0.3 }}
+                className="mt-6 rounded-2xl border border-[#EDE9E3]/80 bg-white p-5 flex flex-col sm:flex-row sm:items-center gap-4"
+              >
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-[#E07A5F]/8 flex items-center justify-center shrink-0">
+                    <Database className="w-4 h-4 text-[#E07A5F]" strokeWidth={1.7} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-semibold text-[#B5B0AA] uppercase tracking-wider">
+                      Passkey Registry Contract
+                    </p>
+                    <p className="text-[13px] font-mono text-[#6B6560] truncate mt-0.5">
+                      {contractAddress}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={handleCopyContract}
                     className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#EDE9E3] text-[12px] font-medium text-[#6B6560] hover:bg-[#F5F2ED] hover:text-[#2D3436] transition-all"
                   >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    Explorer
-                  </a>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </div>
-      </section>
+                    {copiedContract ? (
+                      <Check className="w-3.5 h-3.5 text-[#6B8F71]" />
+                    ) : (
+                      <Copy className="w-3.5 h-3.5" />
+                    )}
+                    {copiedContract ? 'Copied' : 'Copy'}
+                  </button>
+                  {contractExplorerUrl && (
+                    <a
+                      href={contractExplorerUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-[#EDE9E3] text-[12px] font-medium text-[#6B6560] hover:bg-[#F5F2ED] hover:text-[#2D3436] transition-all"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      Explorer
+                    </a>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Features */}
       <section
@@ -870,132 +1195,28 @@ function LandingPage(): ReactElement {
         </p>
       </footer>
 
-      {/* Sign In Modal */}
-      <Dialog open={showSignIn} onOpenChange={setShowSignIn}>
-        <DialogContent className="max-w-[380px] p-0 gap-0 rounded-2xl">
-          <DialogTitle className="sr-only">Sign In</DialogTitle>
-          <DialogDescription className="sr-only">
-            Choose how to connect your wallet
-          </DialogDescription>
-
-          <div className="px-6 pt-7 pb-5">
-            <h3 className="text-[17px] font-semibold text-[#2D3436] mb-1">Sign In</h3>
-            <p className="text-[13px] text-[#8A8580]">Choose how to connect your wallet</p>
-          </div>
-
-          <div className="px-5 pb-6 space-y-2.5">
-            {/* Passkey */}
-            <button
-              onClick={handleSignIn}
-              disabled={!!connectingType}
-              className="flex items-center gap-3.5 w-full p-4 rounded-xl border border-[#EDE9E3] hover:border-[#6B8F71]/30 hover:bg-[#6B8F71]/4 transition-all text-left group cursor-pointer"
-            >
-              <div className="w-10 h-10 rounded-xl bg-[#6B8F71]/10 flex items-center justify-center shrink-0">
-                <Fingerprint className="w-5 h-5 text-[#6B8F71]" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-semibold text-[#2D3436]">Passkey</p>
-                <p className="text-[12px] text-[#9B9590] mt-0.5">
-                  Sign in with Face ID or Touch ID
-                </p>
-              </div>
-              {connectingType === 'passkey' ? (
-                <Loader2 className="w-4 h-4 animate-spin text-[#6B8F71]" />
-              ) : (
-                <ArrowRight className="w-4 h-4 text-[#B5B0AA] group-hover:text-[#6B8F71] transition-colors" />
-              )}
-            </button>
-
-            {/* Tempo Wallet */}
-            <button
-              onClick={handleTempoWalletConnect}
-              disabled={!!connectingType}
-              className="flex items-center gap-3.5 w-full p-4 rounded-xl border border-[#EDE9E3] hover:border-[#9B72CF]/30 hover:bg-[#9B72CF]/4 transition-all text-left group cursor-pointer"
-            >
-              <div className="w-10 h-10 rounded-xl bg-[#9B72CF]/10 flex items-center justify-center shrink-0">
-                <Globe className="w-5 h-5 text-[#9B72CF]" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-semibold text-[#2D3436]">Tempo Wallet</p>
-                <p className="text-[12px] text-[#9B9590] mt-0.5">Connect your Tempo account</p>
-              </div>
-              {connectingType === 'tempo' ? (
-                <Loader2 className="w-4 h-4 animate-spin text-[#9B72CF]" />
-              ) : (
-                <ArrowRight className="w-4 h-4 text-[#B5B0AA] group-hover:text-[#9B72CF] transition-colors" />
-              )}
-            </button>
-
-            {/* Browser Wallet — hidden for now */}
-          </div>
-
-          {/* Footer */}
-          <div className="border-t border-[#EDE9E3]/60 px-6 py-4">
-            <p className="text-[13px] text-center text-[#9B9590]">
-              Don&apos;t have a wallet?{' '}
-              <button
-                onClick={() => {
-                  setShowSignIn(false);
-                  setShowCreateWallet(true);
-                }}
-                className="font-semibold text-[#6B8F71] hover:text-[#5A7D60] transition-colors cursor-pointer"
-              >
-                Create one
-              </button>
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Create Wallet Modal (shared component, uses Dialog) */}
-      <CreateWalletModal
-        isOpen={showCreateWallet}
-        isLoading={isConnecting}
-        onClose={() => setShowCreateWallet(false)}
-        onCreateWallet={handleCreateWallet}
-        onSignIn={() => {
-          setShowCreateWallet(false);
-          setShowSignIn(true);
-        }}
+      {/* Connect Wizard */}
+      <TempoConnectModal
+        isOpen={showTempoConnectModal}
+        onClose={() => setShowTempoConnectModal(false)}
+        connectTempoWallet={connectTempoWallet}
+        signTempoWallet={signTempoWallet}
+        onSuccess={handleWizardSuccess}
       />
 
-      {/* Tempo Wallet Sign Message Step */}
-      <Dialog open={showTempoSign} onOpenChange={setShowTempoSign}>
-        <DialogContent className="max-w-[380px] p-0 gap-0 rounded-2xl">
-          <DialogTitle className="sr-only">Verify Wallet</DialogTitle>
-          <DialogDescription className="sr-only">
-            Sign a message to verify wallet ownership
-          </DialogDescription>
-
-          <div className="px-6 pt-7 pb-5">
-            <h3 className="text-[17px] font-semibold text-[#2D3436] mb-1">Verify Wallet</h3>
-            <p className="text-[13px] text-[#8A8580]">
-              Sign a message to verify you own this wallet
-            </p>
-          </div>
-
-          <div className="px-5 pb-6">
-            <button
-              onClick={handleTempoSign}
-              disabled={connectingType === 'tempo-sign'}
-              className="flex items-center gap-3.5 w-full p-4 rounded-xl border border-[#EDE9E3] hover:border-[#9B72CF]/30 hover:bg-[#9B72CF]/4 transition-all text-left group cursor-pointer"
-            >
-              <div className="w-10 h-10 rounded-xl bg-[#9B72CF]/10 flex items-center justify-center shrink-0">
-                <Globe className="w-5 h-5 text-[#9B72CF]" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[14px] font-semibold text-[#2D3436]">Sign Message</p>
-                <p className="text-[12px] text-[#9B9590] mt-0.5">This opens your Tempo Wallet</p>
-              </div>
-              {connectingType === 'tempo-sign' ? (
-                <Loader2 className="w-4 h-4 animate-spin text-[#9B72CF]" />
-              ) : (
-                <ArrowRight className="w-4 h-4 text-[#B5B0AA] group-hover:text-[#9B72CF] transition-colors" />
-              )}
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Dev mode: Create Wallet Modal (passkey) */}
+      {isDevMode && (
+        <CreateWalletModal
+          isOpen={showCreateWallet}
+          isLoading={isConnecting}
+          onClose={() => setShowCreateWallet(false)}
+          onCreateWallet={handleCreateWallet}
+          onSignIn={() => {
+            setShowCreateWallet(false);
+            setShowTempoConnectModal(true);
+          }}
+        />
+      )}
     </div>
   );
 }
