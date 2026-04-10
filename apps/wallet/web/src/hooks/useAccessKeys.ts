@@ -14,6 +14,7 @@ export const ACCESS_KEYS_QUERY_KEY = 'accessKeys';
 export interface AccessKeyWithMetadata extends AccessKey {
   dbId?: string;
   label?: string;
+  createdAt?: string;
 }
 
 interface DbAccessKey {
@@ -88,6 +89,7 @@ export function useAccessKeys(): UseAccessKeysReturn {
                 isRevoked: keyData.isRevoked,
                 dbId: dbKey.id,
                 label: dbKey.label ?? undefined,
+                createdAt: dbKey.createdAt ?? undefined,
               };
             } catch (error) {
               console.error(`Failed to fetch on-chain state for key ${keyId}:`, error);

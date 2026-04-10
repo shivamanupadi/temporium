@@ -26,7 +26,12 @@ import {
 import { toast } from '@/lib/toast';
 import { format } from 'date-fns';
 import { isAddress, type Address } from 'viem';
-import { Actions, tempoPublicClient, getExplorerTxUrl } from '@/lib/tempo-client';
+import {
+  Actions,
+  tempoPublicClient,
+  getExplorerTxUrl,
+  getExplorerAddressUrl,
+} from '@/lib/tempo-client';
 import { Button } from '@/components/ui/button';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { Input } from '@/components/ui/input';
@@ -169,6 +174,15 @@ function KeyIdWithCopy({ keyId }: { keyId: string }): ReactElement {
           <Copy className="w-3.5 h-3.5" />
         )}
       </button>
+      <a
+        href={getExplorerAddressUrl(keyId)}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={e => e.stopPropagation()}
+        className="shrink-0 text-[#B5B0AA] hover:text-[#6B6560] transition-colors"
+      >
+        <ExternalLink className="w-3.5 h-3.5" />
+      </a>
     </span>
   );
 }
@@ -646,124 +660,129 @@ function AccessKeysPage(): ReactElement {
             Keys ({activeKeys.length} active, {keys.length} total)
           </p>
           <AnimatePresence mode="popLayout">
-            {keys.map(key => {
-              const status = getKeyStatus(key.isRevoked, key.expiry);
-              return (
-                <motion.div
-                  key={key.keyId}
-                  variants={cardVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  layout
-                  className={`rounded-2xl border bg-white p-5 transition-colors ${
-                    status === 'revoked'
-                      ? 'border-[#B5B0AA]/30 bg-[#FAFAF9] opacity-60'
-                      : status === 'expired'
-                        ? 'border-[#E07A5F]/30 bg-[#FEF9F7]'
-                        : 'border-[#EDE9E3]'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-3 min-w-0">
-                      <div
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                          status === 'revoked'
-                            ? 'bg-[#B5B0AA]/10'
-                            : status === 'expired'
-                              ? 'bg-[#E07A5F]/10'
-                              : 'bg-coral/10'
-                        }`}
-                      >
-                        {status === 'expired' ? (
-                          <AlertTriangle className="w-5 h-5 text-[#E07A5F]" />
-                        ) : (
-                          <Key className="w-5 h-5 text-coral" />
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <KeyIdWithCopy keyId={key.keyId} />
+            {[...keys]
+              .sort((a, b) => {
+                const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+                const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+                return dateB - dateA;
+              })
+              .map(key => {
+                const status = getKeyStatus(key.isRevoked, key.expiry);
+                return (
+                  <motion.div
+                    key={key.keyId}
+                    variants={cardVariants}
+                    initial="hidden"
+                    animate="visible"
+                    exit="exit"
+                    layout
+                    className={`rounded-2xl border bg-white p-5 transition-colors ${
+                      status === 'revoked'
+                        ? 'border-[#B5B0AA]/30 bg-[#FAFAF9] opacity-60'
+                        : status === 'expired'
+                          ? 'border-[#E07A5F]/30 bg-[#FEF9F7]'
+                          : 'border-[#EDE9E3]'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="min-w-0">
+                          <KeyIdWithCopy keyId={key.keyId} />
 
-                        {/* Key metadata */}
-                        <div className="flex flex-wrap gap-1.5 mt-2">
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-coral/10 text-[11px] font-medium text-coral">
-                            {key.signatureType}
-                          </span>
-                          {key.enforceLimits && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#E07A5F]/10 text-[11px] font-medium text-[#E07A5F]">
-                              <Shield className="w-3 h-3" />
-                              limits
+                          {/* Key metadata */}
+                          <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#9B72CF]/10 text-[11px] font-medium text-[#9B72CF]">
+                              {key.signatureType}
                             </span>
-                          )}
-                          <span
-                            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium ${
-                              status === 'active'
-                                ? 'bg-[#6B8F71]/10 text-[#6B8F71]'
-                                : status === 'expired'
-                                  ? 'bg-[#E07A5F]/10 text-[#E07A5F]'
-                                  : 'bg-[#B5B0AA]/10 text-[#B5B0AA]'
-                            }`}
-                          >
-                            {status}
-                          </span>
-                        </div>
-
-                        {/* Expiry */}
-                        <div className="flex items-center gap-1.5 mt-2">
-                          <span className="text-[11px] font-medium text-[#B5B0AA]">Expires</span>
-                          <span
-                            className={`text-[12px] ${
-                              isKeyExpired(key.expiry)
-                                ? 'text-[#E07A5F] font-semibold'
-                                : 'text-[#9B9590]'
-                            }`}
-                          >
-                            {formatExpiry(key.expiry)}
-                          </span>
+                            {key.enforceLimits && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#E07A5F]/10 text-[11px] font-medium text-[#E07A5F]">
+                                <Shield className="w-3 h-3" />
+                                limits
+                              </span>
+                            )}
+                            <span
+                              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium ${
+                                status === 'active'
+                                  ? 'bg-[#3D8B4D]/12 text-[#3D8B4D]'
+                                  : status === 'expired'
+                                    ? 'bg-[#E07A5F]/10 text-[#E07A5F]'
+                                    : 'bg-[#E07A5F]/10 text-[#E07A5F]'
+                              }`}
+                            >
+                              {status}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-4 mt-1.5">
+                            {key.createdAt && (
+                              <span className="inline-flex items-center gap-1.5">
+                                <span className="text-[11px] font-medium text-[#B5B0AA]">
+                                  Created
+                                </span>
+                                <span className="text-[12px] text-[#9B9590]">
+                                  {format(new Date(key.createdAt), 'MMM d, yyyy')}
+                                </span>
+                              </span>
+                            )}
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="text-[11px] font-medium text-[#B5B0AA]">
+                                Expires
+                              </span>
+                              <span
+                                className={`text-[12px] ${
+                                  isKeyExpired(key.expiry)
+                                    ? 'text-[#E07A5F] font-semibold'
+                                    : 'text-[#9B9590]'
+                                }`}
+                              >
+                                {formatExpiry(key.expiry)}
+                              </span>
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center gap-2 shrink-0">
-                      {!key.isRevoked ? (
-                        <>
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 shrink-0">
+                        {!key.isRevoked ? (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setLimitsModalKeyId(key.keyId)}
+                              className="h-9 px-3 rounded-lg text-[12px] font-semibold border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED] gap-1.5"
+                            >
+                              <Coins className="w-3.5 h-3.5" />
+                              Manage Limits
+                            </Button>
+                            <Button
+                              onClick={() => setRevokeConfirmKeyId(key.keyId)}
+                              disabled={revokingKeyId === key.keyId}
+                              className="h-9 px-3 rounded-lg text-[12px] font-semibold text-[#E07A5F] bg-[#E07A5F]/10 hover:bg-[#E07A5F]/20 gap-1.5"
+                            >
+                              {revokingKeyId === key.keyId ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <ShieldOff className="w-3.5 h-3.5" />
+                              )}
+                              Revoke
+                            </Button>
+                          </>
+                        ) : key.dbId ? (
                           <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setLimitsModalKeyId(key.keyId)}
-                            className="h-9 px-3 rounded-lg text-[12px] font-semibold border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED] gap-1.5"
+                            onClick={() =>
+                              setDeleteConfirmKey({ dbId: key.dbId!, keyId: key.keyId })
+                            }
+                            className="h-9 px-3 rounded-lg text-[12px] font-semibold text-[#B5B0AA] bg-[#F5F2ED] hover:bg-[#EDE9E3] gap-1.5"
                           >
-                            <Coins className="w-3.5 h-3.5" />
-                            Manage Limits
+                            <Trash2 className="w-3.5 h-3.5" />
+                            Delete
                           </Button>
-                          <Button
-                            onClick={() => setRevokeConfirmKeyId(key.keyId)}
-                            disabled={revokingKeyId === key.keyId}
-                            className="h-9 px-3 rounded-lg text-[12px] font-semibold text-[#E07A5F] bg-[#E07A5F]/10 hover:bg-[#E07A5F]/20 gap-1.5"
-                          >
-                            {revokingKeyId === key.keyId ? (
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            ) : (
-                              <ShieldOff className="w-3.5 h-3.5" />
-                            )}
-                            Revoke
-                          </Button>
-                        </>
-                      ) : key.dbId ? (
-                        <Button
-                          onClick={() => setDeleteConfirmKey({ dbId: key.dbId!, keyId: key.keyId })}
-                          className="h-9 px-3 rounded-lg text-[12px] font-semibold text-[#B5B0AA] bg-[#F5F2ED] hover:bg-[#EDE9E3] gap-1.5"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          Delete
-                        </Button>
-                      ) : null}
+                        ) : null}
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              );
-            })}
+                  </motion.div>
+                );
+              })}
           </AnimatePresence>
         </motion.div>
       )}
@@ -848,9 +867,9 @@ function AccessKeysPage(): ReactElement {
           </div>
           <div className="border-t border-[#EDE9E3]/60" />
           <div className="px-6 py-5 space-y-4">
-            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#6B8EAD]/[0.06] border border-[#6B8EAD]/15">
-              <Info className="w-4 h-4 text-[#6B8EAD] shrink-0 mt-0.5" />
-              <p className="text-[12px] text-[#6B8EAD]/80 leading-relaxed">
+            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#8A8580]/[0.06] border border-[#8A8580]/15">
+              <Info className="w-4 h-4 text-[#8A8580] shrink-0 mt-0.5" />
+              <p className="text-[12px] text-[#8A8580]/80 leading-relaxed">
                 This only imports key metadata (ID, type, status) for display and management.
                 Private keys are never stored or transmitted. Importing is completely safe.
               </p>

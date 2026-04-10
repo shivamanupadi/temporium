@@ -12,13 +12,11 @@ import {
   LayoutDashboard,
   Send,
   QrCode,
-  Droplets,
   CircleDollarSign,
   Shield,
   Key,
   Users,
   Clock,
-  Repeat,
   LogOut,
   Settings,
   Menu,
@@ -34,7 +32,6 @@ import {
   PanelLeft,
   ListPlus,
   Gift,
-  ShieldCheck,
   RefreshCw,
   ArrowLeftRight,
 } from 'lucide-react';
@@ -63,14 +60,23 @@ const navSections = [
     items: [{ to: '/portal/dashboard', label: 'Dashboard', icon: LayoutDashboard }],
   },
   {
-    label: 'Payments',
+    label: 'Transfers',
     items: [
       { to: '/portal/send', label: 'Send', icon: Send },
       { to: '/portal/receive', label: 'Receive', icon: QrCode },
+    ],
+  },
+  {
+    label: 'Payments',
+    items: [
       { to: '/portal/batch-payments', label: 'Batch Payments', icon: ListPlus },
       { to: '/portal/recurring-payments', label: 'Recurring Payments', icon: RefreshCw },
       { to: '/portal/scheduled-payments', label: 'Scheduled Payments', icon: Clock },
     ],
+  },
+  {
+    label: 'Exchange',
+    items: [{ to: '/portal/dex-swap', label: 'Swap', icon: ArrowLeftRight }],
   },
   {
     label: 'TIP20 Manager',
@@ -84,18 +90,6 @@ const navSections = [
     items: [
       { to: '/portal/tip403-factory', label: 'TIP403 Factory', icon: Shield },
       { to: '/portal/access-keys', label: 'Access Keys', icon: Key },
-      { to: '/portal/token-approvals', label: 'Token Approvals', icon: ShieldCheck },
-    ],
-  },
-  {
-    label: 'Exchange',
-    items: [{ to: '/portal/dex-swap', label: 'Swap', icon: ArrowLeftRight }],
-  },
-  {
-    label: 'Fee AMM',
-    items: [
-      { to: '/portal/fee-amm-swap', label: 'Rebalance Swap', icon: Repeat },
-      { to: '/portal/fee-amm-liquidity', label: 'Liquidity', icon: Droplets },
     ],
   },
   {
