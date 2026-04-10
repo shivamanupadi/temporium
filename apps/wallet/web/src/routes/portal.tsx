@@ -36,6 +36,7 @@ import {
   Gift,
   ShieldCheck,
   RefreshCw,
+  ArrowLeftRight,
 } from 'lucide-react';
 import { useTempo } from '@/hooks/useTempo';
 import { useAuthGuard } from '@/hooks/useAuthGuard';
@@ -94,9 +95,15 @@ const navSections = [
     ],
   },
   {
+    label: 'Exchange',
+    items: [
+      { to: '/portal/dex-swap', label: 'Swap', icon: ArrowLeftRight },
+    ],
+  },
+  {
     label: 'Fee AMM',
     items: [
-      { to: '/portal/fee-amm-swap', label: 'Swap', icon: Repeat },
+      { to: '/portal/fee-amm-swap', label: 'Rebalance Swap', icon: Repeat },
       { to: '/portal/fee-amm-liquidity', label: 'Liquidity', icon: Droplets },
     ],
   },

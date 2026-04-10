@@ -25,6 +25,7 @@ import { Route as PortalRecurringPaymentsRouteImport } from './routes/portal/rec
 import { Route as PortalReceiveRouteImport } from './routes/portal/receive'
 import { Route as PortalFeeAmmSwapRouteImport } from './routes/portal/fee-amm-swap'
 import { Route as PortalFeeAmmLiquidityRouteImport } from './routes/portal/fee-amm-liquidity'
+import { Route as PortalDexSwapRouteImport } from './routes/portal/dex-swap'
 import { Route as PortalDashboardRouteImport } from './routes/portal/dashboard'
 import { Route as PortalContactsRouteImport } from './routes/portal/contacts'
 import { Route as PortalConnectedAppsRouteImport } from './routes/portal/connected-apps'
@@ -120,6 +121,11 @@ const PortalFeeAmmLiquidityRoute = PortalFeeAmmLiquidityRouteImport.update({
   path: '/fee-amm-liquidity',
   getParentRoute: () => PortalRoute,
 } as any)
+const PortalDexSwapRoute = PortalDexSwapRouteImport.update({
+  id: '/dex-swap',
+  path: '/dex-swap',
+  getParentRoute: () => PortalRoute,
+} as any)
 const PortalDashboardRoute = PortalDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -209,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/portal/connected-apps': typeof PortalConnectedAppsRoute
   '/portal/contacts': typeof PortalContactsRoute
   '/portal/dashboard': typeof PortalDashboardRoute
+  '/portal/dex-swap': typeof PortalDexSwapRoute
   '/portal/fee-amm-liquidity': typeof PortalFeeAmmLiquidityRoute
   '/portal/fee-amm-swap': typeof PortalFeeAmmSwapRoute
   '/portal/receive': typeof PortalReceiveRoute
@@ -241,6 +248,7 @@ export interface FileRoutesByTo {
   '/portal/connected-apps': typeof PortalConnectedAppsRoute
   '/portal/contacts': typeof PortalContactsRoute
   '/portal/dashboard': typeof PortalDashboardRoute
+  '/portal/dex-swap': typeof PortalDexSwapRoute
   '/portal/fee-amm-liquidity': typeof PortalFeeAmmLiquidityRoute
   '/portal/fee-amm-swap': typeof PortalFeeAmmSwapRoute
   '/portal/receive': typeof PortalReceiveRoute
@@ -272,6 +280,7 @@ export interface FileRoutesById {
   '/portal/connected-apps': typeof PortalConnectedAppsRoute
   '/portal/contacts': typeof PortalContactsRoute
   '/portal/dashboard': typeof PortalDashboardRoute
+  '/portal/dex-swap': typeof PortalDexSwapRoute
   '/portal/fee-amm-liquidity': typeof PortalFeeAmmLiquidityRoute
   '/portal/fee-amm-swap': typeof PortalFeeAmmSwapRoute
   '/portal/receive': typeof PortalReceiveRoute
@@ -306,6 +315,7 @@ export interface FileRouteTypes {
     | '/portal/connected-apps'
     | '/portal/contacts'
     | '/portal/dashboard'
+    | '/portal/dex-swap'
     | '/portal/fee-amm-liquidity'
     | '/portal/fee-amm-swap'
     | '/portal/receive'
@@ -338,6 +348,7 @@ export interface FileRouteTypes {
     | '/portal/connected-apps'
     | '/portal/contacts'
     | '/portal/dashboard'
+    | '/portal/dex-swap'
     | '/portal/fee-amm-liquidity'
     | '/portal/fee-amm-swap'
     | '/portal/receive'
@@ -368,6 +379,7 @@ export interface FileRouteTypes {
     | '/portal/connected-apps'
     | '/portal/contacts'
     | '/portal/dashboard'
+    | '/portal/dex-swap'
     | '/portal/fee-amm-liquidity'
     | '/portal/fee-amm-swap'
     | '/portal/receive'
@@ -510,6 +522,13 @@ declare module '@tanstack/react-router' {
       path: '/fee-amm-liquidity'
       fullPath: '/portal/fee-amm-liquidity'
       preLoaderRoute: typeof PortalFeeAmmLiquidityRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/portal/dex-swap': {
+      id: '/portal/dex-swap'
+      path: '/dex-swap'
+      fullPath: '/portal/dex-swap'
+      preLoaderRoute: typeof PortalDexSwapRouteImport
       parentRoute: typeof PortalRoute
     }
     '/portal/dashboard': {
@@ -692,6 +711,7 @@ interface PortalRouteChildren {
   PortalConnectedAppsRoute: typeof PortalConnectedAppsRoute
   PortalContactsRoute: typeof PortalContactsRoute
   PortalDashboardRoute: typeof PortalDashboardRoute
+  PortalDexSwapRoute: typeof PortalDexSwapRoute
   PortalFeeAmmLiquidityRoute: typeof PortalFeeAmmLiquidityRoute
   PortalFeeAmmSwapRoute: typeof PortalFeeAmmSwapRoute
   PortalReceiveRoute: typeof PortalReceiveRoute
@@ -711,6 +731,7 @@ const PortalRouteChildren: PortalRouteChildren = {
   PortalConnectedAppsRoute: PortalConnectedAppsRoute,
   PortalContactsRoute: PortalContactsRoute,
   PortalDashboardRoute: PortalDashboardRoute,
+  PortalDexSwapRoute: PortalDexSwapRoute,
   PortalFeeAmmLiquidityRoute: PortalFeeAmmLiquidityRoute,
   PortalFeeAmmSwapRoute: PortalFeeAmmSwapRoute,
   PortalReceiveRoute: PortalReceiveRoute,
