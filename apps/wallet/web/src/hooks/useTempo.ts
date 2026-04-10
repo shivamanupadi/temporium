@@ -118,6 +118,7 @@ export function useTempo(): UseTempoReturn {
         const passkeyLabel = label ? `Temporium: ${label}` : 'Temporium Wallet';
         await connectAsync({
           connector: tempoPasskeyConnector,
+          chainId: tempoChain.id,
           capabilities: { method: 'register', name: passkeyLabel },
         });
       } catch (err) {
@@ -136,6 +137,7 @@ export function useTempo(): UseTempoReturn {
     try {
       await connectAsync({
         connector: tempoPasskeyConnector,
+        chainId: tempoChain.id,
         capabilities: { method: 'login', selectAccount: true },
       });
     } catch (err) {
@@ -427,14 +429,11 @@ export function useTempo(): UseTempoReturn {
           memo: transfer.memo,
         })
       );
-      const result = await client.sendCalls({
+      // Use sendTransaction with calls[] (not sendCalls) so feeToken is respected
+      const txHash = await client.sendTransaction({
         calls,
         feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
       } as any);
-      // result.id is a composite: txHash (32 bytes) + chainId + magic
-      // Extract the actual tx hash (first 66 hex chars)
-      const id: string = result.id;
-      const txHash = (id.length > 66 ? id.slice(0, 66) : id) as `0x${string}`;
       await waitForTx(txHash);
       return txHash;
     },

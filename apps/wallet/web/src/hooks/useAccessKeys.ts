@@ -1,19 +1,18 @@
 import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useWalletClient, useAccount } from 'wagmi';
-import { tempoPublicClient } from '@/lib/tempo-client';
-import { ACCOUNT_KEYCHAIN_ADDRESS } from '@/lib/constants';
-import { getSignatureTypeLabel } from '@/lib/access-keys-utils';
+import { tempoPublicClient, Actions } from '@/lib/tempo-client';
+import { DEFAULT_FEE_TOKEN_ADDRESS, ACCOUNT_KEYCHAIN_ADDRESS } from '@/lib/constants';
+import { getSignatureTypeNumber } from '@/lib/access-keys-utils';
 import { apiGet, apiPost } from '@/lib/api-client';
 import { Abis } from 'viem/tempo';
 import type { Address } from 'viem';
-import type { AccessKey } from '@/types';
+import type { AccessKey, AccessKeyType } from '@/types';
 
 export const ACCESS_KEYS_QUERY_KEY = 'accessKeys';
 
 export interface AccessKeyWithMetadata extends AccessKey {
-  publicKeyHash?: `0x${string}`;
-  dbId?: string; // D1 record ID for delete
+  dbId?: string;
   label?: string;
 }
 
@@ -33,7 +32,7 @@ interface UseAccessKeysReturn {
 
   authorizeKey: (params: {
     keyId: Address;
-    signatureType: number;
+    keyType: AccessKeyType;
     expiry: number;
     enforceLimits: boolean;
     limits: { token: Address; amount: bigint }[];
@@ -69,40 +68,29 @@ export function useAccessKeys(): UseAccessKeysReturn {
       if (!address) return [];
 
       try {
-        // 1. Fetch saved key IDs from D1
         const dbKeys = await apiGet<DbAccessKey[]>('/v1/access-keys');
 
-        // 2. Hydrate each key with live on-chain state
         const hydratedKeys = await Promise.all(
           dbKeys.map(async dbKey => {
             const keyId = dbKey.keyId as Address;
 
             try {
-              const keyData = (await tempoPublicClient.readContract({
-                address: ACCOUNT_KEYCHAIN_ADDRESS,
-                abi: Abis.accountKeychain,
-                functionName: 'getKey',
-                args: [address, keyId],
-              })) as {
-                signatureType: number;
-                keyId: Address;
-                expiry: bigint;
-                enforceLimits: boolean;
-                isRevoked: boolean;
-              };
+              const keyData = await Actions.accessKey.getMetadata(tempoPublicClient, {
+                account: address,
+                accessKey: keyId,
+              });
 
               return {
                 keyId,
-                signatureType: getSignatureTypeLabel(keyData.signatureType),
+                signatureType: keyData.keyType as AccessKeyType,
                 expiry: Number(keyData.expiry),
-                enforceLimits: keyData.enforceLimits,
+                enforceLimits: keyData.spendPolicy === 'limited',
                 isRevoked: keyData.isRevoked,
                 dbId: dbKey.id,
                 label: dbKey.label ?? undefined,
               };
             } catch (error) {
               console.error(`Failed to fetch on-chain state for key ${keyId}:`, error);
-              // Return DB-only data with unknown on-chain state
               return null;
             }
           })
@@ -112,7 +100,6 @@ export function useAccessKeys(): UseAccessKeysReturn {
           (key): key is NonNullable<typeof key> => key !== null
         ) as AccessKeyWithMetadata[];
 
-        // Deduplicate by keyId
         const uniqueKeys = new Map<string, AccessKeyWithMetadata>();
         for (const key of validKeys) {
           uniqueKeys.set(key.keyId.toLowerCase(), key);
@@ -135,7 +122,7 @@ export function useAccessKeys(): UseAccessKeysReturn {
   const authorizeKey = useCallback(
     async (params: {
       keyId: Address;
-      signatureType: number;
+      keyType: AccessKeyType;
       expiry: number;
       enforceLimits: boolean;
       limits: { token: Address; amount: bigint }[];
@@ -143,30 +130,33 @@ export function useAccessKeys(): UseAccessKeysReturn {
     }) => {
       if (!walletClient || !address) throw new Error('Wallet not connected');
 
+      // authorize requires off-chain key authorization signing which needs
+      // a LocalAccount. wagmi provides JsonRpcAccount, so we use writeContract directly.
       const hash = await walletClient.writeContract({
         address: ACCOUNT_KEYCHAIN_ADDRESS,
         abi: Abis.accountKeychain,
         functionName: 'authorizeKey',
         args: [
           params.keyId,
-          params.signatureType,
+          getSignatureTypeNumber(params.keyType),
           BigInt(params.expiry),
           params.enforceLimits,
-          params.limits,
+          params.enforceLimits
+            ? params.limits.map(l => ({ token: l.token, amount: l.amount }))
+            : [],
         ],
-      });
+        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
+      } as any);
 
       await tempoPublicClient.waitForTransactionReceipt({ hash });
 
-      // Save key metadata to D1
       try {
         await apiPost('/v1/access-keys', {
           keyId: params.keyId,
-          signatureType: getSignatureTypeLabel(params.signatureType),
+          signatureType: params.keyType,
           txHash: hash,
         });
       } catch (error) {
-        // Non-fatal: key is on-chain even if DB save fails
         console.error('Failed to save access key to DB:', error);
       }
 
@@ -181,11 +171,9 @@ export function useAccessKeys(): UseAccessKeysReturn {
     async (params: { keyId: Address; feeToken?: Address }) => {
       if (!walletClient || !address) throw new Error('Wallet not connected');
 
-      const hash = await walletClient.writeContract({
-        address: ACCOUNT_KEYCHAIN_ADDRESS,
-        abi: Abis.accountKeychain,
-        functionName: 'revokeKey',
-        args: [params.keyId],
+      const hash = await Actions.accessKey.revoke(walletClient, {
+        accessKey: params.keyId,
+        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
       });
 
       await tempoPublicClient.waitForTransactionReceipt({ hash });
@@ -200,11 +188,11 @@ export function useAccessKeys(): UseAccessKeysReturn {
     async (params: { keyId: Address; token: Address; newLimit: bigint; feeToken?: Address }) => {
       if (!walletClient || !address) throw new Error('Wallet not connected');
 
-      const hash = await walletClient.writeContract({
-        address: ACCOUNT_KEYCHAIN_ADDRESS,
-        abi: Abis.accountKeychain,
-        functionName: 'updateSpendingLimit',
-        args: [params.keyId, params.token, params.newLimit],
+      const hash = await Actions.accessKey.updateLimit(walletClient, {
+        accessKey: params.keyId,
+        token: params.token,
+        limit: params.newLimit,
+        feeToken: params.feeToken || DEFAULT_FEE_TOKEN_ADDRESS,
       });
 
       await tempoPublicClient.waitForTransactionReceipt({ hash });
@@ -220,24 +208,16 @@ export function useAccessKeys(): UseAccessKeysReturn {
       if (!address) return null;
 
       try {
-        const keyData = (await tempoPublicClient.readContract({
-          address: ACCOUNT_KEYCHAIN_ADDRESS,
-          abi: Abis.accountKeychain,
-          functionName: 'getKey',
-          args: [address, keyId],
-        })) as {
-          signatureType: number;
-          keyId: Address;
-          expiry: bigint;
-          enforceLimits: boolean;
-          isRevoked: boolean;
-        };
+        const keyData = await Actions.accessKey.getMetadata(tempoPublicClient, {
+          account: address,
+          accessKey: keyId,
+        });
 
         return {
           keyId,
-          signatureType: getSignatureTypeLabel(keyData.signatureType),
+          signatureType: keyData.keyType as AccessKeyType,
           expiry: Number(keyData.expiry),
-          enforceLimits: keyData.enforceLimits,
+          enforceLimits: keyData.spendPolicy === 'limited',
           isRevoked: keyData.isRevoked,
         };
       } catch (error) {
@@ -253,14 +233,12 @@ export function useAccessKeys(): UseAccessKeysReturn {
       if (!address) return 0n;
 
       try {
-        const remaining = await tempoPublicClient.readContract({
-          address: ACCOUNT_KEYCHAIN_ADDRESS,
-          abi: Abis.accountKeychain,
-          functionName: 'getRemainingLimit',
-          args: [address, keyId, token],
+        const result = await Actions.accessKey.getRemainingLimit(tempoPublicClient, {
+          account: address,
+          accessKey: keyId,
+          token,
         });
-
-        return remaining as bigint;
+        return result.remaining;
       } catch (error) {
         console.error(`Failed to get remaining limit for ${keyId}:`, error);
         return 0n;

@@ -18,7 +18,7 @@
     "format": "turbo run format",
     "reset": "yarn clean && yarn install",
     "check:push": "yarn lint && yarn build",
-    "kill-ports": "lsof -ti:4000,4001,4002,4003,4004,4005 | xargs kill -9 || true",
+    "kill-ports": "lsof -ti:8008,8009,8012 | xargs kill -9 || true",
     "dev:wallet": "turbo run dev --filter=@temporium/wallet-api --filter=@temporium/wallet-web --filter=@temporium/wallet-demo-dapp",
     "build:wallet": "turbo run build --filter=@temporium/wallet-api --filter=@temporium/wallet-web",
     "postinstall": "patch-package && node scripts/patch-ox.js"
@@ -35,7 +35,6 @@
   },
   "dependencies": {
     "@wagmi/core": "^3.4.2",
-    "tempo.ts": "^0.14.2",
     "viem": "^2.47.10",
     "wagmi": "^3.6.1"
   }

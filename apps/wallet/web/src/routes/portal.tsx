@@ -96,9 +96,7 @@ const navSections = [
   },
   {
     label: 'Exchange',
-    items: [
-      { to: '/portal/dex-swap', label: 'Swap', icon: ArrowLeftRight },
-    ],
+    items: [{ to: '/portal/dex-swap', label: 'Swap', icon: ArrowLeftRight }],
   },
   {
     label: 'Fee AMM',

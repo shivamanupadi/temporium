@@ -1,7 +1,7 @@
 import type { Address } from 'viem';
 import { tempoModerato } from 'viem/chains';
 
-export const WALLET_URL = import.meta.env.VITE_WALLET_URL || 'http://localhost:4009';
+export const WALLET_URL = import.meta.env.VITE_WALLET_URL || 'http://localhost:8009';
 export const RPC_URL = import.meta.env.VITE_RPC_URL || 'https://rpc.moderato.tempo.xyz';
 
 export const DEFAULT_FEE_TOKEN = '0x20c0000000000000000000000000000000000001' as Address;

@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev --port 4008",
-    "dev:local": "wrangler dev --port 4008 --local --persist",
+    "dev": "wrangler dev --port 8008",
+    "dev:local": "wrangler dev --port 8008 --local --persist",
     "build": "tsc --noEmit",
     "deploy": "wrangler deploy",
     "deploy:staging": "wrangler deploy --env staging",
@@ -27,7 +27,6 @@
     "drizzle-orm": "^0.38.3",
     "accounts": "^0.5.8",
     "hono": "^4.6.16",
-    "tempo.ts": "^0.14.2",
     "viem": "^2.47.10",
     "zod": "^3.24.1"
   },

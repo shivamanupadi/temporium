@@ -20,11 +20,13 @@ import {
   Download,
   Info,
   Trash2,
+  ExternalLink,
+  CheckCircle,
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { format } from 'date-fns';
 import { isAddress, type Address } from 'viem';
-import { Actions, tempoPublicClient } from '@/lib/tempo-client';
+import { Actions, tempoPublicClient, getExplorerTxUrl } from '@/lib/tempo-client';
 import { Button } from '@/components/ui/button';
 import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { Input } from '@/components/ui/input';
@@ -43,7 +45,6 @@ import { apiPost, apiDelete } from '@/lib/api-client';
 import {
   generateSecp256k1Key,
   generateP256Key,
-  getSignatureTypeNumber,
   formatExpiry,
   isKeyExpired,
   getKeyStatus,
@@ -82,7 +83,7 @@ const KEY_TYPES: { id: AccessKeyType; label: string; description: string }[] = [
   },
 ];
 
-type WizardStep = 'type' | 'config' | 'limits' | 'save' | 'review';
+type WizardStep = 'type' | 'config' | 'limits' | 'save' | 'review' | 'success';
 
 const STEP_LABELS: Record<WizardStep, { title: string; description: string }> = {
   type: { title: 'Key Type', description: 'Choose the cryptographic key type to generate.' },
@@ -95,6 +96,10 @@ const STEP_LABELS: Record<WizardStep, { title: string; description: string }> = 
   review: {
     title: 'Review & Authorize',
     description: 'Review details and authorize the key on-chain.',
+  },
+  success: {
+    title: 'Success',
+    description: 'Your access key has been created.',
   },
 };
 
@@ -227,6 +232,7 @@ function AccessKeysPage(): ReactElement {
   const [keySaved, setKeySaved] = useState(false);
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [authTxHash, setAuthTxHash] = useState<string | null>(null);
 
   // --- Import dialog state ---
   const [isImportDialogOpen, setIsImportDialogOpen] = useState(false);
@@ -266,6 +272,7 @@ function AccessKeysPage(): ReactElement {
     setKeySaved(false);
     setShowPrivateKey(false);
     setIsSubmitting(false);
+    setAuthTxHash(null);
   }, []);
 
   const resetTokenLimitModal = useCallback(() => {
@@ -410,20 +417,17 @@ function AccessKeysPage(): ReactElement {
             }))
         : [];
 
-      await authorizeKey({
+      const result = await authorizeKey({
         keyId: generatedKey.keyId,
-        signatureType: getSignatureTypeNumber(generatedKey.type),
+        keyType: generatedKey.type,
         expiry,
         enforceLimits,
         limits,
         feeToken: feeToken?.address,
       });
 
-      setIsAddDialogOpen(false);
-      resetForm();
-      toast.success('Access key authorized', {
-        description: `Key ${formatAddress(generatedKey.keyId)} has been registered on-chain.`,
-      });
+      setAuthTxHash(result.transactionHash);
+      setWizardStep('success' as WizardStep);
     } catch (err) {
       toast.error('Failed to authorize key', {
         description: (err as Error).message,
@@ -446,7 +450,7 @@ function AccessKeysPage(): ReactElement {
     const keyId = revokeConfirmKeyId;
     setRevokingKeyId(keyId);
     try {
-      await revokeKey({ keyId: keyId as `0x${string}` });
+      await revokeKey({ keyId: keyId as `0x${string}`, feeToken: feeToken?.address });
       toast.success('Key revoked', {
         description: `Key ${formatAddress(keyId)} has been revoked on-chain.`,
       });
@@ -1594,28 +1598,120 @@ function AccessKeysPage(): ReactElement {
                   </div>
                 </motion.div>
               )}
+
+              {/* ─── Success Step ─── */}
+              {wizardStep === 'success' && generatedKey && (
+                <motion.div
+                  key="success"
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.3 }}
+                  className="px-2"
+                >
+                  <div className="text-center py-4">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                      className="inline-flex items-center justify-center mb-5"
+                    >
+                      <div className="w-14 h-14 rounded-full flex items-center justify-center bg-[#6B8F71]">
+                        <CheckCircle className="w-7 h-7 text-white" />
+                      </div>
+                    </motion.div>
+
+                    <motion.p
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.25 }}
+                      className="text-[15px] font-bold text-[#2D3436] mb-1"
+                    >
+                      Access Key Created
+                    </motion.p>
+                    <motion.p
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.35 }}
+                      className="text-[12px] text-[#9B9590]"
+                    >
+                      Key has been registered on-chain
+                    </motion.p>
+                  </div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.45 }}
+                    className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3] space-y-3 text-left"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                        Key ID
+                      </span>
+                      <span className="font-mono text-[12px] text-[#2D3436]">
+                        {formatAddress(generatedKey.keyId, 8)}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                        Type
+                      </span>
+                      <span className="text-[12px] text-[#2D3436]">{generatedKey.type}</span>
+                    </div>
+                    {authTxHash && (
+                      <div className="flex items-center justify-between pt-2 border-t border-[#EDE9E3]">
+                        <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                          Tx Hash
+                        </span>
+                        <a
+                          href={getExplorerTxUrl(authTxHash)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 font-mono text-[12px] text-[#E07A5F] hover:text-[#C45A3F] transition-colors"
+                        >
+                          {authTxHash.slice(0, 10)}...{authTxHash.slice(-6)}
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    )}
+                  </motion.div>
+                </motion.div>
+              )}
             </AnimatePresence>
           </div>
 
           {/* Footer */}
           <div className="px-6 pb-6 pt-0 flex gap-3">
-            <Button
-              variant="outline"
-              onClick={goBack}
-              disabled={isSubmitting}
-              className="flex-1 h-11 rounded-xl text-[13px] font-semibold border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED] gap-2"
-            >
-              {currentStepIndex === 0 ? (
-                'Cancel'
-              ) : (
-                <>
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  Back
-                </>
-              )}
-            </Button>
+            {wizardStep !== 'success' && (
+              <Button
+                variant="outline"
+                onClick={goBack}
+                disabled={isSubmitting}
+                className="flex-1 h-11 rounded-xl text-[13px] font-semibold border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED] gap-2"
+              >
+                {currentStepIndex === 0 ? (
+                  'Cancel'
+                ) : (
+                  <>
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    Back
+                  </>
+                )}
+              </Button>
+            )}
 
-            {wizardStep === 'review' ? (
+            {wizardStep === 'success' ? (
+              <Button
+                onClick={() => {
+                  setIsAddDialogOpen(false);
+                  resetForm();
+                }}
+                className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-coral hover:bg-coral/80 text-white"
+              >
+                Done
+              </Button>
+            ) : wizardStep === 'review' ? (
               <Button
                 onClick={handleAuthorizeKey}
                 disabled={isSubmitting}
