@@ -28,6 +28,7 @@ import {
   Actions,
 } from '@/lib/tempo-client';
 import { formatAmount, parseAmount } from '@/lib/utils';
+import { getTokenColors } from '@/lib/tokenlist';
 
 interface DexSwapSearch {
   from?: string;
@@ -129,6 +130,18 @@ interface RecentSwap {
   amountIn: bigint;
   amountOut: bigint;
   blockNumber: bigint;
+  timestamp: bigint;
+}
+
+function formatTimeAgo(timestamp: bigint): string {
+  const seconds = Math.floor(Date.now() / 1000) - Number(timestamp);
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
 }
 
 const TRANSFER_EVENT = parseAbiItem(
@@ -161,9 +174,11 @@ async function fetchTransferLogs(
 function useRecentSwaps(userAddress: Address | undefined): {
   swaps: RecentSwap[];
   isLoading: boolean;
+  refresh: () => void;
 } {
   const [swaps, setSwaps] = useState<RecentSwap[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!userAddress) {
@@ -255,6 +270,7 @@ function useRecentSwaps(userAddress: Address | undefined): {
               amountIn,
               amountOut,
               blockNumber: logs[0].blockNumber!,
+              timestamp: logs[0].blockTimestamp ?? 0n,
             });
           }
         }
@@ -273,9 +289,11 @@ function useRecentSwaps(userAddress: Address | undefined): {
     return () => {
       cancelled = true;
     };
-  }, [userAddress]);
+  }, [userAddress, refreshKey]);
 
-  return { swaps, isLoading };
+  const refresh = useCallback(() => setRefreshKey(k => k + 1), []);
+
+  return { swaps, isLoading, refresh };
 }
 
 function DexSwapPage(): ReactElement | null {
@@ -285,7 +303,11 @@ function DexSwapPage(): ReactElement | null {
   const { data: walletClient } = useWalletClient();
   const { from, to } = Route.useSearch();
   const navigate = useNavigate();
-  const { swaps: recentSwaps, isLoading: isLoadingSwaps } = useRecentSwaps(address);
+  const {
+    swaps: recentSwaps,
+    isLoading: isLoadingSwaps,
+    refresh: refreshSwaps,
+  } = useRecentSwaps(address);
 
   // Token selection
   const [tokenIn, setTokenIn] = useState<Token | null>(null);
@@ -556,6 +578,7 @@ function DexSwapPage(): ReactElement | null {
       setGasFee(receipt.gasUsed * receipt.effectiveGasPrice);
       setTxHash(hash);
       setStatus('success');
+      refreshSwaps();
     } catch (err) {
       console.error('[DEX Swap] Error:', err);
       const message = err instanceof Error ? err.message : String(err);
@@ -575,508 +598,561 @@ function DexSwapPage(): ReactElement | null {
   if (!address) return null;
 
   return (
-    <div className="flex gap-6 items-start">
-      {/* Left: Swap Form */}
-      <div className="max-w-md flex-1 min-w-0">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35 }}
-          className="mb-6"
-        >
-          <h1 className="text-2xl font-bold text-[#2D3436] tracking-tight">Swap</h1>
-          <p className="text-[14px] text-[#6B6560] mt-1">Exchange stablecoins on Tempo DEX</p>
-        </motion.div>
-
-        {/* Loading tokens */}
-        {(!tokenIn || !tokenOut || !feeToken) && (
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.08 }}
-            className="rounded-2xl border border-[#EDE9E3] bg-white p-8 text-center"
-          >
-            {isLoadingTokens ? (
-              <div className="flex items-center justify-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin text-[#9B9590]" />
-                <span className="text-[13px] text-[#9B9590]">Loading tokens...</span>
-              </div>
-            ) : (
-              <p className="text-[13px] text-[#9B9590]">No tokens available.</p>
-            )}
-          </motion.div>
-        )}
-
-        {/* Main content */}
-        {tokenIn && tokenOut && feeToken && (
-          <AnimatePresence mode="wait">
-            {/* Success */}
-            {status === 'success' && txHash ? (
-              <motion.div
-                key="success"
-                initial={{ opacity: 0, scale: 0.97 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.97 }}
-                transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                className="rounded-2xl border border-[#EDE9E3] bg-white overflow-hidden"
-              >
-                <div className="px-6 pt-8 pb-6 text-center">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
-                    className="w-14 h-14 rounded-full bg-[#6B8F71] flex items-center justify-center mx-auto mb-5"
-                  >
-                    <CheckCircle className="w-7 h-7 text-white" />
-                  </motion.div>
-                  <p className="text-[17px] font-bold text-[#2D3436] mb-1">Swap Successful</p>
-                  <div className="flex items-center justify-center gap-2 text-[#6B6560] text-[14px]">
-                    <span className="font-semibold text-[#2D3436]">
-                      {formatAmount(parsedAmountIn, inDecimals)}
-                    </span>
-                    <span>{tokenIn.symbol}</span>
-                    <ArrowDown className="w-3.5 h-3.5 text-[#9B9590]" />
-                    <span className="font-semibold text-[#2D3436]">
-                      {quote ? formatAmount(quote, outDecimals) : '—'}
-                    </span>
-                    <span>{tokenOut.symbol}</span>
-                  </div>
-                </div>
-
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.45 }}
-                  className="mx-6 mb-4 rounded-xl bg-[#FDFBF8] border border-[#EDE9E3] p-4 space-y-3"
-                >
-                  {gasFee !== null && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-[12px] text-[#9B9590]">Network Fee</span>
-                      <span className="text-[12px] font-medium text-[#2D3436]">
-                        {formatAmount(gasFee, 18)} {feeToken.symbol}
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex items-center justify-between">
-                    <span className="text-[12px] text-[#9B9590]">Transaction</span>
-                    <a
-                      href={getExplorerTxUrl(txHash)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-1 text-[12px] font-mono text-[#E07A5F] hover:text-[#C45A3F] transition-colors"
-                    >
-                      {txHash.slice(0, 10)}...{txHash.slice(-6)}
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.55 }}
-                  className="px-6 pb-6"
-                >
-                  <Button
-                    onClick={handleReset}
-                    className="w-full h-11 rounded-xl text-[14px] font-semibold bg-[#E07A5F] hover:bg-[#D06A4F] text-white"
-                  >
-                    New Swap
-                  </Button>
-                </motion.div>
-              </motion.div>
-            ) : (
-              /* Form */
-              <motion.div
-                key="form"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="rounded-2xl border border-[#EDE9E3] bg-white"
-              >
-                <motion.div
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.35, delay: 0.08 }}
-                  className="p-5"
-                >
-                  {/* You Pay */}
-                  <div className="rounded-xl bg-[#FDFBF8] border border-[#EDE9E3] p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
-                        You Pay
-                      </span>
-                      <button
-                        type="button"
-                        onClick={handleSetMax}
-                        className="text-[11px] text-[#9B9590] hover:text-[#E07A5F] transition-colors"
-                      >
-                        Balance: {formatAmount(tokenInBalance.value, inDecimals)}
-                      </button>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        placeholder="0.00"
-                        value={amountIn}
-                        onChange={e => handleAmountInChange(e.target.value)}
-                        disabled={status !== 'idle'}
-                        className="flex-1 text-[28px] font-bold text-[#2D3436] bg-transparent border-none outline-none placeholder:text-[#D5D0CA] min-w-0"
-                      />
-                      <TokenPicker
-                        token={tokenIn}
-                        tokens={tokens}
-                        disabledAddresses={[tokenOut.address]}
-                        onChange={handleTokenInChange}
-                      />
-                    </div>
-                    {!hasBalance && parsedAmountIn > 0n && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        className="mt-3 flex items-center gap-1.5 text-[11px] text-[#D35D3A]"
-                      >
-                        <AlertTriangle className="w-3 h-3" />
-                        <span>Insufficient balance</span>
-                      </motion.div>
-                    )}
-                  </div>
-
-                  {/* Direction Toggle */}
-                  <div className="flex justify-center -my-2.5 relative z-10">
-                    <motion.button
-                      whileHover={{ rotate: 180, scale: 1.05 }}
-                      whileTap={{ scale: 0.92 }}
-                      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-                      onClick={handleSwapTokenPositions}
-                      disabled={status !== 'idle'}
-                      className="w-10 h-10 rounded-xl bg-white border border-[#EDE9E3] flex items-center justify-center shadow-sm hover:border-[#E07A5F]/30 transition-colors"
-                    >
-                      <ArrowDownUp className="w-4 h-4 text-[#6B6560]" />
-                    </motion.button>
-                  </div>
-
-                  {/* You Receive */}
-                  <div className="rounded-xl bg-[#FDFBF8] border border-[#EDE9E3] p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
-                        You Receive
-                      </span>
-                      <span className="text-[11px] text-[#9B9590]">
-                        Balance: {formatAmount(tokenOutBalance.value, outDecimals)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 text-[28px] font-bold text-[#2D3436] min-w-0">
-                        {isQuoting ? (
-                          <Loader2 className="w-6 h-6 animate-spin text-[#9B9590]" />
-                        ) : quote !== null && quote > 0n ? (
-                          formatAmount(quote, outDecimals)
-                        ) : parsedAmountIn > 0n ? (
-                          <span className="text-[#D5D0CA]">—</span>
-                        ) : (
-                          <span className="text-[#D5D0CA]">0.00</span>
-                        )}
-                      </div>
-                      <TokenPicker
-                        token={tokenOut}
-                        tokens={tokens}
-                        disabledAddresses={[tokenIn.address]}
-                        onChange={handleTokenOutChange}
-                      />
-                    </div>
-                    {parsedAmountIn > 0n && !isQuoting && quote === null && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        className="mt-3 flex items-center gap-1.5 text-[11px] text-[#D35D3A]"
-                      >
-                        <AlertTriangle className="w-3 h-3" />
-                        <span>No liquidity for this pair</span>
-                      </motion.div>
-                    )}
-                  </div>
-                </motion.div>
-
-                {/* Quote Details */}
-                <AnimatePresence>
-                  {quote !== null && quote > 0n && parsedAmountIn > 0n && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="px-5 overflow-hidden"
-                    >
-                      <div className="rounded-xl bg-[#FDFBF8] border border-[#EDE9E3] p-4 mb-4 space-y-2.5">
-                        {/* Swap Route Tree */}
-                        {route && (
-                          <div>
-                            <span className="text-[12px] text-[#9B9590] mb-2 block">
-                              Swap Route
-                            </span>
-                            <div className="font-mono text-[12px] space-y-0.5">
-                              {route.path.map((addr, i) => {
-                                const t = tokens.find(
-                                  tk => tk.address.toLowerCase() === addr.toLowerCase()
-                                );
-                                const symbol = t?.symbol ?? `${addr.slice(0, 8)}...`;
-                                const decimals = t?.decimals ?? 6;
-                                const isFirst = i === 0;
-                                const isLast = i === route.path.length - 1;
-                                const isMiddle = !isFirst && !isLast;
-                                const amount = isFirst ? parsedAmountIn : route.quotes[i - 1];
-                                const prefix = isFirst
-                                  ? '\u250C\u2500\u2500'
-                                  : isLast
-                                    ? '\u2514\u2500\u2500'
-                                    : '\u2502  ';
-                                const label = isFirst ? 'INPUT' : isLast ? 'OUTPUT' : '';
-
-                                return (
-                                  <div key={addr} className="flex items-baseline justify-between">
-                                    <span
-                                      className={isMiddle ? 'text-[#9B72CF]' : 'text-[#2D3436]'}
-                                    >
-                                      {prefix} {symbol}
-                                    </span>
-                                    <span className="text-[#6B6560]">
-                                      {formatAmount(amount, decimals, 4)}{' '}
-                                      {label && (
-                                        <span className="text-[#9B9590] text-[10px]">{label}</span>
-                                      )}
-                                    </span>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        )}
-                        <div className="flex items-center justify-between">
-                          <span className="text-[12px] text-[#9B9590]">Rate</span>
-                          <span className="text-[12px] font-medium text-[#2D3436]">
-                            1 {tokenIn.symbol} ={' '}
-                            {formatAmount(
-                              (quote * BigInt(10 ** inDecimals)) / parsedAmountIn,
-                              outDecimals
-                            )}{' '}
-                            {tokenOut.symbol}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[12px] text-[#9B9590]">
-                            Min. Received (0.5% slippage)
-                          </span>
-                          <span className="text-[12px] font-medium text-[#2D3436]">
-                            {formatAmount((quote * 995n) / 1000n, outDecimals)} {tokenOut.symbol}
-                          </span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[12px] text-[#9B9590]">Network Fee</span>
-                          <span className="text-[12px] font-medium text-[#9B9590]">
-                            Paid in {feeToken.symbol}
-                          </span>
-                        </div>
-                        <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-
-                {/* Action Buttons */}
-                <div className="px-5 pb-5">
-                  {status === 'idle' && (
-                    <Button
-                      onClick={() => setStatus('confirming')}
-                      disabled={!isValidForm}
-                      className="w-full h-12 rounded-xl text-[14px] font-semibold bg-[#E07A5F] hover:bg-[#D06A4F] text-white disabled:bg-[#EDE9E3] disabled:text-[#B5B0AA]"
-                    >
-                      {isQuoting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
-                          Getting quote...
-                        </>
-                      ) : !amountIn || parsedAmountIn === 0n ? (
-                        'Enter an amount'
-                      ) : quote === null ? (
-                        'No liquidity for this pair'
-                      ) : !hasBalance ? (
-                        `Insufficient ${tokenIn.symbol} balance`
-                      ) : (
-                        'Review Swap'
-                      )}
-                    </Button>
-                  )}
-
-                  {status === 'confirming' && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.2 }}
-                      className="space-y-3"
-                    >
-                      <div className="rounded-xl border border-[#E07A5F]/20 bg-[#E07A5F]/[0.04] p-4">
-                        <p className="text-[12px] font-semibold text-[#E07A5F] uppercase tracking-wider mb-2">
-                          Confirm Swap
-                        </p>
-                        <div className="flex items-center gap-3 text-[14px]">
-                          <span className="font-bold text-[#2D3436]">
-                            {formatAmount(parsedAmountIn, inDecimals)}
-                          </span>
-                          <span className="text-[#6B6560]">{tokenIn.symbol}</span>
-                          <ArrowDown className="w-3.5 h-3.5 text-[#9B9590]" />
-                          <span className="font-bold text-[#2D3436]">
-                            {quote ? formatAmount(quote, outDecimals) : '—'}
-                          </span>
-                          <span className="text-[#6B6560]">{tokenOut.symbol}</span>
-                        </div>
-                        <p className="text-[11px] text-[#9B9590] mt-2">
-                          Min. received:{' '}
-                          {quote ? formatAmount((quote * 995n) / 1000n, outDecimals) : '—'}{' '}
-                          {tokenOut.symbol} (0.5% slippage)
-                        </p>
-                        <p className="text-[11px] text-[#9B9590] mt-1">
-                          Network fee paid in {feeToken.symbol}
-                        </p>
-                      </div>
-
-                      <div className="flex gap-3">
-                        <Button
-                          onClick={() => setStatus('idle')}
-                          variant="outline"
-                          className="flex-1 h-11 rounded-xl text-[13px] font-semibold border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          onClick={handleSwap}
-                          className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-[#E07A5F] hover:bg-[#D06A4F] text-white"
-                        >
-                          Confirm Swap
-                        </Button>
-                      </div>
-                    </motion.div>
-                  )}
-
-                  {status === 'pending' && (
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="py-6 text-center"
-                    >
-                      <div className="relative inline-flex items-center justify-center mb-4">
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
-                          className="absolute w-16 h-16"
-                        >
-                          <svg viewBox="0 0 64 64" className="w-full h-full">
-                            <circle
-                              cx="32"
-                              cy="32"
-                              r="30"
-                              fill="none"
-                              stroke="url(#dexSwapGrad)"
-                              strokeWidth="1.5"
-                              strokeDasharray="50 140"
-                              strokeLinecap="round"
-                            />
-                            <defs>
-                              <linearGradient id="dexSwapGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                                <stop offset="0%" stopColor="#E07A5F" stopOpacity="0.7" />
-                                <stop offset="100%" stopColor="#E07A5F" stopOpacity="0.1" />
-                              </linearGradient>
-                            </defs>
-                          </svg>
-                        </motion.div>
-                        <motion.div
-                          animate={{ scale: [1, 1.05, 1] }}
-                          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                          className="w-11 h-11 rounded-full bg-[#E07A5F]/10 flex items-center justify-center"
-                        >
-                          <Loader2 className="w-5 h-5 text-[#E07A5F] animate-spin" />
-                        </motion.div>
-                      </div>
-                      <p className="text-[13px] font-semibold text-[#2D3436]">Processing Swap</p>
-                      <p className="text-[12px] text-[#9B9590] mt-1">
-                        Swapping {formatAmount(parsedAmountIn, inDecimals)} {tokenIn.symbol} for ~
-                        {quote ? formatAmount(quote, outDecimals) : '—'} {tokenOut.symbol}
-                      </p>
-                    </motion.div>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        )}
-      </div>
-
-      {/* Right: Recent Swaps */}
+    <div>
+      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.15 }}
-        className="w-80 shrink-0 rounded-2xl border border-[#EDE9E3] bg-white p-5 sticky top-6 hidden lg:block"
+        transition={{ duration: 0.35 }}
+        className="mb-6"
       >
-        <h3 className="text-[13px] font-semibold text-[#9B9590] uppercase tracking-wider mb-4">
-          Your Recent Swaps
-        </h3>
-        {isLoadingSwaps ? (
-          <div className="flex items-center justify-center gap-2 py-8">
-            <Loader2 className="w-4 h-4 animate-spin text-[#9B9590]" />
-            <span className="text-[12px] text-[#9B9590]">Loading...</span>
-          </div>
-        ) : recentSwaps.length === 0 ? (
-          <p className="text-[12px] text-[#9B9590] text-center py-8">No recent swaps</p>
-        ) : (
-          <div className="space-y-2 max-h-[calc(100vh-180px)] overflow-y-auto">
-            {recentSwaps.map(swap => {
-              const tIn = tokens.find(t => t.address.toLowerCase() === swap.tokenIn.toLowerCase());
-              const tOut = tokens.find(
-                t => t.address.toLowerCase() === swap.tokenOut.toLowerCase()
-              );
-              return (
-                <a
-                  key={swap.txHash}
-                  href={getExplorerTxUrl(swap.txHash)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block p-3 rounded-xl bg-[#FDFBF8] border border-[#EDE9E3] hover:border-[#E07A5F]/20 transition-colors group"
-                >
-                  <div className="text-[12px] space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#9B9590]">Sold</span>
-                      <span>
-                        <span className="font-medium text-[#D35D3A]">
-                          {formatAmount(swap.amountIn, tIn?.decimals ?? 6)}
-                        </span>
-                        <span className="text-[#9B9590] ml-1">{tIn?.symbol ?? '?'}</span>
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#9B9590]">Received</span>
-                      <span>
-                        <span className="font-medium text-[#5B9A6F]">
-                          {formatAmount(swap.amountOut, tOut?.decimals ?? 6)}
-                        </span>
-                        <span className="text-[#9B9590] ml-1">{tOut?.symbol ?? '?'}</span>
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-end mt-2">
-                    <span className="text-[10px] text-[#9B9590] font-mono group-hover:text-[#E07A5F] transition-colors flex items-center gap-1">
-                      {swap.txHash.slice(0, 8)}...{swap.txHash.slice(-4)}
-                      <ExternalLink className="w-2.5 h-2.5" />
-                    </span>
-                  </div>
-                </a>
-              );
-            })}
-          </div>
-        )}
+        <h1 className="text-2xl font-bold text-[#2D3436] tracking-tight">Swap</h1>
+        <p className="text-[14px] text-[#6B6560] mt-1">Exchange stablecoins on Tempo DEX</p>
       </motion.div>
+
+      <div className="flex gap-6 items-start">
+        {/* Left: Swap Form */}
+        <div className="max-w-md flex-1 min-w-0">
+          {/* Loading tokens */}
+          {(!tokenIn || !tokenOut || !feeToken) && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.08 }}
+              className="rounded-2xl border border-[#EDE9E3] bg-white p-8 text-center"
+            >
+              {isLoadingTokens ? (
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-[#9B9590]" />
+                  <span className="text-[13px] text-[#9B9590]">Loading tokens...</span>
+                </div>
+              ) : (
+                <p className="text-[13px] text-[#9B9590]">No tokens available.</p>
+              )}
+            </motion.div>
+          )}
+
+          {/* Main content */}
+          {tokenIn && tokenOut && feeToken && (
+            <AnimatePresence mode="wait">
+              {/* Success */}
+              {status === 'success' && txHash ? (
+                <motion.div
+                  key="success"
+                  initial={{ opacity: 0, scale: 0.97 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.97 }}
+                  transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+                  className="rounded-2xl border border-[#5B9A6F]/20 bg-[#5B9A6F]/[0.03] overflow-hidden"
+                >
+                  <div className="px-6 pt-8 pb-6 text-center">
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
+                      className="w-14 h-14 rounded-full bg-[#5B9A6F] flex items-center justify-center mx-auto mb-5"
+                    >
+                      <CheckCircle className="w-7 h-7 text-white" />
+                    </motion.div>
+                    <p className="text-[17px] font-bold text-[#2D3436] mb-1">Swap Successful</p>
+                    <div className="flex items-center justify-center gap-2 text-[14px]">
+                      <span className="font-semibold text-[#2D3436]">
+                        {formatAmount(parsedAmountIn, inDecimals)}
+                      </span>
+                      <span className="text-[#6B6560]">{tokenIn.symbol}</span>
+                      <ArrowDown className="w-3.5 h-3.5 text-[#5B9A6F]" />
+                      <span className="font-semibold text-[#2D3436]">
+                        {quote ? formatAmount(quote, outDecimals) : '—'}
+                      </span>
+                      <span className="text-[#6B6560]">{tokenOut.symbol}</span>
+                    </div>
+                  </div>
+
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.45 }}
+                    className="mx-6 mb-4 rounded-xl bg-white/60 border border-[#5B9A6F]/10 p-4 space-y-3"
+                  >
+                    {gasFee !== null && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-[12px] text-[#9B9590]">Network Fee</span>
+                        <span className="text-[12px] font-medium text-[#2D3436]">
+                          {formatAmount(gasFee, 18)} {feeToken.symbol}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-[12px] text-[#9B9590]">Transaction</span>
+                      <a
+                        href={getExplorerTxUrl(txHash)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-[12px] font-mono text-[#5B9A6F] hover:text-[#4A8A5E] transition-colors"
+                      >
+                        {txHash.slice(0, 10)}...{txHash.slice(-6)}
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.55 }}
+                    className="px-6 pb-6"
+                  >
+                    <Button
+                      onClick={handleReset}
+                      className="w-full h-11 rounded-xl text-[14px] font-semibold bg-[#5B9A6F] hover:bg-[#4A8A5E] text-white"
+                    >
+                      New Swap
+                    </Button>
+                  </motion.div>
+                </motion.div>
+              ) : (
+                /* Form */
+                <motion.div
+                  key="form"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="rounded-2xl border border-[#EDE9E3] bg-white"
+                >
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, delay: 0.08 }}
+                    className="p-5"
+                  >
+                    {/* You Pay */}
+                    <div className="rounded-xl bg-[#FDFBF8] border border-[#EDE9E3] p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                          You Pay
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handleSetMax}
+                          className="text-[11px] text-[#9B9590] hover:text-[#E07A5F] transition-colors"
+                        >
+                          Balance: {formatAmount(tokenInBalance.value, inDecimals)}
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          placeholder="0.00"
+                          value={amountIn}
+                          onChange={e => handleAmountInChange(e.target.value)}
+                          disabled={status !== 'idle'}
+                          className="flex-1 text-[28px] font-bold text-[#2D3436] bg-transparent border-none outline-none placeholder:text-[#D5D0CA] min-w-0"
+                        />
+                        <TokenPicker
+                          token={tokenIn}
+                          tokens={tokens}
+                          disabledAddresses={[tokenOut.address]}
+                          onChange={handleTokenInChange}
+                        />
+                      </div>
+                      {!hasBalance && parsedAmountIn > 0n && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          className="mt-3 flex items-center gap-1.5 text-[11px] text-[#D35D3A]"
+                        >
+                          <AlertTriangle className="w-3 h-3" />
+                          <span>Insufficient balance</span>
+                        </motion.div>
+                      )}
+                    </div>
+
+                    {/* Direction Toggle */}
+                    <div className="flex justify-center -my-2.5 relative z-10">
+                      <motion.button
+                        whileHover={{ rotate: 180, scale: 1.05 }}
+                        whileTap={{ scale: 0.92 }}
+                        transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+                        onClick={handleSwapTokenPositions}
+                        disabled={status !== 'idle'}
+                        className="w-10 h-10 rounded-xl bg-white border border-[#EDE9E3] flex items-center justify-center shadow-sm hover:border-[#E07A5F]/30 transition-colors"
+                      >
+                        <ArrowDownUp className="w-4 h-4 text-[#6B6560]" />
+                      </motion.button>
+                    </div>
+
+                    {/* You Receive */}
+                    <div className="rounded-xl bg-[#FDFBF8] border border-[#EDE9E3] p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                          You Receive
+                        </span>
+                        <span className="text-[11px] text-[#9B9590]">
+                          Balance: {formatAmount(tokenOutBalance.value, outDecimals)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 text-[28px] font-bold text-[#2D3436] min-w-0">
+                          {isQuoting ? (
+                            <Loader2 className="w-6 h-6 animate-spin text-[#9B9590]" />
+                          ) : quote !== null && quote > 0n ? (
+                            formatAmount(quote, outDecimals)
+                          ) : parsedAmountIn > 0n ? (
+                            <span className="text-[#D5D0CA]">—</span>
+                          ) : (
+                            <span className="text-[#D5D0CA]">0.00</span>
+                          )}
+                        </div>
+                        <TokenPicker
+                          token={tokenOut}
+                          tokens={tokens}
+                          disabledAddresses={[tokenIn.address]}
+                          onChange={handleTokenOutChange}
+                        />
+                      </div>
+                      {parsedAmountIn > 0n && !isQuoting && quote === null && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          className="mt-3 flex items-center gap-1.5 text-[11px] text-[#D35D3A]"
+                        >
+                          <AlertTriangle className="w-3 h-3" />
+                          <span>No liquidity for this pair</span>
+                        </motion.div>
+                      )}
+                    </div>
+                  </motion.div>
+
+                  {/* Quote Details */}
+                  <AnimatePresence>
+                    {quote !== null && quote > 0n && parsedAmountIn > 0n && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="px-5 overflow-hidden"
+                      >
+                        <div className="rounded-xl bg-[#FDFBF8] border border-[#EDE9E3] p-4 mb-4 space-y-2.5">
+                          {/* Swap Route Tree */}
+                          {route && (
+                            <div>
+                              <span className="text-[12px] text-[#9B9590] mb-2 block">
+                                Swap Route
+                              </span>
+                              <div className="font-mono text-[12px] space-y-0.5">
+                                {route.path.map((addr, i) => {
+                                  const t = tokens.find(
+                                    tk => tk.address.toLowerCase() === addr.toLowerCase()
+                                  );
+                                  const symbol = t?.symbol ?? `${addr.slice(0, 8)}...`;
+                                  const decimals = t?.decimals ?? 6;
+                                  const isFirst = i === 0;
+                                  const isLast = i === route.path.length - 1;
+                                  const isMiddle = !isFirst && !isLast;
+                                  const amount = isFirst ? parsedAmountIn : route.quotes[i - 1];
+                                  const prefix = isFirst
+                                    ? '\u250C\u2500\u2500'
+                                    : isLast
+                                      ? '\u2514\u2500\u2500'
+                                      : '\u2502  ';
+                                  const label = isFirst ? 'INPUT' : isLast ? 'OUTPUT' : '';
+
+                                  return (
+                                    <div key={addr} className="flex items-baseline justify-between">
+                                      <span
+                                        className={isMiddle ? 'text-[#9B72CF]' : 'text-[#2D3436]'}
+                                      >
+                                        {prefix} {symbol}
+                                      </span>
+                                      <span className="text-[#6B6560]">
+                                        {formatAmount(amount, decimals, 4)}{' '}
+                                        {label && (
+                                          <span className="text-[#9B9590] text-[10px]">
+                                            {label}
+                                          </span>
+                                        )}
+                                      </span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between">
+                            <span className="text-[12px] text-[#9B9590]">Rate</span>
+                            <span className="text-[12px] font-medium text-[#2D3436]">
+                              1 {tokenIn.symbol} ={' '}
+                              {formatAmount(
+                                (quote * BigInt(10 ** inDecimals)) / parsedAmountIn,
+                                outDecimals
+                              )}{' '}
+                              {tokenOut.symbol}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[12px] text-[#9B9590]">
+                              Min. Received (0.5% slippage)
+                            </span>
+                            <span className="text-[12px] font-medium text-[#2D3436]">
+                              {formatAmount((quote * 995n) / 1000n, outDecimals)} {tokenOut.symbol}
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[12px] text-[#9B9590]">Network Fee</span>
+                            <span className="text-[12px] font-medium text-[#9B9590]">
+                              Paid in {feeToken.symbol}
+                            </span>
+                          </div>
+                          <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Action Buttons */}
+                  <div className="px-5 pb-5">
+                    {status === 'idle' && (
+                      <Button
+                        onClick={() => setStatus('confirming')}
+                        disabled={!isValidForm}
+                        className="w-full h-12 rounded-xl text-[14px] font-semibold bg-[#E07A5F] hover:bg-[#D06A4F] text-white disabled:bg-[#EDE9E3] disabled:text-[#B5B0AA]"
+                      >
+                        {isQuoting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin mr-1.5" />
+                            Getting quote...
+                          </>
+                        ) : !amountIn || parsedAmountIn === 0n ? (
+                          'Enter an amount'
+                        ) : quote === null ? (
+                          'No liquidity for this pair'
+                        ) : !hasBalance ? (
+                          `Insufficient ${tokenIn.symbol} balance`
+                        ) : (
+                          'Review Swap'
+                        )}
+                      </Button>
+                    )}
+
+                    {status === 'confirming' && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="space-y-3"
+                      >
+                        <div className="rounded-xl border border-[#E07A5F]/20 bg-[#E07A5F]/[0.04] p-4">
+                          <p className="text-[12px] font-semibold text-[#E07A5F] uppercase tracking-wider mb-2">
+                            Confirm Swap
+                          </p>
+                          <div className="flex items-center gap-3 text-[14px]">
+                            <span className="font-bold text-[#2D3436]">
+                              {formatAmount(parsedAmountIn, inDecimals)}
+                            </span>
+                            <span className="text-[#6B6560]">{tokenIn.symbol}</span>
+                            <ArrowDown className="w-3.5 h-3.5 text-[#9B9590]" />
+                            <span className="font-bold text-[#2D3436]">
+                              {quote ? formatAmount(quote, outDecimals) : '—'}
+                            </span>
+                            <span className="text-[#6B6560]">{tokenOut.symbol}</span>
+                          </div>
+                          <p className="text-[11px] text-[#9B9590] mt-2">
+                            Min. received:{' '}
+                            {quote ? formatAmount((quote * 995n) / 1000n, outDecimals) : '—'}{' '}
+                            {tokenOut.symbol} (0.5% slippage)
+                          </p>
+                          <p className="text-[11px] text-[#9B9590] mt-1">
+                            Network fee paid in {feeToken.symbol}
+                          </p>
+                        </div>
+
+                        <div className="flex gap-3">
+                          <Button
+                            onClick={() => setStatus('idle')}
+                            variant="outline"
+                            className="flex-1 h-11 rounded-xl text-[13px] font-semibold border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={handleSwap}
+                            className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-[#E07A5F] hover:bg-[#D06A4F] text-white"
+                          >
+                            Confirm Swap
+                          </Button>
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {status === 'pending' && (
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="py-6 text-center"
+                      >
+                        <div className="relative inline-flex items-center justify-center mb-4">
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
+                            className="absolute w-16 h-16"
+                          >
+                            <svg viewBox="0 0 64 64" className="w-full h-full">
+                              <circle
+                                cx="32"
+                                cy="32"
+                                r="30"
+                                fill="none"
+                                stroke="url(#dexSwapGrad)"
+                                strokeWidth="1.5"
+                                strokeDasharray="50 140"
+                                strokeLinecap="round"
+                              />
+                              <defs>
+                                <linearGradient
+                                  id="dexSwapGrad"
+                                  x1="0%"
+                                  y1="0%"
+                                  x2="100%"
+                                  y2="100%"
+                                >
+                                  <stop offset="0%" stopColor="#E07A5F" stopOpacity="0.7" />
+                                  <stop offset="100%" stopColor="#E07A5F" stopOpacity="0.1" />
+                                </linearGradient>
+                              </defs>
+                            </svg>
+                          </motion.div>
+                          <motion.div
+                            animate={{ scale: [1, 1.05, 1] }}
+                            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                            className="w-11 h-11 rounded-full bg-[#E07A5F]/10 flex items-center justify-center"
+                          >
+                            <Loader2 className="w-5 h-5 text-[#E07A5F] animate-spin" />
+                          </motion.div>
+                        </div>
+                        <p className="text-[13px] font-semibold text-[#2D3436]">Processing Swap</p>
+                        <p className="text-[12px] text-[#9B9590] mt-1">
+                          Swapping {formatAmount(parsedAmountIn, inDecimals)} {tokenIn.symbol} for ~
+                          {quote ? formatAmount(quote, outDecimals) : '—'} {tokenOut.symbol}
+                        </p>
+                      </motion.div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
+        </div>
+
+        {/* Right: Recent Swaps */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, delay: 0.15 }}
+          className="flex-1 shrink-0 sticky top-6 hidden lg:block"
+        >
+          <div className="rounded-2xl border border-[#EDE9E3] bg-white overflow-hidden">
+            <div className="px-4 py-3 border-b border-[#EDE9E3] bg-[#FDFBF8]">
+              <h3 className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                Your Recent Swaps
+              </h3>
+            </div>
+            {isLoadingSwaps ? (
+              <div className="flex items-center justify-center gap-2 py-10">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-[#9B9590]" />
+                <span className="text-[12px] text-[#9B9590]">Loading...</span>
+              </div>
+            ) : recentSwaps.length === 0 ? (
+              <p className="text-[12px] text-[#9B9590] text-center py-10">No recent swaps</p>
+            ) : (
+              <div className="divide-y divide-[#EDE9E3] max-h-[calc(100vh-200px)] overflow-y-auto">
+                {recentSwaps.map(swap => {
+                  const tIn = tokens.find(
+                    t => t.address.toLowerCase() === swap.tokenIn.toLowerCase()
+                  );
+                  const tOut = tokens.find(
+                    t => t.address.toLowerCase() === swap.tokenOut.toLowerCase()
+                  );
+                  const colorsIn = getTokenColors(tIn?.symbol ?? '');
+                  const colorsOut = getTokenColors(tOut?.symbol ?? '');
+                  return (
+                    <a
+                      key={swap.txHash}
+                      href={getExplorerTxUrl(swap.txHash)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-4 py-3 bg-[#FDFBF8] hover:bg-[#F5F2ED] transition-colors group"
+                    >
+                      {/* Token pair icons */}
+                      <div className="relative shrink-0 w-8 h-8">
+                        <div
+                          className="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden absolute top-0 left-0 border-2 border-white"
+                          style={{ backgroundColor: colorsIn.bg }}
+                        >
+                          {tIn?.logoURI ? (
+                            <img
+                              src={tIn.logoURI}
+                              alt={tIn.symbol}
+                              className="w-6 h-6 rounded-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-[8px] font-bold" style={{ color: colorsIn.text }}>
+                              {(tIn?.symbol ?? '?').slice(0, 2)}
+                            </span>
+                          )}
+                        </div>
+                        <div
+                          className="w-6 h-6 rounded-full flex items-center justify-center overflow-hidden absolute bottom-0 right-0 border-2 border-white"
+                          style={{ backgroundColor: colorsOut.bg }}
+                        >
+                          {tOut?.logoURI ? (
+                            <img
+                              src={tOut.logoURI}
+                              alt={tOut.symbol}
+                              className="w-6 h-6 rounded-full object-cover"
+                            />
+                          ) : (
+                            <span
+                              className="text-[8px] font-bold"
+                              style={{ color: colorsOut.text }}
+                            >
+                              {(tOut?.symbol ?? '?').slice(0, 2)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Swap details */}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-[12px] flex items-center gap-1">
+                          <span className="font-medium text-[#2D3436]">
+                            {formatAmount(swap.amountIn, tIn?.decimals ?? 6)}
+                          </span>
+                          <span className="text-[#9B9590]">{tIn?.symbol ?? '?'}</span>
+                          <span className="text-[#D5D0CA] mx-0.5">→</span>
+                          <span className="font-medium text-[#2D3436]">
+                            {formatAmount(swap.amountOut, tOut?.decimals ?? 6)}
+                          </span>
+                          <span className="text-[#9B9590]">{tOut?.symbol ?? '?'}</span>
+                        </div>
+                        <span className="text-[10px] text-[#B5B0AA]">
+                          {formatTimeAgo(swap.timestamp)}
+                        </span>
+                      </div>
+
+                      <span className="text-[10px] font-mono text-[#D5D0CA] group-hover:text-[#E07A5F] transition-colors shrink-0 flex items-center gap-1">
+                        {swap.txHash.slice(0, 6)}...{swap.txHash.slice(-4)}
+                        <ExternalLink className="w-2.5 h-2.5" />
+                      </span>
+                    </a>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 }

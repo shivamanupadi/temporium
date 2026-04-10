@@ -31,7 +31,7 @@
     "typescript": "^5.4.5"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "dependencies": {
     "@vitejs/plugin-basic-ssl": "^2.3.0",
