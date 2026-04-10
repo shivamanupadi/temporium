@@ -55,8 +55,17 @@ const PERMISSIONS = [
 ];
 
 function ConnectPage(): ReactElement {
-  const { isConnected, isConnecting, address, signUp, signIn, connectInjected, connectTempoWallet, hasInjectedWallet } =
-    useTempo();
+  const {
+    isConnected,
+    isConnecting,
+    address,
+    signUp,
+    signIn,
+    connectInjected,
+    connectTempoWallet,
+    signTempoWallet,
+    hasInjectedWallet,
+  } = useTempo();
 
   const [pendingRequest, setPendingRequest] = useState<PendingRequest | null>(null);
   const [status, setStatus] = useState<
@@ -340,6 +349,8 @@ function ConnectPage(): ReactElement {
     try {
       setPendingAction('connect');
       await connectTempoWallet();
+      // Step 2: SIWE sign — triggered by user click, avoids popup blocker
+      await signTempoWallet();
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Connection failed';
       toast.error(message.includes('rejected') ? 'Connection cancelled' : message);

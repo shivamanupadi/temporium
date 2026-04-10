@@ -217,10 +217,12 @@ const featureSections: {
 
 function LandingPage(): ReactElement {
   const navigate = useNavigate();
-  const { isConnected, isConnecting, signUp, signIn, connectTempoWallet } = useTempo();
+  const { isConnected, isConnecting, signUp, signIn, connectTempoWallet, signTempoWallet } =
+    useTempo();
 
   const [showSignIn, setShowSignIn] = useState(false);
   const [showCreateWallet, setShowCreateWallet] = useState(false);
+  const [showTempoSign, setShowTempoSign] = useState(false);
   const [connectingType, setConnectingType] = useState<string | null>(null);
   const [contractAddress, setContractAddress] = useState<string | null>(null);
   const [contractExplorerUrl, setContractExplorerUrl] = useState<string | null>(null);
@@ -280,8 +282,22 @@ function LandingPage(): ReactElement {
     setShowSignIn(false);
     try {
       await connectTempoWallet();
+      setShowTempoSign(true);
     } catch (err) {
       toast.error('Connection failed', { description: (err as Error).message });
+    } finally {
+      setConnectingType(null);
+    }
+  };
+
+  const handleTempoSign = async (): Promise<void> => {
+    setConnectingType('tempo-sign');
+    try {
+      await signTempoWallet();
+      setShowTempoSign(false);
+      navigate({ to: '/portal/dashboard' });
+    } catch (err) {
+      toast.error('Sign in failed', { description: (err as Error).message });
     } finally {
       setConnectingType(null);
     }
@@ -899,9 +915,7 @@ function LandingPage(): ReactElement {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[14px] font-semibold text-[#2D3436]">Tempo Wallet</p>
-                <p className="text-[12px] text-[#9B9590] mt-0.5">
-                  Connect your Tempo account
-                </p>
+                <p className="text-[12px] text-[#9B9590] mt-0.5">Connect your Tempo account</p>
               </div>
               {connectingType === 'tempo' ? (
                 <Loader2 className="w-4 h-4 animate-spin text-[#9B72CF]" />
@@ -942,6 +956,44 @@ function LandingPage(): ReactElement {
           setShowSignIn(true);
         }}
       />
+
+      {/* Tempo Wallet Sign Message Step */}
+      <Dialog open={showTempoSign} onOpenChange={setShowTempoSign}>
+        <DialogContent className="max-w-[380px] p-0 gap-0 rounded-2xl">
+          <DialogTitle className="sr-only">Verify Wallet</DialogTitle>
+          <DialogDescription className="sr-only">
+            Sign a message to verify wallet ownership
+          </DialogDescription>
+
+          <div className="px-6 pt-7 pb-5">
+            <h3 className="text-[17px] font-semibold text-[#2D3436] mb-1">Verify Wallet</h3>
+            <p className="text-[13px] text-[#8A8580]">
+              Sign a message to verify you own this wallet
+            </p>
+          </div>
+
+          <div className="px-5 pb-6">
+            <button
+              onClick={handleTempoSign}
+              disabled={connectingType === 'tempo-sign'}
+              className="flex items-center gap-3.5 w-full p-4 rounded-xl border border-[#EDE9E3] hover:border-[#9B72CF]/30 hover:bg-[#9B72CF]/4 transition-all text-left group cursor-pointer"
+            >
+              <div className="w-10 h-10 rounded-xl bg-[#9B72CF]/10 flex items-center justify-center shrink-0">
+                <Globe className="w-5 h-5 text-[#9B72CF]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[14px] font-semibold text-[#2D3436]">Sign Message</p>
+                <p className="text-[12px] text-[#9B9590] mt-0.5">This opens your Tempo Wallet</p>
+              </div>
+              {connectingType === 'tempo-sign' ? (
+                <Loader2 className="w-4 h-4 animate-spin text-[#9B72CF]" />
+              ) : (
+                <ArrowRight className="w-4 h-4 text-[#B5B0AA] group-hover:text-[#9B72CF] transition-colors" />
+              )}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

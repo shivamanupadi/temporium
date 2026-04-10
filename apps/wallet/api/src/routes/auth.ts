@@ -1,11 +1,11 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
-import { verifyMessage } from 'viem';
 import { generateNonce } from '../lib/crypto';
 import { generateToken } from '../lib/jwt';
 import { challengeRequestSchema, verifyRequestSchema } from '../lib/validation';
 import { BadRequestError, UnauthorizedError } from '../middleware/error';
 import { success } from '../lib/response';
+import { createTempoPublicClient } from '../lib/viem';
 import type { Env, Variables } from '../types/env';
 
 // SIWE message constants
@@ -127,9 +127,13 @@ auth.post('/verify', zValidator('json', verifyRequestSchema), async c => {
     throw new UnauthorizedError('Address mismatch');
   }
 
-  // Verify the signature using viem
+  // Verify the signature using the public client, which supports both
+  // EOA (ECDSA) and smart contract (EIP-1271) signatures
   try {
-    const isValid = await verifyMessage({
+    const { rpcUrl, chain } = c.get('networkConfig');
+    const publicClient = createTempoPublicClient(rpcUrl, chain);
+
+    const isValid = await publicClient.verifyMessage({
       address: address as `0x${string}`,
       message,
       signature: signature as `0x${string}`,

@@ -3,7 +3,12 @@ import { useAccount, useConnect, useDisconnect, useWalletClient, useConnectors }
 import { getWalletClient } from '@wagmi/core';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { type Address, encodeFunctionData } from 'viem';
-import { tempoPasskeyConnector, injectedConnector, tempoWalletConnector, wagmiConfig } from '@/lib/wagmi';
+import {
+  tempoPasskeyConnector,
+  injectedConnector,
+  tempoWalletConnector,
+  wagmiConfig,
+} from '@/lib/wagmi';
 import { tempoChain, tempoPublicClient, waitForTx } from '@/lib/tempo-client';
 import { stringToBytes32, Actions, getTokenBalance } from '@/lib/tempo-client';
 import { DEFAULT_FEE_TOKEN_ADDRESS, TIMING } from '@/lib/constants';
@@ -55,6 +60,7 @@ interface UseTempoReturn {
   signIn: () => Promise<void>;
   connectInjected: () => Promise<void>;
   connectTempoWallet: () => Promise<void>;
+  signTempoWallet: () => Promise<void>;
   disconnect: () => Promise<void>;
   // Transactions
   sendPayment: (params: SendPaymentParams) => Promise<string>;
@@ -174,17 +180,33 @@ export function useTempo(): UseTempoReturn {
     setIsConnecting(true);
     setError(null);
     try {
-      const result = await connectAsync({
+      await connectAsync({
         connector: tempoWalletConnector,
         chainId: tempoChain.id,
       });
+    } catch (err) {
+      setError(err as Error);
+      try {
+        await disconnectAsync();
+      } catch {
+        /* ignore */
+      }
+      throw err;
+    } finally {
+      setIsConnecting(false);
+    }
+  }, [connectAsync, disconnectAsync]);
 
+  const signTempoWallet = useCallback(async () => {
+    setIsConnecting(true);
+    setError(null);
+    try {
       const client = await getWalletClient(wagmiConfig, {
-        account: result.accounts[0],
+        account: address,
         chainId: tempoChain.id,
       });
 
-      if (!client) throw new Error('Failed to get wallet client after connection');
+      if (!client) throw new Error('Failed to get wallet client');
 
       await signInWithEthereum(client);
     } catch (err) {
@@ -198,7 +220,7 @@ export function useTempo(): UseTempoReturn {
     } finally {
       setIsConnecting(false);
     }
-  }, [connectAsync, disconnectAsync]);
+  }, [address, disconnectAsync]);
 
   const disconnect = useCallback(async () => {
     clearAuthTokens();
@@ -443,6 +465,7 @@ export function useTempo(): UseTempoReturn {
     signIn,
     connectInjected,
     connectTempoWallet,
+    signTempoWallet,
     disconnect,
     sendPayment,
     signScheduledPayment,
