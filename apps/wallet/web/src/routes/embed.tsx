@@ -1,155 +1,188 @@
-import { type ReactElement, useEffect, useRef, useState } from 'react';
+import { type ReactElement, useEffect, useRef, useState, useCallback } from 'react';
 import { createFileRoute } from '@tanstack/react-router';
-import { Remote, Messenger, Provider, webAuthn, WebAuthnCeremony } from 'accounts';
-import { Loader2, CheckCircle, XCircle } from 'lucide-react';
-import { KEYS_API_URL } from '@/lib/api';
-import { tempoChain } from '@/lib/tempo-client';
-import { saveAuthToken } from '@/lib/auth-storage';
+import { Remote, Messenger, Provider, webAuthn } from 'accounts';
+import { Loader2, CheckCircle, XCircle, Fingerprint, X } from 'lucide-react';
+import { tempoModerato, tempo } from 'viem/chains';
+import { createCeremony } from '@/lib/ceremony';
 
 export const Route = createFileRoute('/embed')({
   component: EmbedPage,
 });
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type RpcRequest = any;
+
+const REQUEST_LABELS: Record<string, string> = {
+  wallet_connect: 'Connect Wallet',
+  eth_requestAccounts: 'Connect Wallet',
+  personal_sign: 'Sign Message',
+  eth_sendTransaction: 'Send Transaction',
+  eth_signTransaction: 'Sign Transaction',
+  eth_signTypedData_v4: 'Sign Typed Data',
+  wallet_sendCalls: 'Send Batch',
+};
+
 /**
  * Embed route for the accounts SDK Dialog adapter.
  *
- * This page is loaded inside an iframe or popup by dApps using the
- * @temporium/wallet-connect SDK. It uses the accounts SDK Remote module
- * to receive RPC requests from the host and responds after the user
- * signs with their passkey.
+ * Loaded inside a popup by dApps using @temporium/wallet-connect.
+ * Uses accounts SDK Remote to receive RPC requests and shows
+ * approval UI so the user can trigger passkey signing.
  */
 function EmbedPage(): ReactElement {
   const remoteRef = useRef<ReturnType<typeof Remote.create> | null>(null);
-  const [status, setStatus] = useState<'loading' | 'ready' | 'signing' | 'success' | 'error'>('loading');
+  const [status, setStatus] = useState<'loading' | 'idle' | 'pending' | 'signing' | 'success' | 'error'>('loading');
+  const [pendingRequest, setPendingRequest] = useState<RpcRequest | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const initRef = useRef(false);
 
   useEffect(() => {
-    // Create WebAuthn ceremony pointing at our /keys API
-    const serverCeremony = WebAuthnCeremony.server({ url: KEYS_API_URL });
-    const ceremony = WebAuthnCeremony.from({
-      async getRegistrationOptions(parameters) {
-        return serverCeremony.getRegistrationOptions(parameters);
-      },
-      async verifyRegistration(credential) {
-        const result = await serverCeremony.verifyRegistration(credential);
-        const data = result as Record<string, unknown>;
-        if (data.accessToken && data.expiresIn) {
-          await saveAuthToken({
-            accessToken: data.accessToken as string,
-            expiresIn: data.expiresIn as number,
-          });
-        }
-        return result;
-      },
-      async getAuthenticationOptions(parameters) {
-        return serverCeremony.getAuthenticationOptions(parameters);
-      },
-      async verifyAuthentication(response) {
-        const result = await serverCeremony.verifyAuthentication(response);
-        const data = result as Record<string, unknown>;
-        if (data.accessToken && data.expiresIn) {
-          await saveAuthToken({
-            accessToken: data.accessToken as string,
-            expiresIn: data.expiresIn as number,
-          });
-        }
-        return result;
-      },
-    });
+    if (initRef.current) return;
+    initRef.current = true;
 
-    // Create a Provider with our webAuthn adapter
     const provider = Provider.create({
-      adapter: webAuthn({ ceremony }),
-      chains: [tempoChain] as any,
+      adapter: webAuthn({ ceremony: createCeremony() }),
+      chains: [tempoModerato, tempo] as any,
       persistCredentials: true,
     });
 
-    // Create messenger bridge to communicate with the host (parent window or opener)
-    const targetWindow = window.opener || window.parent;
+    const hostWindow = window.opener || window.parent;
+    if (!hostWindow || hostWindow === window) {
+      setStatus('idle');
+      return;
+    }
+
     const messenger = Messenger.bridge({
-      from: Messenger.fromWindow(window, { targetOrigin: '*' }),
-      to: Messenger.fromWindow(targetWindow, { targetOrigin: '*' }),
+      from: Messenger.fromWindow(window),
+      to: Messenger.fromWindow(hostWindow, { targetOrigin: '*' }),
     });
 
-    // Create Remote
     const remote = Remote.create({ messenger, provider });
     remoteRef.current = remote;
 
-    // Listen for user-facing requests
-    remote.onUserRequest(async ({ request }) => {
+    remote.onUserRequest(({ request }) => {
       if (!request) {
-        // Dialog closed
+        setPendingRequest(null);
+        setStatus('idle');
         return;
       }
-
-      setStatus('signing');
-
-      try {
-        // Let the provider handle the request (triggers passkey signing)
-        await remote.respond(request);
-        setStatus('success');
-        setTimeout(() => setStatus('ready'), 1500);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : 'Request failed';
-        setError(message);
-        setStatus('error');
-        remote.reject(request);
-        setTimeout(() => {
-          setError(null);
-          setStatus('ready');
-        }, 2000);
-      }
+      setPendingRequest(request);
+      setStatus('pending');
     });
 
-    // Signal readiness to the host
     remote.ready();
-    setStatus('ready');
+    setStatus('idle');
 
     return () => {
-      remote.rejectAll();
+      remoteRef.current?.rejectAll();
     };
   }, []);
 
+  const handleApprove = useCallback(async () => {
+    const remote = remoteRef.current;
+    if (!remote || !pendingRequest) return;
+
+    setStatus('signing');
+    try {
+      await remote.respond(pendingRequest);
+      setStatus('success');
+      setPendingRequest(null);
+      setTimeout(() => setStatus('idle'), 1500);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Request failed');
+      setStatus('error');
+      setTimeout(() => {
+        setError(null);
+        setStatus('idle');
+        setPendingRequest(null);
+      }, 2500);
+    }
+  }, [pendingRequest]);
+
+  const handleReject = useCallback(() => {
+    const remote = remoteRef.current;
+    if (!remote || !pendingRequest) return;
+    remote.reject(pendingRequest);
+    setPendingRequest(null);
+    setStatus('idle');
+  }, [pendingRequest]);
+
   return (
     <div className="min-h-screen bg-[#FDFBF8] flex items-center justify-center p-4">
-      <div className="text-center space-y-3">
+      <div className="w-full max-w-[320px] space-y-4">
         {status === 'loading' && (
-          <>
+          <div className="text-center py-8">
             <Loader2 className="w-8 h-8 animate-spin text-[#9B72CF] mx-auto" />
-            <p className="text-sm text-[#8A8580]">Initializing wallet...</p>
-          </>
+            <p className="text-sm text-[#8A8580] mt-3">Initializing...</p>
+          </div>
         )}
-        {status === 'ready' && (
-          <>
-            <div className="w-10 h-10 rounded-full bg-[#5B9A6F]/10 flex items-center justify-center mx-auto">
-              <CheckCircle className="w-5 h-5 text-[#5B9A6F]" />
+
+        {status === 'idle' && (
+          <div className="text-center py-8">
+            <div className="w-12 h-12 rounded-full bg-[#E07A5F]/8 flex items-center justify-center mx-auto">
+              <Fingerprint className="w-6 h-6 text-[#E07A5F]" />
             </div>
-            <p className="text-sm text-[#8A8580]">Wallet ready</p>
-          </>
+            <p className="text-sm font-medium text-[#2D3436] mt-3">Temporium Wallet</p>
+            <p className="text-xs text-[#8A8580] mt-1">Waiting for request...</p>
+          </div>
         )}
+
+        {status === 'pending' && pendingRequest && (
+          <div className="space-y-4">
+            <div className="text-center">
+              <div className="w-12 h-12 rounded-full bg-[#E07A5F]/8 flex items-center justify-center mx-auto">
+                <Fingerprint className="w-6 h-6 text-[#E07A5F]" />
+              </div>
+              <p className="text-sm font-medium text-[#2D3436] mt-3">
+                {REQUEST_LABELS[pendingRequest.method] ?? pendingRequest.method}
+              </p>
+              <p className="text-xs text-[#8A8580] mt-1">Approve with your passkey</p>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={handleReject}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-[#EDE9E3] text-[#6B6560] text-sm font-medium hover:bg-[#F5F2ED] transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+                Reject
+              </button>
+              <button
+                onClick={handleApprove}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-[#E07A5F] text-white text-sm font-medium hover:bg-[#D06A4F] transition-colors cursor-pointer"
+              >
+                <Fingerprint className="w-4 h-4" />
+                Approve
+              </button>
+            </div>
+          </div>
+        )}
+
         {status === 'signing' && (
-          <>
+          <div className="text-center py-8">
             <Loader2 className="w-8 h-8 animate-spin text-[#E07A5F] mx-auto" />
-            <p className="text-sm text-[#2D3436] font-medium">Approve in your wallet</p>
-            <p className="text-xs text-[#8A8580]">Use your passkey to sign</p>
-          </>
+            <p className="text-sm font-medium text-[#2D3436] mt-3">Approve in your wallet</p>
+            <p className="text-xs text-[#8A8580] mt-1">Use your passkey to sign</p>
+          </div>
         )}
+
         {status === 'success' && (
-          <>
+          <div className="text-center py-8">
             <div className="w-10 h-10 rounded-full bg-[#5B9A6F]/10 flex items-center justify-center mx-auto">
               <CheckCircle className="w-5 h-5 text-[#5B9A6F]" />
             </div>
-            <p className="text-sm text-[#5B9A6F] font-medium">Approved</p>
-          </>
+            <p className="text-sm text-[#5B9A6F] font-medium mt-3">Approved</p>
+          </div>
         )}
+
         {status === 'error' && (
-          <>
+          <div className="text-center py-8">
             <div className="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center mx-auto">
               <XCircle className="w-5 h-5 text-red-500" />
             </div>
-            <p className="text-sm text-red-600 font-medium">Failed</p>
-            {error && <p className="text-xs text-[#8A8580] max-w-[250px]">{error}</p>}
-          </>
+            <p className="text-sm text-red-600 font-medium mt-3">Failed</p>
+            {error && <p className="text-xs text-[#8A8580] mt-1 max-w-[250px] mx-auto">{error}</p>}
+          </div>
         )}
       </div>
     </div>

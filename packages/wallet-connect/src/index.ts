@@ -1,7 +1,7 @@
 /**
  * @temporium/wallet-connect
  *
- * SDK for connecting to Temporium Wallet from Tempo apps.
+ * SDK for connecting to Temporium Wallet from Tempo dApps.
  * Uses the accounts SDK Dialog adapter for secure cross-origin communication.
  *
  * @example
@@ -16,13 +16,8 @@
  *
  * await wallet.connect();
  * const walletClient = wallet.getWalletClient();
- *
- * const hash = await Actions.token.transfer(walletClient, {
- *   token, to, amount, feeToken,
- * });
+ * const hash = await Actions.token.transfer(walletClient, { token, to, amount, feeToken });
  * ```
- *
- * @packageDocumentation
  */
 
 export { WalletConnect } from './client';
@@ -31,7 +26,6 @@ export type {
   ConnectionResult,
   ConnectionEventType,
   ConnectionEventListener,
-  // Tempo SDK compatible types
   SendPaymentParams,
   SendScheduledPaymentParams,
   SwapParams,
@@ -45,5 +39,4 @@ export type {
   AmmSwapParams,
   BatchSendParams,
   BatchTransfer,
-  AppPermission,
 } from './types';

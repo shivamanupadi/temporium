@@ -1,63 +1,12 @@
 import { createConfig, http } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import { webAuthn, dialog } from 'accounts/wagmi';
-import { Dialog, WebAuthnCeremony } from 'accounts';
+import { Dialog } from 'accounts';
 import { tempoChain } from './tempo-client';
-import { KEYS_API_URL } from './api';
-import { saveAuthToken } from './auth-storage';
-
-/**
- * Custom WebAuthn ceremony that uses our /keys API (backed by on-chain PasskeyRegistry).
- *
- * Wraps WebAuthnCeremony.server() and intercepts responses to extract
- * JWT tokens injected by our onRegister/onAuthenticate hooks.
- */
-const ceremony = (() => {
-  const serverCeremony = WebAuthnCeremony.server({ url: KEYS_API_URL });
-
-  return WebAuthnCeremony.from({
-    async getRegistrationOptions(parameters) {
-      return serverCeremony.getRegistrationOptions(parameters);
-    },
-
-    async verifyRegistration(credential) {
-      const result = await serverCeremony.verifyRegistration(credential);
-
-      // Extract JWT injected by the server's onRegister hook
-      const data = result as Record<string, unknown>;
-      if (data.accessToken && data.expiresIn) {
-        await saveAuthToken({
-          accessToken: data.accessToken as string,
-          expiresIn: data.expiresIn as number,
-        });
-      }
-
-      return result;
-    },
-
-    async getAuthenticationOptions(parameters) {
-      return serverCeremony.getAuthenticationOptions(parameters);
-    },
-
-    async verifyAuthentication(response) {
-      const result = await serverCeremony.verifyAuthentication(response);
-
-      // Extract JWT injected by the server's onAuthenticate hook
-      const data = result as Record<string, unknown>;
-      if (data.accessToken && data.expiresIn) {
-        await saveAuthToken({
-          accessToken: data.accessToken as string,
-          expiresIn: data.expiresIn as number,
-        });
-      }
-
-      return result;
-    },
-  });
-})();
+import { createCeremony } from './ceremony';
 
 export const tempoPasskeyConnector = webAuthn({
-  ceremony,
+  ceremony: createCeremony(),
 });
 
 export const injectedConnector = injected({
