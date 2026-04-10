@@ -118,7 +118,7 @@ export function useTempo(): UseTempoReturn {
         const passkeyLabel = label ? `Temporium: ${label}` : 'Temporium Wallet';
         await connectAsync({
           connector: tempoPasskeyConnector,
-          capabilities: { type: 'sign-up', label: passkeyLabel },
+          capabilities: { method: 'register', name: passkeyLabel },
         });
       } catch (err) {
         setError(err as Error);
@@ -136,7 +136,7 @@ export function useTempo(): UseTempoReturn {
     try {
       await connectAsync({
         connector: tempoPasskeyConnector,
-        capabilities: { type: 'sign-in', selectAccount: true },
+        capabilities: { method: 'login', selectAccount: true },
       });
     } catch (err) {
       setError(err as Error);

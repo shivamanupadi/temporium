@@ -1,127 +1,63 @@
 import { createConfig, http } from 'wagmi';
 import { injected } from 'wagmi/connectors';
-import { webAuthn, KeyManager } from 'wagmi/tempo';
-import { dialog } from 'accounts/wagmi';
-import { Dialog } from 'accounts';
+import { webAuthn, dialog } from 'accounts/wagmi';
+import { Dialog, WebAuthnCeremony } from 'accounts';
 import { tempoChain } from './tempo-client';
-import { KEYS_API_URL, TEMPO_NETWORK } from './api';
+import { KEYS_API_URL } from './api';
 import { saveAuthToken } from './auth-storage';
 
-function getRpId(): string {
-  if (typeof window === 'undefined') return 'localhost';
+/**
+ * Custom WebAuthn ceremony that uses our /keys API (backed by on-chain PasskeyRegistry).
+ *
+ * Wraps WebAuthnCeremony.server() and intercepts responses to extract
+ * JWT tokens injected by our onRegister/onAuthenticate hooks.
+ */
+const ceremony = (() => {
+  const serverCeremony = WebAuthnCeremony.server({ url: KEYS_API_URL });
 
-  const hostname = window.location.hostname;
-
-  if (hostname === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
-    return hostname;
-  }
-
-  const parts = hostname.split('.');
-
-  const specialSuffixes = ['pages.dev', 'workers.dev', 'co.uk', 'com.au', 'co.nz'];
-  for (const suffix of specialSuffixes) {
-    if (hostname.endsWith(`.${suffix}`)) {
-      const suffixParts = suffix.split('.').length;
-      return parts.slice(-(suffixParts + 1)).join('.');
-    }
-  }
-
-  return parts.slice(-2).join('.');
-}
-
-function bufferToBase64(buffer: ArrayBuffer): string {
-  return btoa(String.fromCharCode(...new Uint8Array(buffer)));
-}
-
-interface SerializedCredential {
-  id: string;
-  type: string;
-  rawId: string;
-  response: {
-    clientDataJSON: string;
-    attestationObject: string;
-    authenticatorData?: string;
-    transports?: string[];
-  };
-  authenticatorAttachment?: string;
-}
-
-function serializeCredential(raw: PublicKeyCredential): SerializedCredential {
-  const response = raw.response as AuthenticatorAttestationResponse;
-  const authenticatorData = response.getAuthenticatorData ? response.getAuthenticatorData() : null;
-
-  return {
-    id: raw.id,
-    type: raw.type,
-    rawId: bufferToBase64(raw.rawId),
-    response: {
-      clientDataJSON: bufferToBase64(response.clientDataJSON),
-      attestationObject: bufferToBase64(response.attestationObject),
-      ...(authenticatorData && { authenticatorData: bufferToBase64(authenticatorData) }),
-      ...(response.getTransports && { transports: response.getTransports() }),
+  return WebAuthnCeremony.from({
+    async getRegistrationOptions(parameters) {
+      return serverCeremony.getRegistrationOptions(parameters);
     },
-    ...(raw.authenticatorAttachment && {
-      authenticatorAttachment: raw.authenticatorAttachment,
-    }),
-  };
-}
 
-interface KeysApiResponse {
-  publicKey: `0x${string}`;
-  accessToken?: string;
-  expiresIn?: number;
-}
+    async verifyRegistration(credential) {
+      const result = await serverCeremony.verifyRegistration(credential);
 
-const keyManager = KeyManager.from({
-  async getChallenge() {
-    const response = await fetch(`${KEYS_API_URL}/challenge`, {
-      headers: { 'X-Tempo-Network': TEMPO_NETWORK },
-    });
-    if (!response.ok) throw new Error('Failed to get challenge');
-    return response.json();
-  },
-
-  async getPublicKey(parameters) {
-    const response = await fetch(`${KEYS_API_URL}/${parameters.credential.id}`, {
-      headers: { 'X-Tempo-Network': TEMPO_NETWORK },
-    });
-    if (!response.ok) throw new Error('publicKey not found.');
-    const data: KeysApiResponse = await response.json();
-
-    if (data.accessToken && data.expiresIn) {
-      saveAuthToken({ accessToken: data.accessToken, expiresIn: data.expiresIn });
-    }
-
-    return data.publicKey;
-  },
-
-  async setPublicKey(parameters) {
-    const serialized = serializeCredential(parameters.credential as unknown as PublicKeyCredential);
-
-    const response = await fetch(`${KEYS_API_URL}/${parameters.credential.id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Tempo-Network': TEMPO_NETWORK },
-      body: JSON.stringify({ credential: serialized, publicKey: parameters.publicKey }),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Failed to save public key: ${error}`);
-    }
-
-    const text = await response.text();
-    if (text) {
-      const data: KeysApiResponse = JSON.parse(text);
+      // Extract JWT injected by the server's onRegister hook
+      const data = result as Record<string, unknown>;
       if (data.accessToken && data.expiresIn) {
-        saveAuthToken({ accessToken: data.accessToken, expiresIn: data.expiresIn });
+        saveAuthToken({
+          accessToken: data.accessToken as string,
+          expiresIn: data.expiresIn as number,
+        });
       }
-    }
-  },
-});
+
+      return result;
+    },
+
+    async getAuthenticationOptions(parameters) {
+      return serverCeremony.getAuthenticationOptions(parameters);
+    },
+
+    async verifyAuthentication(response) {
+      const result = await serverCeremony.verifyAuthentication(response);
+
+      // Extract JWT injected by the server's onAuthenticate hook
+      const data = result as Record<string, unknown>;
+      if (data.accessToken && data.expiresIn) {
+        saveAuthToken({
+          accessToken: data.accessToken as string,
+          expiresIn: data.expiresIn as number,
+        });
+      }
+
+      return result;
+    },
+  });
+})();
 
 export const tempoPasskeyConnector = webAuthn({
-  keyManager,
-  rpId: getRpId(),
+  ceremony,
 });
 
 export const injectedConnector = injected({

@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { Handler, Kv } from 'tempo.ts/server';
+import { Handler, Kv } from 'accounts/server';
 import { keccak256 } from 'viem';
 import {
   createTempoPublicClient,
@@ -22,12 +22,12 @@ import {
   ConflictError,
 } from '../middleware/error';
 import { getTempoChain, getRpcUrl } from '../lib/chain';
-import type { Env, Variables, NetworkConfig } from '../types/env';
+import type { Env, Variables } from '../types/env';
 
 /**
- * Challenge expiration time in milliseconds (5 minutes)
+ * Challenge expiration time in seconds (5 minutes)
  */
-const CHALLENGE_EXPIRATION_MS = 5 * 60 * 1000;
+const CHALLENGE_TTL_SECONDS = 5 * 60;
 
 /**
  * Maximum challenges to store (prevent memory issues)
@@ -35,13 +35,7 @@ const CHALLENGE_EXPIRATION_MS = 5 * 60 * 1000;
 const MAX_CHALLENGES = 10000;
 
 /**
- * Endpoints that should not receive JWT tokens
- */
-const EXCLUDED_ENDPOINTS = ['challenge'];
-
-/**
  * Module-level challenge storage - persists across requests within the same Worker isolate
- * This is necessary because Workers create new service instances per request
  */
 const globalChallenges = new Map<string, number>();
 
@@ -53,7 +47,7 @@ function cleanupExpiredChallenges(): void {
   let cleaned = 0;
 
   for (const [challenge, timestamp] of globalChallenges.entries()) {
-    if (now - timestamp > CHALLENGE_EXPIRATION_MS) {
+    if (now - timestamp > CHALLENGE_TTL_SECONDS * 1000) {
       globalChallenges.delete(challenge);
       cleaned++;
     }
@@ -61,215 +55,6 @@ function cleanupExpiredChallenges(): void {
 
   if (cleaned > 0) {
     console.log(`Cleaned up ${cleaned} expired challenges (remaining: ${globalChallenges.size})`);
-  }
-}
-
-/**
- * KeysService - Implements tempo.ts Kv interface backed by blockchain
- */
-class KeysService implements Kv.Kv {
-  private publicClient: PublicClient;
-  private walletClient: WalletClient | null = null;
-  private registryAddress: Address;
-  private chain: NetworkConfig['chain'];
-
-  /**
-   * Always uses mainnet PasskeyRegistry — passkey identity is network-agnostic.
-   * Users register once on mainnet and can use any network.
-   */
-  constructor(
-    private env: Pick<
-      Env,
-      | 'JWT_SECRET'
-      | 'JWT_EXPIRATION'
-      | 'MAINNET_PASSKEY_REGISTRY_ADDRESS'
-      | 'MAINNET_RELAYER_PRIVATE_KEY'
-    >
-  ) {
-    const mainnetChain = getTempoChain('mainnet');
-    const mainnetRpcUrl = getRpcUrl(mainnetChain);
-
-    this.registryAddress = env.MAINNET_PASSKEY_REGISTRY_ADDRESS as Address;
-    this.chain = mainnetChain;
-    this.publicClient = createTempoPublicClient(mainnetRpcUrl, this.chain);
-
-    if (env.MAINNET_RELAYER_PRIVATE_KEY) {
-      this.walletClient = createTempoWalletClient(
-        mainnetRpcUrl,
-        env.MAINNET_RELAYER_PRIVATE_KEY,
-        this.chain
-      );
-    }
-  }
-
-  private isOnChainEnabled(): boolean {
-    return !!this.registryAddress && this.registryAddress !== '0x...';
-  }
-
-  async get<T = unknown>(key: string): Promise<T> {
-    // Handle challenge keys - use global map
-    if (key.startsWith('challenge:')) {
-      const challenge = key.replace('challenge:', '');
-      const timestamp = globalChallenges.get(challenge);
-
-      if (timestamp) {
-        const age = Date.now() - timestamp;
-        if (age <= CHALLENGE_EXPIRATION_MS) {
-          return '1' as T;
-        }
-        globalChallenges.delete(challenge);
-      }
-      return undefined as T;
-    }
-
-    // Extract credentialId from key
-    const credentialId = key.replace('credential:', '');
-
-    if (this.isOnChainEnabled()) {
-      try {
-        const credentialIdHash = hashCredentialId(credentialId);
-
-        const result = await this.publicClient.readContract({
-          address: this.registryAddress,
-          abi: PasskeyRegistryABI,
-          functionName: 'getPublicKey',
-          args: [credentialIdHash],
-        });
-
-        const [publicKey, wallet] = result as [Hex, Address, bigint];
-
-        if (publicKey && publicKey !== '0x') {
-          console.log(`Retrieved passkey from chain for wallet: ${wallet}`);
-          return publicKey as T;
-        }
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-        console.error('Failed to read from blockchain:', errorMessage);
-        throw new ExternalServiceError(
-          'Failed to retrieve passkey from blockchain',
-          'PasskeyRegistry'
-        );
-      }
-    }
-
-    console.log(`Passkey not found for credentialId: ${credentialId}`);
-    return undefined as T;
-  }
-
-  async set(key: string, value: unknown): Promise<void> {
-    // Store challenges in global map (persists across requests)
-    if (key.startsWith('challenge:')) {
-      const challenge = key.replace('challenge:', '');
-
-      // Prevent unbounded growth
-      if (globalChallenges.size >= MAX_CHALLENGES) {
-        cleanupExpiredChallenges();
-
-        // If still too many after cleanup, reject
-        if (globalChallenges.size >= MAX_CHALLENGES) {
-          console.warn('Challenge storage at capacity, rejecting new challenge');
-          throw new ServiceUnavailableError('Service temporarily at capacity. Please try again.');
-        }
-      }
-
-      globalChallenges.set(challenge, Date.now());
-      // Cleanup old challenges periodically
-      if (globalChallenges.size % 100 === 0) {
-        cleanupExpiredChallenges();
-      }
-      console.log(
-        `Challenge stored: ${challenge.substring(0, 16)}... (total: ${globalChallenges.size})`
-      );
-      return;
-    }
-
-    const credentialId = key.replace('credential:', '');
-
-    if (!this.isOnChainEnabled()) {
-      console.warn('On-chain storage not configured');
-      throw new ServiceUnavailableError('Passkey registration service not configured');
-    }
-
-    if (!this.walletClient) {
-      throw new ServiceUnavailableError('Relayer not configured for on-chain registration');
-    }
-
-    try {
-      const rawPublicKey =
-        typeof value === 'string'
-          ? value
-          : (value as { publicKey?: string })?.publicKey || JSON.stringify(value);
-
-      const normalizedPublicKey = validateAndNormalizePublicKey(rawPublicKey);
-      const credentialIdHash = hashCredentialId(credentialId);
-
-      console.log(`Registering passkey on-chain for credentialId: ${credentialId}`);
-
-      const hash = await this.walletClient.writeContract({
-        chain: this.chain,
-        account: this.walletClient.account!,
-        address: this.registryAddress,
-        abi: PasskeyRegistryABI,
-        functionName: 'register',
-        args: [credentialIdHash, normalizedPublicKey],
-        nonceKey: randomNonceKey(),
-        nonce: 0,
-      } as any);
-
-      console.log(`Transaction submitted: ${hash}`);
-
-      const receipt = await this.publicClient.waitForTransactionReceipt({
-        hash,
-        confirmations: 1,
-      });
-
-      if (receipt.status === 'success') {
-        console.log(`Passkey registered on-chain. Tx: ${hash}`);
-      } else {
-        throw new Error('Transaction reverted');
-      }
-    } catch (error) {
-      if (error instanceof ServiceUnavailableError || error instanceof BadRequestError) {
-        throw error;
-      }
-
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
-      // Handle specific blockchain errors
-      if (errorMessage.includes('already registered')) {
-        console.log('Passkey already registered on-chain');
-        throw new ConflictError('Passkey already registered');
-      }
-      if (errorMessage.includes('not owner')) {
-        console.error('Wallet not authorized as owner on PasskeyRegistry contract');
-        throw new ServiceUnavailableError('Registration service not configured correctly');
-      }
-      if (errorMessage.includes('key already registered')) {
-        throw new ConflictError('This passkey is already registered');
-      }
-      if (
-        errorMessage.includes('invalid key length') ||
-        errorMessage.includes('Invalid public key')
-      ) {
-        throw new BadRequestError('Invalid passkey format');
-      }
-
-      console.error('Failed to write to blockchain:', errorMessage);
-      throw new ExternalServiceError(
-        'Failed to register passkey. Please try again.',
-        'PasskeyRegistry'
-      );
-    }
-  }
-
-  async delete(key: string): Promise<void> {
-    if (key.startsWith('challenge:')) {
-      const challenge = key.replace('challenge:', '');
-      globalChallenges.delete(challenge);
-      console.log(
-        `Challenge consumed: ${challenge.substring(0, 16)}... (remaining: ${globalChallenges.size})`
-      );
-    }
   }
 }
 
@@ -287,33 +72,292 @@ function deriveWalletAddress(publicKey: string): string {
   }
 }
 
+/**
+ * Create a Kv adapter backed by the PasskeyRegistry smart contract.
+ *
+ * - Challenges are stored in an in-memory Map (same Worker isolate).
+ * - Credentials (public keys) are stored on-chain in the PasskeyRegistry contract.
+ *
+ * This implements the accounts SDK Kv interface:
+ *   get(key) / set(key, value) / delete(key)
+ *
+ * Key prefixes:
+ *   "challenge:<hex>"       → in-memory challenge timestamp
+ *   "credential:<credId>"   → on-chain public key ({ publicKey })
+ */
+function createOnChainKv(
+  env: Pick<Env, 'MAINNET_PASSKEY_REGISTRY_ADDRESS' | 'MAINNET_RELAYER_PRIVATE_KEY'>
+) {
+  const mainnetChain = getTempoChain('mainnet');
+  const mainnetRpcUrl = getRpcUrl(mainnetChain);
+
+  const registryAddress = env.MAINNET_PASSKEY_REGISTRY_ADDRESS as Address;
+  const publicClient: PublicClient = createTempoPublicClient(mainnetRpcUrl, mainnetChain);
+
+  let walletClient: WalletClient | null = null;
+  if (env.MAINNET_RELAYER_PRIVATE_KEY) {
+    walletClient = createTempoWalletClient(
+      mainnetRpcUrl,
+      env.MAINNET_RELAYER_PRIVATE_KEY,
+      mainnetChain
+    );
+  }
+
+  const isOnChainEnabled = (): boolean => !!registryAddress && registryAddress !== '0x...';
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return Kv.from({
+    async get(key: string): Promise<any> {
+      // Challenge keys → in-memory map
+      if (key.startsWith('challenge:')) {
+        const challenge = key.replace('challenge:', '');
+        const timestamp = globalChallenges.get(challenge);
+
+        if (timestamp) {
+          const age = Date.now() - timestamp;
+          if (age <= CHALLENGE_TTL_SECONDS * 1000) {
+            return timestamp;
+          }
+          globalChallenges.delete(challenge);
+        }
+        return undefined;
+      }
+
+      // Credential keys → on-chain lookup
+      const credentialId = key.replace('credential:', '');
+
+      if (!isOnChainEnabled()) {
+        return undefined;
+      }
+
+      try {
+        const credentialIdHash = hashCredentialId(credentialId);
+
+        const result = await publicClient.readContract({
+          address: registryAddress,
+          abi: PasskeyRegistryABI,
+          functionName: 'getPublicKey',
+          args: [credentialIdHash],
+        });
+
+        const [publicKey, wallet] = result as [Hex, Address, bigint];
+
+        if (publicKey && publicKey !== '0x') {
+          console.log(`Retrieved passkey from chain for wallet: ${wallet}`);
+          return { publicKey };
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        console.error('Failed to read from blockchain:', errorMessage);
+        throw new ExternalServiceError(
+          'Failed to retrieve passkey from blockchain',
+          'PasskeyRegistry'
+        );
+      }
+
+      console.log(`Passkey not found for credentialId: ${credentialId}`);
+      return undefined;
+    },
+
+    async set(key: string, value: unknown) {
+      // Challenge keys → in-memory map
+      if (key.startsWith('challenge:')) {
+        const challenge = key.replace('challenge:', '');
+
+        if (globalChallenges.size >= MAX_CHALLENGES) {
+          cleanupExpiredChallenges();
+          if (globalChallenges.size >= MAX_CHALLENGES) {
+            console.warn('Challenge storage at capacity, rejecting new challenge');
+            throw new Error('Service temporarily at capacity. Please try again.');
+          }
+        }
+
+        globalChallenges.set(challenge, value as number);
+        if (globalChallenges.size % 100 === 0) {
+          cleanupExpiredChallenges();
+        }
+        console.log(
+          `Challenge stored: ${challenge.substring(0, 16)}... (total: ${globalChallenges.size})`
+        );
+        return;
+      }
+
+      // Credential keys → on-chain registration
+      const credentialId = key.replace('credential:', '');
+
+      if (!isOnChainEnabled()) {
+        console.warn('On-chain storage not configured');
+        throw new Error('Passkey registration service not configured');
+      }
+
+      if (!walletClient) {
+        throw new Error('Relayer not configured for on-chain registration');
+      }
+
+      try {
+        const publicKey =
+          typeof value === 'object' && value !== null && 'publicKey' in value
+            ? (value as { publicKey: string }).publicKey
+            : typeof value === 'string'
+              ? value
+              : JSON.stringify(value);
+
+        const normalizedPublicKey = validateAndNormalizePublicKey(publicKey);
+        const credentialIdHash = hashCredentialId(credentialId);
+
+        console.log(`Registering passkey on-chain for credentialId: ${credentialId}`);
+
+        const hash = await walletClient.writeContract({
+          chain: mainnetChain,
+          account: walletClient.account!,
+          address: registryAddress,
+          abi: PasskeyRegistryABI,
+          functionName: 'register',
+          args: [credentialIdHash, normalizedPublicKey],
+          nonceKey: randomNonceKey(),
+          nonce: 0,
+        } as any);
+
+        console.log(`Transaction submitted: ${hash}`);
+
+        const receipt = await publicClient.waitForTransactionReceipt({
+          hash,
+          confirmations: 1,
+        });
+
+        if (receipt.status === 'success') {
+          console.log(`Passkey registered on-chain. Tx: ${hash}`);
+        } else {
+          throw new Error('Transaction reverted');
+        }
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+        if (
+          errorMessage.includes('already registered') ||
+          errorMessage.includes('key already registered')
+        ) {
+          console.log('Passkey already registered on-chain');
+          throw new Error('Passkey already registered');
+        }
+        if (errorMessage.includes('not owner')) {
+          console.error('Wallet not authorized as owner on PasskeyRegistry contract');
+          throw new Error('Registration service not configured correctly');
+        }
+        if (
+          errorMessage.includes('invalid key length') ||
+          errorMessage.includes('Invalid public key')
+        ) {
+          throw new Error('Invalid passkey format');
+        }
+
+        console.error('Failed to write to blockchain:', errorMessage);
+        throw new Error('Failed to register passkey. Please try again.');
+      }
+    },
+
+    async delete(key: string) {
+      if (key.startsWith('challenge:')) {
+        const challenge = key.replace('challenge:', '');
+        globalChallenges.delete(challenge);
+        console.log(
+          `Challenge consumed: ${challenge.substring(0, 16)}... (remaining: ${globalChallenges.size})`
+        );
+      }
+    },
+  });
+}
+
+/**
+ * Get the rpId for WebAuthn from the request origin
+ */
+function getRpId(request: Request): string {
+  const origin = request.headers.get('origin') || request.headers.get('referer') || '';
+  try {
+    const url = new URL(origin);
+    const hostname = url.hostname;
+
+    if (hostname === 'localhost' || /^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
+      return hostname;
+    }
+
+    const parts = hostname.split('.');
+    const specialSuffixes = ['pages.dev', 'workers.dev', 'co.uk', 'com.au', 'co.nz'];
+    for (const suffix of specialSuffixes) {
+      if (hostname.endsWith(`.${suffix}`)) {
+        const suffixParts = suffix.split('.').length;
+        return parts.slice(-(suffixParts + 1)).join('.');
+      }
+    }
+
+    return parts.slice(-2).join('.');
+  } catch {
+    return 'localhost';
+  }
+}
+
 const keysRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
 
 /**
- * Handle all /keys/* requests via tempo.ts Handler.keyManager
+ * Handle all /keys/* requests via accounts SDK Handler.webAuthn
  */
 keysRouter.all('/*', async c => {
-  const keysService = new KeysService(c.env);
+  const kv = createOnChainKv(c.env);
+  const rpId = getRpId(c.req.raw);
+  const origin = c.req.header('origin') || 'http://localhost';
 
-  // Create tempo.ts key manager handler
-  const keysHandler = Handler.keyManager({
-    kv: keysService,
+  const handler = Handler.webAuthn({
+    kv,
+    rpId,
+    origin,
+    challengeTtl: CHALLENGE_TTL_SECONDS,
     path: '',
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, X-Tempo-Network',
     },
+    onRegister: (async ({
+      publicKey,
+    }: {
+      credentialId: string;
+      publicKey: string;
+      request: Request;
+    }) => {
+      try {
+        const walletAddress = deriveWalletAddress(publicKey);
+        const token = await generateToken(walletAddress, c.env.JWT_SECRET, c.env.JWT_EXPIRATION);
+        console.log(`Generated JWT token for wallet: ${walletAddress} (register)`);
+        return Response.json({ ...token, walletAddress });
+      } catch (error) {
+        console.error('Failed to generate token on register:', error);
+      }
+    }) as any,
+    onAuthenticate: (async ({
+      publicKey,
+    }: {
+      credentialId: string;
+      publicKey: string;
+      request: Request;
+    }) => {
+      try {
+        const walletAddress = deriveWalletAddress(publicKey);
+        const token = await generateToken(walletAddress, c.env.JWT_SECRET, c.env.JWT_EXPIRATION);
+        console.log(`Generated JWT token for wallet: ${walletAddress} (authenticate)`);
+        return Response.json({ ...token, walletAddress });
+      } catch (error) {
+        console.error('Failed to generate token on authenticate:', error);
+      }
+    }) as any,
   });
 
   // Get the path after /keys/
   const url = new URL(c.req.url);
   const path = url.pathname.replace(/^\/keys\/?/, '');
 
-  // Build the request URL for tempo.ts handler
+  // Build the request URL for the handler
   const requestUrl = `${url.origin}/${path}${url.search}`;
 
-  // Create a fetch Request from the Hono request
   const headers = new Headers();
   c.req.raw.headers.forEach((value, key) => {
     headers.set(key, value);
@@ -331,15 +375,23 @@ keysRouter.all('/*', async c => {
   const fetchRequest = new Request(requestUrl, {
     method: c.req.method,
     headers,
-    body: body,
+    body,
   });
 
-  // Call tempo.ts handler
-  let response: Response;
   try {
-    response = await keysHandler.fetch(fetchRequest);
+    const response = await handler.fetch(fetchRequest);
+    const responseBody = await response.text();
+
+    const responseHeaders = new Headers();
+    response.headers.forEach((value, key) => {
+      responseHeaders.set(key, value);
+    });
+
+    return new Response(responseBody, {
+      status: response.status,
+      headers: responseHeaders,
+    });
   } catch (error) {
-    // Re-throw our custom errors
     if (
       error instanceof ServiceUnavailableError ||
       error instanceof ExternalServiceError ||
@@ -348,77 +400,9 @@ keysRouter.all('/*', async c => {
     ) {
       throw error;
     }
-    console.error('tempo.ts handler error:', error);
-    throw new ExternalServiceError('Passkey service error', 'tempo.ts');
+    console.error('accounts SDK handler error:', error);
+    throw new ExternalServiceError('Passkey service error', 'accounts');
   }
-
-  const responseBody = await response.text();
-
-  // Extract credentialId from path
-  const credentialId = path.split('/')[0];
-
-  // Check if we should inject JWT token
-  const isSuccessful = response.status >= 200 && response.status < 300;
-  const hasCredentialId = Boolean(credentialId);
-  const isExcluded = EXCLUDED_ENDPOINTS.includes(credentialId);
-
-  if (isSuccessful && hasCredentialId && !isExcluded) {
-    let publicKey: string | undefined;
-
-    try {
-      if (c.req.method === 'POST') {
-        // After registration, get the public key from the service
-        publicKey = await keysService.get<string>(`credential:${credentialId}`);
-      } else if (c.req.method === 'GET' && responseBody) {
-        // Parse public key from response
-        try {
-          const data = JSON.parse(responseBody);
-          publicKey = data.publicKey;
-        } catch {
-          // Not JSON or no publicKey field
-        }
-      }
-
-      if (publicKey) {
-        // Derive wallet address from public key
-        const walletAddress = deriveWalletAddress(publicKey);
-
-        // Generate JWT token
-        const token = await generateToken(walletAddress, c.env.JWT_SECRET, c.env.JWT_EXPIRATION);
-
-        console.log(`Generated JWT token for wallet: ${walletAddress}`);
-
-        // Return response in tempo.ts expected format (NOT wrapped)
-        // The frontend KeyManager expects { publicKey, accessToken, expiresIn } directly
-        return c.json({
-          publicKey,
-          ...token,
-        });
-      }
-    } catch (error) {
-      // Re-throw our custom errors
-      if (
-        error instanceof BadRequestError ||
-        error instanceof ServiceUnavailableError ||
-        error instanceof ExternalServiceError ||
-        error instanceof ConflictError
-      ) {
-        throw error;
-      }
-      console.error('Failed to create authenticated response:', error);
-    }
-  }
-
-  // Return original response from tempo.ts handler
-  const responseHeaders = new Headers();
-  response.headers.forEach((value, key) => {
-    responseHeaders.set(key, value);
-  });
-
-  return new Response(responseBody, {
-    status: response.status,
-    headers: responseHeaders,
-  });
 });
 
 export default keysRouter;

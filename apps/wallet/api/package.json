@@ -25,6 +25,7 @@
     "@remix-run/route-pattern": "^0.15.3",
     "@remix-run/session": "^0.4.0",
     "drizzle-orm": "^0.38.3",
+    "accounts": "^0.5.8",
     "hono": "^4.6.16",
     "tempo.ts": "^0.14.2",
     "viem": "^2.47.10",
