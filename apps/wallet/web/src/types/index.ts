@@ -1,7 +1,5 @@
 import type { Address } from 'viem';
 
-export * from './wallet-connect';
-
 /**
  * Wallet connection type
  */

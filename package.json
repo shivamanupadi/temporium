@@ -19,7 +19,7 @@
     "reset": "yarn clean && yarn install",
     "check:push": "yarn lint && yarn build",
     "kill-ports": "lsof -ti:8008,8009,8012 | xargs kill -9 || true",
-    "dev:wallet": "turbo run dev --filter=@temporium/wallet-api --filter=@temporium/wallet-web --filter=@temporium/wallet-demo-dapp",
+    "dev:wallet": "turbo run dev --filter=@temporium/wallet-api --filter=@temporium/wallet-web",
     "build:wallet": "turbo run build --filter=@temporium/wallet-api --filter=@temporium/wallet-web",
     "postinstall": "patch-package && node scripts/patch-ox.js"
   },

@@ -158,21 +158,3 @@ export const RECURRING_INTERVAL_PRESETS = [
   { label: 'Weekly', seconds: 604800 },
   { label: 'Monthly', seconds: 2592000 },
 ] as const;
-
-/**
- * Wallet Connect Protocol Version
- */
-export const WALLET_CONNECT_VERSION = '1.0.0';
-
-/**
- * Storage keys
- */
-export const STORAGE_KEYS = {
-  CONNECTED_APPS: 'temporium_connected_apps',
-  PENDING_REQUESTS: 'temporium_pending_requests',
-} as const;
-
-/**
- * Wallet URL for WalletConnect popup (self-host popups)
- */
-export const WALLET_URL = import.meta.env.VITE_WALLET_URL || window.location.origin;

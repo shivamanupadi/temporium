@@ -26,7 +26,6 @@
     "@tanstack/react-query": "^5.90.12",
     "@tanstack/react-router": "^1.140.1",
     "@temporium/shared-ui": "*",
-    "@temporium/wallet-connect": "*",
     "accounts": "^0.5.8",
     "canvas-confetti": "^1.9.4",
     "class-variance-authority": "^0.7.1",
