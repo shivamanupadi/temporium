@@ -85,22 +85,16 @@ function deriveWalletAddress(publicKey: string): string {
  *   "challenge:<hex>"       → in-memory challenge timestamp
  *   "credential:<credId>"   → on-chain public key ({ publicKey })
  */
-function createOnChainKv(
-  env: Pick<Env, 'MAINNET_PASSKEY_REGISTRY_ADDRESS' | 'MAINNET_RELAYER_PRIVATE_KEY'>
-) {
+function createOnChainKv(env: Pick<Env, 'PASSKEY_REGISTRY_CONTRACT' | 'RELAYER_PRIVATE_KEY'>) {
   const mainnetChain = getTempoChain('mainnet');
   const mainnetRpcUrl = getRpcUrl(mainnetChain);
 
-  const registryAddress = env.MAINNET_PASSKEY_REGISTRY_ADDRESS as Address;
+  const registryAddress = env.PASSKEY_REGISTRY_CONTRACT as Address;
   const publicClient: PublicClient = createTempoPublicClient(mainnetRpcUrl, mainnetChain);
 
   let walletClient: WalletClient | null = null;
-  if (env.MAINNET_RELAYER_PRIVATE_KEY) {
-    walletClient = createTempoWalletClient(
-      mainnetRpcUrl,
-      env.MAINNET_RELAYER_PRIVATE_KEY,
-      mainnetChain
-    );
+  if (env.RELAYER_PRIVATE_KEY) {
+    walletClient = createTempoWalletClient(mainnetRpcUrl, env.RELAYER_PRIVATE_KEY, mainnetChain);
   }
 
   const isOnChainEnabled = (): boolean => !!registryAddress && registryAddress !== '0x...';

@@ -12,7 +12,6 @@
       "env": [
         "JWT_SECRET",
         "JWT_EXPIRATION",
-        "ALLOWED_ORIGINS",
         "VITE_API_URL",
         "VITE_TEMPO_NETWORK",
         "VITE_WALLET_URL"
@@ -24,7 +23,6 @@
       "env": [
         "JWT_SECRET",
         "JWT_EXPIRATION",
-        "ALLOWED_ORIGINS",
         "VITE_API_URL",
         "VITE_TEMPO_NETWORK",
         "VITE_WALLET_URL"

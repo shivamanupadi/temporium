@@ -32,11 +32,10 @@ export async function networkMiddleware(
 
   const recurringPaymentsAddress =
     network === 'mainnet'
-      ? c.env.MAINNET_RECURRING_PAYMENTS_ADDRESS
-      : c.env.TESTNET_RECURRING_PAYMENTS_ADDRESS;
+      ? c.env.RECURRING_PAYMENTS_MAINNET_CONTRACT
+      : c.env.RECURRING_PAYMENTS_TESTNET_CONTRACT;
 
-  const relayerPrivateKey =
-    network === 'mainnet' ? c.env.MAINNET_RELAYER_PRIVATE_KEY : c.env.TESTNET_RELAYER_PRIVATE_KEY;
+  const relayerPrivateKey = c.env.RELAYER_PRIVATE_KEY;
 
   const networkConfig: NetworkConfig = {
     network,

@@ -29,11 +29,8 @@ export function createApp() {
   // Pretty JSON in development
   app.use('*', prettyJSON());
 
-  // CORS - applied per-request to access env
-  app.use('*', async (c, next) => {
-    const corsMiddleware = createCorsMiddleware(c.env.ALLOWED_ORIGINS || '*');
-    return corsMiddleware(c, next);
-  });
+  // CORS
+  app.use('*', createCorsMiddleware());
 
   // Network resolution from X-Tempo-Network header
   app.use('*', networkMiddleware);

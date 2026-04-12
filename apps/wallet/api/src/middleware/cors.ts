@@ -1,10 +1,10 @@
 import { cors } from 'hono/cors';
 
-export function createCorsMiddleware(allowedOrigins: string) {
-  const origins = allowedOrigins === '*' ? '*' : allowedOrigins.split(',').map(o => o.trim());
-
+// Wildcard CORS is intentional — the API is fronted by its own auth + JWT
+// checks, and the set of legitimate callers isn't known at deploy time.
+export function createCorsMiddleware() {
   return cors({
-    origin: origins,
+    origin: '*',
     allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization', 'X-Tempo-Network'],
     // `WWW-Authenticate` carries the mppx 402 challenge; `Payment-Receipt`

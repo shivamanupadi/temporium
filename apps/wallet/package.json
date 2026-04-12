@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "turbo run dev --filter=@temporium/wallet-api --filter=@temporium/wallet-web",
     "build": "turbo run build --filter=@temporium/wallet-api --filter=@temporium/wallet-web",
-    "type-check": "turbo run type-check --filter=@temporium/wallet-api --filter=@temporium/wallet-web"
+    "type-check": "turbo run type-check --filter=@temporium/wallet-api --filter=@temporium/wallet-web",
+    "kill-ports": "lsof -ti:8008,8009,8012 | xargs kill -9 || true"
   }
 }

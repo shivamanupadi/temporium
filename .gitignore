@@ -16,6 +16,8 @@ out
 # Wrangler
 .wrangler
 .dev.vars
+.dev.vars.doppler
+.dev.vars.bak
 
 # Logs
 *.log

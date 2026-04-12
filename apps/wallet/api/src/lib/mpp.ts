@@ -17,7 +17,7 @@ import type { Address } from 'viem';
 import type { Env } from '../types/env';
 import type { PaymentLink } from '../db/schema';
 
-/** Per-network treasury + fee rate resolution. */
+/** Platform revenue wallet + fee rate resolution. */
 export interface PlatformFeeConfig {
   /** Fee rate in basis points (100 = 1%). Zero means fee is dormant. */
   feeBps: number;
@@ -26,17 +26,15 @@ export interface PlatformFeeConfig {
 }
 
 /**
- * Read platform-fee settings out of env for the given network.
- * At launch, `PLATFORM_FEE_BPS` defaults to "0" and treasury strings are empty —
- * the pay handler will skip splits entirely in that state.
+ * Read platform-fee settings out of env. At launch, `PLATFORM_FEE_BPS`
+ * defaults to "0" and `PLATFORM_REVENUE_ADDRESS` is empty — the pay
+ * handler will skip splits entirely in that state. The revenue wallet
+ * is shared across networks (same address for testnet and mainnet).
  */
-export function getPlatformFeeConfig(env: Env, network: 'testnet' | 'mainnet'): PlatformFeeConfig {
+export function getPlatformFeeConfig(env: Env): PlatformFeeConfig {
   const raw = env.PLATFORM_FEE_BPS ?? '0';
   const feeBps = Number.isFinite(Number(raw)) ? Number(raw) : 0;
-  const treasury =
-    network === 'mainnet'
-      ? (env.MAINNET_PLATFORM_TREASURY_ADDRESS ?? '')
-      : (env.TESTNET_PLATFORM_TREASURY_ADDRESS ?? '');
+  const treasury = env.PLATFORM_REVENUE_ADDRESS ?? '';
   return { feeBps, treasury };
 }
 

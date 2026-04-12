@@ -1,0 +1,1 @@
+cd apps/wallet/api && yarn db:check

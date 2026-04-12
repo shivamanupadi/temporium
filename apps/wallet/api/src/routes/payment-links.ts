@@ -46,7 +46,7 @@ const paymentLinksRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
  */
 paymentLinksRouter.get('/config', async c => {
   const network = c.get('networkConfig').network;
-  const { feeBps } = getPlatformFeeConfig(c.env, network);
+  const { feeBps } = getPlatformFeeConfig(c.env);
   return success(c, { feeBps, network });
 });
 
@@ -82,7 +82,7 @@ paymentLinksRouter.get('/public/:id', zValidator('param', idParamSchema), async 
 
   const fulfilled = link.status !== 'active' || (!link.reusable && paymentCount >= 1);
 
-  const { feeBps } = getPlatformFeeConfig(c.env, link.network as 'testnet' | 'mainnet');
+  const { feeBps } = getPlatformFeeConfig(c.env);
 
   return success(c, {
     id: link.id,
@@ -147,8 +147,7 @@ paymentLinksRouter.post('/public/:id/pay', zValidator('param', idParamSchema), a
   }
 
   // --- Fee config ---------------------------------------------------------
-  const network = link.network as 'testnet' | 'mainnet';
-  const { feeBps, treasury } = getPlatformFeeConfig(c.env, network);
+  const { feeBps, treasury } = getPlatformFeeConfig(c.env);
   if (feeBps > 0 && !treasury) {
     throw new InternalError('Platform fee is configured but no treasury address is set');
   }

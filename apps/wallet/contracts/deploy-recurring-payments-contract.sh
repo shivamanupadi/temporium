@@ -12,7 +12,7 @@ FEE_TOKEN="0x20c0000000000000000000000000000000000000"  # pathUSD (chain default
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GATEWAY_ROOT="$(dirname "$SCRIPT_DIR")"
 DEV_VARS_FILE="$GATEWAY_ROOT/api/.dev.vars"
-WRANGLER_FILE="$GATEWAY_ROOT/api/wrangler.toml"
+# Frontend (Vite) env — separate from the Doppler-managed API env.
 WEB_ENV_FILE="$GATEWAY_ROOT/web/.env"
 
 # Parse flags
@@ -21,6 +21,10 @@ NETWORK=""
 OP_ITEM=""
 while [[ $# -gt 0 ]]; do
     case $1 in
+        --local|-l)
+            DEPLOY_TARGET="local"
+            shift
+            ;;
         --dev|-d)
             DEPLOY_TARGET="dev"
             shift
@@ -38,22 +42,31 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --help|-h)
-            echo "Usage: ./deploy-recurring.sh <--dev|-d|--deploy> <--testnet|-t|--mainnet|-m>"
+            echo "Usage: ./deploy-recurring-payments-contract.sh <--local|-l|--dev|-d|--deploy> <--testnet|-t|--mainnet|-m>"
             echo ""
-            echo "Deploys RecurringPayments to Tempo and updates wallet config."
+            echo "Deploys RecurringPayments to Tempo and updates the per-network"
+            echo "contract address in the chosen layer."
             echo ""
             echo "Target (required):"
-            echo "  --dev, -d       Deploy contract, update .dev.vars + web .env (local dev)"
-            echo "  --deploy        Deploy contract, update wrangler.toml [vars]"
+            echo "  --local, -l     Write to .dev.vars (personal override, not"
+            echo "                  synced anywhere — visible only on this machine)"
+            echo "  --dev, -d       Push to Doppler dev config (visible to the"
+            echo "                  whole team via yarn dev)"
+            echo "  --deploy        Push to Doppler prd config, then sync"
+            echo "                  Doppler → Cloudflare Worker secrets (production)"
+            echo ""
+            echo "Both --local and --dev also update apps/wallet/web/.env for Vite"
+            echo "(the frontend does not have its own Doppler project yet)."
             echo ""
             echo "Network (required):"
             echo "  --testnet, -t   Deploy to Tempo Testnet (Moderato)"
             echo "  --mainnet, -m   Deploy to Tempo Mainnet"
             echo ""
             echo "Examples:"
-            echo "  ./deploy-recurring.sh --dev --testnet"
-            echo "  ./deploy-recurring.sh --deploy --testnet"
-            echo "  ./deploy-recurring.sh --deploy --mainnet"
+            echo "  ./deploy-recurring-payments-contract.sh --local --testnet"
+            echo "  ./deploy-recurring-payments-contract.sh --dev --testnet"
+            echo "  ./deploy-recurring-payments-contract.sh --deploy --testnet"
+            echo "  ./deploy-recurring-payments-contract.sh --deploy --mainnet"
             exit 0
             ;;
         *)
@@ -64,8 +77,9 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Select 1Password item based on deploy target (dev wallet for local, prod wallet for deploy)
-if [ "$DEPLOY_TARGET" = "dev" ]; then
+# Select 1Password item based on deploy target.
+# local + dev use the development wallet; deploy uses the production wallet.
+if [ "$DEPLOY_TARGET" = "local" ] || [ "$DEPLOY_TARGET" = "dev" ]; then
     OP_ITEM="Temporium Wallet Contract Owner Development"
 elif [ "$DEPLOY_TARGET" = "deploy" ]; then
     OP_ITEM="Temporium Wallet Contract Owner Production"
@@ -75,12 +89,13 @@ fi
 if [ -z "$DEPLOY_TARGET" ] || [ -z "$NETWORK" ]; then
     echo "Error: You must specify both target and network"
     echo ""
-    echo "Usage: ./deploy-recurring.sh <--dev|-d|--deploy> <--testnet|-t|--mainnet|-m>"
+    echo "Usage: ./deploy-recurring-payments-contract.sh <--local|-l|--dev|-d|--deploy> <--testnet|-t|--mainnet|-m>"
     echo ""
     echo "Examples:"
-    echo "  ./deploy-recurring.sh --dev --testnet"
-    echo "  ./deploy-recurring.sh --deploy --testnet"
-    echo "  ./deploy-recurring.sh --deploy --mainnet"
+    echo "  ./deploy-recurring-payments-contract.sh --local --testnet"
+    echo "  ./deploy-recurring-payments-contract.sh --dev --testnet"
+    echo "  ./deploy-recurring-payments-contract.sh --deploy --testnet"
+    echo "  ./deploy-recurring-payments-contract.sh --deploy --mainnet"
     exit 1
 fi
 
@@ -89,13 +104,13 @@ if [ "$NETWORK" = "testnet" ]; then
     RPC_URL="$TESTNET_RPC_URL"
     CHAIN_ID="$TESTNET_CHAIN_ID"
     NETWORK_LABEL="Testnet (Moderato)"
-    CONTRACT_VAR="TESTNET_RECURRING_PAYMENTS_ADDRESS"
+    CONTRACT_VAR="RECURRING_PAYMENTS_TESTNET_CONTRACT"
     VITE_VAR="VITE_RECURRING_PAYMENTS_ADDRESS"
 else
     RPC_URL="$MAINNET_RPC_URL"
     CHAIN_ID="$MAINNET_CHAIN_ID"
     NETWORK_LABEL="Mainnet"
-    CONTRACT_VAR="MAINNET_RECURRING_PAYMENTS_ADDRESS"
+    CONTRACT_VAR="RECURRING_PAYMENTS_MAINNET_CONTRACT"
     VITE_VAR="VITE_RECURRING_PAYMENTS_ADDRESS"
 fi
 
@@ -153,15 +168,15 @@ echo ""
 echo "=== Deployment Complete ==="
 echo "Contract Address: $CONTRACT_ADDRESS"
 
-# Update config files based on target
-if [ "$DEPLOY_TARGET" = "dev" ]; then
+# Route the new contract address to the chosen layer:
+#   local  → .dev.vars (personal override, not synced anywhere)
+#   dev    → Doppler dev config (team-shared)
+#   deploy → Doppler prd config + sync to Cloudflare Worker secrets
+if [ "$DEPLOY_TARGET" = "local" ]; then
     echo ""
-    echo "Updating $DEV_VARS_FILE..."
-
-    # Create .dev.vars if it doesn't exist
+    echo "Updating $DEV_VARS_FILE (personal override, not synced to Doppler)..."
     touch "$DEV_VARS_FILE"
 
-    # Update per-network RECURRING_PAYMENTS_ADDRESS in .dev.vars
     if grep -q "^${CONTRACT_VAR}=" "$DEV_VARS_FILE"; then
         sed -i '' "s|^${CONTRACT_VAR}=.*|${CONTRACT_VAR}=\"$CONTRACT_ADDRESS\"|" "$DEV_VARS_FILE"
     else
@@ -171,9 +186,26 @@ if [ "$DEPLOY_TARGET" = "dev" ]; then
     echo "Updated .dev.vars:"
     echo "  ${CONTRACT_VAR}=$CONTRACT_ADDRESS"
 
-    # Update web .env for Vite
+else
+    if [ "$DEPLOY_TARGET" = "dev" ]; then
+        DOPPLER_CONFIG="dev"
+    else
+        DOPPLER_CONFIG="prd"
+    fi
+
     echo ""
-    echo "Updating $WEB_ENV_FILE..."
+    echo "Pushing ${CONTRACT_VAR} to Doppler (temporium-api / $DOPPLER_CONFIG)..."
+    doppler secrets set "${CONTRACT_VAR}=$CONTRACT_ADDRESS" \
+        -p temporium-api -c "$DOPPLER_CONFIG" --no-interactive
+    echo "Doppler $DOPPLER_CONFIG config updated"
+fi
+
+# Frontend (Vite) reads from apps/wallet/web/.env since the web app doesn't
+# have its own Doppler project yet. Update for any laptop-facing target
+# (--local or --dev); production frontend builds pick up env via CI.
+if [ "$DEPLOY_TARGET" = "local" ] || [ "$DEPLOY_TARGET" = "dev" ]; then
+    echo ""
+    echo "Updating $WEB_ENV_FILE for Vite..."
     touch "$WEB_ENV_FILE"
 
     if grep -q "^${VITE_VAR}=" "$WEB_ENV_FILE"; then
@@ -184,37 +216,25 @@ if [ "$DEPLOY_TARGET" = "dev" ]; then
 
     echo "Updated web .env:"
     echo "  ${VITE_VAR}=$CONTRACT_ADDRESS"
+fi
 
-elif [ "$DEPLOY_TARGET" = "deploy" ]; then
+# For production deploys, also sync Doppler → Cloudflare Worker secrets so
+# the live worker picks up the new contract address on its next request.
+if [ "$DEPLOY_TARGET" = "deploy" ]; then
     echo ""
-    echo "Updating wrangler.toml [vars]..."
-
-    if [ ! -f "$WRANGLER_FILE" ]; then
-        echo "Error: $WRANGLER_FILE not found"
-        exit 1
-    fi
-
-    # Update per-network RECURRING_PAYMENTS_ADDRESS under [vars]
-    if grep -q "^${CONTRACT_VAR}" "$WRANGLER_FILE"; then
-        sed -i '' "s|^${CONTRACT_VAR} = \".*\"|${CONTRACT_VAR} = \"$CONTRACT_ADDRESS\"|" "$WRANGLER_FILE"
-    else
-        # Add under [vars] section
-        sed -i '' "/^\[vars\]/a\\
-${CONTRACT_VAR} = \"$CONTRACT_ADDRESS\"
-" "$WRANGLER_FILE"
-    fi
-
-    echo "Updated wrangler.toml [vars]:"
-    echo "  ${CONTRACT_VAR} = \"$CONTRACT_ADDRESS\""
+    echo "Syncing Doppler → Cloudflare Worker secrets..."
+    cd "$GATEWAY_ROOT/api"
+    yarn secrets:prod:sync
+    echo "Worker secrets synced"
 fi
 
 echo ""
 echo "Done!"
 echo ""
 echo "Next steps:"
-if [ "$DEPLOY_TARGET" = "dev" ]; then
+if [ "$DEPLOY_TARGET" = "local" ] || [ "$DEPLOY_TARGET" = "dev" ]; then
     echo "  cd apps/wallet/api && yarn dev"
     echo "  cd apps/wallet/web && yarn dev"
 else
-    echo "  cd apps/wallet/api && wrangler deploy"
+    echo "  cd apps/wallet/api && yarn worker:prod:deploy"
 fi

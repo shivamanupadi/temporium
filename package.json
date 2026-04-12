@@ -18,12 +18,13 @@
     "format": "turbo run format",
     "reset": "yarn clean && yarn install",
     "check:push": "yarn lint && yarn build",
-    "kill-ports": "lsof -ti:8008,8009,8012 | xargs kill -9 || true",
     "dev:wallet": "turbo run dev --filter=@temporium/wallet-api --filter=@temporium/wallet-web",
     "build:wallet": "turbo run build --filter=@temporium/wallet-api --filter=@temporium/wallet-web",
-    "postinstall": "patch-package && node scripts/patch-ox.js"
+    "postinstall": "patch-package && node scripts/patch-ox.js",
+    "prepare": "husky"
   },
   "devDependencies": {
+    "husky": "^9.1.7",
     "patch-package": "^8.0.0",
     "prettier": "^3.2.5",
     "rimraf": "^5.0.5",

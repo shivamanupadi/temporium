@@ -9,7 +9,7 @@ const contractsRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
  */
 contractsRouter.get('/', c => {
   const { chain, rpcUrl, explorerUrl, recurringPaymentsAddress } = c.get('networkConfig');
-  const passkeyRegistryAddress = c.env.MAINNET_PASSKEY_REGISTRY_ADDRESS;
+  const passkeyRegistryAddress = c.env.PASSKEY_REGISTRY_CONTRACT;
   const mainnetExplorerUrl = 'https://explore.tempo.xyz';
 
   return c.json({

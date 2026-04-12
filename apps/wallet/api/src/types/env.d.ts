@@ -23,23 +23,19 @@ export interface Env {
   SCHEDULED_TX: DurableObjectNamespace;
   RECURRING_PAYMENT: DurableObjectNamespace;
 
-  // Environment Variables
-  ALLOWED_ORIGINS: string;
-
   // JWT config (shared across networks)
   JWT_EXPIRATION: string;
 
-  // Passkey registry (mainnet only — identity is network-agnostic)
-  MAINNET_PASSKEY_REGISTRY_ADDRESS: string;
+  // Passkey registry — identity is network-agnostic, always resolved on mainnet.
+  PASSKEY_REGISTRY_CONTRACT: string;
 
   // Per-network recurring payments contract addresses
-  TESTNET_RECURRING_PAYMENTS_ADDRESS: string;
-  MAINNET_RECURRING_PAYMENTS_ADDRESS: string;
+  RECURRING_PAYMENTS_TESTNET_CONTRACT: string;
+  RECURRING_PAYMENTS_MAINNET_CONTRACT: string;
 
   // Payment links — platform fee (dormant at launch; flip to enable)
   PLATFORM_FEE_BPS: string; // basis points as string, e.g. "100" for 1%, "0" for dormant
-  TESTNET_PLATFORM_TREASURY_ADDRESS: string; // fee recipient on testnet
-  MAINNET_PLATFORM_TREASURY_ADDRESS: string; // fee recipient on mainnet
+  PLATFORM_REVENUE_ADDRESS: string; // fee recipient (shared across networks)
 
   // Secrets (set via wrangler secret put)
   JWT_SECRET: string;
@@ -50,8 +46,12 @@ export interface Env {
    * verify, mppx rejects the credential with an "invalid-challenge" error.
    */
   MPP_SECRET_KEY: string;
-  TESTNET_RELAYER_PRIVATE_KEY: string;
-  MAINNET_RELAYER_PRIVATE_KEY: string;
+  /**
+   * Relayer EOA used to sign recurring-payment executions and passkey
+   * registry writes. Chain-agnostic — the same EOA signs for both
+   * testnet and mainnet (chain ID lives in the tx payload, not the key).
+   */
+  RELAYER_PRIVATE_KEY: string;
 }
 
 /**

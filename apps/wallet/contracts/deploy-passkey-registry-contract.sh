@@ -12,7 +12,6 @@ FEE_TOKEN="0x20c0000000000000000000000000000000000000"  # pathUSD (chain default
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 GATEWAY_ROOT="$(dirname "$SCRIPT_DIR")"
 DEV_VARS_FILE="$GATEWAY_ROOT/api/.dev.vars"
-WRANGLER_FILE="$GATEWAY_ROOT/api/wrangler.toml"
 
 # Parse flags
 DEPLOY_TARGET=""
@@ -20,6 +19,10 @@ NETWORK=""
 OP_ITEM=""
 while [[ $# -gt 0 ]]; do
     case $1 in
+        --local|-l)
+            DEPLOY_TARGET="local"
+            shift
+            ;;
         --dev|-d)
             DEPLOY_TARGET="dev"
             shift
@@ -37,26 +40,31 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         --help|-h)
-            echo "Usage: ./deploy.sh <--dev|-d|--deploy> <--testnet|-t|--mainnet|-m>"
+            echo "Usage: ./deploy-passkey-registry-contract.sh <--local|-l|--dev|-d|--deploy> <--testnet|-t|--mainnet|-m>"
             echo ""
-            echo "Deploys PasskeyRegistry to Tempo and updates wallet config."
+            echo "Deploys PasskeyRegistry to Tempo and updates contract address"
+            echo "+ relayer key in the chosen layer."
             echo ""
             echo "Target (required):"
-            echo "  --dev, -d       Deploy contract, update .dev.vars (local dev)"
-            echo "  --deploy        Deploy contract, update wrangler.toml [vars]"
-            echo "                  and set wrangler secrets"
+            echo "  --local, -l     Write to .dev.vars (personal override, not"
+            echo "                  synced anywhere — visible only on this machine)"
+            echo "  --dev, -d       Push to Doppler dev config (visible to the"
+            echo "                  whole team via yarn dev)"
+            echo "  --deploy        Push to Doppler prd config, then sync"
+            echo "                  Doppler → Cloudflare Worker secrets (production)"
             echo ""
             echo "Network (required):"
             echo "  --testnet, -t   Deploy to Tempo Testnet (Moderato)"
             echo "  --mainnet, -m   Deploy to Tempo Mainnet"
             echo ""
             echo "Examples:"
-            echo "  ./deploy.sh --dev --testnet       # Local dev against testnet"
-            echo "  ./deploy.sh --deploy --testnet    # Deploy testnet contract + update worker"
-            echo "  ./deploy.sh --deploy --mainnet    # Deploy mainnet contract + update worker"
+            echo "  ./deploy-passkey-registry-contract.sh --local --testnet     # Just my laptop"
+            echo "  ./deploy-passkey-registry-contract.sh --dev --testnet       # Team dev env"
+            echo "  ./deploy-passkey-registry-contract.sh --deploy --testnet    # Production testnet deploy"
+            echo "  ./deploy-passkey-registry-contract.sh --deploy --mainnet    # Production mainnet deploy"
             echo ""
             echo "Worker deploy (after contract deploy):"
-            echo "  wrangler deploy"
+            echo "  cd apps/wallet/api && yarn worker:prod:deploy"
             exit 0
             ;;
         *)
@@ -67,8 +75,9 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Select 1Password item based on deploy target (dev wallet for local, prod wallet for deploy)
-if [ "$DEPLOY_TARGET" = "dev" ]; then
+# Select 1Password item based on deploy target.
+# local + dev use the development wallet; deploy uses the production wallet.
+if [ "$DEPLOY_TARGET" = "local" ] || [ "$DEPLOY_TARGET" = "dev" ]; then
     OP_ITEM="Temporium Wallet Contract Owner Development"
 elif [ "$DEPLOY_TARGET" = "deploy" ]; then
     OP_ITEM="Temporium Wallet Contract Owner Production"
@@ -78,12 +87,13 @@ fi
 if [ -z "$DEPLOY_TARGET" ] || [ -z "$NETWORK" ]; then
     echo "Error: You must specify both target and network"
     echo ""
-    echo "Usage: ./deploy.sh <--dev|-d|--deploy> <--testnet|-t|--mainnet|-m>"
+    echo "Usage: ./deploy-passkey-registry-contract.sh <--local|-l|--dev|-d|--deploy> <--testnet|-t|--mainnet|-m>"
     echo ""
     echo "Examples:"
-    echo "  ./deploy.sh --dev --testnet"
-    echo "  ./deploy.sh --deploy --testnet"
-    echo "  ./deploy.sh --deploy --mainnet"
+    echo "  ./deploy-passkey-registry-contract.sh --local --testnet"
+    echo "  ./deploy-passkey-registry-contract.sh --dev --testnet"
+    echo "  ./deploy-passkey-registry-contract.sh --deploy --testnet"
+    echo "  ./deploy-passkey-registry-contract.sh --deploy --mainnet"
     exit 1
 fi
 
@@ -92,12 +102,10 @@ if [ "$NETWORK" = "testnet" ]; then
     RPC_URL="$TESTNET_RPC_URL"
     CHAIN_ID="$TESTNET_CHAIN_ID"
     NETWORK_LABEL="Testnet (Moderato)"
-    RELAYER_SECRET="TESTNET_RELAYER_PRIVATE_KEY"
 else
     RPC_URL="$MAINNET_RPC_URL"
     CHAIN_ID="$MAINNET_CHAIN_ID"
     NETWORK_LABEL="Mainnet"
-    RELAYER_SECRET="MAINNET_RELAYER_PRIVATE_KEY"
 fi
 
 echo "=== PasskeyRegistry Deployment (Gateway v1) ==="
@@ -154,61 +162,64 @@ echo ""
 echo "=== Deployment Complete ==="
 echo "Contract Address: $CONTRACT_ADDRESS"
 
-# Update config files based on target
-if [ "$DEPLOY_TARGET" = "dev" ]; then
+# Route the new contract address + relayer key to the chosen layer:
+#   local  → .dev.vars (personal override, not synced anywhere)
+#   dev    → Doppler dev config (team-shared)
+#   deploy → Doppler prd config + sync to Cloudflare Worker secrets
+if [ "$DEPLOY_TARGET" = "local" ]; then
     echo ""
-    echo "Updating $DEV_VARS_FILE..."
-
-    # Create .dev.vars if it doesn't exist
+    echo "Updating $DEV_VARS_FILE (personal override, not synced to Doppler)..."
     touch "$DEV_VARS_FILE"
 
-    # Update per-network PASSKEY_REGISTRY_ADDRESS
-    if grep -q "^MAINNET_PASSKEY_REGISTRY_ADDRESS=" "$DEV_VARS_FILE"; then
-        sed -i '' "s|^MAINNET_PASSKEY_REGISTRY_ADDRESS=.*|MAINNET_PASSKEY_REGISTRY_ADDRESS=\"$CONTRACT_ADDRESS\"|" "$DEV_VARS_FILE"
+    if grep -q "^PASSKEY_REGISTRY_CONTRACT=" "$DEV_VARS_FILE"; then
+        sed -i '' "s|^PASSKEY_REGISTRY_CONTRACT=.*|PASSKEY_REGISTRY_CONTRACT=\"$CONTRACT_ADDRESS\"|" "$DEV_VARS_FILE"
     else
-        echo "MAINNET_PASSKEY_REGISTRY_ADDRESS=\"$CONTRACT_ADDRESS\"" >> "$DEV_VARS_FILE"
+        echo "PASSKEY_REGISTRY_CONTRACT=\"$CONTRACT_ADDRESS\"" >> "$DEV_VARS_FILE"
     fi
 
-    # Update per-network RELAYER_PRIVATE_KEY
-    if grep -q "^${RELAYER_SECRET}=" "$DEV_VARS_FILE"; then
-        sed -i '' "s|^${RELAYER_SECRET}=.*|${RELAYER_SECRET}=\"$PRIVATE_KEY\"|" "$DEV_VARS_FILE"
+    if grep -q "^RELAYER_PRIVATE_KEY=" "$DEV_VARS_FILE"; then
+        sed -i '' "s|^RELAYER_PRIVATE_KEY=.*|RELAYER_PRIVATE_KEY=\"$PRIVATE_KEY\"|" "$DEV_VARS_FILE"
     else
-        echo "${RELAYER_SECRET}=\"$PRIVATE_KEY\"" >> "$DEV_VARS_FILE"
+        echo "RELAYER_PRIVATE_KEY=\"$PRIVATE_KEY\"" >> "$DEV_VARS_FILE"
     fi
 
     echo "Updated .dev.vars:"
-    echo "  MAINNET_PASSKEY_REGISTRY_ADDRESS=$CONTRACT_ADDRESS"
-    echo "  ${RELAYER_SECRET}=<updated>"
+    echo "  PASSKEY_REGISTRY_CONTRACT=$CONTRACT_ADDRESS"
+    echo "  RELAYER_PRIVATE_KEY=<updated>"
 
-elif [ "$DEPLOY_TARGET" = "deploy" ]; then
-    echo ""
-    echo "Updating wrangler.toml [vars]..."
-
-    if [ ! -f "$WRANGLER_FILE" ]; then
-        echo "Error: $WRANGLER_FILE not found"
-        exit 1
+else
+    if [ "$DEPLOY_TARGET" = "dev" ]; then
+        DOPPLER_CONFIG="dev"
+    else
+        DOPPLER_CONFIG="prd"
     fi
 
-    # Update per-network PASSKEY_REGISTRY_ADDRESS under [vars]
-    sed -i '' "s|^MAINNET_PASSKEY_REGISTRY_ADDRESS = \".*\"|MAINNET_PASSKEY_REGISTRY_ADDRESS = \"$CONTRACT_ADDRESS\"|" "$WRANGLER_FILE"
-
-    echo "Updated wrangler.toml [vars]:"
-    echo "  MAINNET_PASSKEY_REGISTRY_ADDRESS = \"$CONTRACT_ADDRESS\""
-
-    # Set secret (no -e flag — single worker)
     echo ""
-    echo "Setting wrangler secret ${RELAYER_SECRET}..."
-    cd "$GATEWAY_ROOT/api"
-    echo "$PRIVATE_KEY" | npx wrangler secret put "$RELAYER_SECRET"
-    echo "${RELAYER_SECRET} secret updated"
+    echo "Pushing PASSKEY_REGISTRY_CONTRACT + RELAYER_PRIVATE_KEY to Doppler"
+    echo "(temporium-api / $DOPPLER_CONFIG)..."
+    doppler secrets set \
+        "PASSKEY_REGISTRY_CONTRACT=$CONTRACT_ADDRESS" \
+        "RELAYER_PRIVATE_KEY=$PRIVATE_KEY" \
+        -p temporium-api -c "$DOPPLER_CONFIG" --no-interactive
+    echo "Doppler $DOPPLER_CONFIG config updated"
+
+    # For production deploys, also sync Doppler → Cloudflare Worker secrets
+    # so the live worker picks up the new contract on its next request.
+    if [ "$DEPLOY_TARGET" = "deploy" ]; then
+        echo ""
+        echo "Syncing Doppler → Cloudflare Worker secrets..."
+        cd "$GATEWAY_ROOT/api"
+        yarn secrets:prod:sync
+        echo "Worker secrets synced"
+    fi
 fi
 
 echo ""
 echo "Done!"
 echo ""
 echo "Next steps:"
-if [ "$DEPLOY_TARGET" = "dev" ]; then
+if [ "$DEPLOY_TARGET" = "local" ] || [ "$DEPLOY_TARGET" = "dev" ]; then
     echo "  cd apps/wallet/api && yarn dev"
 else
-    echo "  cd apps/wallet/api && wrangler deploy"
+    echo "  cd apps/wallet/api && yarn worker:prod:deploy"
 fi

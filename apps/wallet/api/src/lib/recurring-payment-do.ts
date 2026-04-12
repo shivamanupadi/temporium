@@ -134,10 +134,7 @@ export class RecurringPaymentDO implements DurableObject {
 
       // 2. Simulate with public client FIRST (free eth_call, no nonce, no relayer)
       //    This catches user errors (no balance, no allowance) without touching the relayer
-      const relayerKey =
-        network === 'testnet'
-          ? this.env.TESTNET_RELAYER_PRIVATE_KEY
-          : this.env.MAINNET_RELAYER_PRIVATE_KEY;
+      const relayerKey = this.env.RELAYER_PRIVATE_KEY;
 
       const relayerAccount = privateKeyToAccount(relayerKey as `0x${string}`);
 

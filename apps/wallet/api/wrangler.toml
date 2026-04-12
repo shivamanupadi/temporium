@@ -30,22 +30,46 @@ new_sqlite_classes = ["ScheduledTransactionDO"]
 tag = "v2"
 new_sqlite_classes = ["RecurringPaymentDO"]
 
-# Single worker serving both testnet and mainnet via X-Tempo-Network header
-[vars]
-TESTNET_RECURRING_PAYMENTS_ADDRESS = "0x4aC1113E50a40D8fC9bed352ECF393b25DB5462d"
-ALLOWED_ORIGINS = "*"
-JWT_EXPIRATION = "24h"
-MAINNET_PASSKEY_REGISTRY_ADDRESS = "0x82fc6317BC59AD48f5d6Fdfe9FD5fee47a503C65"
-MAINNET_RECURRING_PAYMENTS_ADDRESS = "0x8bB0533c3c196277b36673499a852969e8B5C428"
-# Payment links platform fee — dormant at launch (0 bps = no splits, single on-chain transfer).
-# To enable: set PLATFORM_FEE_BPS to desired basis points (e.g. "100" for 1%) and
-# fill the treasury address for the active network.
-PLATFORM_FEE_BPS = "0"
-TESTNET_PLATFORM_TREASURY_ADDRESS = ""
-MAINNET_PLATFORM_TREASURY_ADDRESS = ""
+# Single worker serving both testnet and mainnet via X-Tempo-Network header.
+#
+# All env vars + secrets live in Doppler (project: temporium-api). Locally,
+# `yarn dev` materializes them into .dev.vars.doppler before running
+# `wrangler dev`. In production, `yarn secrets:prod:sync` pushes them to
+# Cloudflare Worker secrets via `wrangler secret bulk --env production`.
+#
+# Do NOT add a [vars] block here — that would create two sources of truth
+# and Doppler would silently override it at runtime anyway.
 
-# Secrets:
-# wrangler secret put JWT_SECRET
-# wrangler secret put MPP_SECRET_KEY
-# wrangler secret put TESTNET_RELAYER_PRIVATE_KEY
-# wrangler secret put MAINNET_RELAYER_PRIVATE_KEY
+# ─── Production ───
+# Deploy with: wrangler deploy --env production
+#
+# The prod env keeps `name = "temporium-api"` so it targets the existing
+# worker (no migration / domain swap needed). Bindings are duplicated from
+# the top-level block — wrangler does not inherit routes / d1 / DOs into
+# named environments, so each has to be redeclared here.
+
+[env.production]
+name = "temporium-api"
+routes = [
+  { pattern = "api.temporium.xyz", custom_domain = true },
+]
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "temporium-db"
+database_id = "f4f31f16-b5b5-4dfe-9e6e-5f08bdca09cb"
+migrations_dir = "src/db/migrations"
+
+[env.production.durable_objects]
+bindings = [
+  { name = "SCHEDULED_TX", class_name = "ScheduledTransactionDO" },
+  { name = "RECURRING_PAYMENT", class_name = "RecurringPaymentDO" },
+]
+
+[[env.production.migrations]]
+tag = "v1"
+new_sqlite_classes = ["ScheduledTransactionDO"]
+
+[[env.production.migrations]]
+tag = "v2"
+new_sqlite_classes = ["RecurringPaymentDO"]
