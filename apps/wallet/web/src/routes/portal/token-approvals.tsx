@@ -341,7 +341,7 @@ function ApprovalsPage(): ReactElement | null {
                       </div>
                     ) : (
                       <p className="text-[13px] font-bold text-[#2D3436]">
-                        {formatAmount(approval.allowance, approval.token.decimals, 2)}
+                        {formatAmount(approval.allowance, approval.token.decimals)}
                       </p>
                     )}
                     <p className="text-[11px] text-[#9B9590] uppercase tracking-wider">Allowance</p>

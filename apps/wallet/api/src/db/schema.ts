@@ -227,7 +227,7 @@ export const policies = sqliteTable(
 // ============ Payment Links ============
 // Link-level status tracks *availability*, not payment count. Fulfillment for
 // single-use links is derived from the paymentLinkPayments child table.
-export const paymentLinkStatusValues = ['active', 'cancelled', 'expired'] as const;
+export const paymentLinkStatusValues = ['active', 'completed', 'cancelled', 'expired'] as const;
 export type PaymentLinkStatus = (typeof paymentLinkStatusValues)[number];
 
 export const paymentLinks = sqliteTable(
@@ -236,7 +236,8 @@ export const paymentLinks = sqliteTable(
     id: text('id')
       .primaryKey()
       .$defaultFn(() => createId()),
-    owner: text('owner').notNull(), // creator wallet address = recipient
+    owner: text('owner').notNull(), // wallet address that created this link
+    recipient: text('recipient').notNull(), // wallet address that receives payments (may differ from owner)
     network: text('network').notNull(), // 'testnet' | 'mainnet'
     token: text('token').notNull(), // token contract address (lowercased)
     tokenSymbol: text('token_symbol').notNull(),

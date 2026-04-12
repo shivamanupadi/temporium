@@ -64,13 +64,7 @@ paymentLinksRouter.get('/public/:id', zValidator('param', idParamSchema), async 
   }
   let link = rows[0];
 
-  // Auto-transition to 'expired' on read.
-  if (link.status === 'active' && link.expiresAt && link.expiresAt.getTime() < Date.now()) {
-    await db.update(paymentLinks).set({ status: 'expired' }).where(eq(paymentLinks.id, id));
-    link = { ...link, status: 'expired' };
-  }
-
-  // Count payments (and for single-use links, pull the most recent for success UI).
+  // Count payments (needed before expiry check to pick the right terminal state).
   const payments = await db
     .select()
     .from(paymentLinkPayments)
@@ -80,14 +74,23 @@ paymentLinksRouter.get('/public/:id', zValidator('param', idParamSchema), async 
   const paymentCount = payments.length;
   const lastPayment = payments[0] ?? null;
 
-  const fulfilled = link.status !== 'active' || (!link.reusable && paymentCount >= 1);
+  // Auto-transition on read: if past expiry, terminal state depends on
+  // whether the link ever received a payment. Links with payments are
+  // "completed" (they generated revenue); links without are "expired".
+  if (link.status === 'active' && link.expiresAt && link.expiresAt.getTime() < Date.now()) {
+    const newStatus = paymentCount > 0 ? 'completed' : 'expired';
+    await db.update(paymentLinks).set({ status: newStatus }).where(eq(paymentLinks.id, id));
+    link = { ...link, status: newStatus };
+  }
+
+  const fulfilled = link.status !== 'active';
 
   const { feeBps } = getPlatformFeeConfig(c.env);
 
   return success(c, {
     id: link.id,
     network: link.network,
-    recipient: link.owner,
+    recipient: link.recipient,
     token: link.token,
     tokenSymbol: link.tokenSymbol,
     tokenDecimals: link.tokenDecimals,
@@ -133,7 +136,14 @@ paymentLinksRouter.post('/public/:id/pay', zValidator('param', idParamSchema), a
     throw new BadRequestError(`Payment link is ${link.status}`);
   }
   if (link.expiresAt && link.expiresAt.getTime() < Date.now()) {
-    await db.update(paymentLinks).set({ status: 'expired' }).where(eq(paymentLinks.id, id));
+    // Pick terminal state based on payment history — same rule as the
+    // read-path transition: payments → completed, no payments → expired.
+    const priorPayments = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(paymentLinkPayments)
+      .where(eq(paymentLinkPayments.linkId, id));
+    const newStatus = (priorPayments[0]?.count ?? 0) > 0 ? 'completed' : 'expired';
+    await db.update(paymentLinks).set({ status: newStatus }).where(eq(paymentLinks.id, id));
     throw new BadRequestError('Payment link has expired');
   }
   if (!link.reusable) {
@@ -171,7 +181,7 @@ paymentLinksRouter.post('/public/:id/pay', zValidator('param', idParamSchema), a
     splits?: { amount: string; recipient: Address; memo?: string }[];
   } = {
     amount: link.amountDecimal,
-    recipient: link.owner as Address,
+    recipient: link.recipient as Address,
     externalId: link.id,
   };
 
@@ -180,7 +190,6 @@ paymentLinksRouter.post('/public/:id/pay', zValidator('param', idParamSchema), a
       {
         amount: feeAmountDecimal,
         recipient: treasury as Address,
-        memo: 'Temporium platform fee',
       },
     ];
   }
@@ -235,12 +244,19 @@ paymentLinksRouter.post('/public/:id/pay', zValidator('param', idParamSchema), a
     })
     .returning();
 
+  // Single-use links are completed after the first payment.
+  let linkStatus: string = link.status;
+  if (!link.reusable) {
+    await db.update(paymentLinks).set({ status: 'completed' }).where(eq(paymentLinks.id, link.id));
+    linkStatus = 'completed';
+  }
+
   const body = JSON.stringify({
     success: true,
     data: {
       link: {
         id: link.id,
-        status: link.status,
+        status: linkStatus,
         reusable: link.reusable,
       },
       payment: inserted[0],
@@ -331,7 +347,7 @@ paymentLinksRouter.post('/', jwtAuth, zValidator('json', createPaymentLinkSchema
   const db = createDb(c.env.DB);
   const owner = getWalletAddress(c);
   const network = c.get('networkConfig').network;
-  const { token, amount, title, description, reusable, expiresAt } = c.req.valid('json');
+  const { token, amount, recipient, title, description, reusable, expiresAt } = c.req.valid('json');
 
   // Resolve token via tokenlist; rejects anything not in the allowlist.
   const resolved = await resolveAllowedToken(token, network);
@@ -351,6 +367,7 @@ paymentLinksRouter.post('/', jwtAuth, zValidator('json', createPaymentLinkSchema
     .insert(paymentLinks)
     .values({
       owner,
+      recipient,
       network,
       token: resolved.address,
       tokenSymbol: resolved.symbol,
@@ -392,10 +409,10 @@ paymentLinksRouter.get('/:id', jwtAuth, zValidator('param', idParamSchema), asyn
 });
 
 /**
- * DELETE /v1/payment-links/:id — soft-cancel an active link.
+ * DELETE /v1/payment-links/:id — stop or cancel an active link.
  *
- * Refuses to cancel once any payment has been recorded against the link,
- * so links with a settled history stay immutable for audit purposes.
+ * - No payments recorded → cancelled (link was never used, safe to void).
+ * - Has payments (reusable) → completed (stop accepting new payments).
  */
 paymentLinksRouter.delete('/:id', jwtAuth, zValidator('param', idParamSchema), async c => {
   const db = createDb(c.env.DB);
@@ -411,22 +428,18 @@ paymentLinksRouter.delete('/:id', jwtAuth, zValidator('param', idParamSchema), a
     throw new NotFoundError('Payment link not found');
   }
   if (rows[0].status !== 'active') {
-    throw new BadRequestError(`Cannot cancel link with status '${rows[0].status}'`);
+    throw new BadRequestError(`Cannot stop link with status '${rows[0].status}'`);
   }
 
-  // Block deletion if any payment has already been recorded — the link
-  // is now part of a settled history and cannot be voided.
   const paymentCount = await db
     .select({ count: sql<number>`count(*)` })
     .from(paymentLinkPayments)
     .where(eq(paymentLinkPayments.linkId, id));
-  if ((paymentCount[0]?.count ?? 0) >= 1) {
-    throw new BadRequestError(
-      'This payment link has already received at least one payment and cannot be deleted.'
-    );
-  }
+  const hasPaid = (paymentCount[0]?.count ?? 0) >= 1;
 
-  await db.update(paymentLinks).set({ status: 'cancelled' }).where(eq(paymentLinks.id, id));
+  // Links with payments are "completed" (stopped); unpaid links are "cancelled" (voided).
+  const newStatus = hasPaid ? 'completed' : 'cancelled';
+  await db.update(paymentLinks).set({ status: newStatus }).where(eq(paymentLinks.id, id));
 
   return noContent(c);
 });

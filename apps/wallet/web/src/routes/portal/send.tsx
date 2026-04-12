@@ -339,10 +339,10 @@ function SendPage(): ReactElement | null {
 
   const balanceDisplay = balance.isLoading
     ? '...'
-    : formatAmount(balance.data.value, tokenDecimals, 2);
+    : formatAmount(balance.data.value, tokenDecimals);
 
   const formattedParsedAmount =
-    parsedAmount > 0n ? formatAmount(parsedAmount, tokenDecimals, 2) : '0.00';
+    parsedAmount > 0n ? formatAmount(parsedAmount, tokenDecimals) : '0.00';
 
   return (
     <div className="max-w-lg">

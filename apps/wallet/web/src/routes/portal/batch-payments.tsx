@@ -189,9 +189,9 @@ function BatchPaymentsPage(): ReactElement | null {
 
   const balanceDisplay = balance.isLoading
     ? '...'
-    : formatAmount(balance.data.value, tokenDecimals, 2);
+    : formatAmount(balance.data.value, tokenDecimals);
 
-  const formattedTotal = totalAmount > 0n ? formatAmount(totalAmount, tokenDecimals, 2) : '0.00';
+  const formattedTotal = totalAmount > 0n ? formatAmount(totalAmount, tokenDecimals) : '0.00';
 
   return (
     <div className="max-w-2xl">
@@ -404,7 +404,7 @@ function BatchPaymentsPage(): ReactElement | null {
                             </p>
                           </div>
                           <p className="text-[13px] font-semibold text-[#2D3436]">
-                            {formatAmount(r.parsed, tokenDecimals, 2)} {selectedToken.symbol}
+                            {formatAmount(r.parsed, tokenDecimals)} {selectedToken.symbol}
                           </p>
                         </div>
                       ))}

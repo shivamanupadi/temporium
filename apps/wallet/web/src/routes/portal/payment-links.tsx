@@ -25,9 +25,12 @@ import {
 import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 import { TokenPicker } from '@/components/TokenPicker';
+import { ContactPicker } from '@/components/ContactPicker';
 import { useTokenList } from '@/hooks/useTokenList';
+import { useTempo } from '@/hooks/useTempo';
 import {
   listPaymentLinks,
   createPaymentLink,
@@ -41,24 +44,38 @@ import {
 } from '@/lib/payment-links-api';
 import type { Token } from '@/lib/tokenlist';
 import { getTokenColors } from '@/lib/tokenlist';
-import { formatAddress, copyToClipboard, cn } from '@/lib/utils';
+import {
+  formatAddress,
+  formatAmount,
+  formatFeePct,
+  computeFeeBreakdown,
+  copyToClipboard,
+  cn,
+} from '@/lib/utils';
 import { TIMING, LINKS } from '@/lib/constants';
 
 // -----------------------------------------------------------------------------
 // Filters
 // -----------------------------------------------------------------------------
 
-type PaymentLinksFilter = 'all' | 'active' | 'cancelled' | 'expired';
+type PaymentLinksFilter = 'all' | 'active' | 'completed' | 'cancelled' | 'expired';
 
 const FILTERS: ReadonlyArray<{ key: PaymentLinksFilter; label: string }> = [
   { key: 'all', label: 'All' },
   { key: 'active', label: 'Active' },
+  { key: 'completed', label: 'Completed' },
   { key: 'cancelled', label: 'Cancelled' },
   { key: 'expired', label: 'Expired' },
 ];
 
 function isFilter(value: unknown): value is PaymentLinksFilter {
-  return value === 'all' || value === 'active' || value === 'cancelled' || value === 'expired';
+  return (
+    value === 'all' ||
+    value === 'active' ||
+    value === 'completed' ||
+    value === 'cancelled' ||
+    value === 'expired'
+  );
 }
 
 interface PaymentLinksSearch {
@@ -102,7 +119,7 @@ const PAGE_SIZE = 20;
  */
 function filterToBackendStatus(
   filter: PaymentLinksFilter
-): 'active' | 'cancelled' | 'expired' | undefined {
+): 'active' | 'completed' | 'cancelled' | 'expired' | undefined {
   return filter === 'all' ? undefined : filter;
 }
 
@@ -596,19 +613,17 @@ function PaymentLinkRow({
   onOpen,
   onCancel,
 }: LinkRowProps): ReactElement {
-  const fulfilled = !link.reusable && link.paymentCount >= 1;
-
   let statusLabel: string;
   let statusClass: string;
-  if (link.status === 'cancelled') {
+  if (link.status === 'completed') {
+    statusLabel = link.paymentCount > 1 ? `${link.paymentCount} paid` : 'Paid';
+    statusClass = 'bg-[#6B8F71]/10 text-[#6B8F71]';
+  } else if (link.status === 'cancelled') {
     statusLabel = 'Cancelled';
     statusClass = 'bg-[#F5F2ED] text-[#9B9590]';
   } else if (link.status === 'expired') {
     statusLabel = 'Expired';
     statusClass = 'bg-[#F5F2ED] text-[#9B9590]';
-  } else if (fulfilled) {
-    statusLabel = 'Paid';
-    statusClass = 'bg-[#6B8F71]/10 text-[#6B8F71]';
   } else if (link.reusable && link.paymentCount > 0) {
     statusLabel = `${link.paymentCount} paid`;
     statusClass = 'bg-[#6B8F71]/10 text-[#6B8F71]';
@@ -739,12 +754,15 @@ function CreateLinkDialog({
   feeBps,
   onCreated,
 }: CreateDialogProps): ReactElement {
+  const { address } = useTempo();
+
   // Use the curated official tokenlist only — custom user-added tokens are
   // excluded from the picker so the backend resolver always succeeds.
   const { officialTokens, isLoading: tokensLoading } = useTokenList();
   const pickerTokens = officialTokens;
 
   const [selectedToken, setSelectedToken] = useState<Token | null>(null);
+  const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -760,6 +778,7 @@ function CreateLinkDialog({
   }, [pickerTokens, selectedToken]);
 
   const resetForm = useCallback((): void => {
+    setRecipient('');
     setAmount('');
     setTitle('');
     setDescription('');
@@ -769,6 +788,10 @@ function CreateLinkDialog({
   }, [pickerTokens]);
 
   const handleSubmit = useCallback(async (): Promise<void> => {
+    if (!recipient.trim() || !/^0x[a-fA-F0-9]{40}$/.test(recipient.trim())) {
+      toast.error('Enter a valid recipient address');
+      return;
+    }
     if (!selectedToken) {
       toast.error('Pick a currency first');
       return;
@@ -789,6 +812,7 @@ function CreateLinkDialog({
       const created = await createPaymentLink({
         token: selectedToken.address,
         amount: trimmed,
+        recipient: recipient.trim(),
         title: trimmedTitle,
         description: description.trim() || undefined,
         reusable,
@@ -804,22 +828,23 @@ function CreateLinkDialog({
     } finally {
       setIsSubmitting(false);
     }
-  }, [selectedToken, amount, title, description, reusable, expiresAt, onCreated, resetForm]);
+  }, [
+    selectedToken,
+    recipient,
+    amount,
+    title,
+    description,
+    reusable,
+    expiresAt,
+    onCreated,
+    resetForm,
+  ]);
 
   // Fee breakdown (only shown when feeBps > 0).
-  const feeBreakdown = useMemo(() => {
-    if (feeBps <= 0) return null;
-    const amt = parseFloat(amount);
-    if (!Number.isFinite(amt) || amt <= 0) return null;
-    const fee = (amt * feeBps) / 10000;
-    const net = amt - fee;
-    return {
-      gross: amt.toFixed(Math.max(2, (amount.split('.')[1] ?? '').length)),
-      fee: fee.toFixed(Math.max(2, (amount.split('.')[1] ?? '').length)),
-      net: net.toFixed(Math.max(2, (amount.split('.')[1] ?? '').length)),
-      pct: (feeBps / 100).toFixed(feeBps % 100 === 0 ? 0 : 2),
-    };
-  }, [feeBps, amount]);
+  const feeBreakdown = useMemo(
+    () => (selectedToken ? computeFeeBreakdown(amount, feeBps, selectedToken.decimals) : null),
+    [feeBps, amount, selectedToken]
+  );
 
   return (
     <Dialog
@@ -829,25 +854,35 @@ function CreateLinkDialog({
         if (!next) resetForm();
       }}
     >
-      <DialogContent className="p-0 max-w-lg">
-        <div className="p-6 pb-0">
-          <DialogTitle className="text-[18px] font-bold text-[#2D3436]">
-            New payment link
-          </DialogTitle>
+      <DialogContent className="sm:max-w-[440px] p-0 gap-0 rounded-2xl">
+        <div className="px-6 pt-6 pb-4">
+          <DialogTitle className="text-lg font-bold text-[#2D3436]">New Payment Link</DialogTitle>
           <DialogDescription className="text-[13px] text-[#9B9590] mt-1">
-            Pick a currency, set the amount, and share the link to accept payment.
+            Create a payment link for yourself or an external address.
           </DialogDescription>
         </div>
+        <div className="border-t border-[#EDE9E3]/60" />
 
-        <div className="p-6 space-y-5">
-          {/* Currency + amount row */}
+        <div className="px-6 py-5 space-y-4 max-h-[60vh] overflow-y-auto">
+          {/* Recipient */}
+          <ContactPicker value={recipient} onChange={setRecipient} selfAddress={address} />
+
+          {/* Amount + Token */}
           <div>
-            <label className="block text-[12px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2">
+            <Label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2 block">
               Amount
-            </label>
+            </Label>
             <div className="flex items-center gap-2">
+              <Input
+                type="text"
+                inputMode="decimal"
+                value={amount}
+                onChange={e => setAmount(e.target.value)}
+                placeholder="0.00"
+                className="text-[16px] font-semibold h-11 rounded-xl border-[#EDE9E3] bg-[#FDFBF8] focus:border-coral focus:ring-1 focus:ring-coral/20 flex-1"
+              />
               {tokensLoading || !selectedToken ? (
-                <div className="h-12 w-[130px] rounded-xl bg-[#F5F2ED] flex items-center justify-center">
+                <div className="h-11 w-[130px] rounded-xl bg-[#F5F2ED] flex items-center justify-center">
                   <Loader2 className="w-4 h-4 animate-spin text-[#B5B0AA]" />
                 </div>
               ) : (
@@ -857,20 +892,12 @@ function CreateLinkDialog({
                   onChange={setSelectedToken}
                 />
               )}
-              <Input
-                type="text"
-                inputMode="decimal"
-                value={amount}
-                onChange={e => setAmount(e.target.value)}
-                placeholder="0.00"
-                className="flex-1 h-12 px-3.5 bg-white text-[16px] font-mono"
-              />
             </div>
           </div>
 
-          {/* Fee breakdown (dormant at launch) */}
+          {/* Fee breakdown */}
           {feeBreakdown && selectedToken && (
-            <div className="rounded-xl bg-[#F5F2ED] p-3.5 text-[12px] text-[#6B6560] space-y-1">
+            <div className="rounded-xl bg-[#F5F2ED] p-3.5 text-[11px] text-[#6B6560] space-y-1">
               <div className="flex items-center justify-between">
                 <span>Gross</span>
                 <span className="font-mono">
@@ -878,13 +905,13 @@ function CreateLinkDialog({
                 </span>
               </div>
               <div className="flex items-center justify-between">
-                <span>Platform fee ({feeBreakdown.pct}%)</span>
+                <span>Platform fee ({feeBreakdown.pct})</span>
                 <span className="font-mono">
                   −{feeBreakdown.fee} {selectedToken.symbol}
                 </span>
               </div>
               <div className="flex items-center justify-between pt-1 border-t border-[#EDE9E3]">
-                <span className="font-semibold text-[#2D3436]">You receive</span>
+                <span className="font-semibold text-[#2D3436]">Recipient receives</span>
                 <span className="font-mono font-semibold text-[#2D3436]">
                   {feeBreakdown.net} {selectedToken.symbol}
                 </span>
@@ -892,11 +919,11 @@ function CreateLinkDialog({
             </div>
           )}
 
-          {/* Mode toggle */}
+          {/* Mode */}
           <div>
-            <label className="block text-[12px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2">
+            <Label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2 block">
               Mode
-            </label>
+            </Label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -904,12 +931,24 @@ function CreateLinkDialog({
                 className={cn(
                   'rounded-xl border p-3 text-left transition-all',
                   reusable
-                    ? 'border-[#EDE9E3] bg-white hover:border-[#D5D0CA]'
-                    : 'border-[#E07A5F] bg-[#E07A5F]/6'
+                    ? 'border-[#EDE9E3] bg-[#FDFBF8] hover:border-[#D5D0CA]'
+                    : 'border-[#E07A5F]/30 bg-[#E07A5F]/8'
                 )}
               >
-                <span className="text-[13px] font-semibold text-[#2D3436]">Single-use</span>
-                <p className="text-[11.5px] text-[#9B9590] mt-1 leading-tight">
+                <span
+                  className={cn(
+                    'text-[13px] font-semibold',
+                    reusable ? 'text-[#2D3436]' : 'text-[#E07A5F]'
+                  )}
+                >
+                  Single-use
+                </span>
+                <p
+                  className={cn(
+                    'text-[11px] mt-1 leading-tight',
+                    reusable ? 'text-[#9B9590]' : 'text-[#E07A5F]/70'
+                  )}
+                >
                   Locks after the first payment.
                 </p>
               </button>
@@ -919,12 +958,24 @@ function CreateLinkDialog({
                 className={cn(
                   'rounded-xl border p-3 text-left transition-all',
                   !reusable
-                    ? 'border-[#EDE9E3] bg-white hover:border-[#D5D0CA]'
-                    : 'border-[#E07A5F] bg-[#E07A5F]/6'
+                    ? 'border-[#EDE9E3] bg-[#FDFBF8] hover:border-[#D5D0CA]'
+                    : 'border-[#E07A5F]/30 bg-[#E07A5F]/8'
                 )}
               >
-                <span className="text-[13px] font-semibold text-[#2D3436]">Reusable</span>
-                <p className="text-[11.5px] text-[#9B9590] mt-1 leading-tight">
+                <span
+                  className={cn(
+                    'text-[13px] font-semibold',
+                    !reusable ? 'text-[#2D3436]' : 'text-[#E07A5F]'
+                  )}
+                >
+                  Reusable
+                </span>
+                <p
+                  className={cn(
+                    'text-[11px] mt-1 leading-tight',
+                    !reusable ? 'text-[#9B9590]' : 'text-[#E07A5F]/70'
+                  )}
+                >
                   Accepts unlimited payments.
                 </p>
               </button>
@@ -933,12 +984,12 @@ function CreateLinkDialog({
 
           {/* Title */}
           <div>
-            <label
+            <Label
               htmlFor="link-title"
-              className="block text-[12px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2"
+              className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2 block"
             >
               Title <span className="text-[#E07A5F] normal-case">*</span>
-            </label>
+            </Label>
             <Input
               id="link-title"
               type="text"
@@ -946,19 +997,19 @@ function CreateLinkDialog({
               onChange={e => setTitle(e.target.value)}
               placeholder="e.g. March invoice"
               maxLength={80}
-              className="px-3.5 bg-white text-[14px]"
+              className="h-11 rounded-xl border-[#EDE9E3] bg-[#FDFBF8] text-[14px] focus:border-coral focus:ring-1 focus:ring-coral/20"
             />
           </div>
 
           {/* Description */}
           <div>
-            <label
+            <Label
               htmlFor="link-description"
-              className="block text-[12px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2"
+              className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2 block"
             >
               Description{' '}
               <span className="text-[#B5B0AA] normal-case tracking-normal">(optional)</span>
-            </label>
+            </Label>
             <textarea
               id="link-description"
               value={description}
@@ -966,29 +1017,29 @@ function CreateLinkDialog({
               placeholder="Short note shown to the payer"
               maxLength={500}
               rows={3}
-              className="w-full rounded-xl border border-border/50 bg-white px-3.5 py-2.5 text-[14px] text-foreground placeholder:text-[#B5B0AA] outline-none focus:border-[#D5D0CA] resize-none"
+              className="w-full rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] px-3.5 py-2.5 text-[14px] text-foreground placeholder:text-[#B5B0AA] outline-none focus:border-coral focus:ring-1 focus:ring-coral/20 resize-none"
             />
           </div>
 
           {/* Expiration */}
           <div>
-            <label
+            <Label
               htmlFor="link-expires"
-              className="block text-[12px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2"
+              className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2 block"
             >
               Expires <span className="text-[#B5B0AA] normal-case tracking-normal">(optional)</span>
-            </label>
+            </Label>
             <Input
               id="link-expires"
               type="datetime-local"
               value={expiresAt}
               onChange={e => setExpiresAt(e.target.value)}
-              className="px-3.5 bg-white text-[14px]"
+              className="h-11 rounded-xl border-[#EDE9E3] bg-[#FDFBF8] text-[14px] focus:border-coral focus:ring-1 focus:ring-coral/20"
             />
           </div>
         </div>
 
-        <div className="p-6 pt-0 flex gap-3">
+        <div className="px-6 pb-6 pt-0 flex gap-3">
           <Button
             variant="outline"
             onClick={() => {
@@ -1002,7 +1053,9 @@ function CreateLinkDialog({
           <Button
             onClick={handleSubmit}
             isLoading={isSubmitting}
-            disabled={!selectedToken || !amount.trim() || !title.trim() || isSubmitting}
+            disabled={
+              !recipient.trim() || !selectedToken || !amount.trim() || !title.trim() || isSubmitting
+            }
             className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-[#E07A5F] hover:bg-[#D06A4F] text-white"
           >
             {!isSubmitting && <Plus className="w-4 h-4 mr-1" />}
@@ -1131,7 +1184,7 @@ function DetailSidebar({
               {/* Facts */}
               <div className="px-6 py-5 space-y-3 border-b border-[#EDE9E3]/60">
                 <SidebarRow label="Recipient">
-                  <span className="font-mono">{formatAddress(link.owner, 6)}</span>
+                  <span className="font-mono">{formatAddress(link.recipient, 6)}</span>
                 </SidebarRow>
                 <SidebarRow label="Mode">{modeLabel}</SidebarRow>
                 <SidebarRow label="Network">
@@ -1155,15 +1208,29 @@ function DetailSidebar({
                   </SidebarRow>
                 )}
                 <SidebarRow label="Share link">
-                  <a
-                    href={shareUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-[#E07A5F] hover:underline truncate max-w-[240px]"
-                  >
-                    <span className="truncate">{shareUrl.replace(/^https?:\/\//, '')}</span>
-                    <ExternalLink className="w-3 h-3 shrink-0" />
-                  </a>
+                  <span className="inline-flex items-center gap-1.5 truncate max-w-[240px]">
+                    <span className="truncate font-mono text-[11px] text-[#2D3436]">
+                      {shareUrl.replace(/^https?:\/\//, '')}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void copyToClipboard(shareUrl);
+                        toast.success('Link copied');
+                      }}
+                      className="shrink-0 text-[#B5B0AA] hover:text-[#2D3436] transition-colors"
+                    >
+                      <Copy className="w-3 h-3" />
+                    </button>
+                    <a
+                      href={shareUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 text-[#B5B0AA] hover:text-[#2D3436] transition-colors"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                    </a>
+                  </span>
                 </SidebarRow>
               </div>
 
@@ -1198,9 +1265,33 @@ function DetailSidebar({
                       <div key={p.id} className="rounded-xl border border-[#EDE9E3] bg-white p-3.5">
                         <div className="flex items-start justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="text-[13px] font-semibold text-[#2D3436] truncate">
-                              {p.payer ? formatAddress(p.payer, 6) : 'Payment received'}
-                            </p>
+                            <div className="flex items-center gap-1.5">
+                              <p className="text-[13px] font-semibold text-[#2D3436] truncate font-mono">
+                                {p.payer ? formatAddress(p.payer, 6) : 'Payment received'}
+                              </p>
+                              {p.payer && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    void copyToClipboard(p.payer);
+                                    toast.success('Address copied');
+                                  }}
+                                  className="shrink-0 text-[#B5B0AA] hover:text-[#2D3436] transition-colors"
+                                >
+                                  <Copy className="w-3 h-3" />
+                                </button>
+                              )}
+                              {p.payer && (
+                                <a
+                                  href={`${LINKS.explorer}/address/${p.payer}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="shrink-0 text-[#B5B0AA] hover:text-[#2D3436] transition-colors"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                </a>
+                              )}
+                            </div>
                             <p className="text-[11px] text-[#9B9590] mt-0.5">
                               {new Date(p.paidAt).toLocaleString()}
                             </p>
@@ -1215,6 +1306,30 @@ function DetailSidebar({
                               View tx <ExternalLink className="w-3 h-3" />
                             </a>
                           )}
+                        </div>
+                        {/* Per-payment fee breakdown */}
+                        <div className="mt-2 pt-2 border-t border-[#F5F2ED] text-[11px] text-[#9B9590] font-mono space-y-0.5">
+                          <div className="flex justify-between">
+                            <span>Gross</span>
+                            <span>
+                              {formatAmount(p.amount, detail.tokenDecimals)} {detail.tokenSymbol}
+                            </span>
+                          </div>
+                          {p.feeBps > 0 && (
+                            <div className="flex justify-between">
+                              <span>Fee ({formatFeePct(p.feeBps)})</span>
+                              <span>
+                                −{formatAmount(p.feeAmount, detail.tokenDecimals)}{' '}
+                                {detail.tokenSymbol}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex justify-between font-semibold text-[#2D3436]">
+                            <span>You received</span>
+                            <span>
+                              {formatAmount(p.netAmount, detail.tokenDecimals)} {detail.tokenSymbol}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     ))}

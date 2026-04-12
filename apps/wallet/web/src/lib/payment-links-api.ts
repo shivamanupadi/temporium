@@ -16,11 +16,12 @@ import { getWalletApiUrl, TEMPO_NETWORK } from './api';
 // Types
 // =============================================================================
 
-export type PaymentLinkStatus = 'active' | 'cancelled' | 'expired';
+export type PaymentLinkStatus = 'active' | 'completed' | 'cancelled' | 'expired';
 
 export interface PaymentLink {
   id: string;
   owner: string;
+  recipient: string;
   network: 'testnet' | 'mainnet';
   token: string;
   tokenSymbol: string;
@@ -83,6 +84,7 @@ export interface PaymentLinkDetail extends PaymentLink {
 export interface CreatePaymentLinkBody {
   token: string;
   amount: string; // decimal string
+  recipient: string; // wallet address that receives payments
   title: string; // required on the backend
   description?: string;
   reusable?: boolean;

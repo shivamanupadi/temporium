@@ -286,6 +286,7 @@ export const createPaymentLinkSchema = z.object({
     .min(1, 'Amount is required')
     .regex(/^\d+(\.\d+)?$/, 'Amount must be a valid decimal string')
     .refine(val => parseFloat(val) > 0, 'Amount must be greater than zero'),
+  recipient: ethereumAddress,
   title: z
     .string()
     .trim()

@@ -386,9 +386,9 @@ function ScheduledSendModal({
 
   const balanceDisplay = balance.isLoading
     ? '...'
-    : formatAmount(balance.data.value, tokenDecimals, 2);
+    : formatAmount(balance.data.value, tokenDecimals);
 
-  const formattedAmount = parsedAmount > 0n ? formatAmount(parsedAmount, tokenDecimals, 2) : '0.00';
+  const formattedAmount = parsedAmount > 0n ? formatAmount(parsedAmount, tokenDecimals) : '0.00';
 
   const resetForm = useCallback(() => {
     setRecipient('');
@@ -850,7 +850,7 @@ function TransactionRow({
             {/* Amount + token */}
             <div className="flex items-baseline gap-1.5">
               <span className="text-[18px] font-bold text-[#2D3436] tabular-nums tracking-tight">
-                {formatAmount(transaction.amount, transaction.tokenDecimals, 2)}
+                {formatAmount(transaction.amount, transaction.tokenDecimals)}
               </span>
               <span className="text-[12px] font-semibold text-[#9B9590] uppercase">
                 {transaction.tokenSymbol}
@@ -996,7 +996,7 @@ function TransactionRow({
               <div className="flex items-center justify-between">
                 <span className="text-[12px] text-[#9B9590]">Amount</span>
                 <span className="text-[12px] font-semibold text-[#2D3436]">
-                  {formatAmount(transaction.amount, transaction.tokenDecimals, 2)}{' '}
+                  {formatAmount(transaction.amount, transaction.tokenDecimals)}{' '}
                   {transaction.tokenSymbol}
                 </span>
               </div>

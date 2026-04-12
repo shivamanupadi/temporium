@@ -152,7 +152,7 @@ function DashboardPage(): ReactElement {
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-[24px] font-semibold text-[#9B9590]">$</span>
                   <span className="text-[36px] font-bold text-[#2D3436] tracking-tight leading-tight">
-                    {formatAmount(totalBalance, 6, 2)}
+                    {formatAmount(totalBalance, 6)}
                   </span>
                 </div>
                 <p className="text-[12px] text-[#B5B0AA] mt-1">

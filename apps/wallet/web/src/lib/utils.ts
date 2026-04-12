@@ -11,19 +11,60 @@ export function formatAddress(address: string, chars = 4): string {
   return `${address.slice(0, chars + 2)}...${address.slice(-chars)}`;
 }
 
-export function formatAmount(amount: string | bigint, decimals = 6, displayDecimals = 2): string {
+/**
+ * Format a raw token amount (bigint or string) into a human-readable decimal.
+ * When `displayDecimals` is omitted, the token's full on-chain precision is used
+ * so displayed values always match what's actually transferred.
+ */
+export function formatAmount(
+  amount: string | bigint,
+  decimals = 6,
+  displayDecimals?: number
+): string {
+  const dp = displayDecimals ?? decimals;
   const value = typeof amount === 'bigint' ? amount : BigInt(amount);
   const divisor = BigInt(10 ** decimals);
   const whole = value / divisor;
   const fraction = value % divisor;
 
   const fractionStr = fraction.toString().padStart(decimals, '0');
-  const displayFraction = fractionStr.slice(0, displayDecimals);
+  const displayFraction = fractionStr.slice(0, dp);
 
   const wholeFormatted = whole.toLocaleString();
 
-  if (displayDecimals === 0) return wholeFormatted;
+  if (dp === 0) return wholeFormatted;
   return `${wholeFormatted}.${displayFraction}`;
+}
+
+/**
+ * Format a basis-points value as a human-readable percentage string.
+ * 50 bps → "0.50%", 100 bps → "1%".
+ */
+export function formatFeePct(bps: number): string {
+  return `${(bps / 100).toFixed(bps % 100 === 0 ? 0 : 2)}%`;
+}
+
+/**
+ * Compute the fee breakdown for a given amount and fee rate.
+ * Returns null if fee is dormant (bps ≤ 0) or amount is invalid.
+ * All amounts are formatted to the token's on-chain decimal precision.
+ */
+export function computeFeeBreakdown(
+  amount: string | number,
+  feeBps: number,
+  decimals: number
+): { gross: string; fee: string; net: string; pct: string } | null {
+  if (feeBps <= 0) return null;
+  const amt = typeof amount === 'string' ? parseFloat(amount) : amount;
+  if (!Number.isFinite(amt) || amt <= 0) return null;
+  const fee = (amt * feeBps) / 10000;
+  const net = amt - fee;
+  return {
+    gross: amt.toFixed(decimals),
+    fee: fee.toFixed(decimals),
+    net: net.toFixed(decimals),
+    pct: formatFeePct(feeBps),
+  };
 }
 
 export function parseAmount(value: string, decimals = 6): bigint {

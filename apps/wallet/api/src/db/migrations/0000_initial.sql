@@ -52,6 +52,7 @@ CREATE INDEX `payment_link_payments_payer_idx` ON `payment_link_payments` (`paye
 CREATE TABLE `payment_links` (
 	`id` text PRIMARY KEY NOT NULL,
 	`owner` text NOT NULL,
+	`recipient` text NOT NULL,
 	`network` text NOT NULL,
 	`token` text NOT NULL,
 	`token_symbol` text NOT NULL,

@@ -106,10 +106,6 @@ function formatDateLong(iso: string): string {
   });
 }
 
-function formatFeePct(bps: number): string {
-  return `${(bps / 100).toFixed(bps % 100 === 0 ? 0 : 2)}%`;
-}
-
 /**
  * The Tempo tokenlist serves icons at a stable path keyed on chainId +
  * lowercased address. Reconstructing the URL client-side saves us from a
@@ -515,16 +511,6 @@ function PaymentCertificate(props: PaymentCertificateProps): ReactElement {
           label="Payable to"
           value={<span style={MONO}>{formatAddress(link.recipient, 5)}</span>}
         />
-        {link.feeBps > 0 && (
-          <FactRow
-            label="Processing"
-            value={
-              <span>
-                {formatFeePct(link.feeBps)} <span style={{ color: INK_3 }}>· Temporium</span>
-              </span>
-            }
-          />
-        )}
       </motion.div>
 
       {/* Signature zone */}

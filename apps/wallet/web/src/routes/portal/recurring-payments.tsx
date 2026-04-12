@@ -668,7 +668,7 @@ function CreateSubscriptionDialog({
     contractAddress,
   ]);
 
-  const formattedAmount = parsedAmount > 0n ? formatAmount(parsedAmount, tokenDecimals, 2) : '0.00';
+  const formattedAmount = parsedAmount > 0n ? formatAmount(parsedAmount, tokenDecimals) : '0.00';
 
   const handleClose = useCallback(
     (isOpen: boolean) => {
@@ -720,7 +720,7 @@ function CreateSubscriptionDialog({
                     </Label>
                     {selectedToken && !balance.isLoading && (
                       <span className="text-[11px] text-[#9B9590]">
-                        Balance: {formatAmount(balance.data.value, tokenDecimals, 2)}{' '}
+                        Balance: {formatAmount(balance.data.value, tokenDecimals)}{' '}
                         {selectedToken.symbol}
                       </span>
                     )}
@@ -1333,7 +1333,7 @@ function PaymentRow({
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline gap-1.5">
               <span className="text-[18px] font-bold text-[#2D3436] tabular-nums tracking-tight">
-                {formatAmount(payment.amount, payment.tokenDecimals, 2)}
+                {formatAmount(payment.amount, payment.tokenDecimals)}
               </span>
               <span className="text-[12px] font-semibold text-[#9B9590] uppercase">
                 {payment.tokenSymbol}
@@ -1533,7 +1533,7 @@ function PaymentRow({
                             </span>
                           ) : (
                             <span className="text-[11px] text-[#9B9590]">
-                              {formatAmount(exec.amount, payment.tokenDecimals, 2)}{' '}
+                              {formatAmount(exec.amount, payment.tokenDecimals)}{' '}
                               {payment.tokenSymbol}
                             </span>
                           )}
@@ -1586,7 +1586,7 @@ function PaymentRow({
               <div className="flex items-center justify-between">
                 <span className="text-[12px] text-[#9B9590]">Amount</span>
                 <span className="text-[12px] font-semibold text-[#2D3436]">
-                  {formatAmount(payment.amount, payment.tokenDecimals, 2)} {payment.tokenSymbol}
+                  {formatAmount(payment.amount, payment.tokenDecimals)} {payment.tokenSymbol}
                 </span>
               </div>
               <div className="flex items-center justify-between">

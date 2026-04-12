@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "b4823d49-ef62-43d0-bbee-13367eba3f94",
+  "id": "f55b13a1-9904-498c-aaee-cd1e852908e7",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "access_keys": {
@@ -323,6 +323,13 @@
         },
         "owner": {
           "name": "owner",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "recipient": {
+          "name": "recipient",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
