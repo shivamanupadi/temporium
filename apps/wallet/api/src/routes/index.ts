@@ -9,6 +9,7 @@ import customTokensRouter from './custom-tokens';
 import accessKeysRouter from './access-keys';
 import recurringPaymentsRouter from './recurring-payments';
 import watchedSpendersRouter from './watched-spenders';
+import paymentLinksRouter from './payment-links';
 import tokenlistRouter from './tokenlist';
 import authRouter from './auth';
 import keysRouter from './keys';
@@ -30,6 +31,7 @@ routes.route('/v1/custom-tokens', customTokensRouter);
 routes.route('/v1/access-keys', accessKeysRouter);
 routes.route('/v1/recurring-payments', recurringPaymentsRouter);
 routes.route('/v1/watched-spenders', watchedSpendersRouter);
+routes.route('/v1/payment-links', paymentLinksRouter);
 
 // Non-versioned routes
 routes.route('/tokenlist', tokenlistRouter);

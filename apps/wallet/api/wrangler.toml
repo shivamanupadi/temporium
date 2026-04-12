@@ -37,8 +37,15 @@ ALLOWED_ORIGINS = "*"
 JWT_EXPIRATION = "24h"
 MAINNET_PASSKEY_REGISTRY_ADDRESS = "0x82fc6317BC59AD48f5d6Fdfe9FD5fee47a503C65"
 MAINNET_RECURRING_PAYMENTS_ADDRESS = "0x8bB0533c3c196277b36673499a852969e8B5C428"
+# Payment links platform fee — dormant at launch (0 bps = no splits, single on-chain transfer).
+# To enable: set PLATFORM_FEE_BPS to desired basis points (e.g. "100" for 1%) and
+# fill the treasury address for the active network.
+PLATFORM_FEE_BPS = "0"
+TESTNET_PLATFORM_TREASURY_ADDRESS = ""
+MAINNET_PLATFORM_TREASURY_ADDRESS = ""
 
 # Secrets:
 # wrangler secret put JWT_SECRET
+# wrangler secret put MPP_SECRET_KEY
 # wrangler secret put TESTNET_RELAYER_PRIVATE_KEY
 # wrangler secret put MAINNET_RELAYER_PRIVATE_KEY

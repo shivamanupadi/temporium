@@ -36,8 +36,20 @@ export interface Env {
   TESTNET_RECURRING_PAYMENTS_ADDRESS: string;
   MAINNET_RECURRING_PAYMENTS_ADDRESS: string;
 
+  // Payment links — platform fee (dormant at launch; flip to enable)
+  PLATFORM_FEE_BPS: string; // basis points as string, e.g. "100" for 1%, "0" for dormant
+  TESTNET_PLATFORM_TREASURY_ADDRESS: string; // fee recipient on testnet
+  MAINNET_PLATFORM_TREASURY_ADDRESS: string; // fee recipient on mainnet
+
   // Secrets (set via wrangler secret put)
   JWT_SECRET: string;
+  /**
+   * HMAC secret that mppx uses to cryptographically bind issued challenges
+   * to their contents for stateless verification. Must be stable across
+   * instances — if it changes between the 402 issue and the credential
+   * verify, mppx rejects the credential with an "invalid-challenge" error.
+   */
+  MPP_SECRET_KEY: string;
   TESTNET_RELAYER_PRIVATE_KEY: string;
   MAINNET_RELAYER_PRIVATE_KEY: string;
 }

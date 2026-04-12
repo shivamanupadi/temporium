@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { policyTypeValues, transactionStatusValues, accessKeyTypeValues } from '../db/schema';
+import {
+  policyTypeValues,
+  transactionStatusValues,
+  accessKeyTypeValues,
+  paymentLinkStatusValues,
+} from '../db/schema';
 
 // ============ Common Validators ============
 
@@ -268,4 +273,37 @@ export const policyTypeParamSchema = z.object({
 
 export const policyIdParamSchema = z.object({
   policyId: z.string().min(1, 'Policy ID is required'),
+});
+
+// ============ Payment Links Schemas ============
+
+export const paymentLinkStatusSchema = z.enum(paymentLinkStatusValues);
+
+export const createPaymentLinkSchema = z.object({
+  token: ethereumAddress,
+  amount: z
+    .string()
+    .min(1, 'Amount is required')
+    .regex(/^\d+(\.\d+)?$/, 'Amount must be a valid decimal string')
+    .refine(val => parseFloat(val) > 0, 'Amount must be greater than zero'),
+  title: z
+    .string()
+    .trim()
+    .min(1, 'Title is required')
+    .max(80, 'Title must be 80 characters or less'),
+  description: z.string().max(500, 'Description must be 500 characters or less').trim().optional(),
+  reusable: z.boolean().optional().default(false),
+  expiresAt: z
+    .string()
+    .datetime({ message: 'Invalid expiration date format' })
+    .refine(date => new Date(date) > new Date(), 'Expiration must be in the future')
+    .optional(),
+});
+
+export type CreatePaymentLinkRequest = z.infer<typeof createPaymentLinkSchema>;
+
+export const paymentLinkQuerySchema = z.object({
+  status: paymentLinkStatusSchema.optional(),
+  cursor: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
 });

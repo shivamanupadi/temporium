@@ -23,6 +23,7 @@ import { Route as PortalScheduledPaymentsRouteImport } from './routes/portal/sch
 import { Route as PortalRewardsRouteImport } from './routes/portal/rewards'
 import { Route as PortalRecurringPaymentsRouteImport } from './routes/portal/recurring-payments'
 import { Route as PortalReceiveRouteImport } from './routes/portal/receive'
+import { Route as PortalPaymentLinksRouteImport } from './routes/portal/payment-links'
 import { Route as PortalFeeAmmSwapRouteImport } from './routes/portal/fee-amm-swap'
 import { Route as PortalFeeAmmLiquidityRouteImport } from './routes/portal/fee-amm-liquidity'
 import { Route as PortalDexSwapRouteImport } from './routes/portal/dex-swap'
@@ -31,6 +32,7 @@ import { Route as PortalContactsRouteImport } from './routes/portal/contacts'
 import { Route as PortalConnectedAppsRouteImport } from './routes/portal/connected-apps'
 import { Route as PortalBatchPaymentsRouteImport } from './routes/portal/batch-payments'
 import { Route as PortalAccessKeysRouteImport } from './routes/portal/access-keys'
+import { Route as PayIdRouteImport } from './routes/pay.$id'
 import { Route as PortalTip403FactoryIndexRouteImport } from './routes/portal/tip403-factory.index'
 import { Route as PortalTip20StudioIndexRouteImport } from './routes/portal/tip20-studio.index'
 import { Route as PortalTip403FactoryPolicyIdRouteImport } from './routes/portal/tip403-factory.$policyId'
@@ -111,6 +113,11 @@ const PortalReceiveRoute = PortalReceiveRouteImport.update({
   path: '/receive',
   getParentRoute: () => PortalRoute,
 } as any)
+const PortalPaymentLinksRoute = PortalPaymentLinksRouteImport.update({
+  id: '/payment-links',
+  path: '/payment-links',
+  getParentRoute: () => PortalRoute,
+} as any)
 const PortalFeeAmmSwapRoute = PortalFeeAmmSwapRouteImport.update({
   id: '/fee-amm-swap',
   path: '/fee-amm-swap',
@@ -150,6 +157,11 @@ const PortalAccessKeysRoute = PortalAccessKeysRouteImport.update({
   id: '/access-keys',
   path: '/access-keys',
   getParentRoute: () => PortalRoute,
+} as any)
+const PayIdRoute = PayIdRouteImport.update({
+  id: '/pay/$id',
+  path: '/pay/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const PortalTip403FactoryIndexRoute =
   PortalTip403FactoryIndexRouteImport.update({
@@ -210,6 +222,7 @@ export interface FileRoutesByFullPath {
   '/embed': typeof EmbedRoute
   '/portal': typeof PortalRouteWithChildren
   '/sign': typeof SignRoute
+  '/pay/$id': typeof PayIdRoute
   '/portal/access-keys': typeof PortalAccessKeysRoute
   '/portal/batch-payments': typeof PortalBatchPaymentsRoute
   '/portal/connected-apps': typeof PortalConnectedAppsRoute
@@ -218,6 +231,7 @@ export interface FileRoutesByFullPath {
   '/portal/dex-swap': typeof PortalDexSwapRoute
   '/portal/fee-amm-liquidity': typeof PortalFeeAmmLiquidityRoute
   '/portal/fee-amm-swap': typeof PortalFeeAmmSwapRoute
+  '/portal/payment-links': typeof PortalPaymentLinksRoute
   '/portal/receive': typeof PortalReceiveRoute
   '/portal/recurring-payments': typeof PortalRecurringPaymentsRoute
   '/portal/rewards': typeof PortalRewardsRoute
@@ -243,6 +257,7 @@ export interface FileRoutesByTo {
   '/embed': typeof EmbedRoute
   '/portal': typeof PortalRouteWithChildren
   '/sign': typeof SignRoute
+  '/pay/$id': typeof PayIdRoute
   '/portal/access-keys': typeof PortalAccessKeysRoute
   '/portal/batch-payments': typeof PortalBatchPaymentsRoute
   '/portal/connected-apps': typeof PortalConnectedAppsRoute
@@ -251,6 +266,7 @@ export interface FileRoutesByTo {
   '/portal/dex-swap': typeof PortalDexSwapRoute
   '/portal/fee-amm-liquidity': typeof PortalFeeAmmLiquidityRoute
   '/portal/fee-amm-swap': typeof PortalFeeAmmSwapRoute
+  '/portal/payment-links': typeof PortalPaymentLinksRoute
   '/portal/receive': typeof PortalReceiveRoute
   '/portal/recurring-payments': typeof PortalRecurringPaymentsRoute
   '/portal/rewards': typeof PortalRewardsRoute
@@ -275,6 +291,7 @@ export interface FileRoutesById {
   '/embed': typeof EmbedRoute
   '/portal': typeof PortalRouteWithChildren
   '/sign': typeof SignRoute
+  '/pay/$id': typeof PayIdRoute
   '/portal/access-keys': typeof PortalAccessKeysRoute
   '/portal/batch-payments': typeof PortalBatchPaymentsRoute
   '/portal/connected-apps': typeof PortalConnectedAppsRoute
@@ -283,6 +300,7 @@ export interface FileRoutesById {
   '/portal/dex-swap': typeof PortalDexSwapRoute
   '/portal/fee-amm-liquidity': typeof PortalFeeAmmLiquidityRoute
   '/portal/fee-amm-swap': typeof PortalFeeAmmSwapRoute
+  '/portal/payment-links': typeof PortalPaymentLinksRoute
   '/portal/receive': typeof PortalReceiveRoute
   '/portal/recurring-payments': typeof PortalRecurringPaymentsRoute
   '/portal/rewards': typeof PortalRewardsRoute
@@ -310,6 +328,7 @@ export interface FileRouteTypes {
     | '/embed'
     | '/portal'
     | '/sign'
+    | '/pay/$id'
     | '/portal/access-keys'
     | '/portal/batch-payments'
     | '/portal/connected-apps'
@@ -318,6 +337,7 @@ export interface FileRouteTypes {
     | '/portal/dex-swap'
     | '/portal/fee-amm-liquidity'
     | '/portal/fee-amm-swap'
+    | '/portal/payment-links'
     | '/portal/receive'
     | '/portal/recurring-payments'
     | '/portal/rewards'
@@ -343,6 +363,7 @@ export interface FileRouteTypes {
     | '/embed'
     | '/portal'
     | '/sign'
+    | '/pay/$id'
     | '/portal/access-keys'
     | '/portal/batch-payments'
     | '/portal/connected-apps'
@@ -351,6 +372,7 @@ export interface FileRouteTypes {
     | '/portal/dex-swap'
     | '/portal/fee-amm-liquidity'
     | '/portal/fee-amm-swap'
+    | '/portal/payment-links'
     | '/portal/receive'
     | '/portal/recurring-payments'
     | '/portal/rewards'
@@ -374,6 +396,7 @@ export interface FileRouteTypes {
     | '/embed'
     | '/portal'
     | '/sign'
+    | '/pay/$id'
     | '/portal/access-keys'
     | '/portal/batch-payments'
     | '/portal/connected-apps'
@@ -382,6 +405,7 @@ export interface FileRouteTypes {
     | '/portal/dex-swap'
     | '/portal/fee-amm-liquidity'
     | '/portal/fee-amm-swap'
+    | '/portal/payment-links'
     | '/portal/receive'
     | '/portal/recurring-payments'
     | '/portal/rewards'
@@ -408,6 +432,7 @@ export interface RootRouteChildren {
   EmbedRoute: typeof EmbedRoute
   PortalRoute: typeof PortalRouteWithChildren
   SignRoute: typeof SignRoute
+  PayIdRoute: typeof PayIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -510,6 +535,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PortalReceiveRouteImport
       parentRoute: typeof PortalRoute
     }
+    '/portal/payment-links': {
+      id: '/portal/payment-links'
+      path: '/payment-links'
+      fullPath: '/portal/payment-links'
+      preLoaderRoute: typeof PortalPaymentLinksRouteImport
+      parentRoute: typeof PortalRoute
+    }
     '/portal/fee-amm-swap': {
       id: '/portal/fee-amm-swap'
       path: '/fee-amm-swap'
@@ -565,6 +597,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal/access-keys'
       preLoaderRoute: typeof PortalAccessKeysRouteImport
       parentRoute: typeof PortalRoute
+    }
+    '/pay/$id': {
+      id: '/pay/$id'
+      path: '/pay/$id'
+      fullPath: '/pay/$id'
+      preLoaderRoute: typeof PayIdRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/portal/tip403-factory/': {
       id: '/portal/tip403-factory/'
@@ -714,6 +753,7 @@ interface PortalRouteChildren {
   PortalDexSwapRoute: typeof PortalDexSwapRoute
   PortalFeeAmmLiquidityRoute: typeof PortalFeeAmmLiquidityRoute
   PortalFeeAmmSwapRoute: typeof PortalFeeAmmSwapRoute
+  PortalPaymentLinksRoute: typeof PortalPaymentLinksRoute
   PortalReceiveRoute: typeof PortalReceiveRoute
   PortalRecurringPaymentsRoute: typeof PortalRecurringPaymentsRoute
   PortalRewardsRoute: typeof PortalRewardsRoute
@@ -734,6 +774,7 @@ const PortalRouteChildren: PortalRouteChildren = {
   PortalDexSwapRoute: PortalDexSwapRoute,
   PortalFeeAmmLiquidityRoute: PortalFeeAmmLiquidityRoute,
   PortalFeeAmmSwapRoute: PortalFeeAmmSwapRoute,
+  PortalPaymentLinksRoute: PortalPaymentLinksRoute,
   PortalReceiveRoute: PortalReceiveRoute,
   PortalRecurringPaymentsRoute: PortalRecurringPaymentsRoute,
   PortalRewardsRoute: PortalRewardsRoute,
@@ -754,6 +795,7 @@ const rootRouteChildren: RootRouteChildren = {
   EmbedRoute: EmbedRoute,
   PortalRoute: PortalRouteWithChildren,
   SignRoute: SignRoute,
+  PayIdRoute: PayIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

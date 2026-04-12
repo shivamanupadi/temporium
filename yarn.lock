@@ -4637,6 +4637,15 @@ mppx@^0.5.10:
     ox "0.14.7"
     zod "^4.3.6"
 
+mppx@^0.5.11:
+  version "0.5.11"
+  resolved "https://registry.yarnpkg.com/mppx/-/mppx-0.5.11.tgz#711fbf35388f029f25996fb2ed25b503099bbd8e"
+  integrity sha512-jV3G7RKGp0ANk7UBcfAeIRgqKDtJUDOCdwtqQKQi6dft9hTOLo5+jfLG7NRIE/1lncbIhxsX+zXhfbi34lgcxA==
+  dependencies:
+    incur "^0.3.23"
+    ox "0.14.7"
+    zod "^4.3.6"
+
 ms@^2.1.3:
   version "2.1.3"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.1.3.tgz#574c8138ce1d2b5861f0b44579dbadd60c6615b2"

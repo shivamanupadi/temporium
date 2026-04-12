@@ -24,9 +24,10 @@
     "@remix-run/headers": "^0.17.2",
     "@remix-run/route-pattern": "^0.15.3",
     "@remix-run/session": "^0.4.0",
-    "drizzle-orm": "^0.38.3",
     "accounts": "^0.5.8",
+    "drizzle-orm": "^0.38.3",
     "hono": "^4.6.16",
+    "mppx": "^0.5.11",
     "viem": "^2.47.10",
     "zod": "^3.24.1"
   },

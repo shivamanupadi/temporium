@@ -34,6 +34,7 @@ import {
   Gift,
   RefreshCw,
   ArrowLeftRight,
+  Link2,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 import { useTempo } from '@/hooks/useTempo';
@@ -69,6 +70,7 @@ const navSections = [
   {
     label: 'Payments',
     items: [
+      { to: '/portal/payment-links', label: 'Payment Links', icon: Link2 },
       { to: '/portal/batch-payments', label: 'Batch Payments', icon: ListPlus },
       { to: '/portal/recurring-payments', label: 'Recurring Payments', icon: RefreshCw },
       { to: '/portal/scheduled-payments', label: 'Scheduled Payments', icon: Clock },

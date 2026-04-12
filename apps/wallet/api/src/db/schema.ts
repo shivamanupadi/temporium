@@ -223,3 +223,65 @@ export const policies = sqliteTable(
     index('policies_owner_idx').on(table.owner),
   ]
 );
+
+// ============ Payment Links ============
+// Link-level status tracks *availability*, not payment count. Fulfillment for
+// single-use links is derived from the paymentLinkPayments child table.
+export const paymentLinkStatusValues = ['active', 'cancelled', 'expired'] as const;
+export type PaymentLinkStatus = (typeof paymentLinkStatusValues)[number];
+
+export const paymentLinks = sqliteTable(
+  'payment_links',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    owner: text('owner').notNull(), // creator wallet address = recipient
+    network: text('network').notNull(), // 'testnet' | 'mainnet'
+    token: text('token').notNull(), // token contract address (lowercased)
+    tokenSymbol: text('token_symbol').notNull(),
+    tokenDecimals: integer('token_decimals').notNull(),
+    amount: text('amount').notNull(), // raw base-unit string (wei-style)
+    amountDecimal: text('amount_decimal').notNull(), // human decimal string
+    title: text('title'),
+    description: text('description'),
+    reusable: integer('reusable', { mode: 'boolean' }).notNull().default(false),
+    status: text('status').$type<PaymentLinkStatus>().notNull().default('active'),
+    expiresAt: integer('expires_at', { mode: 'timestamp' }),
+    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  },
+  table => [
+    index('payment_links_owner_idx').on(table.owner),
+    index('payment_links_owner_status_idx').on(table.owner, table.status),
+    index('payment_links_network_idx').on(table.network),
+  ]
+);
+
+// One row per successful payment. Single-use links cap at 1; reusable accumulate.
+export const paymentLinkPayments = sqliteTable(
+  'payment_link_payments',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    linkId: text('link_id')
+      .notNull()
+      .references(() => paymentLinks.id),
+    payer: text('payer').notNull(),
+    txHash: text('tx_hash').notNull(),
+    amount: text('amount').notNull(), // gross raw base-unit amount charged to payer
+    feeAmount: text('fee_amount').notNull().default('0'),
+    feeBps: integer('fee_bps').notNull().default(0),
+    netAmount: text('net_amount').notNull(),
+    paidAt: integer('paid_at', { mode: 'timestamp' })
+      .$defaultFn(() => new Date())
+      .notNull(),
+  },
+  table => [
+    index('payment_link_payments_link_idx').on(table.linkId),
+    index('payment_link_payments_payer_idx').on(table.payer),
+  ]
+);
+
+export type PaymentLink = typeof paymentLinks.$inferSelect;
+export type PaymentLinkPayment = typeof paymentLinkPayments.$inferSelect;
