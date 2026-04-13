@@ -65,6 +65,7 @@ const navSections = [
     items: [
       { to: '/portal/send', label: 'Send', icon: Send },
       { to: '/portal/receive', label: 'Receive', icon: QrCode },
+      { to: '/portal/dex-swap', label: 'Swap', icon: ArrowLeftRight },
     ],
   },
   {
@@ -75,10 +76,6 @@ const navSections = [
       { to: '/portal/recurring-payments', label: 'Recurring Payments', icon: RefreshCw },
       { to: '/portal/scheduled-payments', label: 'Scheduled Payments', icon: Clock },
     ],
-  },
-  {
-    label: 'Exchange',
-    items: [{ to: '/portal/dex-swap', label: 'Swap', icon: ArrowLeftRight }],
   },
   {
     label: 'TIP20 Manager',

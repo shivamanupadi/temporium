@@ -26,7 +26,8 @@ import { ContactPicker } from '@/components/ContactPicker';
 import { useTempo, useTokenBalance, encodeMemo } from '@/hooks/useTempo';
 import { useTokenList } from '@/hooks/useTokenList';
 import { useFeePreference } from '@/hooks/useFeePreference';
-import { createScheduledTransaction } from '@/lib/scheduled-transactions';
+import { createScheduledTransaction, getScheduledTxConfig } from '@/lib/scheduled-transactions';
+import { createMppxFetch } from '@/lib/mpp';
 import type { Token } from '@/lib/tokenlist';
 import { tempoChain } from '@/lib/tempo-client';
 import { SCHEDULE_PRESETS } from '@/lib/constants';
@@ -336,7 +337,7 @@ function ScheduledSendModal({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }): ReactElement {
-  const { address, signScheduledPayment } = useTempo();
+  const { address, walletClient, signScheduledPayment } = useTempo();
   const { tokens } = useTokenList();
   const { preferredFeeToken } = useFeePreference();
 
@@ -349,7 +350,19 @@ function ScheduledSendModal({
     SCHEDULE_PRESETS[0].seconds
   );
   const [customDateTime, setCustomDateTime] = useState<Date | undefined>(undefined);
-  const [step, setStep] = useState<'form' | 'confirm' | 'sending' | 'success'>('form');
+  const [step, setStep] = useState<'form' | 'confirm' | 'pay-fee' | 'sending' | 'success'>('form');
+  const [sendingPhase, setSendingPhase] = useState<'signing' | 'paying-fee' | 'saving'>('signing');
+  const [scheduledForTime, setScheduledForTime] = useState<string | null>(null);
+  const [signedTx, setSignedTx] = useState<string | null>(null);
+  const [signedScheduledFor, setSignedScheduledFor] = useState<number | null>(null);
+
+  // Platform service fee (flat, in token decimal units e.g. "0.1")
+  const [feeAmount, setFeeAmount] = useState('0');
+  useEffect(() => {
+    getScheduledTxConfig()
+      .then(cfg => setFeeAmount(cfg.feeAmount))
+      .catch(() => setFeeAmount('0'));
+  }, []);
 
   useEffect(() => {
     if (tokens.length > 0 && !selectedToken) setSelectedToken(tokens[0]);
@@ -381,6 +394,8 @@ function ScheduledSendModal({
   }, [customDateTime]);
   const hasValidSchedule = isCustomMode ? customTimestamp !== null : scheduleSeconds !== null;
 
+  const hasFee = feeAmount !== '0';
+
   const isFormValid =
     hasValidRecipient && hasValidAmount && hasSufficientBalance && hasValidSchedule;
 
@@ -403,8 +418,10 @@ function ScheduledSendModal({
     if (open) resetForm();
   }, [open, resetForm]);
 
-  const handleSubmit = useCallback(async () => {
+  // Step 1: Sign the scheduled transaction (user click → wallet popup)
+  const handleSign = useCallback(async () => {
     if (!isFormValid || !address || !selectedToken || !feeToken) return;
+    setSendingPhase('signing');
     setStep('sending');
 
     try {
@@ -421,22 +438,19 @@ function ScheduledSendModal({
         scheduledFor,
       });
 
-      await createScheduledTransaction({
-        serializedTx: serializedTransaction,
-        from: address,
-        to: recipient,
-        amount: parsedAmount.toString(),
-        token: selectedToken.address,
-        tokenSymbol: selectedToken.symbol,
-        tokenDecimals: selectedToken.decimals,
-        feeToken: feeToken.address,
-        memo: memo || undefined,
-        scheduledFor: new Date(scheduledFor * 1000).toISOString(),
-      });
+      setSignedTx(serializedTransaction);
+      setSignedScheduledFor(scheduledFor);
 
-      setStep('success');
+      // If there's a fee, show the pay-fee step so the user clicks to
+      // trigger the mppx popup (browsers require a direct user gesture).
+      // If no fee, go straight to saving.
+      if (hasFee) {
+        setStep('pay-fee');
+      } else {
+        await saveScheduledTx(serializedTransaction, scheduledFor);
+      }
     } catch (err) {
-      console.error('Schedule failed:', err);
+      console.error('Sign failed:', err);
       setStep('confirm');
     }
   }, [
@@ -444,6 +458,7 @@ function ScheduledSendModal({
     address,
     selectedToken,
     feeToken,
+    hasFee,
     recipient,
     parsedAmount,
     memo,
@@ -452,6 +467,55 @@ function ScheduledSendModal({
     scheduleSeconds,
     signScheduledPayment,
   ]);
+
+  // Step 2: Pay the fee via mppx + save (user click → wallet popup for fee)
+  const handlePayAndSave = useCallback(async () => {
+    if (!signedTx || !signedScheduledFor) return;
+    setSendingPhase('paying-fee');
+    setStep('sending');
+
+    try {
+      await saveScheduledTx(signedTx, signedScheduledFor);
+    } catch (err) {
+      console.error('Pay & save failed:', err);
+      setStep('pay-fee');
+    }
+  }, [signedTx, signedScheduledFor]);
+
+  // Shared: submit the signed tx to the API via mppx fetch
+  const saveScheduledTx = useCallback(
+    async (serializedTransaction: string, scheduledFor: number) => {
+      if (!address || !selectedToken || !feeToken) return;
+      setSendingPhase('saving');
+
+      const mppxFetch = createMppxFetch(walletClient) ?? fetch;
+
+      await createScheduledTransaction(
+        {
+          serializedTx: serializedTransaction,
+          from: address,
+          to: recipient,
+          amount: parsedAmount.toString(),
+          token: selectedToken.address,
+          tokenSymbol: selectedToken.symbol,
+          tokenDecimals: selectedToken.decimals,
+          feeToken: feeToken.address,
+          memo: memo || undefined,
+          scheduledFor: new Date(scheduledFor * 1000).toISOString(),
+        },
+        mppxFetch
+      );
+
+      setScheduledForTime(
+        new Date(scheduledFor * 1000).toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      );
+      setStep('success');
+    },
+    [address, selectedToken, feeToken, walletClient, recipient, parsedAmount, memo]
+  );
 
   if (!selectedToken || !feeToken) return <></>;
 
@@ -463,7 +527,7 @@ function ScheduledSendModal({
       }}
     >
       <DialogContent
-        hideClose={step === 'sending'}
+        hideClose={step === 'sending' || step === 'pay-fee'}
         className="sm:max-w-[440px] p-0 gap-0 rounded-2xl"
       >
         <AnimatePresence mode="wait">
@@ -650,6 +714,14 @@ function ScheduledSendModal({
                     </div>
                   </div>
                 </div>
+                {hasFee && (
+                  <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#9B72CF]/5 border border-[#9B72CF]/15">
+                    <span className="text-[12px] text-[#9B9590]">Service fee</span>
+                    <span className="text-[13px] font-semibold text-[#2D3436]">
+                      {feeAmount} {selectedToken.symbol}
+                    </span>
+                  </div>
+                )}
                 <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#FDFBF8] border border-[#EDE9E3]">
                   <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
                   <FeeTokenPicker value={feeToken} tokens={tokens} onChange={setFeeToken} />
@@ -665,38 +737,212 @@ function ScheduledSendModal({
                   Back
                 </Button>
                 <Button
-                  onClick={handleSubmit}
+                  onClick={handleSign}
                   className="flex-1 h-12 font-semibold bg-[#E07A5F] hover:bg-[#D4694F] text-white shadow-lg shadow-[#E07A5F]/15"
                 >
-                  Schedule Payment
+                  {hasFee ? 'Sign & Continue' : 'Schedule Payment'}
                 </Button>
               </div>
             </motion.div>
           )}
 
-          {/* ─── Sending ─── */}
+          {/* ─── Pay Fee ─── */}
+          {step === 'pay-fee' && (
+            <motion.div
+              key="pay-fee"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+            >
+              <div className="px-6 pt-6 pb-4">
+                <DialogTitle className="text-lg font-bold text-[#2D3436]">
+                  Pay Service Fee
+                </DialogTitle>
+                <DialogDescription className="text-[13px] text-[#9B9590] mt-1">
+                  Transaction signed. Confirm the service fee to schedule.
+                </DialogDescription>
+              </div>
+
+              <div className="px-6 pb-4 space-y-3">
+                <div className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3]">
+                  <p className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-1">
+                    Payment Amount
+                  </p>
+                  <p className="text-2xl font-bold text-[#2D3436]">
+                    {formattedAmount}{' '}
+                    <span className="text-[15px] font-semibold text-[#9B9590]">
+                      {selectedToken.symbol}
+                    </span>
+                  </p>
+                </div>
+
+                <div className="bg-[#9B72CF]/5 rounded-xl p-4 border border-[#9B72CF]/15">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[11px] font-semibold text-[#9B72CF] uppercase tracking-wider">
+                        Service Fee
+                      </p>
+                      <p className="text-[12px] text-[#9B9590] mt-0.5">
+                        Charged once to schedule this payment
+                      </p>
+                    </div>
+                    <p className="text-[15px] font-bold text-[#2D3436]">
+                      {feeAmount} {selectedToken.symbol}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step progress */}
+                <div className="flex items-center gap-3 py-2">
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle className="w-4 h-4 text-[#6B8F71]" />
+                    <span className="text-[12px] text-[#6B8F71] font-medium">Signed</span>
+                  </div>
+                  <div className="flex-1 h-px bg-[#EDE9E3]" />
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-4 h-4 rounded-full border-2 border-[#9B72CF] flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 rounded-full bg-[#9B72CF]" />
+                    </div>
+                    <span className="text-[12px] text-[#9B72CF] font-medium">Pay Fee</span>
+                  </div>
+                  <div className="flex-1 h-px bg-[#EDE9E3]" />
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-4 h-4 rounded-full border-2 border-[#EDE9E3]" />
+                    <span className="text-[12px] text-[#9B9590]">Schedule</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-6 pb-6">
+                <Button
+                  onClick={handlePayAndSave}
+                  className="w-full h-12 font-semibold bg-[#9B72CF] hover:bg-[#8A63BE] text-white shadow-lg shadow-[#9B72CF]/15"
+                >
+                  Pay {feeAmount} {selectedToken.symbol} & Schedule
+                </Button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ─── Sending (step wizard) ─── */}
           {step === 'sending' && (
             <motion.div
               key="sending"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.2 }}
+              className="relative overflow-hidden"
             >
               <DialogTitle className="sr-only">Processing</DialogTitle>
               <DialogDescription className="sr-only">Scheduling your payment</DialogDescription>
-              <div className="px-6 py-14 text-center">
-                <div className="w-12 h-12 rounded-full bg-[#E07A5F]/10 flex items-center justify-center mx-auto mb-6">
-                  <Loader2 className="w-5 h-5 animate-spin text-[#E07A5F]" />
+
+              {/* Background glow */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <motion.div
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.15, 0.3, 0.15] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  className="absolute -top-16 -left-16 w-48 h-48 rounded-full"
+                  style={{
+                    background:
+                      'radial-gradient(circle, rgba(155,114,207,0.2) 0%, transparent 70%)',
+                  }}
+                />
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.25, 0.1] }}
+                  transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+                  className="absolute -bottom-16 -right-16 w-48 h-48 rounded-full"
+                  style={{
+                    background:
+                      'radial-gradient(circle, rgba(155,114,207,0.15) 0%, transparent 70%)',
+                  }}
+                />
+              </div>
+
+              <div className="relative px-6 py-14 text-center">
+                {/* Spinner */}
+                <div className="relative inline-flex items-center justify-center mb-6">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 8, repeat: Infinity, ease: 'linear' }}
+                    className="absolute w-16 h-16"
+                  >
+                    <svg viewBox="0 0 64 64" className="w-full h-full">
+                      <circle
+                        cx="32"
+                        cy="32"
+                        r="30"
+                        fill="none"
+                        stroke="rgba(155,114,207,0.5)"
+                        strokeWidth="1.5"
+                        strokeDasharray="50 140"
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                  </motion.div>
+                  <motion.div
+                    animate={{ scale: [1, 1.06, 1] }}
+                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                    className="w-12 h-12 rounded-full bg-[#9B72CF]/10 flex items-center justify-center"
+                  >
+                    <Loader2 className="w-5 h-5 animate-spin text-[#9B72CF]" />
+                  </motion.div>
                 </div>
-                <p className="text-[12px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2">
-                  Scheduling Payment
-                </p>
-                <p className="text-3xl font-bold text-[#2D3436]">
-                  {formattedAmount}{' '}
-                  <span className="text-lg font-semibold text-[#9B9590]">
-                    {selectedToken.symbol}
+
+                <motion.div
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <p className="text-[12px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2">
+                    {sendingPhase === 'signing' && 'Signing Transaction'}
+                    {sendingPhase === 'paying-fee' && 'Paying Service Fee'}
+                    {sendingPhase === 'saving' && 'Scheduling Payment'}
+                  </p>
+                  <p className="text-3xl font-bold text-[#2D3436] tracking-tight">
+                    {formattedAmount}
+                    <span className="text-lg font-semibold text-[#9B9590] ml-2">
+                      {selectedToken.symbol}
+                    </span>
+                  </p>
+                </motion.div>
+
+                {/* Step indicators */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2 }}
+                  className="mt-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#F5F2ED]"
+                >
+                  <span className="font-mono text-[11px] text-[#6B6560]">
+                    {formatAddress(recipient, 6)}
                   </span>
-                </p>
+                </motion.div>
+
+                <div className="flex items-center justify-center gap-2 mt-5">
+                  {(['signing', ...(hasFee ? ['paying-fee'] : []), 'saving'] as const).map(
+                    (phase, i) => (
+                      <div key={phase} className="flex items-center gap-2">
+                        {i > 0 && <div className="w-4 h-px bg-[#EDE9E3]" />}
+                        <div
+                          className={cn(
+                            'w-2 h-2 rounded-full transition-colors',
+                            sendingPhase === phase
+                              ? 'bg-[#9B72CF] scale-125'
+                              : ['signing', ...(hasFee ? ['paying-fee'] : []), 'saving'].indexOf(
+                                    sendingPhase
+                                  ) >
+                                  ['signing', ...(hasFee ? ['paying-fee'] : []), 'saving'].indexOf(
+                                    phase
+                                  )
+                                ? 'bg-[#6B8F71]'
+                                : 'bg-[#EDE9E3]'
+                          )}
+                        />
+                      </div>
+                    )
+                  )}
+                </div>
               </div>
             </motion.div>
           )}
@@ -707,19 +953,24 @@ function ScheduledSendModal({
               key="success"
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.3 }}
+              className="relative overflow-hidden"
             >
               <DialogTitle className="sr-only">Scheduled</DialogTitle>
               <DialogDescription className="sr-only">
                 Payment scheduled successfully
               </DialogDescription>
+
               <div className="px-6 pt-10 pb-6 text-center">
+                {/* Success icon */}
                 <motion.div
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                  className="inline-flex mb-6"
+                  className="inline-flex items-center justify-center mb-6"
                 >
-                  <div className="w-16 h-16 rounded-full bg-[#E07A5F] flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center bg-[#6B8F71]">
                     <svg
                       width="32"
                       height="32"
@@ -735,28 +986,102 @@ function ScheduledSendModal({
                         strokeLinejoin="round"
                         initial={{ pathLength: 0 }}
                         animate={{ pathLength: 1 }}
-                        transition={{ duration: 0.4, delay: 0.3 }}
+                        transition={{ duration: 0.4, delay: 0.3, ease: 'easeOut' }}
                       />
                     </svg>
                   </div>
                 </motion.div>
-                <p className="text-[15px] font-bold text-[#2D3436] mb-1">Payment Scheduled</p>
-                <p className="text-3xl font-bold text-[#2D3436]">
-                  {formattedAmount}{' '}
-                  <span className="text-lg text-[#9B9590] font-semibold">
+
+                {/* Title */}
+                <motion.p
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.35 }}
+                  className="text-[15px] font-bold text-[#2D3436] mb-1"
+                >
+                  Payment Scheduled
+                </motion.p>
+
+                {/* Amount */}
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.45 }}
+                  className="mb-6"
+                >
+                  <span className="text-3xl font-bold text-[#2D3436]">{formattedAmount}</span>
+                  <span className="text-lg text-[#9B9590] ml-1.5 font-semibold">
                     {selectedToken.symbol}
                   </span>
-                </p>
+                </motion.div>
+
+                {/* Details card */}
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.55 }}
+                  className="bg-[#FDFBF8] rounded-xl p-4 border border-[#EDE9E3] space-y-3 text-left"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                      To
+                    </span>
+                    <span className="font-mono text-[12px] text-[#2D3436]">
+                      {formatAddress(recipient, 8)}
+                    </span>
+                  </div>
+
+                  {memo && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                        Memo
+                      </span>
+                      <span className="text-[12px] text-[#2D3436] max-w-[200px] truncate">
+                        {memo}
+                      </span>
+                    </div>
+                  )}
+
+                  {scheduledForTime && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                        Will execute at
+                      </span>
+                      <span className="text-[12px] font-medium text-[#6B8F71] flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {scheduledForTime}
+                      </span>
+                    </div>
+                  )}
+
+                  {hasFee && (
+                    <div className="flex items-center justify-between pt-2 border-t border-[#EDE9E3]">
+                      <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                        Service fee
+                      </span>
+                      <span className="text-[12px] text-[#2D3436]">
+                        {feeAmount} {selectedToken.symbol}
+                      </span>
+                    </div>
+                  )}
+                </motion.div>
               </div>
-              <div className="px-6 pb-6">
+
+              {/* Footer actions */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.65 }}
+                className="px-6 pb-6 flex gap-3"
+              >
                 <Button
                   onClick={() => onOpenChange(false)}
-                  className="w-full h-12 font-semibold bg-[#E07A5F] hover:bg-[#D4694F] text-white shadow-lg shadow-[#E07A5F]/15"
+                  className="flex-1 h-11 rounded-xl font-semibold bg-[#6B8F71] hover:bg-[#6B8F71]/80 text-white"
                 >
-                  <CheckCircle className="w-4 h-4 mr-1.5" />
+                  <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
                   Done
                 </Button>
-              </div>
+              </motion.div>
             </motion.div>
           )}
         </AnimatePresence>

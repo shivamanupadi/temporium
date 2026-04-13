@@ -1,8 +1,10 @@
 import { Hono } from 'hono';
 import { zValidator } from '@hono/zod-validator';
 import { eq, and, asc, desc, lt, or } from 'drizzle-orm';
+import { verify } from 'hono/jwt';
+import type { Address } from 'viem';
 import { jwtAuth, getWalletAddress } from '../middleware/auth';
-import { NotFoundError, BadRequestError } from '../middleware/error';
+import { NotFoundError, BadRequestError, InternalError } from '../middleware/error';
 import { createDb, scheduledTransactions } from '../db';
 import {
   createScheduledTxSchema,
@@ -12,12 +14,126 @@ import {
   statusParamSchema,
 } from '../lib/validation';
 import { success, paginated, noContent } from '../lib/response';
+import { getScheduledTxFeeConfig, createMppxForScheduledTx } from '../lib/mpp';
 import type { Env, Variables } from '../types/env';
 
 const scheduledTxsRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
 
-// All routes require authentication
-scheduledTxsRouter.use('/*', jwtAuth);
+// =============================================================================
+// Public routes — no jwtAuth
+// =============================================================================
+
+/**
+ * GET /v1/scheduled-transactions/config
+ * Public — returns the platform service-fee config so UIs can render the fee
+ * disclosure. `feeAmount === "0"` means no fee is charged.
+ */
+scheduledTxsRouter.get('/config', async c => {
+  const network = c.get('networkConfig').network;
+  const { feeAmount } = getScheduledTxFeeConfig(c.env);
+  return success(c, { feeAmount, network });
+});
+
+/**
+ * POST /v1/scheduled-transactions
+ * Create a new scheduled transaction.
+ *
+ * Registered before the blanket jwtAuth middleware because, when a platform
+ * service fee is active, mppx issues a 402 challenge on the first request.
+ * The mppx client retries with a payment credential but may not replay custom
+ * headers (like Authorization), so we verify the JWT manually *after* the
+ * mppx gate passes rather than via middleware.
+ */
+scheduledTxsRouter.post('/', zValidator('json', createScheduledTxSchema), async c => {
+  const data = c.req.valid('json');
+  const network = c.get('networkConfig').network;
+
+  // --- mppx fee gate (runs before auth so the 402 challenge works) -----------
+  const { feeAmount, treasury } = getScheduledTxFeeConfig(c.env);
+
+  if (feeAmount !== '0') {
+    if (!treasury) {
+      throw new InternalError('Platform fee is configured but no treasury address is set');
+    }
+
+    const mppx = createMppxForScheduledTx(
+      data.token as Address,
+      data.tokenDecimals,
+      network,
+      c.env
+    );
+
+    const result = await mppx.charge({
+      amount: feeAmount,
+      recipient: treasury as Address,
+    })(c.req.raw);
+
+    // 402: return the mppx challenge as-is. CORS middleware adds headers on the way out.
+    if (result.status === 402) {
+      return result.challenge;
+    }
+
+    // Fee paid — fall through to create the scheduled transaction.
+  }
+
+  // --- Auth (via X-Tempo-Auth, not Authorization) ---
+  // The standard Authorization header is used by mppx for the payment credential.
+  // JWT is passed in X-Tempo-Auth so it survives the mppx 402→retry cycle.
+  const authHeader = c.req.header('X-Tempo-Auth') ?? c.req.header('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) {
+    return c.json(
+      { error: 'Unauthorized', message: 'Missing or invalid authorization header' },
+      401
+    );
+  }
+  let owner: string;
+  try {
+    const decoded = await verify(authHeader.slice(7), c.env.JWT_SECRET);
+    owner = (decoded.walletAddress as string).toLowerCase();
+  } catch {
+    return c.json({ error: 'Unauthorized', message: 'Invalid or expired token' }, 401);
+  }
+
+  // --- Persist scheduled transaction -----------------------------------------
+  const db = createDb(c.env.DB);
+  const inserted = await db
+    .insert(scheduledTransactions)
+    .values({
+      owner,
+      serializedTx: data.serializedTx,
+      network,
+      from: data.from,
+      to: data.to,
+      amount: data.amount,
+      token: data.token,
+      tokenSymbol: data.tokenSymbol,
+      tokenDecimals: data.tokenDecimals,
+      feeToken: data.feeToken,
+      memo: data.memo,
+      scheduledFor: new Date(data.scheduledFor),
+    })
+    .returning();
+
+  const txRecord = inserted[0];
+
+  // Create a Durable Object to handle execution at the scheduled time
+  const doId = c.env.SCHEDULED_TX.idFromName(txRecord.id);
+  const doStub = c.env.SCHEDULED_TX.get(doId);
+
+  await doStub.fetch(
+    new Request('http://do/schedule', {
+      method: 'POST',
+      body: JSON.stringify({
+        txId: txRecord.id,
+        serializedTx: data.serializedTx,
+        network,
+        scheduledFor: new Date(data.scheduledFor).getTime(),
+      }),
+    })
+  );
+
+  return success(c, txRecord, 201);
+});
 
 /**
  * GET /v1/scheduled-transactions
@@ -28,7 +144,7 @@ scheduledTxsRouter.use('/*', jwtAuth);
  *   cursor  - opaque cursor from previous response (base64 of createdAt:id)
  *   limit   - page size (1-50, default 20)
  */
-scheduledTxsRouter.get('/', zValidator('query', scheduledTxQuerySchema), async c => {
+scheduledTxsRouter.get('/', jwtAuth, zValidator('query', scheduledTxQuerySchema), async c => {
   const db = createDb(c.env.DB);
   const owner = getWalletAddress(c);
   const { status, cursor, limit } = c.req.valid('query');
@@ -87,25 +203,30 @@ scheduledTxsRouter.get('/', zValidator('query', scheduledTxQuerySchema), async c
  * GET /v1/scheduled-transactions/status/:status
  * List scheduled transactions by status
  */
-scheduledTxsRouter.get('/status/:status', zValidator('param', statusParamSchema), async c => {
-  const db = createDb(c.env.DB);
-  const owner = getWalletAddress(c);
-  const { status } = c.req.valid('param');
+scheduledTxsRouter.get(
+  '/status/:status',
+  jwtAuth,
+  zValidator('param', statusParamSchema),
+  async c => {
+    const db = createDb(c.env.DB);
+    const owner = getWalletAddress(c);
+    const { status } = c.req.valid('param');
 
-  const result = await db
-    .select()
-    .from(scheduledTransactions)
-    .where(and(eq(scheduledTransactions.owner, owner), eq(scheduledTransactions.status, status)))
-    .orderBy(asc(scheduledTransactions.scheduledFor));
+    const result = await db
+      .select()
+      .from(scheduledTransactions)
+      .where(and(eq(scheduledTransactions.owner, owner), eq(scheduledTransactions.status, status)))
+      .orderBy(asc(scheduledTransactions.scheduledFor));
 
-  return success(c, result);
-});
+    return success(c, result);
+  }
+);
 
 /**
  * GET /v1/scheduled-transactions/pending
  * List pending scheduled transactions
  */
-scheduledTxsRouter.get('/pending', async c => {
+scheduledTxsRouter.get('/pending', jwtAuth, async c => {
   const db = createDb(c.env.DB);
   const owner = getWalletAddress(c);
 
@@ -122,7 +243,7 @@ scheduledTxsRouter.get('/pending', async c => {
  * GET /v1/scheduled-transactions/:id
  * Get a specific scheduled transaction
  */
-scheduledTxsRouter.get('/:id', zValidator('param', idParamSchema), async c => {
+scheduledTxsRouter.get('/:id', jwtAuth, zValidator('param', idParamSchema), async c => {
   const db = createDb(c.env.DB);
   const owner = getWalletAddress(c);
   const { id } = c.req.valid('param');
@@ -141,61 +262,12 @@ scheduledTxsRouter.get('/:id', zValidator('param', idParamSchema), async c => {
 });
 
 /**
- * POST /v1/scheduled-transactions
- * Create a new scheduled transaction
- */
-scheduledTxsRouter.post('/', zValidator('json', createScheduledTxSchema), async c => {
-  const db = createDb(c.env.DB);
-  const owner = getWalletAddress(c);
-  const data = c.req.valid('json');
-  const network = c.get('networkConfig').network;
-
-  // 1. Save metadata to D1 (for listing/UI)
-  const result = await db
-    .insert(scheduledTransactions)
-    .values({
-      owner,
-      serializedTx: data.serializedTx,
-      network,
-      from: data.from,
-      to: data.to,
-      amount: data.amount,
-      token: data.token,
-      tokenSymbol: data.tokenSymbol,
-      tokenDecimals: data.tokenDecimals,
-      feeToken: data.feeToken,
-      memo: data.memo,
-      scheduledFor: new Date(data.scheduledFor),
-    })
-    .returning();
-
-  const txRecord = result[0];
-
-  // 2. Create a Durable Object to handle execution at the scheduled time
-  const doId = c.env.SCHEDULED_TX.idFromName(txRecord.id);
-  const doStub = c.env.SCHEDULED_TX.get(doId);
-
-  await doStub.fetch(
-    new Request('http://do/schedule', {
-      method: 'POST',
-      body: JSON.stringify({
-        txId: txRecord.id,
-        serializedTx: data.serializedTx,
-        network,
-        scheduledFor: new Date(data.scheduledFor).getTime(),
-      }),
-    })
-  );
-
-  return success(c, txRecord, 201);
-});
-
-/**
  * PATCH /v1/scheduled-transactions/:id
  * Update a scheduled transaction status
  */
 scheduledTxsRouter.patch(
   '/:id',
+  jwtAuth,
   zValidator('param', idParamSchema),
   zValidator('json', updateScheduledTxSchema),
   async c => {
@@ -241,7 +313,7 @@ scheduledTxsRouter.patch(
  * POST /v1/scheduled-transactions/:id/execute
  * Mark a scheduled transaction as executed
  */
-scheduledTxsRouter.post('/:id/execute', zValidator('param', idParamSchema), async c => {
+scheduledTxsRouter.post('/:id/execute', jwtAuth, zValidator('param', idParamSchema), async c => {
   const db = createDb(c.env.DB);
   const owner = getWalletAddress(c);
   const { id } = c.req.valid('param');
@@ -279,7 +351,7 @@ scheduledTxsRouter.post('/:id/execute', zValidator('param', idParamSchema), asyn
  * POST /v1/scheduled-transactions/:id/fail
  * Mark a scheduled transaction as failed
  */
-scheduledTxsRouter.post('/:id/fail', zValidator('param', idParamSchema), async c => {
+scheduledTxsRouter.post('/:id/fail', jwtAuth, zValidator('param', idParamSchema), async c => {
   const db = createDb(c.env.DB);
   const owner = getWalletAddress(c);
   const { id } = c.req.valid('param');
@@ -318,7 +390,7 @@ scheduledTxsRouter.post('/:id/fail', zValidator('param', idParamSchema), async c
  * DELETE /v1/scheduled-transactions/:id
  * Delete a scheduled transaction
  */
-scheduledTxsRouter.delete('/:id', zValidator('param', idParamSchema), async c => {
+scheduledTxsRouter.delete('/:id', jwtAuth, zValidator('param', idParamSchema), async c => {
   const db = createDb(c.env.DB);
   const owner = getWalletAddress(c);
   const { id } = c.req.valid('param');

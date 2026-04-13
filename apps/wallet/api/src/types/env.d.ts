@@ -33,9 +33,10 @@ export interface Env {
   RECURRING_PAYMENTS_TESTNET_CONTRACT: string;
   RECURRING_PAYMENTS_MAINNET_CONTRACT: string;
 
-  // Payment links — platform fee (dormant at launch; flip to enable)
-  PLATFORM_FEE_BPS: string; // basis points as string, e.g. "100" for 1%, "0" for dormant
-  PLATFORM_REVENUE_ADDRESS: string; // fee recipient (shared across networks)
+  // Platform fees — dormant at launch; flip to enable per feature
+  PLATFORM_FEE_PAYMENT_LINK_BPS: string; // payment links fee in basis points, e.g. "100" for 1%
+  PLATFORM_FEE_SCHEDULE_TXN_AMOUNT: string; // flat fee for scheduled payments in token decimal units, e.g. "0.1"
+  PLATFORM_REVENUE_ADDRESS: string; // fee recipient (shared across networks & features)
 
   // Secrets (set via wrangler secret put)
   JWT_SECRET: string;

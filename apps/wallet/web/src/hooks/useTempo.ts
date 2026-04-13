@@ -54,6 +54,8 @@ interface UseTempoReturn {
   address: Address | undefined;
   error: Error | null;
   walletType: WalletType;
+  /** The underlying viem WalletClient — useful for mppx or direct chain calls. */
+  walletClient: import('viem').WalletClient | undefined;
   hasInjectedWallet: boolean;
   // Auth
   signUp: (label?: string) => Promise<void>;
@@ -458,6 +460,7 @@ export function useTempo(): UseTempoReturn {
     address,
     error,
     walletType,
+    walletClient: walletClient ?? undefined,
     hasInjectedWallet,
     signUp,
     signIn,

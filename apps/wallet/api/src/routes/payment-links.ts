@@ -28,7 +28,7 @@ import { createDb, paymentLinks, paymentLinkPayments } from '../db';
 import type { PaymentLink } from '../db/schema';
 import { createPaymentLinkSchema, paymentLinkQuerySchema, idParamSchema } from '../lib/validation';
 import { success, paginated, noContent } from '../lib/response';
-import { getPlatformFeeConfig, computeFeeAmount, createMppxForLink } from '../lib/mpp';
+import { getPaymentLinkFeeConfig, computeFeeAmount, createMppxForLink } from '../lib/mpp';
 import { resolveAllowedToken } from '../lib/payment-link-tokens';
 import type { Env, Variables } from '../types/env';
 
@@ -46,7 +46,7 @@ const paymentLinksRouter = new Hono<{ Bindings: Env; Variables: Variables }>();
  */
 paymentLinksRouter.get('/config', async c => {
   const network = c.get('networkConfig').network;
-  const { feeBps } = getPlatformFeeConfig(c.env);
+  const { feeBps } = getPaymentLinkFeeConfig(c.env);
   return success(c, { feeBps, network });
 });
 
@@ -85,7 +85,7 @@ paymentLinksRouter.get('/public/:id', zValidator('param', idParamSchema), async 
 
   const fulfilled = link.status !== 'active';
 
-  const { feeBps } = getPlatformFeeConfig(c.env);
+  const { feeBps } = getPaymentLinkFeeConfig(c.env);
 
   return success(c, {
     id: link.id,
@@ -157,7 +157,7 @@ paymentLinksRouter.post('/public/:id/pay', zValidator('param', idParamSchema), a
   }
 
   // --- Fee config ---------------------------------------------------------
-  const { feeBps, treasury } = getPlatformFeeConfig(c.env);
+  const { feeBps, treasury } = getPaymentLinkFeeConfig(c.env);
   if (feeBps > 0 && !treasury) {
     throw new InternalError('Platform fee is configured but no treasury address is set');
   }

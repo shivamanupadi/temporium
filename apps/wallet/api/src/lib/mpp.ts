@@ -1,9 +1,9 @@
 /**
  * MPP (Machine Payments Protocol) helpers — wraps `mppx/server` for reuse
- * across payment-gated features.
+ * across payment-gated features (payment links, scheduled payments, etc.).
  *
  * The core pattern:
- *   const mppx = createMppx({ currency, decimals, testnet, secretKey });
+ *   const mppx = createMppx({ currency, decimals, testnet, secretKey, realm });
  *   const result = await mppx.charge(chargeOpts)(request);
  *   if (result.status === 402) return result.challenge;
  *   return result.withReceipt(response);
@@ -17,6 +17,10 @@ import type { Address } from 'viem';
 import type { Env } from '../types/env';
 import type { PaymentLink } from '../db/schema';
 
+// =============================================================================
+// Platform fee resolution
+// =============================================================================
+
 /** Platform revenue wallet + fee rate resolution. */
 export interface PlatformFeeConfig {
   /** Fee rate in basis points (100 = 1%). Zero means fee is dormant. */
@@ -25,18 +29,38 @@ export interface PlatformFeeConfig {
   treasury: string;
 }
 
-/**
- * Read platform-fee settings out of env. At launch, `PLATFORM_FEE_BPS`
- * defaults to "0" and `PLATFORM_REVENUE_ADDRESS` is empty — the pay
- * handler will skip splits entirely in that state. The revenue wallet
- * is shared across networks (same address for testnet and mainnet).
- */
-export function getPlatformFeeConfig(env: Env): PlatformFeeConfig {
-  const raw = env.PLATFORM_FEE_BPS ?? '0';
-  const feeBps = Number.isFinite(Number(raw)) ? Number(raw) : 0;
-  const treasury = env.PLATFORM_REVENUE_ADDRESS ?? '';
-  return { feeBps, treasury };
+/** Parse a basis-points env var string into a safe number. */
+function parseBps(raw: string | undefined): number {
+  const n = Number(raw ?? '0');
+  return Number.isFinite(n) ? n : 0;
 }
+
+/** Fee config for payment links. */
+export function getPaymentLinkFeeConfig(env: Env): PlatformFeeConfig {
+  return {
+    feeBps: parseBps(env.PLATFORM_FEE_PAYMENT_LINK_BPS),
+    treasury: env.PLATFORM_REVENUE_ADDRESS ?? '',
+  };
+}
+
+/** Flat fee config for scheduled payments. */
+export interface ScheduledTxFeeConfig {
+  /** Flat fee in token decimal units (e.g. "0.1"). Empty or "0" means dormant. */
+  feeAmount: string;
+  /** Fee recipient address; empty string when dormant. */
+  treasury: string;
+}
+
+export function getScheduledTxFeeConfig(env: Env): ScheduledTxFeeConfig {
+  const raw = env.PLATFORM_FEE_SCHEDULE_TXN_AMOUNT ?? '0';
+  const feeAmount = Number.isFinite(Number(raw)) && Number(raw) > 0 ? raw : '0';
+  return { feeAmount, treasury: env.PLATFORM_REVENUE_ADDRESS ?? '' };
+}
+
+/**
+ * @deprecated Use feature-specific helpers (`getPaymentLinkFeeConfig`, `getScheduledTxFeeConfig`).
+ */
+export const getPlatformFeeConfig = getPaymentLinkFeeConfig;
 
 /**
  * Compute the raw fee amount (base units) from a gross amount and bps rate.
@@ -48,7 +72,10 @@ export function computeFeeAmount(grossRaw: bigint, feeBps: number): bigint {
   return (grossRaw * BigInt(feeBps)) / 10000n;
 }
 
-/** Generic MPP instance for any currency+decimals combo. Reusable for future features. */
+// =============================================================================
+// Mppx instance factory
+// =============================================================================
+
 export interface CreateMppxOpts {
   /** TIP-20 token contract address. */
   currency: Address;
@@ -82,22 +109,43 @@ export function createMppx(opts: CreateMppxOpts) {
   });
 }
 
-/** Convenience: create an Mppx instance configured for a specific PaymentLink. */
-export function createMppxForLink(link: PaymentLink, env: Env) {
-  const secretKey = env.MPP_SECRET_KEY;
-  if (!secretKey) {
+/**
+ * Resolve MPP_SECRET_KEY from env, throwing a descriptive error if missing.
+ * Shared by all feature-specific factory helpers below.
+ */
+function requireSecretKey(env: Env): string {
+  const key = env.MPP_SECRET_KEY;
+  if (!key) {
     throw new Error(
       'MPP_SECRET_KEY is not configured — set it in .dev.vars (local) or via `wrangler secret put MPP_SECRET_KEY` (deployed)'
     );
   }
-  // Fixed realm keyed on network so challenges issued on testnet can't be
-  // replayed on mainnet and vice versa.
-  const realm = `temporium-payment-links:${link.network}`;
+  return key;
+}
+
+/** Create an Mppx instance configured for a PaymentLink. */
+export function createMppxForLink(link: PaymentLink, env: Env) {
   return createMppx({
     currency: link.token as Address,
     decimals: link.tokenDecimals,
     testnet: link.network === 'testnet',
-    secretKey,
-    realm,
+    secretKey: requireSecretKey(env),
+    realm: `temporium-payment-links:${link.network}`,
+  });
+}
+
+/** Create an Mppx instance for a scheduled-payment service fee. */
+export function createMppxForScheduledTx(
+  token: Address,
+  tokenDecimals: number,
+  network: 'testnet' | 'mainnet',
+  env: Env
+) {
+  return createMppx({
+    currency: token,
+    decimals: tokenDecimals,
+    testnet: network === 'testnet',
+    secretKey: requireSecretKey(env),
+    realm: `temporium-scheduled-txs:${network}`,
   });
 }

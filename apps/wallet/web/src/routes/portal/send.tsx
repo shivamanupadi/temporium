@@ -19,7 +19,6 @@ import { format } from 'date-fns';
 import type { Address } from 'viem';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 import { TokenPicker } from '@/components/TokenPicker';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
@@ -28,6 +27,7 @@ import { useTempo, useTokenBalance, encodeMemo } from '@/hooks/useTempo';
 import { useTokenList } from '@/hooks/useTokenList';
 import { useFeePreference } from '@/hooks/useFeePreference';
 import { createScheduledTransaction } from '@/lib/scheduled-transactions';
+import { createMppxFetch } from '@/lib/mpp';
 import type { Token } from '@/lib/tokenlist';
 import { SCHEDULE_PRESETS } from '@/lib/constants';
 import { tempoChain } from '@/lib/tempo-client';
@@ -95,7 +95,7 @@ function formatDuration(seconds: number): string {
 function SendPage(): ReactElement | null {
   const { mode: searchMode } = Route.useSearch();
   const navigate = useNavigate();
-  const { address, isConnected, sendPayment, signScheduledPayment } = useTempo();
+  const { address, isConnected, walletClient, sendPayment, signScheduledPayment } = useTempo();
   const { tokens } = useTokenList();
   const { preferredFeeToken } = useFeePreference();
 
@@ -241,20 +241,26 @@ function SendPage(): ReactElement | null {
           scheduledFor,
         });
 
-        // POST to worker API — the cron will submit it when the time comes
+        // POST to worker API — the cron will submit it when the time comes.
+        // Uses mppx fetch so the platform service fee (if configured) is paid
+        // transparently via the 402 challenge flow.
         const scheduledForISO = new Date(scheduledFor * 1000).toISOString();
-        await createScheduledTransaction({
-          serializedTx: serializedTransaction,
-          from: address,
-          to: form.recipient,
-          amount: parsedAmount.toString(),
-          token: selectedToken.address,
-          tokenSymbol: selectedToken.symbol,
-          tokenDecimals: selectedToken.decimals,
-          feeToken: feeToken.address,
-          memo: form.memo || undefined,
-          scheduledFor: scheduledForISO,
-        });
+        const mppxFetch = createMppxFetch(walletClient) ?? fetch;
+        await createScheduledTransaction(
+          {
+            serializedTx: serializedTransaction,
+            from: address,
+            to: form.recipient,
+            amount: parsedAmount.toString(),
+            token: selectedToken.address,
+            tokenSymbol: selectedToken.symbol,
+            tokenDecimals: selectedToken.decimals,
+            feeToken: feeToken.address,
+            memo: form.memo || undefined,
+            scheduledFor: scheduledForISO,
+          },
+          mppxFetch
+        );
 
         setScheduledForTime(
           new Date(scheduledFor * 1000).toLocaleTimeString([], {
@@ -292,6 +298,7 @@ function SendPage(): ReactElement | null {
     isCustomMode,
     customTimestamp,
     signScheduledPayment,
+    walletClient,
     sendPayment,
     form,
     parsedAmount,
@@ -388,188 +395,118 @@ function SendPage(): ReactElement | null {
           </button>
         </div>
 
-        <div className="p-5 space-y-5">
-          {/* Recipient address */}
-          <ContactPicker
-            value={form.recipient}
-            onChange={v => updateField('recipient', v)}
-            selfAddress={address}
-          />
+        <div className="p-5 space-y-5 min-h-[420px]">
+          {mode === 'instant' ? (
+            <>
+              {/* Recipient address */}
+              <ContactPicker
+                value={form.recipient}
+                onChange={v => updateField('recipient', v)}
+                selfAddress={address}
+              />
 
-          {/* Amount */}
-          <div>
-            <label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2 block">
-              Amount
-            </label>
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1">
+              {/* Amount */}
+              <div>
+                <label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2 block">
+                  Amount
+                </label>
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1">
+                    <Input
+                      type="text"
+                      inputMode="decimal"
+                      placeholder="0.00"
+                      value={form.amount}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        handleAmountChange(e.target.value)
+                      }
+                      className={cn(
+                        'text-[18px] font-semibold bg-[#FDFBF8]',
+                        form.amount &&
+                          hasValidAmount &&
+                          !hasSufficientBalance &&
+                          'border-red-300 bg-red-50/30'
+                      )}
+                    />
+                  </div>
+                  <TokenPicker token={selectedToken} tokens={tokens} onChange={setSelectedToken} />
+                </div>
+                <div className="flex items-center justify-between mt-2">
+                  <p className="text-[12px] text-[#9B9590]">
+                    Available <span className="font-semibold text-[#2D3436]">{balanceDisplay}</span>{' '}
+                    {selectedToken.symbol}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleMaxAmount}
+                    className="text-[11px] font-medium text-[#9B9590] hover:text-[#2D3436] transition-colors px-2 py-0.5 rounded bg-[#F5F2ED] hover:bg-[#EDE9E3]"
+                  >
+                    Max
+                  </button>
+                </div>
+                {form.amount && hasValidAmount && !hasSufficientBalance && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-[11px] text-red-500 mt-1.5 flex items-center gap-1"
+                  >
+                    <AlertTriangle className="w-3 h-3" />
+                    Insufficient balance
+                  </motion.p>
+                )}
+              </div>
+
+              {/* Memo */}
+              <div>
+                <label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2 block">
+                  Memo{' '}
+                  <span className="text-[#B5B0AA] font-normal normal-case">
+                    (optional, max 32 bytes)
+                  </span>
+                </label>
                 <Input
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="0.00"
-                  value={form.amount}
+                  placeholder="What's this for?"
+                  value={form.memo}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    handleAmountChange(e.target.value)
+                    updateField('memo', e.target.value)
                   }
-                  className={cn(
-                    'text-[18px] font-semibold bg-[#FDFBF8]',
-                    form.amount &&
-                      hasValidAmount &&
-                      !hasSufficientBalance &&
-                      'border-red-300 bg-red-50/30'
-                  )}
+                  maxLength={32}
+                  className="text-[13px] bg-[#FDFBF8]"
                 />
               </div>
-              <TokenPicker token={selectedToken} tokens={tokens} onChange={setSelectedToken} />
+
+              {/* Submit button */}
+              <Button
+                disabled={!isFormValid}
+                onClick={handleReview}
+                className="w-full h-12 text-[14px] font-semibold bg-[#E07A5F] hover:bg-[#D4694F] text-white shadow-lg shadow-[#E07A5F]/15 hover:shadow-xl hover:shadow-[#E07A5F]/20"
+              >
+                Review Payment
+                <ArrowRight className="w-4 h-4 ml-1.5" />
+              </Button>
+            </>
+          ) : (
+            <div className="rounded-xl border border-[var(--color-sage)]/15 bg-[var(--color-sage)]/[0.04] p-5 text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-[var(--color-sage)]/10 flex items-center justify-center mx-auto">
+                <Clock className="w-6 h-6 text-[var(--color-sage)]" />
+              </div>
+              <div>
+                <p className="text-[14px] font-semibold text-[#2D3436]">
+                  Schedule payments from the dedicated page
+                </p>
+                <p className="text-[12px] text-[#9B9590] mt-1 leading-relaxed">
+                  Set up time-locked transfers, manage pending schedules, and track execution
+                  history — all in one place.
+                </p>
+              </div>
+              <Link to="/portal/scheduled-payments">
+                <Button className="h-10 px-6 text-[13px] font-semibold bg-[var(--color-sage)] hover:bg-[var(--color-sage)]/80 text-white shadow-lg shadow-[var(--color-sage)]/15">
+                  <Clock className="w-3.5 h-3.5 mr-1.5" />
+                  Go to Scheduled Payments
+                </Button>
+              </Link>
             </div>
-            <div className="flex items-center justify-between mt-2">
-              <p className="text-[12px] text-[#9B9590]">
-                Available <span className="font-semibold text-[#2D3436]">{balanceDisplay}</span>{' '}
-                {selectedToken.symbol}
-              </p>
-              <button
-                type="button"
-                onClick={handleMaxAmount}
-                className="text-[11px] font-medium text-[#9B9590] hover:text-[#2D3436] transition-colors px-2 py-0.5 rounded bg-[#F5F2ED] hover:bg-[#EDE9E3]"
-              >
-                Max
-              </button>
-            </div>
-            {form.amount && hasValidAmount && !hasSufficientBalance && (
-              <motion.p
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-[11px] text-red-500 mt-1.5 flex items-center gap-1"
-              >
-                <AlertTriangle className="w-3 h-3" />
-                Insufficient balance
-              </motion.p>
-            )}
-          </div>
-
-          {/* Memo */}
-          <div>
-            <label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2 block">
-              Memo{' '}
-              <span className="text-[#B5B0AA] font-normal normal-case">
-                (optional, max 32 bytes)
-              </span>
-            </label>
-            <Input
-              placeholder="What's this for?"
-              value={form.memo}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                updateField('memo', e.target.value)
-              }
-              maxLength={32}
-              className="text-[13px] bg-[#FDFBF8]"
-            />
-          </div>
-
-          {/* Schedule presets (visible only in scheduled mode) */}
-          <AnimatePresence mode="wait">
-            {mode === 'scheduled' && (
-              <motion.div
-                key="schedule-options"
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.2 }}
-                className="overflow-hidden"
-              >
-                <div className="space-y-4">
-                  {/* Quick presets */}
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider block">
-                      Quick delay
-                    </label>
-                    <div className="flex gap-2 flex-wrap">
-                      {SCHEDULE_PRESETS.map(
-                        (preset: { readonly label: string; readonly seconds: number }) => {
-                          const isActive = scheduleSeconds === preset.seconds;
-                          return (
-                            <button
-                              key={preset.seconds}
-                              type="button"
-                              onClick={() => {
-                                setScheduleSeconds(preset.seconds);
-                                setCustomDateTime(new Date(Date.now() + preset.seconds * 1000));
-                              }}
-                              className={cn(
-                                'px-4 py-2 rounded-xl text-[13px] font-medium transition-all border',
-                                isActive
-                                  ? 'bg-[#6B8F71] text-white border-[#6B8F71] shadow-sm'
-                                  : 'bg-[#FDFBF8] text-[#6B6560] border-[#EDE9E3] hover:border-[#6B8F71]/40 hover:bg-[#6B8F71]/5'
-                              )}
-                            >
-                              <Clock className="w-3 h-3 inline-block mr-1 -mt-0.5" />
-                              {preset.label}
-                            </button>
-                          );
-                        }
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Divider */}
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 border-t border-[#EDE9E3]" />
-                    <span className="text-[11px] font-medium text-[#B5B0AA] uppercase">or</span>
-                    <div className="flex-1 border-t border-[#EDE9E3]" />
-                  </div>
-
-                  {/* Custom date & time picker */}
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider block">
-                      Pick a date & time
-                    </label>
-                    <DateTimePicker
-                      date={customDateTime}
-                      onDateChange={d => {
-                        setCustomDateTime(d);
-                        setScheduleSeconds(null);
-                      }}
-                      color="coral"
-                      placeholder="Select date & time"
-                      disabled={date => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                    />
-                    {isCustomMode && customTimestamp && (
-                      <p className="text-[12px] text-[#6B8F71] font-medium">
-                        {format(new Date(customTimestamp * 1000), "EEEE, MMM d 'at' h:mm a")}
-                      </p>
-                    )}
-                    {isCustomMode && customDateTime && !customTimestamp && (
-                      <p className="text-[12px] text-coral/70">Selected time is in the past</p>
-                    )}
-                  </div>
-
-                  {/* Warning banner */}
-                  <div className="flex items-start gap-2.5 p-3 rounded-xl bg-coral/[0.04] border border-coral/15">
-                    <AlertTriangle className="w-4 h-4 text-coral/60 mt-0.5 shrink-0" />
-                    <p className="text-[12px] text-coral/70 leading-relaxed">
-                      The transaction will be signed now and submitted automatically at the
-                      scheduled time. You can cancel pending payments from the Scheduled page.
-                    </p>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* Submit button */}
-          <Button
-            disabled={!isFormValid}
-            onClick={handleReview}
-            className={cn(
-              'w-full h-12 text-[14px] font-semibold',
-              mode === 'instant'
-                ? 'bg-[#E07A5F] hover:bg-[#D4694F] text-white shadow-lg shadow-[#E07A5F]/15 hover:shadow-xl hover:shadow-[#E07A5F]/20'
-                : 'bg-[#6B8F71] hover:bg-[#5A7D60] text-white shadow-lg shadow-[#6B8F71]/15 hover:shadow-xl hover:shadow-[#6B8F71]/20'
-            )}
-          >
-            {mode === 'instant' ? 'Review Payment' : 'Review Scheduled Payment'}
-            <ArrowRight className="w-4 h-4 ml-1.5" />
-          </Button>
+          )}
         </div>
       </motion.div>
 

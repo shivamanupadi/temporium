@@ -6,7 +6,7 @@ export function createCorsMiddleware() {
   return cors({
     origin: '*',
     allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowHeaders: ['Content-Type', 'Authorization', 'X-Tempo-Network'],
+    allowHeaders: ['Content-Type', 'Authorization', 'X-Tempo-Network', 'X-Tempo-Auth'],
     // `WWW-Authenticate` carries the mppx 402 challenge; `Payment-Receipt`
     // carries the settlement proof on 200. Browsers hide non-simple response
     // headers from JS unless they are explicitly exposed, so mppx/client
