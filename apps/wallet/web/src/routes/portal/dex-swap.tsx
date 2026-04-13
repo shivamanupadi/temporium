@@ -29,6 +29,7 @@ import {
 } from '@/lib/tempo-client';
 import { formatAmount, parseAmount } from '@/lib/utils';
 import { getTokenColors } from '@/lib/tokenlist';
+import { publicApiRequest } from '@/lib/api-client';
 
 interface DexSwapSearch {
   from?: string;
@@ -337,6 +338,26 @@ function DexSwapPage(): ReactElement | null {
     setFeeToken(preferred ?? chainDefault ?? tokens[0]);
   }, [tokens, preferredFeeToken, feeToken]);
 
+  // Swap fee config (fetched from server)
+  const [swapFee, setSwapFee] = useState<{
+    feeAmount: string;
+    feeToken: string;
+    treasury: string;
+  }>({ feeAmount: '0', feeToken: '', treasury: '' });
+
+  useEffect(() => {
+    publicApiRequest<{ feeAmount: string; feeToken: string; treasury: string }>('/v1/swap/config')
+      .then(setSwapFee)
+      .catch(() => setSwapFee({ feeAmount: '0', feeToken: '', treasury: '' }));
+  }, []);
+
+  const hasSwapFee = swapFee.feeAmount !== '0' && !!swapFee.feeToken && !!swapFee.treasury;
+
+  // Resolve the fee token metadata for display
+  const swapFeeTokenMeta = hasSwapFee
+    ? tokens.find(t => t.address.toLowerCase() === swapFee.feeToken.toLowerCase())
+    : null;
+
   // Form state
   const [amountIn, setAmountIn] = useState('');
   const [route, setRoute] = useState<SwapRoute | null>(null);
@@ -565,6 +586,20 @@ function DexSwapPage(): ReactElement | null {
             minAmountOut: minHop2,
           })
         );
+      }
+
+      // Append platform fee transfer (atomic — swap + fee succeed or fail together)
+      if (hasSwapFee && swapFeeTokenMeta) {
+        const feeRaw = parseAmount(swapFee.feeAmount, swapFeeTokenMeta.decimals);
+        if (feeRaw > 0n) {
+          calls.push(
+            Actions.token.transfer.call({
+              token: swapFee.feeToken as Address,
+              to: swapFee.treasury as Address,
+              amount: feeRaw,
+            })
+          );
+        }
       }
 
       // Execute all calls in a single batch transaction
@@ -963,6 +998,11 @@ function DexSwapPage(): ReactElement | null {
                             {quote ? formatAmount((quote * 995n) / 1000n, outDecimals) : '—'}{' '}
                             {tokenOut.symbol} (0.5% slippage)
                           </p>
+                          {hasSwapFee && swapFeeTokenMeta && (
+                            <p className="text-[11px] text-[#9B9590] mt-2">
+                              Service fee: {swapFee.feeAmount} {swapFeeTokenMeta.symbol}
+                            </p>
+                          )}
                           <p className="text-[11px] text-[#9B9590] mt-1">
                             Network fee paid in {feeToken.symbol}
                           </p>
