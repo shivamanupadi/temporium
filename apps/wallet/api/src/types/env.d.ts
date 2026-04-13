@@ -37,6 +37,7 @@ export interface Env {
   PLATFORM_FEE_PAYMENT_LINK_BPS: string; // payment links fee in basis points, e.g. "100" for 1%
   PLATFORM_FEE_SCHEDULE_TXN_AMOUNT: string; // flat fee for scheduled payments in token decimal units, e.g. "0.1"
   PLATFORM_FEE_SWAP_AMOUNT: string; // flat fee for swaps in token decimal units, e.g. "0.1"
+  PLATFORM_FEE_RECURRING_AMOUNT: string; // flat fee for recurring payment creation, e.g. "0.5"
   PLATFORM_REVENUE_ADDRESS: string; // fee recipient (shared across networks & features)
 
   // Secrets (set via wrangler secret put)

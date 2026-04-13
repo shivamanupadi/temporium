@@ -40,6 +40,7 @@ import {
   reactivateRecurringPayment,
   type PaginatedRecurringPaymentResponse,
 } from '@/lib/recurring-payments';
+import { publicApiRequest } from '@/lib/api-client';
 import type { Token } from '@/lib/tokenlist';
 import {
   formatAmount,
@@ -463,7 +464,7 @@ function RecurringPaymentsPage(): ReactElement {
 // Create Subscription Dialog
 // ---------------------------------------------------------------------------
 
-type CreateStep = 'form' | 'confirm' | 'processing' | 'success';
+type CreateStep = 'form' | 'confirm' | 'approved' | 'processing' | 'success';
 
 function CreateSubscriptionDialog({
   open,
@@ -493,6 +494,27 @@ function CreateSubscriptionDialog({
 }): ReactElement {
   const [step, setStep] = useState<CreateStep>('form');
   const [processingStatus, setProcessingStatus] = useState('');
+
+  // Platform fee config
+  const [recurringFee, setRecurringFee] = useState<{
+    feeAmount: string;
+    feeToken: string;
+    treasury: string;
+  }>({ feeAmount: '0', feeToken: '', treasury: '' });
+
+  useEffect(() => {
+    publicApiRequest<{ feeAmount: string; feeToken: string; treasury: string }>(
+      '/v1/recurring-payments/config'
+    )
+      .then(setRecurringFee)
+      .catch(() => setRecurringFee({ feeAmount: '0', feeToken: '', treasury: '' }));
+  }, []);
+
+  const hasRecurringFee =
+    recurringFee.feeAmount !== '0' && !!recurringFee.feeToken && !!recurringFee.treasury;
+  const recurringFeeTokenMeta = hasRecurringFee
+    ? tokens.find(t => t.address.toLowerCase() === recurringFee.feeToken.toLowerCase())
+    : null;
 
   // Form state
   const [recipient, setRecipient] = useState('');
@@ -552,8 +574,10 @@ function CreateSubscriptionDialog({
     setAmount(cleaned);
   }, []);
 
-  const handleSubmit = useCallback(async () => {
+  // Step 1: Approve token spend (user click → wallet popup)
+  const handleApprove = useCallback(async () => {
     if (!isFormValid || !selectedToken || !feeToken) return;
+    setProcessingStatus('Checking token allowance...');
     setStep('processing');
 
     try {
@@ -561,15 +585,12 @@ function CreateSubscriptionDialog({
       if (!contractAddress) throw new Error('Contract address not loaded');
       if (!walletClient) throw new Error('Wallet not connected');
 
-      // Step 1: Approve token spend FIRST (so the relayer can pull funds immediately)
-      setProcessingStatus('Checking token allowance...');
       const currentAllowance = await Actions.token.getAllowance(tempoPublicClient, {
         token: selectedToken.address,
         spender: contractAddress,
         account: address as Address,
       });
 
-      // For unlimited subscriptions, approve max uint256; for bounded ones, approve total cost
       const totalNeeded =
         parsedMaxPayments > 0
           ? parsedAmount * BigInt(parsedMaxPayments)
@@ -586,9 +607,8 @@ function CreateSubscriptionDialog({
         await waitForTx(approveHash as `0x${string}`);
       }
 
-      // Step 2: Create on-chain subscription
-      setProcessingStatus('Creating subscription on-chain...');
-
+      // Simulate createSubscription to catch errors before the next step
+      setProcessingStatus('Verifying subscription...');
       const contractArgs = {
         address: contractAddress,
         abi: RECURRING_PAYMENTS_ABI,
@@ -599,19 +619,82 @@ function CreateSubscriptionDialog({
           parsedAmount,
           BigInt(effectiveInterval),
           BigInt(parsedMaxPayments),
-          BigInt(Math.floor(Date.now() / 1000) + effectiveInterval), // startAt = now + interval
+          BigInt(Math.floor(Date.now() / 1000) + effectiveInterval),
         ] as const,
       };
-
-      // Simulate first to catch errors before spending gas
       await tempoPublicClient.simulateContract({
         ...contractArgs,
         account: address as Address,
       });
 
-      // Write via walletClient (signs locally → eth_sendRawTransaction)
-      const txHash = await walletClient.writeContract(contractArgs);
-      const receipt = await waitForTx(txHash);
+      // Move to the "approved" step — user clicks to trigger the batch tx
+      setStep('approved');
+    } catch (err) {
+      console.error('Approve failed:', err);
+      const message = err instanceof Error ? err.message : 'Failed to approve token';
+      toast.error(message);
+      setStep('confirm');
+    }
+  }, [
+    isFormValid,
+    selectedToken,
+    feeToken,
+    walletClient,
+    address,
+    recipient,
+    parsedAmount,
+    effectiveInterval,
+    parsedMaxPayments,
+    approveToken,
+    contractAddress,
+  ]);
+
+  // Step 2: Create subscription + pay fee as batch tx (user click → wallet popup)
+  const handleCreateAndPay = useCallback(async () => {
+    if (!selectedToken || !feeToken || !walletClient || !contractAddress) return;
+    setProcessingStatus('Creating subscription on-chain...');
+    setStep('processing');
+
+    try {
+      const feeTokenAddress = feeToken.address;
+
+      // Build batch calls: createSubscription + optional fee transfer
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const calls: any[] = [
+        {
+          address: contractAddress,
+          abi: RECURRING_PAYMENTS_ABI,
+          functionName: 'createSubscription',
+          args: [
+            recipient as Address,
+            selectedToken.address,
+            parsedAmount,
+            BigInt(effectiveInterval),
+            BigInt(parsedMaxPayments),
+            BigInt(Math.floor(Date.now() / 1000) + effectiveInterval),
+          ],
+        },
+      ];
+
+      // Append platform fee transfer (atomic — subscription + fee succeed or fail together)
+      if (hasRecurringFee && recurringFeeTokenMeta) {
+        const feeRaw = parseAmount(recurringFee.feeAmount, recurringFeeTokenMeta.decimals);
+        if (feeRaw > 0n) {
+          calls.push(
+            Actions.token.transfer.call({
+              token: recurringFee.feeToken as Address,
+              to: recurringFee.treasury as Address,
+              amount: feeRaw,
+            })
+          );
+        }
+      }
+
+      const txHash = await walletClient.sendTransaction({
+        calls,
+        feeToken: feeTokenAddress,
+      } as any);
+      const receipt = await waitForTx(txHash as `0x${string}`);
 
       // Parse the subscription ID from the SubscriptionCreated event log
       let subscriptionId = 0;
@@ -626,7 +709,7 @@ function CreateSubscriptionDialog({
         // Fallback: could not parse event
       }
 
-      // Step 3: Register with API + Durable Object
+      // Register with API + Durable Object
       setProcessingStatus('Setting up recurring schedule...');
       const nextPaymentAt = new Date(Date.now() + effectiveInterval * 1000).toISOString();
 
@@ -651,21 +734,21 @@ function CreateSubscriptionDialog({
       console.error('Create recurring payment failed:', err);
       const message = err instanceof Error ? err.message : 'Failed to create subscription';
       toast.error(message);
-      setStep('confirm');
+      setStep('approved');
     }
   }, [
-    isFormValid,
     selectedToken,
     feeToken,
     walletClient,
-    address,
     recipient,
     parsedAmount,
     effectiveInterval,
     parsedMaxPayments,
     label,
-    approveToken,
     contractAddress,
+    hasRecurringFee,
+    recurringFee,
+    recurringFeeTokenMeta,
   ]);
 
   const formattedAmount = parsedAmount > 0n ? formatAmount(parsedAmount, tokenDecimals) : '0.00';
@@ -936,6 +1019,16 @@ function CreateSubscriptionDialog({
                   )}
                 </div>
 
+                {/* Service fee */}
+                {hasRecurringFee && recurringFeeTokenMeta && (
+                  <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-[var(--color-lavender)]/5 border border-[var(--color-lavender)]/15">
+                    <span className="text-[12px] text-[#9B9590]">Service fee</span>
+                    <span className="text-[13px] font-semibold text-[#2D3436]">
+                      {recurringFee.feeAmount} {recurringFeeTokenMeta.symbol}
+                    </span>
+                  </div>
+                )}
+
                 {/* Fee token */}
                 {feeToken && (
                   <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-[#FDFBF8] border border-[#EDE9E3]">
@@ -983,11 +1076,94 @@ function CreateSubscriptionDialog({
                   Back
                 </Button>
                 <Button
-                  onClick={handleSubmit}
+                  onClick={handleApprove}
                   className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-coral hover:bg-coral/80 text-white gap-2"
                 >
                   <Repeat className="w-3.5 h-3.5" />
-                  Create Subscription
+                  {hasRecurringFee ? 'Approve & Continue' : 'Create Subscription'}
+                </Button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ─── Approved — Create & Pay step ─── */}
+          {step === 'approved' && selectedToken && (
+            <motion.div
+              key="approved"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="px-6 pt-6 pb-4">
+                <DialogTitle className="text-lg font-bold text-[#2D3436]">Create & Pay</DialogTitle>
+                <DialogDescription className="text-[13px] text-[#9B9590] mt-1">
+                  Token approved. Confirm to create the subscription.
+                </DialogDescription>
+              </div>
+              <div className="border-t border-[#EDE9E3]/60" />
+
+              <div className="px-6 py-5 space-y-3">
+                <div className="rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] text-[#9B9590]">Amount</span>
+                    <span className="text-[14px] font-bold text-[#2D3436]">
+                      {formattedAmount} {selectedToken.symbol}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[12px] text-[#9B9590]">Frequency</span>
+                    <span className="text-[12px] font-semibold text-[#2D3436]">
+                      {formatInterval(effectiveInterval)}
+                    </span>
+                  </div>
+                </div>
+
+                {hasRecurringFee && recurringFeeTokenMeta && (
+                  <div className="rounded-xl bg-[var(--color-lavender)]/5 border border-[var(--color-lavender)]/15 p-4">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-[11px] font-semibold text-[var(--color-lavender)] uppercase tracking-wider">
+                          Service Fee
+                        </p>
+                        <p className="text-[12px] text-[#9B9590] mt-0.5">
+                          One-time fee to create this subscription
+                        </p>
+                      </div>
+                      <p className="text-[15px] font-bold text-[#2D3436]">
+                        {recurringFee.feeAmount} {recurringFeeTokenMeta.symbol}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step progress */}
+                <div className="flex items-center gap-3 py-2">
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircle className="w-4 h-4 text-[var(--color-sage)]" />
+                    <span className="text-[12px] text-[var(--color-sage)] font-medium">
+                      Approved
+                    </span>
+                  </div>
+                  <div className="flex-1 h-px bg-[#EDE9E3]" />
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-4 h-4 rounded-full border-2 border-coral flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 rounded-full bg-coral" />
+                    </div>
+                    <span className="text-[12px] text-coral font-medium">Create</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-6 pb-6">
+                <Button
+                  onClick={handleCreateAndPay}
+                  className="w-full h-12 font-semibold bg-coral hover:bg-coral/80 text-white gap-2"
+                >
+                  <Repeat className="w-4 h-4" />
+                  {hasRecurringFee && recurringFeeTokenMeta
+                    ? `Pay ${recurringFee.feeAmount} ${recurringFeeTokenMeta.symbol} & Create`
+                    : 'Create Subscription'}
                 </Button>
               </div>
             </motion.div>
@@ -1088,7 +1264,7 @@ function CreateSubscriptionDialog({
                   transition={{ type: 'spring', stiffness: 200, damping: 15 }}
                   className="inline-flex items-center justify-center mb-6"
                 >
-                  <div className="w-16 h-16 rounded-full bg-[#E07A5F] flex items-center justify-center">
+                  <div className="w-16 h-16 rounded-full bg-[var(--color-sage)] flex items-center justify-center">
                     <svg
                       width="32"
                       height="32"
@@ -1154,7 +1330,7 @@ function CreateSubscriptionDialog({
                     <span className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
                       Next payment
                     </span>
-                    <span className="text-[12px] text-coral font-medium flex items-center gap-1">
+                    <span className="text-[12px] text-[var(--color-sage)] font-medium flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       {formatInterval(effectiveInterval)} from now
                     </span>
@@ -1182,7 +1358,7 @@ function CreateSubscriptionDialog({
                   onClick={() => {
                     onCreated();
                   }}
-                  className="flex-1 h-11 rounded-xl font-semibold bg-coral hover:bg-coral/80 text-white"
+                  className="flex-1 h-11 rounded-xl font-semibold bg-[var(--color-sage)] hover:bg-[var(--color-sage)]/80 text-white"
                 >
                   <CheckCircle className="w-3.5 h-3.5 mr-1.5" />
                   Done
@@ -1248,6 +1424,7 @@ function PaymentRow({
   payment: RecurringPayment;
   onCancelled: () => void;
 }): ReactElement {
+  const { data: walletClient } = useWalletClient();
   const isActive = payment.status === 'active';
   const isFailed = payment.status === 'failed';
   const isWarning = isActive && !!payment.failReason;
@@ -1293,6 +1470,41 @@ function PaymentRow({
   const handleCancel = async (): Promise<void> => {
     setIsCancelling(true);
     try {
+      // 1. Cancel on-chain subscription + revoke approval in a single batch tx
+      if (
+        walletClient &&
+        payment.subscriptionId !== null &&
+        payment.subscriptionId !== undefined &&
+        payment.contractAddress
+      ) {
+        const cancelSubCall = {
+          address: payment.contractAddress as Address,
+          abi: [
+            {
+              type: 'function' as const,
+              name: 'cancelSubscription',
+              inputs: [{ name: 'subscriptionId', type: 'uint256' }],
+              outputs: [],
+              stateMutability: 'nonpayable' as const,
+            },
+          ],
+          functionName: 'cancelSubscription',
+          args: [BigInt(payment.subscriptionId)],
+        };
+
+        const revokeApprovalCall = Actions.token.approve.call({
+          token: payment.token as Address,
+          spender: payment.contractAddress as Address,
+          amount: 0n,
+        });
+
+        const txHash = await walletClient.sendTransaction({
+          calls: [cancelSubCall, revokeApprovalCall],
+        } as any);
+        await waitForTx(txHash as `0x${string}`);
+      }
+
+      // 2. Stop the Durable Object via API (only runs after on-chain cancel succeeds)
       await deleteRecurringPayment(payment.id);
       setConfirmCancel(false);
       onCancelled();
@@ -1609,8 +1821,8 @@ function PaymentRow({
             <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#E07A5F]/[0.06] border border-[#E07A5F]/15">
               <AlertTriangle className="w-4 h-4 text-[#E07A5F] shrink-0 mt-0.5" />
               <p className="text-[12px] text-[#E07A5F]/80 leading-relaxed">
-                You should also cancel the on-chain subscription and revoke the token approval to
-                fully stop this payment.
+                This will cancel the on-chain subscription, revoke the token approval, and stop all
+                future payments. You will be asked to sign one transaction.
               </p>
             </div>
           </div>

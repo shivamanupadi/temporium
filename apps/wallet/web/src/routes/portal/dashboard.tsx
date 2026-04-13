@@ -291,10 +291,10 @@ function DashboardPage(): ReactElement {
         </div>
 
         {/* Right Column — Assets */}
-        <div className="lg:sticky lg:top-0 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto">
+        <div className="lg:sticky lg:top-0 lg:h-[calc(100vh-8rem)]">
           <motion.div
             variants={itemVariants}
-            className="rounded-2xl border border-[#EDE9E3] bg-white"
+            className="rounded-2xl border border-[#EDE9E3] bg-white h-full flex flex-col overflow-hidden"
           >
             {/* Header */}
             <div className="px-5 py-4 flex items-center justify-between">
@@ -307,91 +307,93 @@ function DashboardPage(): ReactElement {
             </div>
 
             {/* Token list */}
-            {isBalanceLoading && tokens.length === 0 ? (
-              <div className="px-5 pb-2">
-                {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="flex items-center gap-3 py-3 border-t border-[#F5F2ED]">
-                    <div className="w-8 h-8 rounded-full bg-[#F5F2ED] animate-pulse shrink-0" />
-                    <div className="flex-1">
-                      <div className="h-3.5 w-12 bg-[#F5F2ED] rounded animate-pulse" />
+            <div className="flex-1 min-h-0 overflow-y-auto">
+              {isBalanceLoading && tokens.length === 0 ? (
+                <div className="px-5 pb-2">
+                  {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 py-3 border-t border-[#F5F2ED]">
+                      <div className="w-8 h-8 rounded-full bg-[#F5F2ED] animate-pulse shrink-0" />
+                      <div className="flex-1">
+                        <div className="h-3.5 w-12 bg-[#F5F2ED] rounded animate-pulse" />
+                      </div>
+                      <div className="h-3.5 w-20 bg-[#F5F2ED] rounded animate-pulse" />
                     </div>
-                    <div className="h-3.5 w-20 bg-[#F5F2ED] rounded animate-pulse" />
-                  </div>
-                ))}
-              </div>
-            ) : tokens.length === 0 ? (
-              <div className="px-5 pb-8 pt-4 text-center border-t border-[#F5F2ED]">
-                <p className="text-[13px] text-[#9B9590]">No assets yet</p>
-                <p className="text-[12px] text-[#B5B0AA] mt-0.5">
-                  {isTestnet ? 'Use the faucet above' : 'Send tokens to get started'}
-                </p>
-              </div>
-            ) : (
-              <div className="px-5 pb-2">
-                {tokens.map((token, index) => {
-                  const colors = getTokenColors(token.symbol);
-                  return (
-                    <motion.div
-                      key={token.address}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ duration: 0.25, delay: index * 0.03 }}
-                      className={cn(
-                        'group flex items-center gap-3 py-3',
-                        index > 0 && 'border-t border-[#F5F2ED]'
-                      )}
-                    >
-                      {/* Icon */}
-                      <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden shrink-0"
-                        style={{ backgroundColor: colors.bg }}
+                  ))}
+                </div>
+              ) : tokens.length === 0 ? (
+                <div className="px-5 pb-8 pt-4 text-center border-t border-[#F5F2ED]">
+                  <p className="text-[13px] text-[#9B9590]">No assets yet</p>
+                  <p className="text-[12px] text-[#B5B0AA] mt-0.5">
+                    {isTestnet ? 'Use the faucet above' : 'Send tokens to get started'}
+                  </p>
+                </div>
+              ) : (
+                <div className="px-5 pb-2">
+                  {tokens.map((token, index) => {
+                    const colors = getTokenColors(token.symbol);
+                    return (
+                      <motion.div
+                        key={token.address}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.25, delay: index * 0.03 }}
+                        className={cn(
+                          'group flex items-center gap-3 py-3',
+                          index > 0 && 'border-t border-[#F5F2ED]'
+                        )}
                       >
-                        {token.logoURI ? (
-                          <img
-                            src={token.logoURI}
-                            alt={token.symbol}
-                            className="w-8 h-8 rounded-full object-cover"
-                            onError={e => {
-                              e.currentTarget.style.display = 'none';
-                              e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                            }}
+                        {/* Icon */}
+                        <div
+                          className="w-8 h-8 rounded-full flex items-center justify-center overflow-hidden shrink-0"
+                          style={{ backgroundColor: colors.bg }}
+                        >
+                          {token.logoURI ? (
+                            <img
+                              src={token.logoURI}
+                              alt={token.symbol}
+                              className="w-8 h-8 rounded-full object-cover"
+                              onError={e => {
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                              }}
+                            />
+                          ) : null}
+                          <DollarSign
+                            className={cn('h-3.5 w-3.5', token.logoURI && 'hidden')}
+                            style={{ color: colors.text }}
                           />
-                        ) : null}
-                        <DollarSign
-                          className={cn('h-3.5 w-3.5', token.logoURI && 'hidden')}
-                          style={{ color: colors.text }}
-                        />
-                      </div>
+                        </div>
 
-                      {/* Name */}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-medium text-[#2D3436] leading-none">
-                          {token.symbol}
+                        {/* Name */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[13px] font-medium text-[#2D3436] leading-none">
+                            {token.symbol}
+                          </p>
+                          <p className="text-[11px] text-[#B5B0AA] mt-0.5 leading-none truncate">
+                            {token.name}
+                          </p>
+                        </div>
+
+                        {/* Balance */}
+                        <p className="text-[13px] font-semibold text-[#2D3436] tabular-nums shrink-0">
+                          <span className="text-[#9B9590] font-normal">$</span>
+                          {formatAmount(token.balance.toString(), token.decimals)}
                         </p>
-                        <p className="text-[11px] text-[#B5B0AA] mt-0.5 leading-none truncate">
-                          {token.name}
-                        </p>
-                      </div>
 
-                      {/* Balance */}
-                      <p className="text-[13px] font-semibold text-[#2D3436] tabular-nums shrink-0">
-                        <span className="text-[#9B9590] font-normal">$</span>
-                        {formatAmount(token.balance.toString(), token.decimals)}
-                      </p>
-
-                      <a
-                        href={`${LINKS.explorer}/token/${token.address}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-[11px] text-[#B5B0AA] hover:text-[#6B6560] transition-colors shrink-0"
-                      >
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            )}
+                        <a
+                          href={`${LINKS.explorer}/token/${token.address}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-[11px] text-[#B5B0AA] hover:text-[#6B6560] transition-colors shrink-0"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </motion.div>
         </div>
       </div>

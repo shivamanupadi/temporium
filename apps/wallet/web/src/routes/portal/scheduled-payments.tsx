@@ -418,6 +418,41 @@ function ScheduledSendModal({
     if (open) resetForm();
   }, [open, resetForm]);
 
+  // Shared: submit the signed tx to the API via mppx fetch
+  const saveScheduledTx = useCallback(
+    async (serializedTransaction: string, scheduledFor: number) => {
+      if (!address || !selectedToken || !feeToken) return;
+      setSendingPhase('saving');
+
+      const mppxFetch = createMppxFetch(walletClient) ?? fetch;
+
+      await createScheduledTransaction(
+        {
+          serializedTx: serializedTransaction,
+          from: address,
+          to: recipient,
+          amount: parsedAmount.toString(),
+          token: selectedToken.address,
+          tokenSymbol: selectedToken.symbol,
+          tokenDecimals: selectedToken.decimals,
+          feeToken: feeToken.address,
+          memo: memo || undefined,
+          scheduledFor: new Date(scheduledFor * 1000).toISOString(),
+        },
+        mppxFetch
+      );
+
+      setScheduledForTime(
+        new Date(scheduledFor * 1000).toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      );
+      setStep('success');
+    },
+    [address, selectedToken, feeToken, walletClient, recipient, parsedAmount, memo]
+  );
+
   // Step 1: Sign the scheduled transaction (user click → wallet popup)
   const handleSign = useCallback(async () => {
     if (!isFormValid || !address || !selectedToken || !feeToken) return;
@@ -466,6 +501,7 @@ function ScheduledSendModal({
     customTimestamp,
     scheduleSeconds,
     signScheduledPayment,
+    saveScheduledTx,
   ]);
 
   // Step 2: Pay the fee via mppx + save (user click → wallet popup for fee)
@@ -480,42 +516,7 @@ function ScheduledSendModal({
       console.error('Pay & save failed:', err);
       setStep('pay-fee');
     }
-  }, [signedTx, signedScheduledFor]);
-
-  // Shared: submit the signed tx to the API via mppx fetch
-  const saveScheduledTx = useCallback(
-    async (serializedTransaction: string, scheduledFor: number) => {
-      if (!address || !selectedToken || !feeToken) return;
-      setSendingPhase('saving');
-
-      const mppxFetch = createMppxFetch(walletClient) ?? fetch;
-
-      await createScheduledTransaction(
-        {
-          serializedTx: serializedTransaction,
-          from: address,
-          to: recipient,
-          amount: parsedAmount.toString(),
-          token: selectedToken.address,
-          tokenSymbol: selectedToken.symbol,
-          tokenDecimals: selectedToken.decimals,
-          feeToken: feeToken.address,
-          memo: memo || undefined,
-          scheduledFor: new Date(scheduledFor * 1000).toISOString(),
-        },
-        mppxFetch
-      );
-
-      setScheduledForTime(
-        new Date(scheduledFor * 1000).toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-        })
-      );
-      setStep('success');
-    },
-    [address, selectedToken, feeToken, walletClient, recipient, parsedAmount, memo]
-  );
+  }, [signedTx, signedScheduledFor, saveScheduledTx]);
 
   if (!selectedToken || !feeToken) return <></>;
 

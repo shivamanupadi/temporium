@@ -620,7 +620,19 @@ function DexSwapPage(): ReactElement | null {
       toast.error('Swap failed', { description: message });
       setStatus('idle');
     }
-  }, [tokenIn, tokenOut, feeToken, walletClient, address, parsedAmountIn, route]);
+  }, [
+    tokenIn,
+    tokenOut,
+    feeToken,
+    walletClient,
+    address,
+    parsedAmountIn,
+    route,
+    hasSwapFee,
+    swapFee,
+    swapFeeTokenMeta,
+    refreshSwaps,
+  ]);
 
   const handleReset = useCallback(() => {
     setAmountIn('');
