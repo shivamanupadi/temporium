@@ -26,7 +26,7 @@ function buildSiweMessage(params: {
   expirationTime: string;
   chainId: number;
 }): string {
-  return `${SIWE_DOMAIN} wants you to sign in with your Ethereum account:
+  return `${SIWE_DOMAIN} wants you to sign in with your Tempo account:
 ${params.address}
 
 Sign this message to authenticate with Temporium.

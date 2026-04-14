@@ -7,6 +7,7 @@ import {
   ArrowRight,
   ArrowDownUp,
   Loader2,
+  PenLine,
   LayoutDashboard,
   Send,
   QrCode,
@@ -36,7 +37,6 @@ import { getWalletApiUrl } from '@/lib/api';
 import { copyToClipboard } from '@/lib/utils';
 import { isAccessTokenExpired } from '@/lib/auth-storage';
 import { isDevMode, TEMPO_NETWORK } from '@/lib/constants';
-import { CheckCircle } from 'lucide-react';
 
 export const Route = createFileRoute('/')({
   component: LandingPage,
@@ -59,7 +59,7 @@ const NETWORKS = [
     id: 'testnet' as const,
     name: 'Tempo Testnet',
     subtitle: 'Moderato (test network)',
-    color: '#D4A574',
+    color: '#E07A5F',
   },
 ];
 
@@ -131,211 +131,247 @@ function TempoConnectModal({
     [isLoading, onClose]
   );
 
-  const STEPS: { key: TempoStep; label: string }[] = [
-    { key: 'network', label: 'Network' },
-    { key: 'connecting', label: 'Connect' },
-    { key: 'verify', label: 'Verify' },
-    { key: 'success', label: 'Done' },
-  ];
+  const STEPS: TempoStep[] = ['network', 'connecting', 'verify', 'success'];
+  const stepIndex = STEPS.indexOf(step);
+  const progress = ((stepIndex + 1) / STEPS.length) * 100;
+  const isSuccess = step === 'success';
 
-  const stepIndex = STEPS.findIndex(s => s.key === step);
+  const subtitle =
+    step === 'network'
+      ? 'Choose a network to continue'
+      : step === 'connecting'
+        ? 'Opening your wallet…'
+        : step === 'verify'
+          ? 'One quick signature'
+          : 'Welcome back';
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-[400px] min-h-[320px] p-0 gap-0 rounded-2xl flex flex-col">
-        <DialogTitle className="sr-only">Connect Wallet</DialogTitle>
-        <DialogDescription className="sr-only">Connect your Tempo wallet</DialogDescription>
+      <DialogContent className="max-w-[420px] p-0 gap-0 rounded-3xl overflow-hidden border-none shadow-[0_20px_50px_-20px_rgba(45,52,54,0.2)]">
+        <DialogTitle className="sr-only">Sign in with Tempo Wallet</DialogTitle>
+        <DialogDescription className="sr-only">
+          Connect your Tempo wallet to continue
+        </DialogDescription>
 
-        {/* Step Indicator */}
-        <div className="px-6 pt-16 pb-5 shrink-0">
-          <div className="flex items-center">
-            {STEPS.map((s, i) => {
-              const isCompleted = i < stepIndex;
-              const isCurrent = i === stepIndex;
-              const isSuccess = step === 'success';
-              const activeColor = isSuccess ? '#5B9A6F' : '#E07A5F';
+        {/* Header */}
+        <div className="px-6 pt-6 pb-5 bg-[#FDFBF8] border-b border-[#EDE9E3]">
+          <div className="pr-10">
+            <p className="text-[15px] font-semibold text-[#2D3436] tracking-tight leading-tight">
+              Sign in with Tempo
+            </p>
+            <motion.p
+              key={subtitle}
+              initial={{ opacity: 0, y: 4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              className="text-[12px] text-[#9B9590] mt-0.5"
+            >
+              {subtitle}
+            </motion.p>
+          </div>
 
-              return (
-                <div key={s.key} className="flex items-center flex-1">
-                  <div className="flex flex-col items-center flex-1 relative">
-                    {/* Dot */}
-                    <div
-                      className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold transition-all duration-300 border-2"
-                      style={{
-                        borderColor: isCompleted || isCurrent ? activeColor : '#EDE9E3',
-                        backgroundColor: isCompleted
-                          ? activeColor
-                          : isCurrent
-                            ? `${activeColor}15`
-                            : 'white',
-                        color: isCompleted ? 'white' : isCurrent ? activeColor : '#B5B0AA',
-                      }}
-                    >
-                      {isCompleted ? <Check className="w-3.5 h-3.5" /> : i + 1}
-                    </div>
-                    {/* Label */}
-                    <span
-                      className="text-[10px] mt-1.5 transition-colors duration-300 whitespace-nowrap"
-                      style={{
-                        color: isCompleted || isCurrent ? '#2D3436' : '#B5B0AA',
-                        fontWeight: isCurrent ? 600 : 400,
-                      }}
-                    >
-                      {s.label}
-                    </span>
-                  </div>
-                  {/* Connector line */}
-                  {i < STEPS.length - 1 && (
-                    <div
-                      className="h-0.5 flex-1 rounded-full transition-colors duration-300 -mt-4"
-                      style={{
-                        backgroundColor: isCompleted ? activeColor : '#EDE9E3',
-                      }}
-                    />
-                  )}
-                </div>
-              );
-            })}
+          {/* Progress bar */}
+          <div className="relative mt-5 h-[5px] rounded-full bg-[#EDE9E3] overflow-hidden">
+            <motion.div
+              className="h-full rounded-full"
+              style={{ backgroundColor: isSuccess ? '#5B9A6F' : '#E07A5F' }}
+              initial={false}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+            />
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col justify-center">
+        {/* Body */}
+        <div className="relative min-h-[280px]">
           <AnimatePresence mode="wait">
-            {/* Step 1: Network Selection */}
             {step === 'network' && (
               <motion.div
                 key="network"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.15 }}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.18 }}
+                className="px-6 pt-5 pb-6"
               >
-                <div className="px-6 pb-2">
-                  <p className="text-[15px] font-semibold text-[#2D3436]">Select Network</p>
-                  <p className="text-[12px] text-[#8A8580] mt-0.5">
-                    Choose which Tempo network to use
-                  </p>
-                </div>
-                <div className="px-6 pb-5 pt-2 space-y-2">
+                <div className="space-y-2">
                   {NETWORKS.map(net => (
                     <button
                       key={net.id}
                       onClick={() => handleSelectNetwork(net.id)}
                       disabled={isLoading}
-                      className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-[#EDE9E3] hover:bg-[#FDFBF8] transition-all text-left cursor-pointer disabled:opacity-50"
+                      className="group w-full flex items-center gap-3.5 p-3.5 rounded-2xl border border-[#EDE9E3] bg-white hover:border-[#E07A5F] hover:bg-[#FDFBF8] transition-all text-left cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                        style={{ backgroundColor: `${net.color}15` }}
+                        className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: `${net.color}18` }}
                       >
-                        <Globe className="w-4 h-4" style={{ color: net.color }} />
+                        <Globe
+                          className="w-[18px] h-[18px]"
+                          style={{ color: net.color }}
+                          strokeWidth={2}
+                        />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-semibold text-[#2D3436]">{net.name}</p>
-                        <p className="text-[11px] text-[#9B9590]">{net.subtitle}</p>
+                        <p className="text-[13.5px] font-semibold text-[#2D3436]">{net.name}</p>
+                        <p className="text-[11.5px] text-[#9B9590] mt-0.5">{net.subtitle}</p>
                       </div>
-                      <ArrowRight className="w-3.5 h-3.5 text-[#B5B0AA] shrink-0" />
+                      <ArrowRight className="w-4 h-4 text-[#B5B0AA] group-hover:text-[#E07A5F] group-hover:translate-x-0.5 transition-all shrink-0" />
                     </button>
                   ))}
-
-                  {error && <p className="text-[12px] text-[#E07A5F] text-center pt-1">{error}</p>}
-
-                  <p className="text-[11px] text-center text-[#9B9590] pt-2">
-                    Don&apos;t have a wallet?{' '}
-                    <a
-                      href="https://wallet.tempo.xyz"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="font-semibold text-[#9B72CF] hover:text-[#8A62BF] transition-colors"
-                    >
-                      Create one at Tempo
-                    </a>
-                  </p>
                 </div>
+
+                {error && (
+                  <div className="mt-3 px-3 py-2.5 rounded-xl bg-[#E07A5F]/8 border border-[#E07A5F]/20">
+                    <p className="text-[12px] text-[#B5614A] text-center">{error}</p>
+                  </div>
+                )}
+
+                <p className="text-[11.5px] text-center text-[#9B9590] mt-5">
+                  Don&apos;t have a wallet?{' '}
+                  <a
+                    href="https://wallet.tempo.xyz"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-[#9B72CF] hover:text-[#8A62BF] transition-colors"
+                  >
+                    Create one →
+                  </a>
+                </p>
               </motion.div>
             )}
 
-            {/* Step 2: Connecting */}
             {step === 'connecting' && (
               <motion.div
                 key="connecting"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.15 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="px-6 py-12 flex flex-col items-center text-center"
               >
-                <div className="px-6 py-8 text-center">
-                  <Loader2 className="w-8 h-8 animate-spin text-[#9B72CF] mx-auto mb-3" />
-                  <p className="text-[14px] font-semibold text-[#2D3436]">
-                    Connecting to {selectedNetwork === 'mainnet' ? 'Mainnet' : 'Testnet'}
-                  </p>
-                  <p className="text-[12px] text-[#9B9590] mt-1">
-                    Approve in the Tempo Wallet popup
-                  </p>
+                <div className="relative w-20 h-20 mb-5">
+                  <motion.div
+                    className="absolute inset-0 rounded-full"
+                    style={{ backgroundColor: '#E07A5F', opacity: 0.12 }}
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.18, 0.06, 0.18] }}
+                    transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+                  />
+                  <motion.div
+                    className="absolute inset-2 rounded-full"
+                    style={{ backgroundColor: '#E07A5F', opacity: 0.2 }}
+                    animate={{ scale: [1, 1.12, 1], opacity: [0.25, 0.12, 0.25] }}
+                    transition={{
+                      duration: 1.8,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                      delay: 0.25,
+                    }}
+                  />
+                  <div
+                    className="absolute inset-5 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: '#E07A5F' }}
+                  >
+                    <Loader2 className="w-5 h-5 text-white animate-spin" strokeWidth={2.5} />
+                  </div>
                 </div>
+                <p className="text-[14px] font-semibold text-[#2D3436]">
+                  Connecting to {selectedNetwork === 'mainnet' ? 'Mainnet' : 'Testnet'}
+                </p>
+                <p className="text-[12px] text-[#9B9590] mt-1.5 max-w-[260px] leading-relaxed">
+                  Approve the connection in your Tempo Wallet popup to continue.
+                </p>
               </motion.div>
             )}
 
-            {/* Step 3: Verify */}
             {step === 'verify' && (
               <motion.div
                 key="verify"
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.15 }}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.18 }}
+                className="px-6 pt-5 pb-6"
               >
-                <div className="px-6 pb-2">
-                  <p className="text-[15px] font-semibold text-[#2D3436]">Verify Ownership</p>
-                  <p className="text-[12px] text-[#8A8580] mt-0.5">
-                    Sign a message to prove you own this wallet
+                <div className="mb-3 px-1">
+                  <p className="text-[12.5px] text-[#6B6560] leading-relaxed">
+                    Prove you own this wallet by signing a message. This confirms your identity —
+                    it&apos;s not a transaction and costs nothing.
                   </p>
                 </div>
-                <div className="px-6 pb-5 pt-2 space-y-3">
-                  <button
-                    onClick={handleVerify}
-                    disabled={isLoading}
-                    className="w-full flex items-center gap-3 p-3.5 rounded-xl border border-[#EDE9E3] hover:border-[#9B72CF]/30 hover:bg-[#9B72CF]/4 transition-all text-left cursor-pointer disabled:opacity-50"
+                <button
+                  onClick={handleVerify}
+                  disabled={isLoading}
+                  className="group w-full flex items-center gap-3.5 p-3.5 rounded-2xl border border-[#EDE9E3] bg-white hover:border-[#5B9A6F] hover:bg-[#FDFBF8] transition-all text-left cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:border-[#EDE9E3] disabled:hover:bg-white"
+                >
+                  <div
+                    className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: '#5B9A6F18' }}
                   >
-                    <div className="w-8 h-8 rounded-lg bg-[#9B72CF]/10 flex items-center justify-center shrink-0">
-                      <Globe className="w-4 h-4 text-[#9B72CF]" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[13px] font-semibold text-[#2D3436]">Sign Message</p>
-                      <p className="text-[11px] text-[#9B9590]">Opens your Tempo Wallet to sign</p>
-                    </div>
-                    {isLoading ? (
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[#9B72CF] shrink-0" />
-                    ) : (
-                      <ArrowRight className="w-3.5 h-3.5 text-[#B5B0AA] shrink-0" />
-                    )}
-                  </button>
-                  {error && <p className="text-[12px] text-[#E07A5F] text-center">{error}</p>}
-                </div>
+                    <PenLine className="w-[18px] h-[18px] text-[#5B9A6F]" strokeWidth={2} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[13.5px] font-semibold text-[#2D3436]">
+                      {isLoading ? 'Waiting for signature…' : 'Sign Message'}
+                    </p>
+                    <p className="text-[11.5px] text-[#9B9590] mt-0.5">
+                      No transaction, no gas — just a signature.
+                    </p>
+                  </div>
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-[#5B9A6F] shrink-0" />
+                  ) : (
+                    <ArrowRight className="w-4 h-4 text-[#B5B0AA] group-hover:text-[#5B9A6F] group-hover:translate-x-0.5 transition-all shrink-0" />
+                  )}
+                </button>
+
+                {error && (
+                  <div className="mt-3 px-3 py-2.5 rounded-xl bg-[#E07A5F]/8 border border-[#E07A5F]/20">
+                    <p className="text-[12px] text-[#B5614A] text-center">{error}</p>
+                  </div>
+                )}
               </motion.div>
             )}
 
-            {/* Step 4: Success */}
             {step === 'success' && (
               <motion.div
                 key="success"
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.96 }}
-                transition={{ duration: 0.3 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="px-6 py-12 flex flex-col items-center text-center"
               >
-                <div className="px-6 py-8 text-center">
+                <div className="relative w-20 h-20 mb-5">
                   <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-                    className="w-12 h-12 rounded-full bg-[#5B9A6F] flex items-center justify-center mx-auto mb-3"
+                    className="absolute inset-0 rounded-full"
+                    style={{ backgroundColor: '#5B9A6F', opacity: 0.15 }}
+                    animate={{ scale: [1, 1.4, 1], opacity: [0.2, 0, 0.2] }}
+                    transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut' }}
+                  />
+                  <motion.div
+                    initial={{ scale: 0, rotate: -20 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: 'spring', stiffness: 220, damping: 16 }}
+                    className="absolute inset-3 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: '#5B9A6F' }}
                   >
-                    <CheckCircle className="w-6 h-6 text-white" />
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{
+                        delay: 0.15,
+                        type: 'spring',
+                        stiffness: 300,
+                        damping: 14,
+                      }}
+                    >
+                      <Check className="w-7 h-7 text-white" strokeWidth={3} />
+                    </motion.div>
                   </motion.div>
-                  <p className="text-[15px] font-bold text-[#2D3436]">Connected</p>
-                  <p className="text-[12px] text-[#9B9590] mt-1">Redirecting to dashboard...</p>
                 </div>
+                <p className="text-[15px] font-bold text-[#2D3436]">You&apos;re signed in</p>
+                <p className="text-[12px] text-[#9B9590] mt-1.5">Redirecting to your dashboard…</p>
               </motion.div>
             )}
           </AnimatePresence>
