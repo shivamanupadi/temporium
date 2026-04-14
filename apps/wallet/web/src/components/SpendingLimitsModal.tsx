@@ -1,44 +1,20 @@
 import { type ReactElement, useState, useCallback, useEffect } from 'react';
-import {
-  Plus,
-  Trash2,
-  Shield,
-  AlertCircle,
-  Loader2,
-  ArrowRight,
-  ArrowLeft,
-  Coins,
-  Pencil,
-} from 'lucide-react';
+import { Shield, AlertCircle, Loader2, Trash2, DollarSign } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { isAddress, formatUnits, type Address } from 'viem';
 import { Actions, tempoPublicClient } from '@/lib/tempo-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { formatAddress } from '@/lib/utils';
+import { formatAddress, cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 import { TokenAddressPicker } from '@/components/TokenAddressPicker';
 import { FeeTokenPicker } from '@/components/FeeTokenPicker';
-import { getTokens, type Token } from '@/lib/tokenlist';
+import { getTokenColors, type Token } from '@/lib/tokenlist';
 import { useTokenList } from '@/hooks/useTokenList';
 import { useFeePreference } from '@/hooks/useFeePreference';
 import { tempoChain } from '@/lib/tempo-client';
 import type { TokenMetadata } from '@/types';
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-interface SpendingLimitDisplay {
-  token: Address;
-  remaining: bigint;
-  symbol: string;
-  name: string;
-  decimals: number;
-}
-
-type ModalView = 'list' | 'edit' | 'add';
 
 interface SpendingLimitsModalProps {
   keyId: string;
@@ -51,8 +27,40 @@ interface SpendingLimitsModalProps {
     newLimit: bigint;
     feeToken?: Address;
   }) => Promise<{ transactionHash: `0x${string}` }>;
-  getRemainingLimit: (keyId: Address, token: Address) => Promise<bigint>;
+  getRemainingLimit: (
+    keyId: Address,
+    token: Address
+  ) => Promise<{ remaining: bigint; periodEnd: bigint } | null>;
   onUpdated: () => Promise<void>;
+}
+
+interface LookupState {
+  token: Address;
+  metadata: TokenMetadata;
+  remaining: bigint | null; // null = no limit configured
+}
+
+function TokenIcon({ symbol, logoURI }: { symbol: string; logoURI?: string }): ReactElement {
+  const colors = getTokenColors(symbol);
+  return (
+    <div
+      className="w-9 h-9 rounded-full flex items-center justify-center overflow-hidden shrink-0"
+      style={{ backgroundColor: colors.bg }}
+    >
+      {logoURI ? (
+        <img
+          src={logoURI}
+          alt={symbol}
+          className="w-9 h-9 rounded-full object-cover"
+          onError={e => {
+            e.currentTarget.style.display = 'none';
+            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+          }}
+        />
+      ) : null}
+      <DollarSign className={cn('h-4 w-4', logoURI && 'hidden')} style={{ color: colors.text }} />
+    </div>
+  );
 }
 
 export function SpendingLimitsModal({
@@ -79,256 +87,151 @@ export function SpendingLimitsModal({
     setFeeToken(preferred ?? chainDefault ?? allTokens[0]);
   }, [allTokens, preferredFeeToken]);
 
-  // Fetched spending limits
-  const [spendingLimits, setSpendingLimits] = useState<SpendingLimitDisplay[]>([]);
-  const [loadingLimits, setLoadingLimits] = useState(false);
+  // Single-screen state
+  const [tokenAddress, setTokenAddress] = useState('');
+  const [lookup, setLookup] = useState<LookupState | null>(null);
+  const [lookupLoading, setLookupLoading] = useState(false);
+  const [lookupError, setLookupError] = useState<string | null>(null);
 
-  // View state
-  const [view, setView] = useState<ModalView>('list');
+  const [amount, setAmount] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [removing, setRemoving] = useState(false);
 
-  // Edit state
-  const [editingLimit, setEditingLimit] = useState<SpendingLimitDisplay | null>(null);
-  const [editAmount, setEditAmount] = useState('');
-  const [editSubmitting, setEditSubmitting] = useState(false);
-
-  // Delete state
-  const [deletingToken, setDeletingToken] = useState<string | null>(null);
-
-  // Add state
-  const [tlAddress, setTlAddress] = useState('');
-  const [tlAmount, setTlAmount] = useState('');
-  const [tlMetadata, setTlMetadata] = useState<TokenMetadata | null>(null);
-  const [tlStep, setTlStep] = useState<'address' | 'amount'>('address');
-  const [tlValidating, setTlValidating] = useState(false);
-  const [tlError, setTlError] = useState<string | null>(null);
-  const [tlSubmitting, setTlSubmitting] = useState(false);
-
-  // --- Fetch spending limits when modal opens ---
-  const fetchLimits = useCallback(async () => {
-    if (!keyId) return;
-
-    setLoadingLimits(true);
-    try {
-      const tokens = await getTokens();
-      const results: SpendingLimitDisplay[] = [];
-
-      await Promise.all(
-        tokens.map(async (token: Token) => {
-          try {
-            const remaining = await getRemainingLimit(keyId as Address, token.address);
-            if (remaining > 0n) {
-              results.push({
-                token: token.address,
-                remaining,
-                symbol: token.symbol,
-                name: token.name,
-                decimals: token.decimals,
-              });
-            }
-          } catch {
-            // skip tokens that fail
-          }
-        })
-      );
-
-      setSpendingLimits(results);
-    } catch (err) {
-      console.error('Failed to fetch spending limits:', err);
-      setSpendingLimits([]);
-    } finally {
-      setLoadingLimits(false);
-    }
-  }, [keyId, getRemainingLimit]);
-
-  useEffect(() => {
-    if (isOpen && keyId) {
-      fetchLimits();
-    }
-    if (!isOpen) {
-      setSpendingLimits([]);
-      setView('list');
-      setEditingLimit(null);
-    }
-  }, [isOpen, keyId, fetchLimits]);
-
-  const resetAddState = useCallback(() => {
-    setTlAddress('');
-    setTlAmount('');
-    setTlMetadata(null);
-    setTlStep('address');
-    setTlValidating(false);
-    setTlError(null);
-    setTlSubmitting(false);
+  const reset = useCallback(() => {
+    setTokenAddress('');
+    setLookup(null);
+    setLookupLoading(false);
+    setLookupError(null);
+    setAmount('');
+    setSubmitting(false);
+    setRemoving(false);
   }, []);
 
-  const handleClose = useCallback(() => {
-    setView('list');
-    setEditingLimit(null);
-    setEditAmount('');
-    resetAddState();
-    onClose();
-  }, [onClose, resetAddState]);
+  useEffect(() => {
+    if (!isOpen) reset();
+  }, [isOpen, reset]);
 
-  const goToList = useCallback(() => {
-    setView('list');
-    setEditingLimit(null);
-    setEditAmount('');
-    resetAddState();
-  }, [resetAddState]);
-
-  // --- Add flow ---
-  const openAdd = useCallback(() => {
-    resetAddState();
-    setView('add');
-  }, [resetAddState]);
-
-  const handleValidateToken = useCallback(async () => {
-    const trimmed = tlAddress.trim();
+  // Debounced auto-lookup when the token address becomes valid.
+  useEffect(() => {
+    const trimmed = tokenAddress.trim();
     if (!trimmed) {
-      setTlError('Please enter a token address');
+      setLookup(null);
+      setLookupError(null);
+      setAmount('');
       return;
     }
     if (!isAddress(trimmed)) {
-      setTlError('Invalid address format');
+      setLookup(null);
+      setLookupError('Invalid contract address');
       return;
     }
+    if (lookup?.token.toLowerCase() === trimmed.toLowerCase()) return;
 
-    if (spendingLimits.some(l => l.token.toLowerCase() === trimmed.toLowerCase())) {
-      setTlError('This token already has a spending limit. Edit it instead.');
-      return;
-    }
+    let cancelled = false;
+    setLookupLoading(true);
+    setLookupError(null);
 
-    setTlValidating(true);
-    setTlError(null);
-    try {
-      const metadata = await Actions.token.getMetadata(tempoPublicClient, {
-        token: trimmed as Address,
-      });
-      if (!metadata || !metadata.name) {
-        setTlError('Token not found or not a valid TIP-20 token');
-        return;
-      }
-      setTlMetadata(metadata as TokenMetadata);
-      setTlStep('amount');
-    } catch {
-      setTlError('Failed to fetch token. Please check the address.');
-    } finally {
-      setTlValidating(false);
-    }
-  }, [tlAddress, spendingLimits]);
-
-  const handleAddLimit = useCallback(async () => {
-    if (!tlMetadata || !tlAmount || parseFloat(tlAmount) <= 0) return;
-
-    setTlSubmitting(true);
-    try {
-      const decimals = tlMetadata.decimals || 18;
-      await updateSpendingLimit({
-        keyId: keyId as Address,
-        token: tlAddress.trim() as Address,
-        newLimit: BigInt(Math.floor(parseFloat(tlAmount) * 10 ** decimals)),
-        feeToken: feeToken?.address,
-      });
-      toast.success('Spending limit added', {
-        description: `${tlMetadata.symbol} limit set for key ${formatAddress(keyId, 6)}.`,
-      });
-      await onUpdated();
-      resetAddState();
-      setView('list');
-      await fetchLimits();
-    } catch (err) {
-      toast.error('Failed to add spending limit', {
-        description: (err as Error).message,
-      });
-    } finally {
-      setTlSubmitting(false);
-    }
-  }, [
-    tlMetadata,
-    tlAddress,
-    tlAmount,
-    keyId,
-    updateSpendingLimit,
-    onUpdated,
-    resetAddState,
-    fetchLimits,
-  ]);
-
-  // --- Edit flow ---
-  const openEdit = useCallback((sl: SpendingLimitDisplay) => {
-    setEditingLimit(sl);
-    setEditAmount(formatUnits(sl.remaining, sl.decimals));
-    setView('edit');
-  }, []);
-
-  const handleUpdateLimit = useCallback(async () => {
-    if (!editingLimit || !editAmount || parseFloat(editAmount) <= 0) return;
-
-    setEditSubmitting(true);
-    try {
-      const decimals = editingLimit.decimals || 18;
-      await updateSpendingLimit({
-        keyId: keyId as Address,
-        token: editingLimit.token as Address,
-        newLimit: BigInt(Math.floor(parseFloat(editAmount) * 10 ** decimals)),
-        feeToken: feeToken?.address,
-      });
-      toast.success('Spending limit updated', {
-        description: `${editingLimit.symbol || formatAddress(editingLimit.token, 4)} limit updated.`,
-      });
-      await onUpdated();
-      goToList();
-      await fetchLimits();
-    } catch (err) {
-      toast.error('Failed to update spending limit', {
-        description: (err as Error).message,
-      });
-    } finally {
-      setEditSubmitting(false);
-    }
-  }, [editingLimit, editAmount, keyId, updateSpendingLimit, onUpdated, goToList, fetchLimits]);
-
-  // --- Delete ---
-  const handleDeleteLimit = useCallback(
-    async (sl: SpendingLimitDisplay) => {
-      setDeletingToken(sl.token);
+    void (async () => {
       try {
-        await updateSpendingLimit({
-          keyId: keyId as Address,
-          token: sl.token as Address,
-          newLimit: 0n,
-          feeToken: feeToken?.address,
+        const [metadata, limit] = await Promise.all([
+          Actions.token.getMetadata(tempoPublicClient, { token: trimmed as Address }),
+          getRemainingLimit(keyId as Address, trimmed as Address),
+        ]);
+        if (cancelled) return;
+        if (!metadata || !metadata.name) {
+          setLookupError('Token not found or not a valid TIP-20 token');
+          setLookup(null);
+          return;
+        }
+        const hasLimit = limit !== null && limit.periodEnd > 0n;
+        const remaining = hasLimit && limit ? limit.remaining : null;
+        const decimals = metadata.decimals ?? 18;
+        setLookup({
+          token: trimmed as Address,
+          metadata: { ...metadata, decimals } as TokenMetadata,
+          remaining,
         });
-        toast.success('Spending limit removed', {
-          description: `${sl.symbol || formatAddress(sl.token, 4)} limit removed.`,
-        });
-        await onUpdated();
-        await fetchLimits();
-      } catch (err) {
-        toast.error('Failed to remove spending limit', {
-          description: (err as Error).message,
-        });
+        if (remaining !== null) {
+          setAmount(formatUnits(remaining, decimals));
+        } else {
+          setAmount('');
+        }
+      } catch {
+        if (cancelled) return;
+        setLookupError('Failed to fetch token. Please check the address.');
+        setLookup(null);
       } finally {
-        setDeletingToken(null);
+        if (!cancelled) setLookupLoading(false);
       }
-    },
-    [keyId, updateSpendingLimit, onUpdated, fetchLimits]
-  );
+    })();
 
-  // --- Title & description per view ---
-  const title =
-    view === 'edit'
-      ? `Edit Limit: ${editingLimit?.symbol || formatAddress(editingLimit?.token ?? '', 4)}`
-      : view === 'add'
-        ? 'Add Token Limit'
-        : 'Spending Limits';
+    return () => {
+      cancelled = true;
+    };
+  }, [tokenAddress, keyId, getRemainingLimit, lookup?.token]);
 
-  const description =
-    view === 'edit'
-      ? 'Update the spending limit for this token.'
-      : view === 'add'
-        ? 'Look up a token on-chain and set a spending limit.'
-        : `Manage token spending limits for key ${formatAddress(keyId, 6)}.`;
+  const parsedAmount = parseFloat(amount || '0');
+  const amountValid = parsedAmount > 0;
+
+  const handleSubmit = useCallback(async () => {
+    if (!lookup || !amountValid) return;
+    setSubmitting(true);
+    try {
+      const decimals = lookup.metadata.decimals ?? 18;
+      const newLimit = BigInt(Math.floor(parsedAmount * 10 ** decimals));
+      await updateSpendingLimit({
+        keyId: keyId as Address,
+        token: lookup.token,
+        newLimit,
+        feeToken: feeToken?.address,
+      });
+      toast.success(lookup.remaining !== null ? 'Limit updated' : 'Limit set', {
+        description: `${lookup.metadata.symbol} limit: ${formatUnits(newLimit, decimals)}`,
+      });
+      await onUpdated();
+      // Refresh the lookup to show the new remaining.
+      setLookup(prev => (prev ? { ...prev, remaining: newLimit } : prev));
+    } catch (err) {
+      toast.error('Failed to update limit', {
+        description: (err as Error).message,
+      });
+    } finally {
+      setSubmitting(false);
+    }
+  }, [lookup, amountValid, parsedAmount, keyId, feeToken, updateSpendingLimit, onUpdated]);
+
+  const handleRemove = useCallback(async () => {
+    if (!lookup || lookup.remaining === null) return;
+    setRemoving(true);
+    try {
+      await updateSpendingLimit({
+        keyId: keyId as Address,
+        token: lookup.token,
+        newLimit: 0n,
+        feeToken: feeToken?.address,
+      });
+      toast.success('Limit removed', {
+        description: `${lookup.metadata.symbol} limit cleared.`,
+      });
+      await onUpdated();
+      setLookup(prev => (prev ? { ...prev, remaining: null } : prev));
+      setAmount('');
+    } catch (err) {
+      toast.error('Failed to remove limit', {
+        description: (err as Error).message,
+      });
+    } finally {
+      setRemoving(false);
+    }
+  }, [lookup, keyId, feeToken, updateSpendingLimit, onUpdated]);
+
+  const handleClose = useCallback(() => {
+    reset();
+    onClose();
+  }, [onClose, reset]);
+
+  const hasLimit = lookup?.remaining !== null && lookup?.remaining !== undefined;
+  const decimals = lookup?.metadata.decimals ?? 18;
 
   return (
     <Dialog
@@ -337,349 +240,166 @@ export function SpendingLimitsModal({
         if (!open) handleClose();
       }}
     >
-      <DialogContent className="p-0 gap-0 max-w-[420px] overflow-visible">
-        <div className="px-6 pt-6 pb-4">
-          <DialogTitle className="text-[18px] font-bold text-[#2D3436]">{title}</DialogTitle>
-          <DialogDescription className="text-[13px] text-[#9B9590] mt-1">
-            {description}
-          </DialogDescription>
+      <DialogContent className="p-0 gap-0 max-w-[440px] rounded-3xl overflow-visible border-none shadow-[0_20px_50px_-20px_rgba(45,52,54,0.2)]">
+        {/* Header */}
+        <div className="px-6 pt-6 pb-5 bg-[#FDFBF8] border-b border-[#EDE9E3] rounded-t-3xl">
+          <div className="pr-10">
+            <DialogTitle className="text-[15px] font-semibold text-[#2D3436] tracking-tight leading-tight">
+              Manage Spending Limits
+            </DialogTitle>
+            <DialogDescription className="text-[12px] text-[#9B9590] mt-0.5 font-mono">
+              Key {formatAddress(keyId, 6)}
+            </DialogDescription>
+          </div>
         </div>
-        <div className="border-t border-[#EDE9E3]/60" />
 
-        {view === 'edit' && editingLimit ? (
-          /* --- EDIT VIEW --- */
-          <>
-            <div className="px-6 py-5 space-y-4">
-              <div className="rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] p-3 space-y-2">
-                {editingLimit.name && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-[12px] text-[#9B9590]">Token</span>
-                    <span className="text-[12px] font-semibold text-[#2D3436]">
-                      {editingLimit.name}
+        {/* Body */}
+        <div className="px-6 py-5 space-y-4 min-h-[380px]">
+          {!enforceLimits && (
+            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#F5F2ED]">
+              <Shield className="w-4 h-4 text-[#9B9590] shrink-0 mt-0.5" />
+              <p className="text-[11.5px] text-[#9B9590] leading-relaxed">
+                This key was authorized with unlimited spending. Setting a limit here will not take
+                effect unless the key was created with limits enabled.
+              </p>
+            </div>
+          )}
+
+          {/* Token picker */}
+          <TokenAddressPicker
+            value={tokenAddress}
+            onChange={val => {
+              setTokenAddress(val);
+              setLookupError(null);
+            }}
+            label="Token"
+            showValidation={false}
+          />
+
+          {lookupError && (
+            <div className="flex items-center gap-1.5">
+              <AlertCircle className="w-3 h-3 text-[#E5484D] shrink-0" />
+              <p className="text-[11.5px] text-[#E5484D]">{lookupError}</p>
+            </div>
+          )}
+
+          {/* Status card — appears after a successful lookup */}
+          {lookup && !lookupLoading && (
+            <div
+              className={`rounded-2xl border p-3.5 flex items-center gap-3 ${
+                hasLimit
+                  ? 'border-[#6B8F71]/20 bg-[#6B8F71]/[0.05]'
+                  : 'border-[#EDE9E3] bg-[#FDFBF8]'
+              }`}
+            >
+              <TokenIcon
+                symbol={lookup.metadata.symbol}
+                logoURI={
+                  allTokens.find(t => t.address.toLowerCase() === lookup.token.toLowerCase())
+                    ?.logoURI
+                }
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-semibold text-[#2D3436]">
+                  {lookup.metadata.symbol}
+                  <span className="font-normal text-[#9B9590] ml-1.5 text-[11.5px]">
+                    {lookup.metadata.name}
+                  </span>
+                </p>
+                <p className="text-[11.5px] mt-0.5">
+                  {hasLimit ? (
+                    <span className="text-[#6B8F71] font-medium">
+                      {formatUnits(lookup.remaining as bigint, decimals)} remaining
                     </span>
-                  </div>
-                )}
-                <div className="flex items-center justify-between">
-                  <span className="text-[12px] text-[#9B9590]">Symbol</span>
-                  <span className="text-[12px] font-medium text-[#2D3436]">
-                    {editingLimit.symbol || '–'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[12px] text-[#9B9590]">Current Remaining</span>
-                  <span className="text-[12px] font-mono font-medium text-[#2D3436]">
-                    {formatUnits(editingLimit.remaining, editingLimit.decimals)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[12px] text-[#9B9590]">Address</span>
-                  <span className="text-[11px] font-mono text-[#9B9590]">
-                    {formatAddress(editingLimit.token, 6)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
-                  New Spending Limit
-                </Label>
-                <Input
-                  placeholder="0.00"
-                  type="number"
-                  value={editAmount}
-                  onChange={e => setEditAmount(e.target.value)}
-                  className="h-10 rounded-xl text-[13px] border-[#EDE9E3]"
-                />
-              </div>
-
-              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#E07A5F]/[0.06] border border-[#E07A5F]/15">
-                <Shield className="w-4 h-4 text-[#E07A5F] shrink-0 mt-0.5" />
-                <p className="text-[12px] text-[#E07A5F]/80 leading-relaxed">
-                  This will send a transaction to update the spending limit on-chain.
+                  ) : (
+                    <span className="text-[#9B9590]">No limit set</span>
+                  )}
                 </p>
               </div>
             </div>
+          )}
 
-            {feeToken && allTokens.length > 0 && (
-              <div className="px-6 pb-3 flex items-center justify-between">
-                <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
-                <FeeTokenPicker value={feeToken} tokens={allTokens} onChange={setFeeToken} />
-              </div>
-            )}
-
-            <div className="px-6 pb-6 pt-0 flex gap-3">
-              <Button
-                variant="outline"
-                onClick={goToList}
-                className="flex-1 h-11 rounded-xl text-[13px] font-semibold border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED] gap-2"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                Back
-              </Button>
-              <Button
-                onClick={handleUpdateLimit}
-                disabled={editSubmitting || !editAmount || parseFloat(editAmount) <= 0}
-                className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-coral hover:bg-coral/80 text-white gap-2"
-              >
-                {editSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  <>
-                    <Coins className="w-4 h-4" />
-                    Update Limit
-                  </>
-                )}
-              </Button>
+          {lookupLoading && (
+            <div className="rounded-2xl border border-[#EDE9E3] bg-white p-3.5 flex items-center gap-3">
+              <Loader2 className="w-4 h-4 animate-spin text-[#B5B0AA]" />
+              <p className="text-[12px] text-[#9B9590]">Checking token…</p>
             </div>
-          </>
-        ) : view === 'add' ? (
-          /* --- ADD VIEW --- */
-          <>
-            {tlStep === 'address' ? (
-              <div className="px-6 py-5 space-y-4">
-                <TokenAddressPicker
-                  value={tlAddress}
-                  onChange={val => {
-                    setTlAddress(val);
-                    setTlError(null);
-                  }}
-                  label="Token Address"
-                  showValidation={false}
+          )}
+
+          {/* Amount input — only shown when we have a valid token */}
+          {lookup && !lookupLoading && (
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                {hasLimit ? 'New Limit' : 'Set Limit'}
+              </Label>
+              <div className="relative">
+                <Input
+                  placeholder="0.00"
+                  type="number"
+                  value={amount}
+                  onChange={e => setAmount(e.target.value)}
+                  className="h-11 rounded-xl text-[13px] border-[#EDE9E3] pr-16"
                 />
-                {tlError && (
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <AlertCircle className="w-3 h-3 text-[#E5484D] shrink-0" />
-                    <p className="text-[11px] text-[#E5484D]">{tlError}</p>
-                  </div>
-                )}
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[11.5px] font-medium text-[#9B9590]">
+                  {lookup.metadata.symbol}
+                </span>
               </div>
+              <p className="text-[11px] text-[#B5B0AA]">
+                Max {lookup.metadata.symbol} this key can spend from your account.
+              </p>
+            </div>
+          )}
+
+          {/* Fee token */}
+          {lookup && !lookupLoading && feeToken && allTokens.length > 0 && (
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
+              <FeeTokenPicker value={feeToken} tokens={allTokens} onChange={setFeeToken} />
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 pb-6 flex gap-3">
+          {hasLimit && (
+            <Button
+              variant="outline"
+              onClick={handleRemove}
+              disabled={removing || submitting}
+              className="h-12 px-4 border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
+            >
+              {removing ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Trash2 className="w-4 h-4" />
+              )}
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            onClick={handleClose}
+            disabled={submitting || removing}
+            className="flex-1 h-12 border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
+          >
+            Close
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={!lookup || !amountValid || submitting || removing}
+            className="flex-1 h-12 text-[14px] font-semibold bg-[#E07A5F] hover:bg-[#D4694F] text-white shadow-lg shadow-[#E07A5F]/15 hover:shadow-xl hover:shadow-[#E07A5F]/20"
+          >
+            {submitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
+                Saving…
+              </>
+            ) : hasLimit ? (
+              'Update Limit'
             ) : (
-              <div className="px-6 py-5 space-y-4">
-                {tlMetadata && (
-                  <div className="rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] p-3 space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[12px] text-[#9B9590]">Token</span>
-                      <span className="text-[12px] font-semibold text-[#2D3436]">
-                        {tlMetadata.name}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[12px] text-[#9B9590]">Symbol</span>
-                      <span className="text-[12px] font-medium text-[#2D3436]">
-                        {tlMetadata.symbol}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[12px] text-[#9B9590]">Decimals</span>
-                      <span className="text-[12px] font-medium text-[#2D3436]">
-                        {tlMetadata.decimals}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[12px] text-[#9B9590]">Address</span>
-                      <span className="text-[11px] font-mono text-[#9B9590]">
-                        {formatAddress(tlAddress.trim(), 6)}
-                      </span>
-                    </div>
-                  </div>
-                )}
-                <div className="space-y-1.5">
-                  <Label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
-                    Spending Limit Amount
-                  </Label>
-                  <Input
-                    placeholder="0.00"
-                    type="number"
-                    value={tlAmount}
-                    onChange={e => setTlAmount(e.target.value)}
-                    className="h-10 rounded-xl text-[13px] border-[#EDE9E3]"
-                  />
-                  {tlMetadata && (
-                    <p className="text-[11px] text-[#B5B0AA]">
-                      Maximum amount of {tlMetadata.symbol} this key can spend.
-                    </p>
-                  )}
-                </div>
-                {tlError && (
-                  <div className="flex items-center gap-1.5">
-                    <AlertCircle className="w-3 h-3 text-[#E5484D] shrink-0" />
-                    <p className="text-[11px] text-[#E5484D]">{tlError}</p>
-                  </div>
-                )}
-              </div>
+              'Set Limit'
             )}
-
-            {tlStep === 'amount' && feeToken && allTokens.length > 0 && (
-              <div className="px-6 pb-3 flex items-center justify-between">
-                <span className="text-[12px] text-[#9B9590]">Gas paid in</span>
-                <FeeTokenPicker value={feeToken} tokens={allTokens} onChange={setFeeToken} />
-              </div>
-            )}
-
-            <div className="px-6 pb-6 pt-0 flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  if (tlStep === 'amount') {
-                    setTlStep('address');
-                    setTlMetadata(null);
-                    setTlAmount('');
-                    setTlError(null);
-                  } else {
-                    goToList();
-                  }
-                }}
-                className="flex-1 h-11 rounded-xl text-[13px] font-semibold border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED] gap-2"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                Back
-              </Button>
-              {tlStep === 'address' ? (
-                <Button
-                  onClick={handleValidateToken}
-                  disabled={tlValidating || !tlAddress.trim()}
-                  className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-coral hover:bg-coral/80 text-white gap-2"
-                >
-                  {tlValidating ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Validating...
-                    </>
-                  ) : (
-                    <>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                      Look Up Token
-                    </>
-                  )}
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleAddLimit}
-                  disabled={tlSubmitting || !tlAmount || parseFloat(tlAmount) <= 0}
-                  className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-coral hover:bg-coral/80 text-white gap-2"
-                >
-                  {tlSubmitting ? (
-                    <>
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                      Adding...
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="w-3.5 h-3.5" />
-                      Add Limit
-                    </>
-                  )}
-                </Button>
-              )}
-            </div>
-          </>
-        ) : (
-          /* --- LIST VIEW --- */
-          <>
-            <div className="px-6 py-5 space-y-3">
-              {!enforceLimits && (
-                <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#F5F2ED]">
-                  <Shield className="w-4 h-4 text-[#9B9590] shrink-0 mt-0.5" />
-                  <p className="text-[11px] text-[#9B9590] leading-relaxed">
-                    Spending limits are not enforced for this key. Adding a limit will not take
-                    effect unless the key was created with limits enabled.
-                  </p>
-                </div>
-              )}
-
-              {loadingLimits ? (
-                <div className="rounded-xl border border-dashed border-[#EDE9E3] bg-white p-6 text-center">
-                  <Loader2 className="w-6 h-6 animate-spin text-[#B5B0AA] mx-auto mb-2" />
-                  <p className="text-[12px] text-[#9B9590]">Loading spending limits...</p>
-                </div>
-              ) : spendingLimits.length > 0 ? (
-                <div className="space-y-2">
-                  {spendingLimits.map(sl => (
-                    <div
-                      key={sl.token}
-                      className="flex items-center gap-3 p-3 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8]"
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-[#E07A5F]/10 flex items-center justify-center shrink-0">
-                        <Coins className="w-4 h-4 text-[#E07A5F]" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-semibold text-[#2D3436]">
-                          {sl.symbol || formatAddress(sl.token, 4)}
-                          {sl.name && (
-                            <span className="font-normal text-[#9B9590] ml-1">({sl.name})</span>
-                          )}
-                        </p>
-                        <p className="text-[11px] text-[#9B9590] font-mono">
-                          {formatUnits(sl.remaining, sl.decimals)} remaining
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-0.5 shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => openEdit(sl)}
-                          className="w-8 h-8 rounded-lg text-[#B5B0AA] hover:text-[#E07A5F] hover:bg-[#E07A5F]/10"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteLimit(sl)}
-                          disabled={deletingToken === sl.token}
-                          className="w-8 h-8 rounded-lg text-[#B5B0AA] hover:text-[#E07A5F] hover:bg-[#E07A5F]/10"
-                        >
-                          {deletingToken === sl.token ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-3.5 h-3.5" />
-                          )}
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-xl border border-dashed border-[#EDE9E3] bg-white p-6 text-center">
-                  <div className="w-10 h-10 rounded-xl bg-[#F5F2ED] flex items-center justify-center mx-auto mb-2.5">
-                    <Coins className="w-5 h-5 text-[#B5B0AA]" />
-                  </div>
-                  <p className="text-[12px] text-[#9B9590]">No spending limits configured.</p>
-                  <Button
-                    variant="outline"
-                    onClick={openAdd}
-                    className="mt-3 h-9 px-5 rounded-xl text-[12px] font-semibold border-[#EDE9E3] gap-1.5"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    Add Limit
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            <div className="px-6 pb-6 pt-0 flex gap-3">
-              <Button
-                variant="outline"
-                onClick={handleClose}
-                className="flex-1 h-11 rounded-xl text-[13px] font-semibold border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
-              >
-                Close
-              </Button>
-              {spendingLimits.length > 0 && (
-                <Button
-                  onClick={openAdd}
-                  className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-coral hover:bg-coral/80 text-white gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Limit
-                </Button>
-              )}
-            </div>
-          </>
-        )}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

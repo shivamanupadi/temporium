@@ -53,7 +53,10 @@ interface UseAccessKeysReturn {
   }) => Promise<{ transactionHash: `0x${string}` }>;
 
   getKey: (keyId: Address) => Promise<AccessKey | null>;
-  getRemainingLimit: (keyId: Address, token: Address) => Promise<bigint>;
+  getRemainingLimit: (
+    keyId: Address,
+    token: Address
+  ) => Promise<{ remaining: bigint; periodEnd: bigint } | null>;
 
   refresh: () => Promise<void>;
 }
@@ -231,19 +234,39 @@ export function useAccessKeys(): UseAccessKeysReturn {
   );
 
   const getRemainingLimit = useCallback(
-    async (keyId: Address, token: Address): Promise<bigint> => {
-      if (!address) return 0n;
+    async (
+      keyId: Address,
+      token: Address
+    ): Promise<{ remaining: bigint; periodEnd: bigint } | null> => {
+      if (!address) return null;
+
+      // Try T3+ getRemainingLimitWithPeriod first. If it reverts (common for
+      // legacy one-time limits where period=0), fall back to the pre-T3
+      // getRemainingLimit function which returns a single remaining value.
+      try {
+        const [remaining, periodEnd] = (await tempoPublicClient.readContract({
+          address: ACCOUNT_KEYCHAIN_ADDRESS,
+          abi: Abis.accountKeychain,
+          functionName: 'getRemainingLimitWithPeriod',
+          args: [address, keyId, token],
+        })) as [bigint, bigint];
+        return { remaining, periodEnd: BigInt(periodEnd) };
+      } catch {
+        // Fall through to legacy call.
+      }
 
       try {
-        const result = await Actions.accessKey.getRemainingLimit(tempoPublicClient, {
-          account: address,
-          accessKey: keyId,
-          token,
-        });
-        return result.remaining;
-      } catch (error) {
-        console.error(`Failed to get remaining limit for ${keyId}:`, error);
-        return 0n;
+        const remaining = (await tempoPublicClient.readContract({
+          address: ACCOUNT_KEYCHAIN_ADDRESS,
+          abi: Abis.accountKeychain,
+          functionName: 'getRemainingLimit',
+          args: [address, keyId, token],
+        })) as bigint;
+        // Legacy one-time limit: no period, but a limit IS configured.
+        // Surface a non-zero periodEnd sentinel so the UI treats it as "limit set".
+        return { remaining, periodEnd: remaining > 0n ? 1n : 0n };
+      } catch {
+        return null;
       }
     },
     [address]
