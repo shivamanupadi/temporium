@@ -17,3 +17,5 @@ export { YourAccessCard } from './YourAccessCard';
 export { StartRewardModal } from './StartRewardModal';
 export { SetRecipientModal } from './SetRecipientModal';
 export { ClaimRewardsModal } from './ClaimRewardsModal';
+export { SetupRestrictionsModal } from './SetupRestrictionsModal';
+export { ManageAddressModal } from './ManageAddressModal';

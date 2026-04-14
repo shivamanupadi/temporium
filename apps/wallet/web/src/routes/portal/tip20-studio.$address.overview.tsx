@@ -18,7 +18,6 @@ import {
   Check,
   ShieldCheck,
   ShieldX,
-  ShieldOff,
   Shield,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,20 +28,12 @@ import {
   BurnBlockedModal,
   PauseTokenModal,
   RemoveConfirmModal,
-  LinkPolicyModal,
-  UnlinkPolicyModal,
-  CreateAndLinkPolicyModal,
   YourAccessCard,
 } from '@/components/stablecoins';
 import { useTip20Studio } from '@/hooks/useTip20Studio';
 import { useTempo } from '@/hooks/useTempo';
 import { formatAmount, formatAddress, isUnlimitedSupply } from '@/lib/utils';
-import {
-  getExplorerTokenUrl,
-  getExplorerAddressUrl,
-  Actions,
-  tempoPublicClient,
-} from '@/lib/tempo-client';
+import { getExplorerTokenUrl, Actions, tempoPublicClient } from '@/lib/tempo-client';
 import type { PolicyType } from '@/types';
 
 export const Route = createFileRoute('/portal/tip20-studio/$address/overview')({
@@ -56,9 +47,6 @@ type DashboardModal =
   | 'grant-role'
   | 'revoke-role'
   | 'burn-blocked'
-  | 'link-policy'
-  | 'unlink-policy'
-  | 'create-policy'
   | 'remove'
   | null;
 
@@ -73,8 +61,7 @@ function Tip20StudioOverview(): ReactElement {
   const navigate = useNavigate();
   const { address: userAddress } = useTempo();
 
-  const { stablecoin, isLoading, changeTransferPolicy, removeStablecoin, refresh } =
-    useTip20Studio(tokenAddress);
+  const { stablecoin, isLoading, removeStablecoin, refresh } = useTip20Studio(tokenAddress);
 
   const [activeModal, setActiveModal] = useState<DashboardModal>(null);
   const [copied, setCopied] = useState(false);
@@ -261,16 +248,12 @@ function Tip20StudioOverview(): ReactElement {
           {/* Your Access */}
           <YourAccessCard tokenAddress={tokenAddress} />
 
-          {/* Transfer Policy Card */}
-          <TransferPolicyCard
+          {/* Transfer Restrictions Summary */}
+          <TransferRestrictionsBadge
             policyId={stablecoin?.metadata?.transferPolicyId}
             policyInfo={policyInfo}
             isLoading={isLoadingPolicy}
-            isAdmin={stablecoin?.userRoles?.includes('defaultAdmin') ?? false}
-            userAddress={userAddress}
-            onCreate={() => setActiveModal('create-policy')}
-            onLink={() => setActiveModal('link-policy')}
-            onUnlink={() => setActiveModal('unlink-policy')}
+            tokenAddress={tokenAddress}
           />
         </div>
 
@@ -408,34 +391,6 @@ function Tip20StudioOverview(): ReactElement {
         onClose={closeModal}
       />
 
-      <LinkPolicyModal
-        isOpen={activeModal === 'link-policy'}
-        selectedCoin={stablecoin ?? null}
-        onLink={changeTransferPolicy}
-        onSuccess={handleSuccess}
-        onClose={closeModal}
-      />
-
-      <CreateAndLinkPolicyModal
-        isOpen={activeModal === 'create-policy'}
-        selectedCoin={stablecoin ?? null}
-        onLink={changeTransferPolicy}
-        onSuccess={handleSuccess}
-        onClose={closeModal}
-      />
-
-      {policyInfo && (
-        <UnlinkPolicyModal
-          isOpen={activeModal === 'unlink-policy'}
-          selectedCoin={stablecoin ?? null}
-          policyId={policyInfo.policyId}
-          policyType={policyInfo.type}
-          onUnlink={changeTransferPolicy}
-          onSuccess={handleSuccess}
-          onClose={closeModal}
-        />
-      )}
-
       <RemoveConfirmModal
         coin={activeModal === 'remove' ? (stablecoin ?? null) : null}
         isLoading={isRemoving}
@@ -492,40 +447,20 @@ function SettingsRow({
   );
 }
 
-interface TransferPolicyCardProps {
+interface TransferRestrictionsBadgeProps {
   policyId: bigint | undefined;
   policyInfo: PolicyInfo | null;
   isLoading: boolean;
-  isAdmin: boolean;
-  userAddress: string | undefined;
-  onCreate: () => void;
-  onLink: () => void;
-  onUnlink: () => void;
+  tokenAddress: string;
 }
 
-function TransferPolicyCard({
+function TransferRestrictionsBadge({
   policyId,
   policyInfo,
   isLoading,
-  isAdmin,
-  userAddress,
-  onCreate,
-  onLink,
-  onUnlink,
-}: TransferPolicyCardProps): ReactElement {
-  const [copiedAdmin, setCopiedAdmin] = useState(false);
-
-  const copyAdminAddress = async (): Promise<void> => {
-    if (!policyInfo?.admin) return;
-    await navigator.clipboard.writeText(policyInfo.admin);
-    setCopiedAdmin(true);
-    setTimeout(() => setCopiedAdmin(false), 2000);
-  };
-
-  const isPolicyAdmin =
-    userAddress && policyInfo?.admin?.toLowerCase() === userAddress.toLowerCase();
-
-  const getPolicyStatus = (): {
+  tokenAddress,
+}: TransferRestrictionsBadgeProps): ReactElement {
+  const getStatus = (): {
     icon: ReactElement;
     label: string;
     description: string;
@@ -534,215 +469,77 @@ function TransferPolicyCard({
   } => {
     if (policyId === undefined || policyId === 1n) {
       return {
-        icon: <Shield className="h-5 w-5 text-muted-foreground" />,
+        icon: <Shield className="h-4 w-4 text-muted-foreground" />,
         label: 'No Restrictions',
-        description: 'All transfers are allowed',
+        description: 'All transfers allowed',
         color: 'text-muted-foreground',
         bgColor: 'bg-muted',
       };
     }
     if (policyId === 0n) {
       return {
-        icon: <ShieldOff className="h-5 w-5 text-coral" />,
+        icon: <ShieldX className="h-4 w-4 text-coral" />,
         label: 'Transfers Blocked',
-        description: 'All transfers are rejected',
+        description: 'All transfers rejected',
         color: 'text-coral',
         bgColor: 'bg-coral/10',
       };
     }
     if (policyInfo?.type === 'whitelist') {
       return {
-        icon: <ShieldCheck className="h-5 w-5 text-[var(--color-sage)]" />,
-        label: 'Whitelist Policy',
-        description: 'Only approved addresses can transact',
+        icon: <ShieldCheck className="h-4 w-4 text-[var(--color-sage)]" />,
+        label: 'Allowed List Active',
+        description: 'Only approved addresses can transfer',
         color: 'text-[var(--color-sage)]',
         bgColor: 'bg-[var(--color-sage)]/15',
       };
     }
     if (policyInfo?.type === 'blacklist') {
       return {
-        icon: <ShieldX className="h-5 w-5 text-coral" />,
-        label: 'Blacklist Policy',
-        description: 'Blocked addresses cannot transact',
+        icon: <ShieldX className="h-4 w-4 text-coral" />,
+        label: 'Blocked List Active',
+        description: 'Blocked addresses cannot transfer',
         color: 'text-coral',
         bgColor: 'bg-coral/10',
       };
     }
     return {
-      icon: <Shield className="h-5 w-5 text-coral" />,
-      label: 'Custom Policy',
+      icon: <Shield className="h-4 w-4 text-muted-foreground" />,
+      label: 'Restrictions Active',
       description: 'Transfer restrictions apply',
-      color: 'text-coral',
-      bgColor: 'bg-coral/10',
+      color: 'text-muted-foreground',
+      bgColor: 'bg-muted',
     };
   };
 
-  const status = getPolicyStatus();
-  const hasCustomPolicy = policyId !== undefined && policyId >= 2n;
-  const canLinkPolicy = policyId === undefined || policyId === 1n;
-
-  const handleCreate = (): void => {
-    if (!isAdmin) {
-      toast.error('You need the Admin role to change the transfer policy');
-      return;
-    }
-    onCreate();
-  };
-
-  const handleLink = (): void => {
-    if (!isAdmin) {
-      toast.error('You need the Admin role to change the transfer policy');
-      return;
-    }
-    onLink();
-  };
-
-  const handleUnlink = (): void => {
-    if (!isAdmin) {
-      toast.error('You need the Admin role to change the transfer policy');
-      return;
-    }
-    onUnlink();
-  };
+  const status = getStatus();
 
   return (
-    <div className="bg-card rounded-xl p-4 shadow-xs border border-border mt-6">
-      <h3 className="text-[13px] font-semibold text-foreground mb-3">Transfer Policy</h3>
-
-      {isLoading ? (
-        <div className="flex items-center gap-3 py-2">
-          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          <span className="text-sm text-muted-foreground">Loading policy...</span>
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {/* Policy Status */}
-          <div className="flex items-center gap-3">
+    <Link
+      to="/portal/tip20-studio/$address/restrictions"
+      params={{ address: tokenAddress }}
+      className="block bg-card rounded-xl p-4 shadow-xs border border-border mt-6 hover:border-[#D1CCC7] transition-colors group"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          {isLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          ) : (
             <div
-              className={`w-10 h-10 rounded-lg flex items-center justify-center ${status.bgColor}`}
+              className={`w-8 h-8 rounded-lg flex items-center justify-center ${status.bgColor}`}
             >
               {status.icon}
             </div>
-            <div>
-              <p className={`text-[13px] font-medium ${status.color}`}>{status.label}</p>
-              <p className="text-[11px] text-muted-foreground">{status.description}</p>
-            </div>
+          )}
+          <div>
+            <p className="text-[13px] font-semibold text-foreground">Transfer Restrictions</p>
+            <p className={`text-[11px] ${status.color}`}>
+              {isLoading ? 'Loading...' : `${status.label} \u2014 ${status.description}`}
+            </p>
           </div>
-
-          {/* Policy Actions - shown when no custom policy */}
-          {canLinkPolicy && (
-            <>
-              <div className="h-px bg-border/50" />
-              <div className="flex gap-2">
-                <button
-                  onClick={handleCreate}
-                  className="flex items-center justify-center gap-2 flex-1 h-9 rounded-lg text-[12px] font-medium text-white bg-coral hover:bg-coral/80 transition-colors cursor-pointer"
-                >
-                  <Shield className="h-3.5 w-3.5" />
-                  Create Policy
-                </button>
-                <button
-                  onClick={handleLink}
-                  className="flex items-center justify-center gap-2 flex-1 h-9 rounded-lg text-[12px] font-medium text-coral bg-coral/5 hover:bg-coral/10 transition-colors cursor-pointer"
-                >
-                  <Shield className="h-3.5 w-3.5" />
-                  Link Existing
-                </button>
-              </div>
-              {!isAdmin && (
-                <p className="text-[10px] text-muted-foreground text-center">Requires Admin role</p>
-              )}
-            </>
-          )}
-
-          {/* Policy Details for custom policies */}
-          {hasCustomPolicy && policyInfo && (
-            <>
-              <div className="h-px bg-border/50" />
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-[11px] text-muted-foreground">Policy ID</span>
-                  <span className="text-[12px] font-mono text-foreground">
-                    {policyId.toString()}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] text-muted-foreground">Policy Admin</span>
-                    {isPolicyAdmin ? (
-                      <span className="relative group">
-                        <span className="text-[10px] font-medium text-[var(--color-sage)] bg-[var(--color-sage)]/10 px-1.5 py-0.5 rounded cursor-help">
-                          You
-                        </span>
-                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 text-[10px] text-primary-foreground bg-foreground rounded whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity z-50">
-                          You are the admin of this policy
-                        </span>
-                      </span>
-                    ) : (
-                      <span className="relative group">
-                        <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded cursor-help">
-                          Other
-                        </span>
-                        <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-1 text-[10px] text-primary-foreground bg-foreground rounded whitespace-nowrap opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-opacity z-50">
-                          Someone else controls this policy
-                        </span>
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <span className="text-[12px] font-mono text-foreground">
-                      {formatAddress(policyInfo.admin, 6)}
-                    </span>
-                    <button
-                      onClick={copyAdminAddress}
-                      className="p-1 rounded hover:bg-muted transition-colors cursor-pointer"
-                      title="Copy address"
-                    >
-                      {copiedAdmin ? (
-                        <Check className="h-3 w-3 text-[var(--color-sage)]" />
-                      ) : (
-                        <Copy className="h-3 w-3 text-muted-foreground" />
-                      )}
-                    </button>
-                    <a
-                      href={getExplorerAddressUrl(policyInfo.admin)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-1 rounded hover:bg-muted transition-colors"
-                      title="View in explorer"
-                    >
-                      <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                    </a>
-                  </div>
-                </div>
-              </div>
-              <div className="flex gap-2 mt-2">
-                <Link
-                  to="/portal/tip403-factory"
-                  search={{ policyId: policyId.toString() }}
-                  className="flex items-center justify-center gap-2 flex-1 h-9 rounded-lg text-[12px] font-medium text-coral bg-coral/5 hover:bg-coral/10 transition-colors"
-                >
-                  <Shield className="h-3.5 w-3.5" />
-                  View Policy
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </Link>
-                <button
-                  onClick={handleUnlink}
-                  className="flex items-center justify-center gap-1.5 h-9 px-3 rounded-lg text-[12px] font-medium text-coral bg-coral/5 hover:bg-coral/10 transition-colors cursor-pointer"
-                >
-                  <ShieldOff className="h-3.5 w-3.5" />
-                  Unlink
-                </button>
-              </div>
-              {!isAdmin && (
-                <p className="text-[10px] text-muted-foreground text-center">
-                  Requires Admin role to unlink
-                </p>
-              )}
-            </>
-          )}
         </div>
-      )}
-    </div>
+        <ChevronRight className="h-4 w-4 text-[#D1CCC7] group-hover:text-[#9B9590] transition-colors" />
+      </div>
+    </Link>
   );
 }

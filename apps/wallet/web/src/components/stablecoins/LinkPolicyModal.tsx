@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef, type ReactElement } from 'react';
-import { Loader2, Link2, ExternalLink, ShieldCheck, ShieldX } from 'lucide-react';
+import { Loader2, Link2, ExternalLink, ShieldCheck, ShieldX, Keyboard } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@temporium/shared-ui';
@@ -7,6 +7,7 @@ import { FeeTokenPicker } from '@/components/FeeTokenPicker';
 import { Actions, tempoPublicClient, getExplorerTxUrl } from '@/lib/tempo-client';
 import { formatAddress } from '@/lib/utils';
 import { useTokenList } from '@/hooks/useTokenList';
+import { usePolicies, type PolicyWithMetadata } from '@/hooks/usePolicies';
 import type { Token } from '@/lib/tokenlist';
 import type { StablecoinWithMetadata, PolicyType } from '@/types';
 import type { Address } from 'viem';
@@ -22,7 +23,7 @@ interface LinkPolicyModalProps {
   onClose: () => void;
 }
 
-type ModalState = 'input' | 'confirm' | 'success';
+type ModalState = 'picker' | 'input' | 'confirm' | 'success';
 
 interface PolicyPreview {
   policyId: bigint;
@@ -38,11 +39,12 @@ export function LinkPolicyModal({
   onClose,
 }: LinkPolicyModalProps): ReactElement {
   const { tokens } = useTokenList();
+  const { policies, isLoading: isLoadingPolicies } = usePolicies();
 
   const [policyIdInput, setPolicyIdInput] = useState('');
   const [policyPreview, setPolicyPreview] = useState<PolicyPreview | null>(null);
   const [feeToken, setFeeToken] = useState<Token | null>(null);
-  const [modalState, setModalState] = useState<ModalState>('input');
+  const [modalState, setModalState] = useState<ModalState>('picker');
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [txHash, setTxHash] = useState<string>('');
@@ -53,7 +55,7 @@ export function LinkPolicyModal({
     if (isOpen) {
       setPolicyIdInput('');
       setPolicyPreview(null);
-      setModalState('input');
+      setModalState('picker');
       setIsLoading(false);
       setIsSubmitting(false);
       setTxHash('');
@@ -61,6 +63,15 @@ export function LinkPolicyModal({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
+
+  const handleSelectPolicy = useCallback((policy: PolicyWithMetadata): void => {
+    setPolicyPreview({
+      policyId: BigInt(policy.policyId),
+      type: policy.type,
+      admin: policy.admin as Address,
+    });
+    setModalState('confirm');
+  }, []);
 
   const handleLookup = useCallback(async (): Promise<void> => {
     if (!policyIdInput) {
@@ -133,6 +144,99 @@ export function LinkPolicyModal({
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[400px] p-0 gap-0 rounded-2xl">
+        {/* PICKER STATE */}
+        {modalState === 'picker' && (
+          <>
+            <div className="px-6 pt-6 pb-5 pr-14">
+              <DialogTitle className="text-lg font-bold text-[#2D3436]">
+                Link Existing Restriction List
+              </DialogTitle>
+              <DialogDescription className="text-[13px] font-light text-[#9B9590]">
+                Select a restriction list to apply to {selectedCoin.symbol}
+              </DialogDescription>
+            </div>
+
+            <div className="px-6 pb-4">
+              {isLoadingPolicies ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <span className="text-[13px] text-[#9B9590] ml-2">Loading...</span>
+                </div>
+              ) : policies.length > 0 ? (
+                <div className="space-y-2 max-h-[280px] overflow-y-auto">
+                  {policies.map(policy => {
+                    const isWhitelist = policy.type === 'whitelist';
+                    return (
+                      <button
+                        key={policy.id}
+                        onClick={() => handleSelectPolicy(policy)}
+                        className="w-full flex items-center gap-3 p-3 rounded-xl border border-[#EDE9E3] hover:bg-[#F5F2ED]/50 hover:border-[#D1CCC7] transition-colors cursor-pointer text-left"
+                      >
+                        <div
+                          className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                            isWhitelist ? 'bg-[var(--color-sage)]/10' : 'bg-coral/8'
+                          }`}
+                        >
+                          {isWhitelist ? (
+                            <ShieldCheck className="h-4 w-4 text-[var(--color-sage)]" />
+                          ) : (
+                            <ShieldX className="h-4 w-4 text-coral" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="text-[13px] font-medium text-[#2D3436]">
+                              {isWhitelist ? 'Allowed List' : 'Blocked List'}
+                            </p>
+                            <span className="text-[10px] font-medium text-[#9B9590] bg-[#F5F2ED] px-1.5 py-0.5 rounded">
+                              #{policy.policyId}
+                            </span>
+                            {policy.isAdmin && (
+                              <span className="text-[10px] font-medium text-[var(--color-sage)] bg-[var(--color-sage)]/10 px-1.5 py-0.5 rounded">
+                                Admin
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-[#9B9590] font-mono mt-0.5">
+                            {formatAddress(policy.admin, 6)}
+                          </p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-center py-6">
+                  <p className="text-[13px] text-[#9B9590]">No restriction lists found</p>
+                  <p className="text-[11px] text-[#B5B0AA] mt-1">
+                    Enter a policy ID manually below
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="px-6 pb-4 border-t border-[#EDE9E3]/50 pt-3">
+              <button
+                onClick={() => setModalState('input')}
+                className="flex items-center gap-2 text-[12px] text-coral hover:text-coral/80 transition-colors cursor-pointer"
+              >
+                <Keyboard className="h-3.5 w-3.5" />
+                Enter policy ID manually
+              </button>
+            </div>
+
+            <div className="px-6 pb-6">
+              <Button
+                variant="outline"
+                className="w-full h-11 rounded-xl border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
+                onClick={onClose}
+              >
+                Cancel
+              </Button>
+            </div>
+          </>
+        )}
+
         {/* INPUT STATE */}
         {modalState === 'input' && (
           <>
@@ -172,9 +276,9 @@ export function LinkPolicyModal({
               <Button
                 variant="outline"
                 className="flex-1 h-11 rounded-xl border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
-                onClick={onClose}
+                onClick={() => setModalState('picker')}
               >
-                Cancel
+                Back
               </Button>
               <Button
                 className="flex-1 h-11 rounded-xl font-semibold bg-coral hover:bg-coral/80 text-white"
@@ -284,7 +388,7 @@ export function LinkPolicyModal({
               <Button
                 variant="outline"
                 className="flex-1 h-11 rounded-xl border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
-                onClick={() => setModalState('input')}
+                onClick={() => setModalState('picker')}
                 disabled={isSubmitting}
               >
                 Back

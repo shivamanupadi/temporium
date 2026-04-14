@@ -7,14 +7,18 @@ import {
   redirect,
 } from '@tanstack/react-router';
 import type { ReactElement } from 'react';
-import { CircleDollarSign, Gift, ArrowLeft } from 'lucide-react';
+import { CircleDollarSign, Gift, Shield, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTip20Studio } from '@/hooks/useTip20Studio';
 
 export const Route = createFileRoute('/portal/tip20-studio/$address')({
   component: Tip20StudioLayout,
   beforeLoad: ({ location, params }) => {
-    if (!location.pathname.endsWith('/overview') && !location.pathname.endsWith('/rewards')) {
+    if (
+      !location.pathname.endsWith('/overview') &&
+      !location.pathname.endsWith('/rewards') &&
+      !location.pathname.endsWith('/restrictions')
+    ) {
       throw redirect({
         to: '/portal/tip20-studio/$address/overview',
         params: { address: params.address },
@@ -32,6 +36,8 @@ function Tip20StudioLayout(): ReactElement {
   const { stablecoin, isLoading, isNotFound } = useTip20Studio(tokenAddress);
 
   const isRewardsTab = location.pathname.endsWith('/rewards');
+  const isRestrictionsTab = location.pathname.endsWith('/restrictions');
+  const isOverviewTab = !isRewardsTab && !isRestrictionsTab;
 
   if (isLoading) {
     return (
@@ -151,7 +157,7 @@ function Tip20StudioLayout(): ReactElement {
           to="/portal/tip20-studio/$address/overview"
           params={{ address: tokenAddress }}
           className={`px-4 py-2 text-[13px] font-medium rounded-md transition-colors ${
-            !isRewardsTab
+            isOverviewTab
               ? 'bg-card text-foreground shadow-sm'
               : 'text-muted-foreground hover:text-foreground'
           }`}
@@ -170,6 +176,18 @@ function Tip20StudioLayout(): ReactElement {
         >
           <Gift className="h-4 w-4 inline-block mr-1.5 -mt-0.5" />
           Rewards
+        </Link>
+        <Link
+          to="/portal/tip20-studio/$address/restrictions"
+          params={{ address: tokenAddress }}
+          className={`px-4 py-2 text-[13px] font-medium rounded-md transition-colors ${
+            isRestrictionsTab
+              ? 'bg-card text-foreground shadow-sm'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Shield className="h-4 w-4 inline-block mr-1.5 -mt-0.5" />
+          Restrictions
         </Link>
       </div>
 
