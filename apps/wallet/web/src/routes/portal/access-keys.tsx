@@ -994,7 +994,7 @@ function AccessKeysPage(): ReactElement {
         </DialogContent>
       </Dialog>
 
-      {/* Token Limit Modal (wizard — add token during key creation) */}
+      {/* Token Limit Modal (wizard - add token during key creation) */}
       <Dialog
         open={isTokenLimitModalOpen}
         onOpenChange={open => {
@@ -1155,7 +1155,7 @@ function AccessKeysPage(): ReactElement {
         );
       })()}
 
-      {/* Add Access Key Dialog — Multi-Step Wizard */}
+      {/* Add Access Key Dialog - Multi-Step Wizard */}
       <Dialog
         open={isAddDialogOpen}
         onOpenChange={open => {
@@ -1164,7 +1164,7 @@ function AccessKeysPage(): ReactElement {
         }}
       >
         <DialogContent className="p-0 gap-0 max-w-[420px] rounded-3xl overflow-hidden border-none shadow-[0_20px_50px_-20px_rgba(45,52,54,0.2)]">
-          {/* Header — hidden on success */}
+          {/* Header - hidden on success */}
           {wizardStep !== 'success' ? (
             <div className="px-6 pt-6 pb-5 bg-[#FDFBF8] border-b border-[#EDE9E3]">
               <div className="pr-10 flex items-center justify-between gap-3">

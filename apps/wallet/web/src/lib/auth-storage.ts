@@ -8,7 +8,7 @@ export interface AuthToken {
 
 /**
  * Auth token storage backed by accounts SDK Storage.
- * Uses combined IDB + localStorage for resilience — reads return
+ * Uses combined IDB + localStorage for resilience - reads return
  * first non-null result, writes propagate to both.
  */
 const storage = Storage.combine(

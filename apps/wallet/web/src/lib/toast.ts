@@ -1,4 +1,4 @@
-// Custom toast system — imperative API
+// Custom toast system - imperative API
 // Usage: toast.success('Done!', { description: 'Your changes were saved.' })
 
 type ToastType = 'success' | 'error' | 'info' | 'warning';

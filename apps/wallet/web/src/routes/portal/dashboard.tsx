@@ -290,7 +290,7 @@ function DashboardPage(): ReactElement {
           </motion.div>
         </div>
 
-        {/* Right Column — Assets */}
+        {/* Right Column - Assets */}
         <div className="lg:sticky lg:top-0 lg:h-[calc(100vh-8rem)]">
           <motion.div
             variants={itemVariants}

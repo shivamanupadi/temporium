@@ -46,7 +46,7 @@ export const Route = createFileRoute('/portal/dex-swap')({
 
 type SwapStatus = 'idle' | 'quoting' | 'confirming' | 'pending' | 'success';
 
-/** Swap route — direct or multi-hop via an intermediate token */
+/** Swap route - direct or multi-hop via an intermediate token */
 interface SwapRoute {
   path: Address[];
   quotes: bigint[]; // quote for each hop
@@ -66,7 +66,7 @@ async function getDirectQuote(
   }
 }
 
-/** Find the best swap route — direct or via quote token */
+/** Find the best swap route - direct or via quote token */
 async function findSwapRoute(
   tokenIn: Address,
   tokenOut: Address,
@@ -79,7 +79,7 @@ async function findSwapRoute(
   }
 
   // Try multi-hop via quote tokens
-  // Each TIP20 has a quoteToken — try routing through it
+  // Each TIP20 has a quoteToken - try routing through it
   const quoteTokens = new Set<string>();
 
   for (const addr of [tokenIn, tokenOut]) {
@@ -588,7 +588,7 @@ function DexSwapPage(): ReactElement | null {
         );
       }
 
-      // Append platform fee transfer (atomic — swap + fee succeed or fail together)
+      // Append platform fee transfer (atomic - swap + fee succeed or fail together)
       if (hasSwapFee && swapFeeTokenMeta) {
         const feeRaw = parseAmount(swapFee.feeAmount, swapFeeTokenMeta.decimals);
         if (feeRaw > 0n) {

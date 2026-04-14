@@ -19,7 +19,7 @@ function getStoredNetwork(): 'testnet' | 'mainnet' {
 export const TEMPO_NETWORK = getStoredNetwork();
 export const isTestnet = TEMPO_NETWORK !== 'mainnet';
 
-/** Dev mode — enables passkey wallet (hidden from public users). Activated via ?dev=true URL param. */
+/** Dev mode - enables passkey wallet (hidden from public users). Activated via ?dev=true URL param. */
 export const isDevMode = (() => {
   try {
     if (typeof window === 'undefined') return false;
@@ -43,7 +43,7 @@ export function switchNetwork(network: 'testnet' | 'mainnet', clearSession = fal
   localStorage.setItem(NETWORK_STORAGE_KEY, network);
 
   if (clearSession) {
-    // Clear all session state — forces re-sign-in on the new network
+    // Clear all session state - forces re-sign-in on the new network
     localStorage.removeItem('wagmi.store');
     localStorage.removeItem('temporium_auth');
     // Clear accounts SDK IDB storage
@@ -67,7 +67,7 @@ export function switchNetwork(network: 'testnet' | 'mainnet', clearSession = fal
 export const tempoBaseChain = TEMPO_NETWORK === 'mainnet' ? tempo : tempoModerato;
 
 /**
- * Default fee token address — pathUSD is the chain default on both networks.
+ * Default fee token address - pathUSD is the chain default on both networks.
  * Users can override per-account via FeeManager.setUserToken (Settings page).
  */
 export const DEFAULT_FEE_TOKEN_ADDRESS = '0x20c0000000000000000000000000000000000000' as Address;
@@ -142,7 +142,7 @@ export const TIMING = {
 export const ACCOUNT_KEYCHAIN_ADDRESS = '0xaAAAaaAA00000000000000000000000000000000' as Address;
 
 /**
- * RecurringPayments contract address — loaded dynamically from API via /contracts endpoint.
+ * RecurringPayments contract address - loaded dynamically from API via /contracts endpoint.
  * @deprecated Use getRecurringPaymentsContractAddress() from recurring-payments.ts instead.
  */
 

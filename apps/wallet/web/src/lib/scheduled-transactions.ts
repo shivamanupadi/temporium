@@ -55,7 +55,7 @@ export function getScheduledTxConfig(): Promise<ScheduledTxConfig> {
  *
  * When a platform fee is active the server returns a 402 challenge on the first
  * call. `mppxFetch` (from `createMppxFetch()`) intercepts it, signs the fee
- * payment with the user's wallet, and retries — all transparently. The caller
+ * payment with the user's wallet, and retries - all transparently. The caller
  * just awaits the final result.
  *
  * Auth is handled manually (Bearer token + X-Tempo-Network) because we're
@@ -106,7 +106,7 @@ export async function createScheduledTransaction(
 }
 
 // =============================================================================
-// List / Detail / Delete (unchanged — standard auth, no mppx)
+// List / Detail / Delete (unchanged - standard auth, no mppx)
 // =============================================================================
 
 export function getScheduledTransactions(

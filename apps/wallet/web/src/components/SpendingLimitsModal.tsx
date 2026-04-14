@@ -283,7 +283,7 @@ export function SpendingLimitsModal({
             </div>
           )}
 
-          {/* Status card — appears after a successful lookup */}
+          {/* Status card - appears after a successful lookup */}
           {lookup && !lookupLoading && (
             <div
               className={`rounded-2xl border p-3.5 flex items-center gap-3 ${
@@ -326,7 +326,7 @@ export function SpendingLimitsModal({
             </div>
           )}
 
-          {/* Amount input — only shown when we have a valid token */}
+          {/* Amount input - only shown when we have a valid token */}
           {lookup && !lookupLoading && (
             <div className="space-y-1.5">
               <Label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">

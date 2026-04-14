@@ -1,13 +1,13 @@
 /**
- * Public payment page — /pay/:id
+ * Public payment page - /pay/:id
  *
- * Aesthetic: "Certificate of Payment Due" — an engraved classical financial
+ * Aesthetic: "Certificate of Payment Due" - an engraved classical financial
  * document (think 19th-century treasury note / private-bank draft) reimagined
  * with contemporary restraint. The success state is its sibling: the same
  * paper, stamped and perforated into a receipt.
  *
  * - Fraunces (variable serif) for display, DM Sans (variable sans) for body
- *   — loaded in index.html.
+ *   - loaded in index.html.
  * - Warm cream paper palette with coral accent button, sage success state.
  * - Double engraved border via triple box-shadow, corner diamond marks,
  *   ornamental divider, and a letterspaced uppercase footer.
@@ -46,7 +46,7 @@ export const Route = createFileRoute('/pay/$id')({
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Palette — warm near-white certificate on a payweave-style off-white page.
+ * Palette - warm near-white certificate on a payweave-style off-white page.
  *
  * The card is slightly lighter and warmer than the page, so it reads as a
  * gently elevated sheet rather than a clashing cream island. The footer
@@ -252,7 +252,7 @@ function PayPage(): ReactElement {
     );
   }
 
-  // ─── Idle / paying — the payment certificate ──────────────────────────
+  // ─── Idle / paying - the payment certificate ──────────────────────────
 
   const chainMismatch = isConnected && currentChainId !== CHAIN_ID_BY_NETWORK[link.network];
 
@@ -291,7 +291,7 @@ function PayPage(): ReactElement {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Shell — the warm atmospheric background + centering frame
+// Shell - the warm atmospheric background + centering frame
 // ─────────────────────────────────────────────────────────────────────────────
 
 function Shell({ children }: { children: ReactNode }): ReactElement {
@@ -300,7 +300,7 @@ function Shell({ children }: { children: ReactNode }): ReactElement {
       className="min-h-screen flex items-center justify-center px-5 py-14 relative overflow-hidden"
       style={{ backgroundColor: '#FCF9F5' }}
     >
-      {/* Subtle grid — borrowed from payweave login aesthetic */}
+      {/* Subtle grid - borrowed from payweave login aesthetic */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -313,7 +313,7 @@ function Shell({ children }: { children: ReactNode }): ReactElement {
         aria-hidden
       />
 
-      {/* Single soft coral glow — atmospheric, not a focal */}
+      {/* Single soft coral glow - atmospheric, not a focal */}
       <div
         className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full pointer-events-none"
         style={{
@@ -336,7 +336,7 @@ function Shell({ children }: { children: ReactNode }): ReactElement {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Payment Certificate — the idle/paying state
+// Payment Certificate - the idle/paying state
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface PaymentCertificateProps {
@@ -599,7 +599,7 @@ function PaymentCertificate(props: PaymentCertificateProps): ReactElement {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Receipt Certificate — success state (retains perforation + dotted rows)
+// Receipt Certificate - success state (retains perforation + dotted rows)
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface ReceiptCertificateProps {
@@ -632,7 +632,7 @@ function ReceiptCertificate({
   const subline =
     variant === 'historical'
       ? 'This payment link has already been paid.'
-      : 'Thank you — your payment was successful.';
+      : 'Thank you - your payment was successful.';
 
   return (
     <motion.article
@@ -869,7 +869,7 @@ function ReceiptCertificate({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// NoteCard — loading / error / unavailable states
+// NoteCard - loading / error / unavailable states
 // ─────────────────────────────────────────────────────────────────────────────
 
 function NoteCard({
@@ -1059,7 +1059,7 @@ function FactRow({ label, value }: { label: string; value: ReactNode }): ReactEl
   );
 }
 
-/** Receipt dotted-leader row — label/value separated by a classic dotted line. */
+/** Receipt dotted-leader row - label/value separated by a classic dotted line. */
 function DottedRow({ label, value }: { label: string; value: ReactNode }): ReactElement {
   return (
     <motion.div
@@ -1185,7 +1185,7 @@ function StampButton({
         `,
       }}
     >
-      {/* Inset hairline — gives the stamped-plate look */}
+      {/* Inset hairline - gives the stamped-plate look */}
       <span
         className="absolute inset-[7px] pointer-events-none"
         style={{

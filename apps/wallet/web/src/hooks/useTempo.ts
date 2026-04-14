@@ -54,7 +54,7 @@ interface UseTempoReturn {
   address: Address | undefined;
   error: Error | null;
   walletType: WalletType;
-  /** The underlying viem WalletClient — useful for mppx or direct chain calls. */
+  /** The underlying viem WalletClient - useful for mppx or direct chain calls. */
   walletClient: import('viem').WalletClient | undefined;
   hasInjectedWallet: boolean;
   // Auth
@@ -86,7 +86,7 @@ interface UseTempoReturn {
 }
 
 /**
- * Main hook — wraps passkey and injected wallet types
+ * Main hook - wraps passkey and injected wallet types
  *
  * Uses wagmi walletClient → Actions.* calls
  */
@@ -291,7 +291,7 @@ export function useTempo(): UseTempoReturn {
 
       // Prepare the request WITHOUT validAfter so gas estimation succeeds
       // (estimateGas simulates at the current block timestamp, which is before
-      // the scheduled validAfter — causing a "transaction not valid yet" error).
+      // the scheduled validAfter - causing a "transaction not valid yet" error).
       const prepared = await client.prepareTransactionRequest({
         to: call.address,
         data,
@@ -303,7 +303,7 @@ export function useTempo(): UseTempoReturn {
       // Now add validAfter to the prepared request before signing.
       const withValidAfter = { ...prepared, validAfter: params.scheduledFor };
 
-      // Sign the prepared transaction — does NOT submit to the network.
+      // Sign the prepared transaction - does NOT submit to the network.
       const serializedTransaction = await client.signTransaction(withValidAfter as any);
 
       return { serializedTransaction, scheduledFor: params.scheduledFor };

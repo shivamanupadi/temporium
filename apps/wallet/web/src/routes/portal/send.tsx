@@ -109,7 +109,7 @@ function SendPage(): ReactElement | null {
   }, [tokens, selectedToken]);
 
   // Fee token priority: user on-chain preference > chain default (pathUSD) > first token
-  // Only initialize — don't override user's manual selection
+  // Only initialize - don't override user's manual selection
   useEffect(() => {
     if (tokens.length === 0 || feeToken) return;
     const preferred = preferredFeeToken
@@ -241,7 +241,7 @@ function SendPage(): ReactElement | null {
           scheduledFor,
         });
 
-        // POST to worker API — the cron will submit it when the time comes.
+        // POST to worker API - the cron will submit it when the time comes.
         // Uses mppx fetch so the platform service fee (if configured) is paid
         // transparently via the 402 challenge flow.
         const scheduledForISO = new Date(scheduledFor * 1000).toISOString();
@@ -496,7 +496,7 @@ function SendPage(): ReactElement | null {
                 </p>
                 <p className="text-[12px] text-[#9B9590] mt-1 leading-relaxed">
                   Set up time-locked transfers, manage pending schedules, and track execution
-                  history — all in one place.
+                  history - all in one place.
                 </p>
               </div>
               <Link to="/portal/scheduled-payments">

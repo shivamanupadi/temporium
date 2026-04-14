@@ -216,7 +216,7 @@ export function SetupRestrictionsModal({
       });
       setCreatedPolicyId(createResult.policyId);
       await refreshPolicies();
-      // Stop here — wait for explicit user click to link
+      // Stop here - wait for explicit user click to link
       setModalState('created');
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to create restriction list';
@@ -528,7 +528,7 @@ export function SetupRestrictionsModal({
                 )}
               </div>
 
-              {/* Step indicator — only for create flow (2 txns) */}
+              {/* Step indicator - only for create flow (2 txns) */}
               {flowKind === 'create' && (
                 <div className="mt-3 bg-[#FDFBF8] rounded-xl p-3 border border-[#EDE9E3]">
                   <p className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2">
@@ -605,7 +605,7 @@ export function SetupRestrictionsModal({
                 Creating List...
               </DialogTitle>
               <DialogDescription className="text-[13px] font-light text-[#9B9590]">
-                Step 1 of 2 — Processing transaction
+                Step 1 of 2 - Processing transaction
               </DialogDescription>
             </div>
             <div className="px-6 pb-6 flex flex-col items-center justify-center py-8">
@@ -623,7 +623,7 @@ export function SetupRestrictionsModal({
             <div className="px-6 pt-6 pb-5 pr-14">
               <DialogTitle className="text-lg font-bold text-[#2D3436]">List Created</DialogTitle>
               <DialogDescription className="text-[13px] font-light text-[#9B9590]">
-                Step 1 complete — Now apply it to {selectedCoin.symbol}
+                Step 1 complete - Now apply it to {selectedCoin.symbol}
               </DialogDescription>
             </div>
 
@@ -703,7 +703,7 @@ export function SetupRestrictionsModal({
               </DialogTitle>
               <DialogDescription className="text-[13px] font-light text-[#9B9590]">
                 {flowKind === 'create'
-                  ? 'Step 2 of 2 — Processing transaction'
+                  ? 'Step 2 of 2 - Processing transaction'
                   : 'Processing transaction'}
               </DialogDescription>
             </div>

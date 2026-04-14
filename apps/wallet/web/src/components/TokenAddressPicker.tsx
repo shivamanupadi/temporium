@@ -167,7 +167,7 @@ export function TokenAddressPicker({
       {/* Matched token label */}
       {matchedToken && (
         <p className="text-[11px] font-medium text-[#9B9590] mt-1.5">
-          Matched <span className="text-[#2D3436]">{matchedToken.symbol}</span> —{' '}
+          Matched <span className="text-[#2D3436]">{matchedToken.symbol}</span> -{' '}
           {matchedToken.name}
         </p>
       )}

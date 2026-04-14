@@ -3,7 +3,7 @@
  *
  * Authenticated endpoints go through `apiRequest` (adds Bearer + network).
  * Public endpoints (viewing a share link, paying) go through
- * `publicApiRequest` — same error parsing but no Authorization header.
+ * `publicApiRequest` - same error parsing but no Authorization header.
  *
  * The `pay` endpoint is special: it must be hit via an mppx-wrapped fetch so
  * 402 challenges are handled automatically by the client SDK. That path is
@@ -144,7 +144,7 @@ export function getPublicPaymentLink(id: string): Promise<PublicPaymentLink> {
 
 /**
  * Hit the mppx-gated pay endpoint. `mppxFetch` is the scoped fetch returned
- * from `createMppxFetch()` in `src/lib/mpp.ts` — it intercepts the 402
+ * from `createMppxFetch()` in `src/lib/mpp.ts` - it intercepts the 402
  * response, signs via the wagmi walletClient, and retries automatically.
  *
  * On success the server responds 200 with the usual `{success, data}`

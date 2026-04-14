@@ -5,7 +5,7 @@
  * wrapped by its returned `mppx.fetch`. The challenge is signed by the viem
  * Account we hand it, and the request is transparently retried.
  *
- * On this app, the account comes from wagmi's `useWalletClient()` — we pass
+ * On this app, the account comes from wagmi's `useWalletClient()` - we pass
  * the walletClient both as the viem Client (`getClient`) and as the source of
  * `account`. `polyfill: false` keeps interception scoped to `mppx.fetch`
  * instead of patching `globalThis.fetch`, so the normal authed api-client
@@ -19,7 +19,7 @@ import { Mppx, tempo } from 'mppx/client';
 
 /**
  * Build a scoped payment-aware fetch from a wagmi walletClient.
- * Returns `null` if the walletClient is not yet connected — the caller should
+ * Returns `null` if the walletClient is not yet connected - the caller should
  * disable the pay button in that case.
  */
 export function createMppxFetch(
@@ -34,7 +34,7 @@ export function createMppxFetch(
         getClient: () => walletClient as Client,
       }),
     ],
-    // Keep interception scoped to this fetch — don't touch globalThis.fetch.
+    // Keep interception scoped to this fetch - don't touch globalThis.fetch.
     polyfill: false,
   });
 

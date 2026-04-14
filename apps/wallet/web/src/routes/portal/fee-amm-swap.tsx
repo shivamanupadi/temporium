@@ -60,7 +60,7 @@ function PoolSwapPage(): ReactElement | null {
   const { from, to } = Route.useSearch();
   const navigate = useNavigate();
 
-  // Token selection — validatorToken = what you pay (from), userToken = what you receive (to)
+  // Token selection - validatorToken = what you pay (from), userToken = what you receive (to)
   const [userToken, setUserToken] = useState<Token | null>(null);
   const [validatorToken, setValidatorToken] = useState<Token | null>(null);
   const [feeToken, setFeeToken] = useState<Token | null>(null);
@@ -114,7 +114,7 @@ function PoolSwapPage(): ReactElement | null {
   const parsedAmountOut = parseAmount(amountOut, userDecimals);
   const parsedAmountIn = parseAmount(amountIn, validatorDecimals);
 
-  // Quote computation — instant, no RPC calls needed.
+  // Quote computation - instant, no RPC calls needed.
   // Fee AMM uses fixed rates: amountIn = (amountOut * 10000) / 9985 + 1
   const quotedCost = (() => {
     if (!pool) return null;
@@ -153,7 +153,7 @@ function PoolSwapPage(): ReactElement | null {
   const hasBalance =
     effectiveCost !== null && effectiveCost > 0n && validatorBalanceData.value >= effectiveCost;
 
-  // Display values — show the user's own input for the active field to avoid
+  // Display values - show the user's own input for the active field to avoid
   // confusing rounding artefacts from the roundtrip conversion.
   const displayPayAmount =
     activeField === 'pay' && parsedAmountIn > 0n
@@ -168,7 +168,7 @@ function PoolSwapPage(): ReactElement | null {
         ? formatAmount(effectiveAmountOut, userDecimals)
         : '';
 
-  // Rate string — fixed Fee AMM rate: 1 userToken costs N/SCALE validatorTokens
+  // Rate string - fixed Fee AMM rate: 1 userToken costs N/SCALE validatorTokens
   // Rebalancers get a ~0.15% bonus (pay less than they receive)
   const rateString =
     effectiveCost !== null && effectiveCost > 0n && effectiveAmountOut > 0n

@@ -136,7 +136,7 @@ function LiquidityPage(): ReactElement | null {
   const parsedAddAmount = parseAmount(addAmount, validatorDecimals);
   const parsedRemoveAmount = parseAmount(removeAmount, 18);
 
-  // Validation — independent for add and remove
+  // Validation - independent for add and remove
   const hasAddBalance = validatorBalanceData.value >= parsedAddAmount;
   const hasRemoveBalance = lpBalance >= parsedRemoveAmount;
 
@@ -423,10 +423,10 @@ function LiquidityPage(): ReactElement | null {
         </motion.div>
       )}
 
-      {/* Main content — always shows the form */}
+      {/* Main content - always shows the form */}
       {userToken && validatorToken && feeToken && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-          {/* Pool Selection + Pool Info — single card */}
+          {/* Pool Selection + Pool Info - single card */}
           <div className="rounded-2xl border border-[#EDE9E3] bg-white p-5">
             <div className="flex flex-col md:flex-row md:items-start gap-5">
               {/* Pool Selection */}
@@ -598,7 +598,7 @@ function LiquidityPage(): ReactElement | null {
               </Button>
             </div>
 
-            {/* Remove Liquidity Card — always visible */}
+            {/* Remove Liquidity Card - always visible */}
             <div className="rounded-2xl border border-[#EDE9E3] bg-white p-5 flex flex-col gap-3">
               <div className="flex items-center gap-2">
                 <Minus className="w-4 h-4 text-[#E07A5F]" />

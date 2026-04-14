@@ -116,7 +116,7 @@ export async function getLiquidityBalance(
 // ---------------------------------------------------------------------------
 // Fee AMM quote helpers (fixed-rate, no RPC needed)
 //
-// The Fee AMM uses fixed rates — NOT a bonding curve:
+// The Fee AMM uses fixed rates - NOT a bonding curve:
 //   Fee swap (protocol-only):  amountOut = (amountIn * M) / SCALE
 //   Rebalance swap (public):   amountIn  = (amountOut * N) / SCALE + 1
 //

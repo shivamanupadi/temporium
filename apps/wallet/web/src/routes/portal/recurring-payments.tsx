@@ -627,7 +627,7 @@ function CreateSubscriptionDialog({
         account: address as Address,
       });
 
-      // Move to the "approved" step — user clicks to trigger the batch tx
+      // Move to the "approved" step - user clicks to trigger the batch tx
       setStep('approved');
     } catch (err) {
       console.error('Approve failed:', err);
@@ -676,7 +676,7 @@ function CreateSubscriptionDialog({
         },
       ];
 
-      // Append platform fee transfer (atomic — subscription + fee succeed or fail together)
+      // Append platform fee transfer (atomic - subscription + fee succeed or fail together)
       if (hasRecurringFee && recurringFeeTokenMeta) {
         const feeRaw = parseAmount(recurringFee.feeAmount, recurringFeeTokenMeta.decimals);
         if (feeRaw > 0n) {
@@ -1058,7 +1058,7 @@ function CreateSubscriptionDialog({
                     <div className="flex items-start gap-2">
                       <Clock className="w-3.5 h-3.5 text-coral/70 mt-0.5 shrink-0" />
                       <p className="text-[12px] text-coral/80 leading-relaxed">
-                        Payments execute automatically — tokens stay in your wallet until each
+                        Payments execute automatically - tokens stay in your wallet until each
                         payment is due
                       </p>
                     </div>
@@ -1086,7 +1086,7 @@ function CreateSubscriptionDialog({
             </motion.div>
           )}
 
-          {/* ─── Approved — Create & Pay step ─── */}
+          {/* ─── Approved - Create & Pay step ─── */}
           {step === 'approved' && selectedToken && (
             <motion.div
               key="approved"

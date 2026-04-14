@@ -5,7 +5,7 @@ import { CheckCircle2, XCircle, Info, AlertTriangle, X } from 'lucide-react';
 import { subscribe, type ToastData } from '@/lib/toast';
 
 // ---------------------------------------------------------------------------
-// Theme — matches the gateway warm-neutral palette
+// Theme - matches the gateway warm-neutral palette
 // ---------------------------------------------------------------------------
 
 const TOAST_CONFIG: Record<ToastData['type'], { icon: typeof CheckCircle2; accent: string }> = {
@@ -84,7 +84,7 @@ function ToastItem({ data, onDismiss }: { data: ToastData; onDismiss: (id: strin
 }
 
 // ---------------------------------------------------------------------------
-// Get or create the dedicated toast container — always last child of <body>
+// Get or create the dedicated toast container - always last child of <body>
 // This ensures toasts render above all Radix Dialog portals.
 // ---------------------------------------------------------------------------
 

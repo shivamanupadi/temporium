@@ -115,7 +115,7 @@ const PAGE_SIZE = 20;
 /**
  * Map the client-side filter to the backend status query param.
  * Every filter maps 1:1 to a native server status (or `undefined` for All),
- * so filtering is fully server-side — pagination always returns a full page.
+ * so filtering is fully server-side - pagination always returns a full page.
  */
 function filterToBackendStatus(
   filter: PaymentLinksFilter
@@ -138,7 +138,7 @@ function buildShareUrl(id: string): string {
 }
 
 /**
- * Token logo URL for the Tempo tokenlist — keyed on chainId + lowercased
+ * Token logo URL for the Tempo tokenlist - keyed on chainId + lowercased
  * token address. Reconstructed client-side so we don't need an extra round
  * trip to the tokenlist API just to render a small icon.
  */
@@ -376,7 +376,7 @@ function PaymentLinksPage(): ReactElement {
         </div>
       </motion.div>
 
-      {/* Filter tabs — no motion wrapper: it mounts after the parent's
+      {/* Filter tabs - no motion wrapper: it mounts after the parent's
           stagger has completed, and child variants inherit the parent's
           current state, which leaves the new child stuck at opacity 0. */}
       {!isLoading && <FilterTabs active={activeFilter} onChange={setFilter} />}
@@ -756,7 +756,7 @@ function CreateLinkDialog({
 }: CreateDialogProps): ReactElement {
   const { address } = useTempo();
 
-  // Use the curated official tokenlist only — custom user-added tokens are
+  // Use the curated official tokenlist only - custom user-added tokens are
   // excluded from the picker so the backend resolver always succeeds.
   const { officialTokens, isLoading: tokensLoading } = useTokenList();
   const pickerTokens = officialTokens;
@@ -1068,7 +1068,7 @@ function CreateLinkDialog({
 }
 
 // -----------------------------------------------------------------------------
-// Detail sidebar — slides in from the right with full link + payments
+// Detail sidebar - slides in from the right with full link + payments
 // -----------------------------------------------------------------------------
 
 function DetailSidebar({

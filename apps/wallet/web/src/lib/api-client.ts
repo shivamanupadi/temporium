@@ -48,7 +48,7 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
       if (parsed?.error?.message) message = parsed.error.message;
       else if (typeof parsed?.error === 'string') message = parsed.error;
     } catch {
-      // not JSON — use raw text
+      // not JSON - use raw text
     }
     throw new ApiClientError(message, response.status);
   }
@@ -90,7 +90,7 @@ export function apiDelete<T>(endpoint: string): Promise<T> {
 }
 
 /**
- * Auth-less version of apiRequest — used by public endpoints like the payer
+ * Auth-less version of apiRequest - used by public endpoints like the payer
  * view of a payment link. Still attaches `X-Tempo-Network` and parses the
  * standard `{ success, data, error }` envelope.
  */
@@ -114,7 +114,7 @@ export async function publicApiRequest<T>(endpoint: string, options: RequestInit
       if (parsed?.error?.message) message = parsed.error.message;
       else if (typeof parsed?.error === 'string') message = parsed.error;
     } catch {
-      // not JSON — use raw text
+      // not JSON - use raw text
     }
     throw new ApiClientError(message, response.status);
   }

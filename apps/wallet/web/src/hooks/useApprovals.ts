@@ -15,7 +15,7 @@ import {
 import { formatAddress } from '@/lib/utils';
 
 // ---------------------------------------------------------------------------
-// Label map — friendly names for known protocol contracts.
+// Label map - friendly names for known protocol contracts.
 // Used purely for display; discovery is on-chain.
 // ---------------------------------------------------------------------------
 const SPENDER_LABELS: Record<string, string> = {

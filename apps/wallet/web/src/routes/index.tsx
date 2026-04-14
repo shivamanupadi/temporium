@@ -22,8 +22,8 @@ import {
   Copy,
   Check,
   Coins,
-  ShieldCheck,
   Gift,
+  Link2,
   ListPlus,
   RefreshCw,
   type LucideIcon,
@@ -295,7 +295,7 @@ function TempoConnectModal({
               >
                 <div className="mb-3 px-1">
                   <p className="text-[12.5px] text-[#6B6560] leading-relaxed">
-                    Prove you own this wallet by signing a message. This confirms your identity —
+                    Prove you own this wallet by signing a message. This confirms your identity -
                     it&apos;s not a transaction and costs nothing.
                   </p>
                 </div>
@@ -315,7 +315,7 @@ function TempoConnectModal({
                       {isLoading ? 'Waiting for signature…' : 'Sign Message'}
                     </p>
                     <p className="text-[11.5px] text-[#9B9590] mt-0.5">
-                      No transaction, no gas — just a signature.
+                      No transaction, no gas - just a signature.
                     </p>
                   </div>
                   {isLoading ? (
@@ -409,8 +409,8 @@ const features = [
     desc: 'Deploy access-controlled tokens',
     color: '#E07A5F',
   },
+  { icon: Link2, label: 'Payment Links', desc: 'Shareable on-chain invoices', color: '#9B72CF' },
   { icon: Key, label: 'Access Keys', desc: 'Manage signing permissions', color: '#9B72CF' },
-  { icon: QrCode, label: 'Receive', desc: 'Generate payment QR codes', color: '#6B8F71' },
   { icon: Users, label: 'Contacts', desc: 'Save & organize addresses', color: '#E07A5F' },
 ];
 
@@ -463,6 +463,12 @@ const featureSections: {
         desc: 'Schedule one-time payments for a future time. Perfect for timed releases, payroll, and planned distributions.',
         color: '#D4A574',
       },
+      {
+        icon: Link2,
+        title: 'Payment Links',
+        desc: 'Generate shareable payment links with a pre-filled amount and memo. Anyone with the link can pay in one click.',
+        color: '#9B72CF',
+      },
     ],
   },
   {
@@ -496,12 +502,6 @@ const featureSections: {
         title: 'TIP403 Factory',
         desc: 'Deploy tokens with built-in access controls. Define policies for transfers, minting, and burning with granular permissions.',
         color: '#E07A5F',
-      },
-      {
-        icon: ShieldCheck,
-        title: 'Token Approvals',
-        desc: 'View and manage token spending allowances. Grant approvals to spenders or revoke them instantly.',
-        color: '#6B8F71',
       },
       {
         icon: Gift,
@@ -621,7 +621,7 @@ function LandingPage(): ReactElement {
 
   return (
     <div className="min-h-screen bg-[#FDFBF8] flex flex-col relative ">
-      {/* Lightweight background — radial gradients only, no blur/filters */}
+      {/* Lightweight background - radial gradients only, no blur/filters */}
       <div className="fixed inset-0 pointer-events-none">
         <div
           className="absolute inset-0"
@@ -678,7 +678,7 @@ function LandingPage(): ReactElement {
         </nav>
       </header>
 
-      {/* Main content — 2-column layout */}
+      {/* Main content - 2-column layout */}
       <main className="relative z-10 flex-1 flex flex-col">
         <div className="max-w-5xl w-full mx-auto flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center px-6 py-12 sm:py-16 lg:py-24">
           {/* ── Left: Hero ── */}
@@ -806,7 +806,7 @@ function LandingPage(): ReactElement {
             }}
             className="hidden lg:flex flex-col gap-3"
           >
-            {/* Top row — 3 highlight cards */}
+            {/* Top row - 3 highlight cards */}
             <div className="grid grid-cols-3 gap-3">
               {features.slice(0, 3).map(f => (
                 <motion.div
@@ -845,7 +845,7 @@ function LandingPage(): ReactElement {
               ))}
             </div>
 
-            {/* Middle row — 2 wide feature cards */}
+            {/* Middle row - 2 wide feature cards */}
             <div className="grid grid-cols-2 gap-3">
               {features.slice(3, 5).map(f => (
                 <motion.div
@@ -888,7 +888,7 @@ function LandingPage(): ReactElement {
               ))}
             </div>
 
-            {/* Third row — 2 wide cards */}
+            {/* Third row - 2 wide cards */}
             <div className="grid grid-cols-2 gap-3">
               {features.slice(5, 7).map(f => (
                 <motion.div
@@ -931,7 +931,7 @@ function LandingPage(): ReactElement {
               ))}
             </div>
 
-            {/* Bottom row — remaining features in a single card */}
+            {/* Bottom row - remaining features in a single card */}
             <motion.div
               variants={{
                 hidden: { opacity: 0, y: 14 },
