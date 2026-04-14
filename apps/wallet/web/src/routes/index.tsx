@@ -53,7 +53,7 @@ const NETWORKS = [
     id: 'mainnet' as const,
     name: 'Tempo Mainnet',
     subtitle: 'Production network',
-    color: '#5B9A6F',
+    color: '#6B8F71',
   },
   {
     id: 'testnet' as const,
@@ -174,7 +174,7 @@ function TempoConnectModal({
           <div className="relative mt-5 h-[5px] rounded-full bg-[#EDE9E3] overflow-hidden">
             <motion.div
               className="h-full rounded-full"
-              style={{ backgroundColor: isSuccess ? '#5B9A6F' : '#E07A5F' }}
+              style={{ backgroundColor: isSuccess ? '#6B8F71' : '#E07A5F' }}
               initial={false}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
@@ -302,13 +302,13 @@ function TempoConnectModal({
                 <button
                   onClick={handleVerify}
                   disabled={isLoading}
-                  className="group w-full flex items-center gap-3.5 p-3.5 rounded-2xl border border-[#EDE9E3] bg-white hover:border-[#5B9A6F] hover:bg-[#FDFBF8] transition-all text-left cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:border-[#EDE9E3] disabled:hover:bg-white"
+                  className="group w-full flex items-center gap-3.5 p-3.5 rounded-2xl border border-[#EDE9E3] bg-white hover:border-[#6B8F71] hover:bg-[#FDFBF8] transition-all text-left cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:border-[#EDE9E3] disabled:hover:bg-white"
                 >
                   <div
                     className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                    style={{ backgroundColor: '#5B9A6F18' }}
+                    style={{ backgroundColor: '#6B8F7118' }}
                   >
-                    <PenLine className="w-[18px] h-[18px] text-[#5B9A6F]" strokeWidth={2} />
+                    <PenLine className="w-[18px] h-[18px] text-[#6B8F71]" strokeWidth={2} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[13.5px] font-semibold text-[#2D3436]">
@@ -319,9 +319,9 @@ function TempoConnectModal({
                     </p>
                   </div>
                   {isLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin text-[#5B9A6F] shrink-0" />
+                    <Loader2 className="w-4 h-4 animate-spin text-[#6B8F71] shrink-0" />
                   ) : (
-                    <ArrowRight className="w-4 h-4 text-[#B5B0AA] group-hover:text-[#5B9A6F] group-hover:translate-x-0.5 transition-all shrink-0" />
+                    <ArrowRight className="w-4 h-4 text-[#B5B0AA] group-hover:text-[#6B8F71] group-hover:translate-x-0.5 transition-all shrink-0" />
                   )}
                 </button>
 
@@ -345,7 +345,7 @@ function TempoConnectModal({
                 <div className="relative w-20 h-20 mb-5">
                   <motion.div
                     className="absolute inset-0 rounded-full"
-                    style={{ backgroundColor: '#5B9A6F', opacity: 0.15 }}
+                    style={{ backgroundColor: '#6B8F71', opacity: 0.15 }}
                     animate={{ scale: [1, 1.4, 1], opacity: [0.2, 0, 0.2] }}
                     transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut' }}
                   />
@@ -354,7 +354,7 @@ function TempoConnectModal({
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: 'spring', stiffness: 220, damping: 16 }}
                     className="absolute inset-3 rounded-full flex items-center justify-center"
-                    style={{ backgroundColor: '#5B9A6F' }}
+                    style={{ backgroundColor: '#6B8F71' }}
                   >
                     <motion.div
                       initial={{ scale: 0 }}
@@ -389,7 +389,7 @@ const features = [
     color: '#E07A5F',
   },
   { icon: Send, label: 'Send', desc: 'Transfer tokens instantly', color: '#9B72CF' },
-  { icon: ArrowDownUp, label: 'DEX Swap', desc: 'Trade stablecoins instantly', color: '#5B9A6F' },
+  { icon: ArrowDownUp, label: 'DEX Swap', desc: 'Trade stablecoins instantly', color: '#6B8F71' },
   { icon: ListPlus, label: 'Batch Payments', desc: 'Send to many at once', color: '#E07A5F' },
   {
     icon: Clock,
@@ -401,7 +401,7 @@ const features = [
     icon: CircleDollarSign,
     label: 'TIP20 Studio',
     desc: 'Create & manage tokens',
-    color: '#5B9A6F',
+    color: '#6B8F71',
   },
   {
     icon: Shield,
@@ -410,7 +410,7 @@ const features = [
     color: '#E07A5F',
   },
   { icon: Key, label: 'Access Keys', desc: 'Manage signing permissions', color: '#9B72CF' },
-  { icon: QrCode, label: 'Receive', desc: 'Generate payment QR codes', color: '#5B9A6F' },
+  { icon: QrCode, label: 'Receive', desc: 'Generate payment QR codes', color: '#6B8F71' },
   { icon: Users, label: 'Contacts', desc: 'Save & organize addresses', color: '#E07A5F' },
 ];
 

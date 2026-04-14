@@ -1163,48 +1163,43 @@ function AccessKeysPage(): ReactElement {
           setIsAddDialogOpen(open);
         }}
       >
-        <DialogContent className="p-0 gap-0 max-w-[420px] ">
-          {/* Header with step indicator */}
-          <div className="px-6 pt-6 pb-4">
-            <DialogTitle className="text-[18px] font-bold text-[#2D3436]">
-              {STEP_LABELS[wizardStep].title}
-            </DialogTitle>
-            <DialogDescription className="text-[13px] text-[#9B9590] mt-1">
-              {STEP_LABELS[wizardStep].description}
-            </DialogDescription>
-
-            {/* Step indicator */}
-            <div className="flex items-center gap-2 mt-4">
-              {steps.map((step, idx) => (
-                <div key={step} className="flex items-center gap-2 flex-1">
-                  <div
-                    className={`flex items-center justify-center w-7 h-7 rounded-full text-[11px] font-bold shrink-0 transition-colors ${
-                      idx < currentStepIndex
-                        ? 'bg-coral text-white'
-                        : idx === currentStepIndex
-                          ? 'bg-coral text-white'
-                          : 'bg-[#F5F2ED] text-[#B5B0AA]'
-                    }`}
-                  >
-                    {idx < currentStepIndex ? (
-                      <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
-                    ) : (
-                      idx + 1
-                    )}
-                  </div>
-                  {idx < totalSteps - 1 && (
-                    <div
-                      className={`h-[2px] flex-1 rounded-full transition-colors ${
-                        idx < currentStepIndex ? 'bg-coral' : 'bg-[#EDE9E3]'
-                      }`}
-                    />
-                  )}
+        <DialogContent className="p-0 gap-0 max-w-[420px] rounded-3xl overflow-hidden border-none shadow-[0_20px_50px_-20px_rgba(45,52,54,0.2)]">
+          {/* Header — hidden on success */}
+          {wizardStep !== 'success' ? (
+            <div className="px-6 pt-6 pb-5 bg-[#FDFBF8] border-b border-[#EDE9E3]">
+              <div className="pr-10 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <DialogTitle className="text-[15px] font-semibold text-[#2D3436] tracking-tight leading-tight">
+                    {STEP_LABELS[wizardStep].title}
+                  </DialogTitle>
+                  <DialogDescription className="text-[12px] text-[#9B9590] mt-0.5">
+                    {STEP_LABELS[wizardStep].description}
+                  </DialogDescription>
                 </div>
-              ))}
-            </div>
-          </div>
+                <span className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[#8A8580] px-2.5 py-1 rounded-full bg-white border border-[#EDE9E3] shrink-0">
+                  {Math.min(currentStepIndex + 1, totalSteps)} / {totalSteps}
+                </span>
+              </div>
 
-          <div className="border-t border-[#EDE9E3]/60" />
+              {/* Progress bar */}
+              <div className="relative mt-5 h-[5px] rounded-full bg-[#EDE9E3] overflow-hidden">
+                <motion.div
+                  className="h-full rounded-full"
+                  style={{ backgroundColor: '#E07A5F' }}
+                  initial={false}
+                  animate={{ width: `${((currentStepIndex + 1) / totalSteps) * 100}%` }}
+                  transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                />
+              </div>
+            </div>
+          ) : (
+            <>
+              <DialogTitle className="sr-only">{STEP_LABELS.success.title}</DialogTitle>
+              <DialogDescription className="sr-only">
+                {STEP_LABELS.success.description}
+              </DialogDescription>
+            </>
+          )}
 
           {/* Step content */}
           <div className="px-6 py-5 min-h-[200px]">
@@ -1687,7 +1682,7 @@ function AccessKeysPage(): ReactElement {
                           href={getExplorerTxUrl(authTxHash)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center gap-1 font-mono text-[12px] text-[#E07A5F] hover:text-[#C45A3F] transition-colors"
+                          className="flex items-center gap-1 font-mono text-[12px] text-[#2D3436] hover:text-[#6B6560] transition-colors"
                         >
                           {authTxHash.slice(0, 10)}...{authTxHash.slice(-6)}
                           <ExternalLink className="w-3 h-3" />
@@ -1701,19 +1696,19 @@ function AccessKeysPage(): ReactElement {
           </div>
 
           {/* Footer */}
-          <div className="px-6 pb-6 pt-0 flex gap-3">
+          <div className="px-6 pb-6 flex gap-3">
             {wizardStep !== 'success' && (
               <Button
                 variant="outline"
                 onClick={goBack}
                 disabled={isSubmitting}
-                className="flex-1 h-11 rounded-xl text-[13px] font-semibold border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED] gap-2"
+                className="flex-1 h-12 border-[#EDE9E3] text-[#6B6560] hover:bg-[#F5F2ED]"
               >
                 {currentStepIndex === 0 ? (
                   'Cancel'
                 ) : (
                   <>
-                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
                     Back
                   </>
                 )}
@@ -1726,7 +1721,7 @@ function AccessKeysPage(): ReactElement {
                   setIsAddDialogOpen(false);
                   resetForm();
                 }}
-                className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-coral hover:bg-coral/80 text-white"
+                className="flex-1 h-12 text-[14px] font-semibold bg-[#6B8F71] hover:bg-[#5A7D60] text-white shadow-lg shadow-[#6B8F71]/15 hover:shadow-xl hover:shadow-[#6B8F71]/20"
               >
                 Done
               </Button>
@@ -1734,16 +1729,16 @@ function AccessKeysPage(): ReactElement {
               <Button
                 onClick={handleAuthorizeKey}
                 disabled={isSubmitting}
-                className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-coral hover:bg-coral/80 text-white gap-2"
+                className="flex-1 h-12 text-[14px] font-semibold bg-[#E07A5F] hover:bg-[#D4694F] text-white shadow-lg shadow-[#E07A5F]/15 hover:shadow-xl hover:shadow-[#E07A5F]/20"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
                     Authorizing...
                   </>
                 ) : (
                   <>
-                    <Key className="w-4 h-4" />
+                    <Key className="w-4 h-4 mr-1.5" />
                     Authorize Key
                   </>
                 )}
@@ -1752,10 +1747,10 @@ function AccessKeysPage(): ReactElement {
               <Button
                 onClick={goNext}
                 disabled={!canContinue}
-                className="flex-1 h-11 rounded-xl text-[13px] font-semibold bg-coral hover:bg-coral/80 text-white gap-2"
+                className="flex-1 h-12 text-[14px] font-semibold bg-[#E07A5F] hover:bg-[#D4694F] text-white shadow-lg shadow-[#E07A5F]/15 hover:shadow-xl hover:shadow-[#E07A5F]/20"
               >
                 Continue
-                <ArrowRight className="w-3.5 h-3.5" />
+                <ArrowRight className="w-4 h-4 ml-1.5" />
               </Button>
             )}
           </div>

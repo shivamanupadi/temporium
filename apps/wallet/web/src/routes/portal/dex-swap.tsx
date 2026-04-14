@@ -690,14 +690,14 @@ function DexSwapPage(): ReactElement | null {
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.97 }}
                   transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-                  className="rounded-2xl border border-[#5B9A6F]/20 bg-[#5B9A6F]/[0.03] overflow-hidden"
+                  className="rounded-2xl border border-[#6B8F71]/20 bg-[#6B8F71]/[0.03] overflow-hidden"
                 >
                   <div className="px-6 pt-8 pb-6 text-center">
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ type: 'spring', stiffness: 200, damping: 15, delay: 0.1 }}
-                      className="w-14 h-14 rounded-full bg-[#5B9A6F] flex items-center justify-center mx-auto mb-5"
+                      className="w-14 h-14 rounded-full bg-[#6B8F71] flex items-center justify-center mx-auto mb-5"
                     >
                       <CheckCircle className="w-7 h-7 text-white" />
                     </motion.div>
@@ -707,7 +707,7 @@ function DexSwapPage(): ReactElement | null {
                         {formatAmount(parsedAmountIn, inDecimals)}
                       </span>
                       <span className="text-[#6B6560]">{tokenIn.symbol}</span>
-                      <ArrowDown className="w-3.5 h-3.5 text-[#5B9A6F]" />
+                      <ArrowDown className="w-3.5 h-3.5 text-[#6B8F71]" />
                       <span className="font-semibold text-[#2D3436]">
                         {quote ? formatAmount(quote, outDecimals) : '—'}
                       </span>
@@ -719,7 +719,7 @@ function DexSwapPage(): ReactElement | null {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.45 }}
-                    className="mx-6 mb-4 rounded-xl bg-white/60 border border-[#5B9A6F]/10 p-4 space-y-3"
+                    className="mx-6 mb-4 rounded-xl bg-white/60 border border-[#6B8F71]/10 p-4 space-y-3"
                   >
                     {gasFee !== null && (
                       <div className="flex items-center justify-between">
@@ -735,7 +735,7 @@ function DexSwapPage(): ReactElement | null {
                         href={getExplorerTxUrl(txHash)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-[12px] font-mono text-[#5B9A6F] hover:text-[#4A8A5E] transition-colors"
+                        className="flex items-center gap-1 text-[12px] font-mono text-[#6B8F71] hover:text-[#5A7D60] transition-colors"
                       >
                         {txHash.slice(0, 10)}...{txHash.slice(-6)}
                         <ExternalLink className="w-3 h-3" />
@@ -751,7 +751,7 @@ function DexSwapPage(): ReactElement | null {
                   >
                     <Button
                       onClick={handleReset}
-                      className="w-full h-11 rounded-xl text-[14px] font-semibold bg-[#5B9A6F] hover:bg-[#4A8A5E] text-white"
+                      className="w-full h-11 rounded-xl text-[14px] font-semibold bg-[#6B8F71] hover:bg-[#5A7D60] text-white"
                     >
                       New Swap
                     </Button>
