@@ -13,6 +13,7 @@ import {
   RefreshCw,
   ArrowUpRight,
   ChevronDown,
+  Plus,
 } from 'lucide-react';
 import type { Address } from 'viem';
 import { format } from 'date-fns';
@@ -259,16 +260,17 @@ function ScheduledPage(): ReactElement {
                 : `No ${FILTERS.find(f => f.key === filter)?.label} Transactions`}
             </h3>
             <p className="text-[13px] text-[#9B9590] mt-1.5 max-w-sm mx-auto leading-relaxed">
-              {filter === 'all'
+              {filter === 'all' || filter === 'pending'
                 ? 'Schedule a transfer to send tokens at a specific time in the future.'
                 : 'No transactions match this filter.'}
             </p>
-            {filter === 'all' && (
+            {(filter === 'all' || filter === 'pending') && (
               <Button
                 onClick={() => setShowNewModal(true)}
-                className="mt-5 h-10 px-6 text-[13px] font-semibold bg-[#E07A5F] hover:bg-[#D4694F] text-white shadow-lg shadow-[#E07A5F]/15 gap-2"
+                variant="outline"
+                className="mt-5 h-10 px-6 rounded-xl text-[13px] font-semibold border-[#EDE9E3] gap-2"
               >
-                <Send className="w-4 h-4" />
+                <Plus className="w-4 h-4" />
                 Schedule a Transfer
               </Button>
             )}

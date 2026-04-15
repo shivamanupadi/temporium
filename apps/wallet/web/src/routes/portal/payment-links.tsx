@@ -29,6 +29,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 import { TokenPicker } from '@/components/TokenPicker';
 import { ContactPicker } from '@/components/ContactPicker';
+import { DateTimePicker } from '@/components/ui/date-time-picker';
 import { useTokenList } from '@/hooks/useTokenList';
 import { useTempo } from '@/hooks/useTempo';
 import {
@@ -767,7 +768,7 @@ function CreateLinkDialog({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [reusable, setReusable] = useState(false);
-  const [expiresAt, setExpiresAt] = useState('');
+  const [expiresAt, setExpiresAt] = useState<Date | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Once the token list resolves, default to the first allowed entry.
@@ -783,7 +784,7 @@ function CreateLinkDialog({
     setTitle('');
     setDescription('');
     setReusable(false);
-    setExpiresAt('');
+    setExpiresAt(undefined);
     setSelectedToken(pickerTokens[0] ?? null);
   }, [pickerTokens]);
 
@@ -816,7 +817,7 @@ function CreateLinkDialog({
         title: trimmedTitle,
         description: description.trim() || undefined,
         reusable,
-        expiresAt: expiresAt ? new Date(expiresAt).toISOString() : undefined,
+        expiresAt: expiresAt ? expiresAt.toISOString() : undefined,
       });
       toast.success('Payment link created', {
         description: 'Share the link to receive payment.',
@@ -1023,18 +1024,15 @@ function CreateLinkDialog({
 
           {/* Expiration */}
           <div>
-            <Label
-              htmlFor="link-expires"
-              className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2 block"
-            >
+            <Label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider mb-2 block">
               Expires <span className="text-[#B5B0AA] normal-case tracking-normal">(optional)</span>
             </Label>
-            <Input
-              id="link-expires"
-              type="datetime-local"
-              value={expiresAt}
-              onChange={e => setExpiresAt(e.target.value)}
-              className="h-11 rounded-xl border-[#EDE9E3] bg-[#FDFBF8] text-[14px] focus:border-coral focus:ring-1 focus:ring-coral/20"
+            <DateTimePicker
+              date={expiresAt}
+              onDateChange={setExpiresAt}
+              color="coral"
+              placeholder="Pick a date & time"
+              disabled={date => date < new Date(new Date().setHours(0, 0, 0, 0))}
             />
           </div>
         </div>
