@@ -94,19 +94,17 @@ function DateTimePicker({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <div className="flex flex-col sm:flex-row">
-          <Calendar
-            mode="single"
-            captionLayout="dropdown"
-            selected={date}
-            onSelect={handleDaySelect}
-            disabled={disabled}
-            accentColor={color}
-          />
-          <div className="border-t sm:border-t-0 sm:border-l border-[#EDE9E3]">
-            <TimePicker date={date} setDate={handleTimeChange} color={color} />
-          </div>
+      <PopoverContent className="w-auto p-0 rounded-2xl shadow-lg border-[#EDE9E3]" align="start">
+        <Calendar
+          mode="single"
+          captionLayout="dropdown"
+          selected={date}
+          onSelect={handleDaySelect}
+          disabled={disabled}
+          accentColor={color}
+        />
+        <div className="border-t border-[#EDE9E3]">
+          <TimePicker date={date} setDate={handleTimeChange} color={color} />
         </div>
       </PopoverContent>
     </Popover>

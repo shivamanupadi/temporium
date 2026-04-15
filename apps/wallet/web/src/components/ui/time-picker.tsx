@@ -1,12 +1,24 @@
 import * as React from 'react';
-import { Button } from '@/components/ui/button';
+import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { AccentColor } from '@/components/ui/calendar';
 
-const timeColorMap = {
-  coral: 'bg-coral/15 hover:bg-coral/20 text-coral',
-  lavender: 'bg-coral/15 hover:bg-coral/20 text-coral',
-  sage: 'bg-sage/15 hover:bg-sage/20 text-sage',
+const accentMap = {
+  coral: {
+    active: 'bg-coral text-white shadow-sm',
+    ring: 'focus:ring-coral/30 focus:border-coral/50',
+    chipHover: 'hover:border-coral/40 hover:text-coral',
+  },
+  lavender: {
+    active: 'bg-[#9B72CF] text-white shadow-sm',
+    ring: 'focus:ring-[#9B72CF]/30 focus:border-[#9B72CF]/50',
+    chipHover: 'hover:border-[#9B72CF]/40 hover:text-[#9B72CF]',
+  },
+  sage: {
+    active: 'bg-sage text-white shadow-sm',
+    ring: 'focus:ring-sage/30 focus:border-sage/50',
+    chipHover: 'hover:border-sage/40 hover:text-sage',
+  },
 } as const;
 
 interface TimePickerProps {
@@ -15,120 +27,139 @@ interface TimePickerProps {
   color?: AccentColor;
 }
 
-const HOURS = Array.from({ length: 12 }, (_, i) => i + 1);
-const MINUTES = Array.from({ length: 12 }, (_, i) => i * 5);
-
 function TimePicker({ date, setDate, color = 'coral' }: TimePickerProps) {
-  const handleTimeChange = (type: 'hour' | 'minute' | 'ampm', value: string) => {
-    const newDate = new Date(date ?? new Date());
-    if (type === 'hour') {
-      newDate.setHours((parseInt(value) % 12) + (newDate.getHours() >= 12 ? 12 : 0));
-    } else if (type === 'minute') {
-      newDate.setMinutes(parseInt(value));
-    } else if (type === 'ampm') {
-      const currentHours = newDate.getHours();
-      if (value === 'PM' && currentHours < 12) {
-        newDate.setHours(currentHours + 12);
-      } else if (value === 'AM' && currentHours >= 12) {
-        newDate.setHours(currentHours - 12);
-      }
-    }
-    setDate(newDate);
+  const accent = accentMap[color];
+  const current = date ?? new Date(new Date().setMinutes(0, 0, 0));
+  const hour24 = current.getHours();
+  const hour12 = hour24 % 12 === 0 ? 12 : hour24 % 12;
+  const minute = current.getMinutes();
+  const isPM = hour24 >= 12;
+
+  const [hourStr, setHourStr] = React.useState(hour12.toString().padStart(2, '0'));
+  const [minuteStr, setMinuteStr] = React.useState(minute.toString().padStart(2, '0'));
+
+  React.useEffect(() => {
+    setHourStr(hour12.toString().padStart(2, '0'));
+    setMinuteStr(minute.toString().padStart(2, '0'));
+  }, [hour12, minute]);
+
+  const commit = (h: number, m: number, pm: boolean) => {
+    const next = new Date(date ?? new Date());
+    const normalized24 = (h % 12) + (pm ? 12 : 0);
+    next.setHours(normalized24, m, 0, 0);
+    setDate(next);
   };
 
-  const isHourSelected = (hour: number) => date != null && date.getHours() % 12 === hour % 12;
+  const handleHourBlur = () => {
+    let n = parseInt(hourStr, 10);
+    if (isNaN(n)) n = 12;
+    n = Math.max(1, Math.min(12, n));
+    setHourStr(n.toString().padStart(2, '0'));
+    commit(n, minute, isPM);
+  };
 
-  const isMinuteSelected = (minute: number) => date != null && date.getMinutes() === minute;
+  const handleMinuteBlur = () => {
+    let n = parseInt(minuteStr, 10);
+    if (isNaN(n)) n = 0;
+    n = Math.max(0, Math.min(59, n));
+    setMinuteStr(n.toString().padStart(2, '0'));
+    commit(hour12, n, isPM);
+  };
 
-  const isAmPmSelected = (ampm: 'AM' | 'PM') =>
-    date != null &&
-    ((ampm === 'AM' && date.getHours() < 12) || (ampm === 'PM' && date.getHours() >= 12));
+  const togglePm = (pm: boolean) => commit(hour12, minute, pm);
+
+  const quickPicks: Array<{ label: string; apply: () => void }> = [
+    {
+      label: 'Now',
+      apply: () => {
+        const n = new Date();
+        const h = n.getHours() % 12 === 0 ? 12 : n.getHours() % 12;
+        commit(h, n.getMinutes(), n.getHours() >= 12);
+      },
+    },
+    { label: '9:00 AM', apply: () => commit(9, 0, false) },
+    { label: '12:00 PM', apply: () => commit(12, 0, true) },
+    { label: '5:00 PM', apply: () => commit(5, 0, true) },
+  ];
 
   return (
-    <div className="flex divide-x divide-[#EDE9E3]">
-      <Column label="Hr">
-        {HOURS.map(hour => (
-          <TimeButton
-            key={hour}
-            selected={isHourSelected(hour)}
-            onClick={() => handleTimeChange('hour', hour.toString())}
-            color={color}
+    <div className="p-4 space-y-3 min-w-[260px]">
+      <div className="flex items-center gap-1.5">
+        <Clock className="w-3 h-3 text-[#9B9590]" />
+        <span className="text-[10px] uppercase font-semibold text-[#9B9590] tracking-wider">
+          Time
+        </span>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <input
+          type="text"
+          inputMode="numeric"
+          maxLength={2}
+          value={hourStr}
+          onChange={e => setHourStr(e.target.value.replace(/\D/g, ''))}
+          onBlur={handleHourBlur}
+          onFocus={e => e.target.select()}
+          className={cn(
+            'w-14 h-11 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] text-center text-[16px] font-semibold tabular-nums text-[#2D3436] outline-none transition-colors focus:ring-2',
+            accent.ring
+          )}
+        />
+        <span className="text-[16px] font-semibold text-[#B5B0AA]">:</span>
+        <input
+          type="text"
+          inputMode="numeric"
+          maxLength={2}
+          value={minuteStr}
+          onChange={e => setMinuteStr(e.target.value.replace(/\D/g, ''))}
+          onBlur={handleMinuteBlur}
+          onFocus={e => e.target.select()}
+          className={cn(
+            'w-14 h-11 rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] text-center text-[16px] font-semibold tabular-nums text-[#2D3436] outline-none transition-colors focus:ring-2',
+            accent.ring
+          )}
+        />
+
+        <div className="ml-auto flex items-center rounded-xl border border-[#EDE9E3] bg-[#FDFBF8] p-0.5 h-11">
+          <button
+            type="button"
+            onClick={() => togglePm(false)}
+            className={cn(
+              'px-3 h-10 rounded-lg text-[12px] font-semibold transition-all',
+              !isPM ? accent.active : 'text-[#6B6560] hover:text-[#2D3436]'
+            )}
           >
-            {hour}
-          </TimeButton>
-        ))}
-      </Column>
-      <Column label="Min">
-        {MINUTES.map(minute => (
-          <TimeButton
-            key={minute}
-            selected={isMinuteSelected(minute)}
-            onClick={() => handleTimeChange('minute', minute.toString())}
-            color={color}
+            AM
+          </button>
+          <button
+            type="button"
+            onClick={() => togglePm(true)}
+            className={cn(
+              'px-3 h-10 rounded-lg text-[12px] font-semibold transition-all',
+              isPM ? accent.active : 'text-[#6B6560] hover:text-[#2D3436]'
+            )}
           >
-            {minute.toString().padStart(2, '0')}
-          </TimeButton>
-        ))}
-      </Column>
-      <Column label=" " scroll={false}>
-        {(['AM', 'PM'] as const).map(ampm => (
-          <TimeButton
-            key={ampm}
-            selected={isAmPmSelected(ampm)}
-            onClick={() => handleTimeChange('ampm', ampm)}
-            color={color}
+            PM
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-1.5 pt-0.5">
+        {quickPicks.map(q => (
+          <button
+            key={q.label}
+            type="button"
+            onClick={q.apply}
+            className={cn(
+              'h-7 px-2.5 rounded-lg border border-[#EDE9E3] bg-white text-[11px] font-medium text-[#6B6560] transition-colors',
+              accent.chipHover
+            )}
           >
-            {ampm}
-          </TimeButton>
+            {q.label}
+          </button>
         ))}
-      </Column>
+      </div>
     </div>
-  );
-}
-
-function Column({
-  label,
-  scroll = true,
-  children,
-}: {
-  label: string;
-  scroll?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="flex flex-col w-[100px]">
-      <p className="text-[10px] font-semibold text-[#9B9590] uppercase tracking-wider text-center px-1 pt-2 pb-1">
-        {label}
-      </p>
-      <div className={cn('px-0.5 pb-1', scroll && 'h-[180px] overflow-y-auto')}>{children}</div>
-    </div>
-  );
-}
-
-function TimeButton({
-  selected,
-  onClick,
-  children,
-  color = 'coral',
-}: {
-  selected: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-  color?: AccentColor;
-}) {
-  return (
-    <Button
-      size="icon"
-      type="button"
-      variant={selected ? 'default' : 'ghost'}
-      className={cn(
-        'w-full shrink-0 aspect-square',
-        selected ? timeColorMap[color] : 'text-[#6B6560]'
-      )}
-      onClick={onClick}
-    >
-      {children}
-    </Button>
   );
 }
 
