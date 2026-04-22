@@ -30,11 +30,6 @@ export async function networkMiddleware(
   const rpcUrl = getRpcUrl(chain);
   const explorerUrl = getExplorerUrl(chain);
 
-  const recurringPaymentsAddress =
-    network === 'mainnet'
-      ? c.env.RECURRING_PAYMENTS_MAINNET_CONTRACT
-      : c.env.RECURRING_PAYMENTS_TESTNET_CONTRACT;
-
   const relayerPrivateKey = c.env.RELAYER_PRIVATE_KEY;
 
   const networkConfig: NetworkConfig = {
@@ -42,7 +37,6 @@ export async function networkMiddleware(
     chain,
     rpcUrl,
     explorerUrl,
-    recurringPaymentsAddress,
     relayerPrivateKey,
   };
 

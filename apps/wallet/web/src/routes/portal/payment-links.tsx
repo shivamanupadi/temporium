@@ -91,7 +91,7 @@ export const Route = createFileRoute('/portal/payment-links')({
 });
 
 // -----------------------------------------------------------------------------
-// Animation presets (match contacts.tsx / recurring-payments.tsx)
+// Animation presets
 // -----------------------------------------------------------------------------
 
 const containerVariants = {

@@ -182,58 +182,6 @@ export const updateScheduledTxSchema = z.object({
 export type CreateScheduledTxRequest = z.infer<typeof createScheduledTxSchema>;
 export type UpdateScheduledTxRequest = z.infer<typeof updateScheduledTxSchema>;
 
-// ============ Recurring Payments Schemas ============
-
-import { recurringPaymentStatusValues } from '../db/schema';
-
-export const recurringPaymentStatusSchema = z.enum(recurringPaymentStatusValues);
-
-export const createRecurringPaymentSchema = z.object({
-  recipient: ethereumAddress,
-  token: ethereumAddress,
-  tokenSymbol: z
-    .string()
-    .min(1, 'Token symbol is required')
-    .max(20, 'Token symbol must be 20 characters or less')
-    .trim(),
-  tokenDecimals: z
-    .number()
-    .int('Token decimals must be an integer')
-    .min(0, 'Token decimals must be non-negative')
-    .max(18, 'Token decimals must be 18 or less'),
-  amount: z
-    .string()
-    .min(1, 'Amount is required')
-    .regex(/^\d+$/, 'Amount must be a valid integer string'),
-  intervalSeconds: z
-    .number()
-    .int('Interval must be an integer')
-    .min(60, 'Interval must be at least 1 minute'),
-  maxPayments: z
-    .number()
-    .int('Max payments must be an integer')
-    .min(0, 'Max payments must be non-negative')
-    .optional(),
-  subscriptionId: z.number().int('Subscription ID must be an integer').min(0),
-  contractAddress: ethereumAddress,
-  nextPaymentAt: z.string().datetime({ message: 'Invalid next payment date format' }),
-  txHash: transactionHash.optional(),
-  label: z.string().max(100, 'Label must be 100 characters or less').trim().optional(),
-});
-
-export type CreateRecurringPaymentRequest = z.infer<typeof createRecurringPaymentSchema>;
-
-export const recurringPaymentQuerySchema = z.object({
-  status: recurringPaymentStatusSchema.optional(),
-  network: z.enum(['testnet', 'mainnet']).optional(),
-  cursor: z.string().optional(),
-  limit: z.coerce.number().int().min(1).max(50).default(20),
-});
-
-export const recurringPaymentStatusParamSchema = z.object({
-  status: recurringPaymentStatusSchema,
-});
-
 // ============ Watched Spenders Schemas ============
 
 export const createWatchedSpenderSchema = z.object({

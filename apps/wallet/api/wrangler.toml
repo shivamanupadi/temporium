@@ -19,16 +19,22 @@ migrations_dir = "src/db/migrations"
 [durable_objects]
 bindings = [
   { name = "SCHEDULED_TX", class_name = "ScheduledTransactionDO" },
-  { name = "RECURRING_PAYMENT", class_name = "RecurringPaymentDO" },
 ]
 
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["ScheduledTransactionDO"]
 
+# v2 created RecurringPaymentDO (since removed); v3 deletes it.
+# Leaving v1 and v2 in the history is required — wrangler uses the tag
+# sequence to compute which migrations to apply against the deployed script.
 [[migrations]]
 tag = "v2"
 new_sqlite_classes = ["RecurringPaymentDO"]
+
+[[migrations]]
+tag = "v3"
+deleted_classes = ["RecurringPaymentDO"]
 
 # Single worker serving both testnet and mainnet via X-Tempo-Network header.
 #
@@ -63,7 +69,6 @@ migrations_dir = "src/db/migrations"
 [env.production.durable_objects]
 bindings = [
   { name = "SCHEDULED_TX", class_name = "ScheduledTransactionDO" },
-  { name = "RECURRING_PAYMENT", class_name = "RecurringPaymentDO" },
 ]
 
 [[env.production.migrations]]
@@ -73,3 +78,7 @@ new_sqlite_classes = ["ScheduledTransactionDO"]
 [[env.production.migrations]]
 tag = "v2"
 new_sqlite_classes = ["RecurringPaymentDO"]
+
+[[env.production.migrations]]
+tag = "v3"
+deleted_classes = ["RecurringPaymentDO"]

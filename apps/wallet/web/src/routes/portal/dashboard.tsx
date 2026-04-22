@@ -20,7 +20,6 @@ import {
   ShieldCheck,
   Gift,
   ListPlus,
-  RefreshCw,
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { Button } from '@/components/ui/button';
@@ -55,7 +54,6 @@ const quickActions = [
   { to: '/portal/send', label: 'Send', icon: Send },
   { to: '/portal/receive', label: 'Receive', icon: QrCode },
   { to: '/portal/batch-payments', label: 'Batch', icon: ListPlus },
-  { to: '/portal/recurring-payments', label: 'Recurring', icon: RefreshCw },
   { to: '/portal/scheduled-payments', label: 'Scheduled', icon: Clock },
   { to: '/portal/tip20-studio', label: 'TIP20', icon: CircleDollarSign },
   { to: '/portal/rewards', label: 'Rewards', icon: Gift },

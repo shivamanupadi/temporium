@@ -32,7 +32,6 @@ import {
   PanelLeft,
   ListPlus,
   Gift,
-  RefreshCw,
   ArrowLeftRight,
   Link2,
 } from 'lucide-react';
@@ -73,7 +72,6 @@ const navSections = [
     items: [
       { to: '/portal/payment-links', label: 'Payment Links', icon: Link2 },
       { to: '/portal/batch-payments', label: 'Batch Payments', icon: ListPlus },
-      { to: '/portal/recurring-payments', label: 'Recurring Payments', icon: RefreshCw },
       { to: '/portal/scheduled-payments', label: 'Scheduled Payments', icon: Clock },
     ],
   },

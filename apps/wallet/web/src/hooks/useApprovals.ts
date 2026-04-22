@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useMemo, useCallback } from 'react';
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { parseAbiItem, type Address } from 'viem';
 import { useAccount } from 'wagmi';
@@ -6,7 +6,6 @@ import { Actions, tempoPublicClient } from '@/lib/tempo-client';
 import { useTokenList } from '@/hooks/useTokenList';
 import type { Token } from '@/lib/tokenlist';
 import { TIMING } from '@/lib/constants';
-import { getRecurringPaymentsContractAddress } from '@/lib/recurring-payments';
 import {
   getWatchedSpenders,
   addWatchedSpender,
@@ -121,21 +120,7 @@ export function useApprovals(): UseApprovalsReturn {
   });
 
   // ------------------------------------------------------------------
-  // 2. Load RecurringPayments contract address from API
-  // ------------------------------------------------------------------
-  const [recurringAddr, setRecurringAddr] = useState<Address | null>(null);
-  useEffect(() => {
-    getRecurringPaymentsContractAddress()
-      .then(addr => {
-        setRecurringAddr(addr as Address);
-        // Also register label
-        SPENDER_LABELS[addr.toLowerCase()] = 'Recurring Payments';
-      })
-      .catch(() => {});
-  }, []);
-
-  // ------------------------------------------------------------------
-  // 3. Load watched spenders from D1
+  // 2. Load watched spenders from D1
   // ------------------------------------------------------------------
   const { data: watchedSpendersData = [] } = useQuery({
     queryKey: ['watched-spenders'],
@@ -156,7 +141,7 @@ export function useApprovals(): UseApprovalsReturn {
   }, [watchedSpendersData]);
 
   // ------------------------------------------------------------------
-  // 4. Merge all spender sources (static + recurring + watched + discovered)
+  // 3. Merge all spender sources (static + watched + discovered)
   // ------------------------------------------------------------------
   const allSpenders = useMemo(() => {
     const seen = new Set<string>();
@@ -173,9 +158,6 @@ export function useApprovals(): UseApprovalsReturn {
     // Static known spenders
     for (const addr of STATIC_SPENDER_ADDRESSES) addSpender(addr);
 
-    // RecurringPayments contract
-    if (recurringAddr) addSpender(recurringAddr);
-
     // Watched spenders from D1
     for (const ws of watchedSpendersData) addSpender(ws.address as Address);
 
@@ -183,19 +165,18 @@ export function useApprovals(): UseApprovalsReturn {
     for (const addr of discoveredSpenders) addSpender(addr as Address);
 
     return result;
-  }, [discoveredSpenders, recurringAddr, watchedSpendersData]);
+  }, [discoveredSpenders, watchedSpendersData]);
 
-  // Build set of "known" addresses (static + recurring + watched) for isWatched check
+  // Build set of "known" addresses (static + watched) for isWatched check
   const knownAddresses = useMemo(() => {
     const set = new Set<string>();
     for (const addr of STATIC_SPENDER_ADDRESSES) set.add(addr.toLowerCase());
-    if (recurringAddr) set.add(recurringAddr.toLowerCase());
     for (const ws of watchedSpendersData) set.add(ws.address.toLowerCase());
     return set;
-  }, [recurringAddr, watchedSpendersData]);
+  }, [watchedSpendersData]);
 
   // ------------------------------------------------------------------
-  // 5. Query current allowance for each token × spender pair
+  // 4. Query current allowance for each token × spender pair
   // ------------------------------------------------------------------
   const pairs = useMemo(() => {
     return tokens.flatMap(token => allSpenders.map(spender => ({ token, spender })));

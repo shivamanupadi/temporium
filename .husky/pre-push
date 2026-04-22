@@ -1,1 +1,9 @@
-cd apps/wallet/api && yarn db:check
+set -e
+
+# 1. Drift check: schema.ts ↔ meta/*_snapshot.json agree (drizzle-kit).
+(cd apps/wallet/api && yarn db:check)
+
+# 2. Append-only check: previously-committed migrations/snapshots haven't been
+#    edited. Independent of the snapshot file — catches tampering that would
+#    otherwise slip past db:check.
+./apps/wallet/api/scripts/check-migrations-append-only.sh

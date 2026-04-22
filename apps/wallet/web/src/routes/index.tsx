@@ -25,7 +25,6 @@ import {
   Gift,
   Link2,
   ListPlus,
-  RefreshCw,
   type LucideIcon,
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
@@ -392,12 +391,6 @@ const features = [
   { icon: ArrowDownUp, label: 'DEX Swap', desc: 'Trade stablecoins instantly', color: '#6B8F71' },
   { icon: ListPlus, label: 'Batch Payments', desc: 'Send to many at once', color: '#E07A5F' },
   {
-    icon: Clock,
-    label: 'Recurring Payments',
-    desc: 'Automated scheduled transfers',
-    color: '#9B72CF',
-  },
-  {
     icon: CircleDollarSign,
     label: 'TIP20 Studio',
     desc: 'Create & manage tokens',
@@ -431,7 +424,7 @@ const featureSections: {
     label: 'Payments',
     heading: 'Send & receive with ease',
     subtitle:
-      'Transfer tokens to anyone, generate shareable QR codes, and automate recurring payments. All with sub-cent fees.',
+      'Transfer tokens to anyone, generate shareable QR codes, and automate payments. All with sub-cent fees.',
     items: [
       {
         icon: Send,
@@ -449,12 +442,6 @@ const featureSections: {
         icon: ListPlus,
         title: 'Batch Payments',
         desc: 'Send tokens to multiple recipients in a single transaction. Perfect for payroll, airdrops, and batch distributions.',
-        color: '#E07A5F',
-      },
-      {
-        icon: RefreshCw,
-        title: 'Recurring Payments',
-        desc: 'Automated token transfers on a schedule. Set frequency, amount, and let the protocol handle the rest.',
         color: '#E07A5F',
       },
       {

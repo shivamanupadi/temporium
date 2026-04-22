@@ -454,7 +454,7 @@ function ApprovalsPage(): ReactElement | null {
           <h3 className="text-[16px] font-semibold text-[#2D3436]">No Active Approvals</h3>
           <p className="text-[13px] text-[#9B9590] mt-1.5 max-w-sm mx-auto leading-relaxed">
             No active approvals found. Approvals are created automatically when you use features
-            like Recurring Payments, DEX, or Token Management.
+            like DEX or Token Management.
           </p>
         </motion.div>
       )}

@@ -141,20 +141,3 @@ export const TIMING = {
  */
 export const ACCOUNT_KEYCHAIN_ADDRESS = '0xaAAAaaAA00000000000000000000000000000000' as Address;
 
-/**
- * RecurringPayments contract address - loaded dynamically from API via /contracts endpoint.
- * @deprecated Use getRecurringPaymentsContractAddress() from recurring-payments.ts instead.
- */
-
-/**
- * Recurring payment interval presets (in seconds)
- */
-export const RECURRING_INTERVAL_PRESETS = [
-  { label: '1 min', seconds: 60 },
-  { label: '5 min', seconds: 300 },
-  { label: '15 min', seconds: 900 },
-  { label: 'Hourly', seconds: 3600 },
-  { label: 'Daily', seconds: 86400 },
-  { label: 'Weekly', seconds: 604800 },
-  { label: 'Monthly', seconds: 2592000 },
-] as const;

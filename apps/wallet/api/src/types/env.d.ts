@@ -8,7 +8,6 @@ export interface NetworkConfig {
   chain: Chain;
   rpcUrl: string;
   explorerUrl: string;
-  recurringPaymentsAddress: string;
   relayerPrivateKey: string;
 }
 
@@ -21,7 +20,6 @@ export interface Env {
 
   // Durable Objects
   SCHEDULED_TX: DurableObjectNamespace;
-  RECURRING_PAYMENT: DurableObjectNamespace;
 
   // JWT config (shared across networks)
   JWT_EXPIRATION: string;
@@ -29,15 +27,10 @@ export interface Env {
   // Passkey registry — identity is network-agnostic, always resolved on mainnet.
   PASSKEY_REGISTRY_CONTRACT: string;
 
-  // Per-network recurring payments contract addresses
-  RECURRING_PAYMENTS_TESTNET_CONTRACT: string;
-  RECURRING_PAYMENTS_MAINNET_CONTRACT: string;
-
   // Platform fees — dormant at launch; flip to enable per feature
   PLATFORM_FEE_PAYMENT_LINK_BPS: string; // payment links fee in basis points, e.g. "100" for 1%
   PLATFORM_FEE_SCHEDULE_TXN_AMOUNT: string; // flat fee for scheduled payments in token decimal units, e.g. "0.1"
   PLATFORM_FEE_SWAP_AMOUNT: string; // flat fee for swaps in token decimal units, e.g. "0.1"
-  PLATFORM_FEE_RECURRING_AMOUNT: string; // flat fee for recurring payment creation, e.g. "0.5"
   PLATFORM_REVENUE_ADDRESS: string; // fee recipient (shared across networks & features)
 
   // Secrets (set via wrangler secret put)
@@ -50,9 +43,9 @@ export interface Env {
    */
   MPP_SECRET_KEY: string;
   /**
-   * Relayer EOA used to sign recurring-payment executions and passkey
-   * registry writes. Chain-agnostic — the same EOA signs for both
-   * testnet and mainnet (chain ID lives in the tx payload, not the key).
+   * Relayer EOA used to sign passkey registry writes. Chain-agnostic —
+   * the same EOA signs for both testnet and mainnet (chain ID lives in
+   * the tx payload, not the key).
    */
   RELAYER_PRIVATE_KEY: string;
 }
