@@ -16,6 +16,7 @@
     "type-check": "turbo run type-check",
     "clean": "turbo clean && rimraf node_modules .turbo dist yarn.lock '**/node_modules' '**/dist' '**/.turbo' '**/.vite' '**/.wrangler' '**/contracts/out' '**/contracts/cache' '**/contracts/broadcast'",
     "format": "turbo run format",
+    "format:check": "turbo run format:check",
     "reset": "yarn clean && yarn install",
     "check:push": "yarn lint && yarn build",
     "dev:wallet": "turbo run dev --filter=@temporium/wallet-api --filter=@temporium/wallet-web",

@@ -5,6 +5,7 @@
   "scripts": {
     "lint": "echo 'No linting configured for typescript-config'",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "clean": "rimraf node_modules .turbo",
     "reset": "npm run clean && npm install"
   }

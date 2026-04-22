@@ -7,3 +7,9 @@ set -e
 #    edited. Independent of the snapshot file — catches tampering that would
 #    otherwise slip past db:check.
 ./apps/wallet/api/scripts/check-migrations-append-only.sh
+
+# 3. Formatting check (prettier --check). Run `yarn format` to fix.
+yarn format:check
+
+# 4. Lint + build across the monorepo.
+yarn check:push

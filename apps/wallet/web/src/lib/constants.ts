@@ -140,4 +140,3 @@ export const TIMING = {
  * AccountKeychain precompile address
  */
 export const ACCOUNT_KEYCHAIN_ADDRESS = '0xaAAAaaAA00000000000000000000000000000000' as Address;
-
