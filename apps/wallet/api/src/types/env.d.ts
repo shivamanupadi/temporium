@@ -20,6 +20,8 @@ export interface Env {
 
   // Durable Objects
   SCHEDULED_TX: DurableObjectNamespace;
+  // TIP-1022 salt-mining container (DO-backed, see lib/mine-salt-container.ts).
+  MINE_SALT_CONTAINER: DurableObjectNamespace;
 
   // JWT config (shared across networks)
   JWT_EXPIRATION: string;

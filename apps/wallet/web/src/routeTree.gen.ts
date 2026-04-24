@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PortalRouteImport } from './routes/portal'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PortalVirtualAddressesRouteImport } from './routes/portal/virtual-addresses'
 import { Route as PortalTokenApprovalsRouteImport } from './routes/portal/token-approvals'
 import { Route as PortalTip403FactoryRouteImport } from './routes/portal/tip403-factory'
 import { Route as PortalTip20StudioRouteImport } from './routes/portal/tip20-studio'
@@ -30,6 +31,7 @@ import { Route as PortalAccessKeysRouteImport } from './routes/portal/access-key
 import { Route as PayIdRouteImport } from './routes/pay.$id'
 import { Route as PortalTip403FactoryIndexRouteImport } from './routes/portal/tip403-factory.index'
 import { Route as PortalTip20StudioIndexRouteImport } from './routes/portal/tip20-studio.index'
+import { Route as PortalVirtualAddressesIdRouteImport } from './routes/portal/virtual-addresses.$id'
 import { Route as PortalTip403FactoryPolicyIdRouteImport } from './routes/portal/tip403-factory.$policyId'
 import { Route as PortalTip20StudioAddressRouteImport } from './routes/portal/tip20-studio.$address'
 import { Route as PortalSettingsFeeTokenRouteImport } from './routes/portal/settings.fee-token'
@@ -48,6 +50,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const PortalVirtualAddressesRoute = PortalVirtualAddressesRouteImport.update({
+  id: '/virtual-addresses',
+  path: '/virtual-addresses',
+  getParentRoute: () => PortalRoute,
 } as any)
 const PortalTokenApprovalsRoute = PortalTokenApprovalsRouteImport.update({
   id: '/token-approvals',
@@ -145,6 +152,12 @@ const PortalTip20StudioIndexRoute = PortalTip20StudioIndexRouteImport.update({
   path: '/',
   getParentRoute: () => PortalTip20StudioRoute,
 } as any)
+const PortalVirtualAddressesIdRoute =
+  PortalVirtualAddressesIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => PortalVirtualAddressesRoute,
+  } as any)
 const PortalTip403FactoryPolicyIdRoute =
   PortalTip403FactoryPolicyIdRouteImport.update({
     id: '/$policyId',
@@ -213,10 +226,12 @@ export interface FileRoutesByFullPath {
   '/portal/tip20-studio': typeof PortalTip20StudioRouteWithChildren
   '/portal/tip403-factory': typeof PortalTip403FactoryRouteWithChildren
   '/portal/token-approvals': typeof PortalTokenApprovalsRoute
+  '/portal/virtual-addresses': typeof PortalVirtualAddressesRouteWithChildren
   '/portal/settings/custom-tokens': typeof PortalSettingsCustomTokensRoute
   '/portal/settings/fee-token': typeof PortalSettingsFeeTokenRoute
   '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRouteWithChildren
   '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRouteWithChildren
+  '/portal/virtual-addresses/$id': typeof PortalVirtualAddressesIdRoute
   '/portal/tip20-studio/': typeof PortalTip20StudioIndexRoute
   '/portal/tip403-factory/': typeof PortalTip403FactoryIndexRoute
   '/portal/tip20-studio/$address/overview': typeof PortalTip20StudioAddressOverviewRoute
@@ -242,10 +257,12 @@ export interface FileRoutesByTo {
   '/portal/send': typeof PortalSendRoute
   '/portal/settings': typeof PortalSettingsRouteWithChildren
   '/portal/token-approvals': typeof PortalTokenApprovalsRoute
+  '/portal/virtual-addresses': typeof PortalVirtualAddressesRouteWithChildren
   '/portal/settings/custom-tokens': typeof PortalSettingsCustomTokensRoute
   '/portal/settings/fee-token': typeof PortalSettingsFeeTokenRoute
   '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRouteWithChildren
   '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRouteWithChildren
+  '/portal/virtual-addresses/$id': typeof PortalVirtualAddressesIdRoute
   '/portal/tip20-studio': typeof PortalTip20StudioIndexRoute
   '/portal/tip403-factory': typeof PortalTip403FactoryIndexRoute
   '/portal/tip20-studio/$address/overview': typeof PortalTip20StudioAddressOverviewRoute
@@ -274,10 +291,12 @@ export interface FileRoutesById {
   '/portal/tip20-studio': typeof PortalTip20StudioRouteWithChildren
   '/portal/tip403-factory': typeof PortalTip403FactoryRouteWithChildren
   '/portal/token-approvals': typeof PortalTokenApprovalsRoute
+  '/portal/virtual-addresses': typeof PortalVirtualAddressesRouteWithChildren
   '/portal/settings/custom-tokens': typeof PortalSettingsCustomTokensRoute
   '/portal/settings/fee-token': typeof PortalSettingsFeeTokenRoute
   '/portal/tip20-studio/$address': typeof PortalTip20StudioAddressRouteWithChildren
   '/portal/tip403-factory/$policyId': typeof PortalTip403FactoryPolicyIdRouteWithChildren
+  '/portal/virtual-addresses/$id': typeof PortalVirtualAddressesIdRoute
   '/portal/tip20-studio/': typeof PortalTip20StudioIndexRoute
   '/portal/tip403-factory/': typeof PortalTip403FactoryIndexRoute
   '/portal/tip20-studio/$address/overview': typeof PortalTip20StudioAddressOverviewRoute
@@ -307,10 +326,12 @@ export interface FileRouteTypes {
     | '/portal/tip20-studio'
     | '/portal/tip403-factory'
     | '/portal/token-approvals'
+    | '/portal/virtual-addresses'
     | '/portal/settings/custom-tokens'
     | '/portal/settings/fee-token'
     | '/portal/tip20-studio/$address'
     | '/portal/tip403-factory/$policyId'
+    | '/portal/virtual-addresses/$id'
     | '/portal/tip20-studio/'
     | '/portal/tip403-factory/'
     | '/portal/tip20-studio/$address/overview'
@@ -336,10 +357,12 @@ export interface FileRouteTypes {
     | '/portal/send'
     | '/portal/settings'
     | '/portal/token-approvals'
+    | '/portal/virtual-addresses'
     | '/portal/settings/custom-tokens'
     | '/portal/settings/fee-token'
     | '/portal/tip20-studio/$address'
     | '/portal/tip403-factory/$policyId'
+    | '/portal/virtual-addresses/$id'
     | '/portal/tip20-studio'
     | '/portal/tip403-factory'
     | '/portal/tip20-studio/$address/overview'
@@ -367,10 +390,12 @@ export interface FileRouteTypes {
     | '/portal/tip20-studio'
     | '/portal/tip403-factory'
     | '/portal/token-approvals'
+    | '/portal/virtual-addresses'
     | '/portal/settings/custom-tokens'
     | '/portal/settings/fee-token'
     | '/portal/tip20-studio/$address'
     | '/portal/tip403-factory/$policyId'
+    | '/portal/virtual-addresses/$id'
     | '/portal/tip20-studio/'
     | '/portal/tip403-factory/'
     | '/portal/tip20-studio/$address/overview'
@@ -400,6 +425,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/portal/virtual-addresses': {
+      id: '/portal/virtual-addresses'
+      path: '/virtual-addresses'
+      fullPath: '/portal/virtual-addresses'
+      preLoaderRoute: typeof PortalVirtualAddressesRouteImport
+      parentRoute: typeof PortalRoute
     }
     '/portal/token-approvals': {
       id: '/portal/token-approvals'
@@ -533,6 +565,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal/tip20-studio/'
       preLoaderRoute: typeof PortalTip20StudioIndexRouteImport
       parentRoute: typeof PortalTip20StudioRoute
+    }
+    '/portal/virtual-addresses/$id': {
+      id: '/portal/virtual-addresses/$id'
+      path: '/$id'
+      fullPath: '/portal/virtual-addresses/$id'
+      preLoaderRoute: typeof PortalVirtualAddressesIdRouteImport
+      parentRoute: typeof PortalVirtualAddressesRoute
     }
     '/portal/tip403-factory/$policyId': {
       id: '/portal/tip403-factory/$policyId'
@@ -669,6 +708,20 @@ const PortalTip403FactoryRouteChildren: PortalTip403FactoryRouteChildren = {
 const PortalTip403FactoryRouteWithChildren =
   PortalTip403FactoryRoute._addFileChildren(PortalTip403FactoryRouteChildren)
 
+interface PortalVirtualAddressesRouteChildren {
+  PortalVirtualAddressesIdRoute: typeof PortalVirtualAddressesIdRoute
+}
+
+const PortalVirtualAddressesRouteChildren: PortalVirtualAddressesRouteChildren =
+  {
+    PortalVirtualAddressesIdRoute: PortalVirtualAddressesIdRoute,
+  }
+
+const PortalVirtualAddressesRouteWithChildren =
+  PortalVirtualAddressesRoute._addFileChildren(
+    PortalVirtualAddressesRouteChildren,
+  )
+
 interface PortalRouteChildren {
   PortalAccessKeysRoute: typeof PortalAccessKeysRoute
   PortalBatchPaymentsRoute: typeof PortalBatchPaymentsRoute
@@ -686,6 +739,7 @@ interface PortalRouteChildren {
   PortalTip20StudioRoute: typeof PortalTip20StudioRouteWithChildren
   PortalTip403FactoryRoute: typeof PortalTip403FactoryRouteWithChildren
   PortalTokenApprovalsRoute: typeof PortalTokenApprovalsRoute
+  PortalVirtualAddressesRoute: typeof PortalVirtualAddressesRouteWithChildren
 }
 
 const PortalRouteChildren: PortalRouteChildren = {
@@ -705,6 +759,7 @@ const PortalRouteChildren: PortalRouteChildren = {
   PortalTip20StudioRoute: PortalTip20StudioRouteWithChildren,
   PortalTip403FactoryRoute: PortalTip403FactoryRouteWithChildren,
   PortalTokenApprovalsRoute: PortalTokenApprovalsRoute,
+  PortalVirtualAddressesRoute: PortalVirtualAddressesRouteWithChildren,
 }
 
 const PortalRouteWithChildren =

@@ -1,0 +1,10 @@
+{
+  "name": "@temporium/mine-salt-container",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "main": "server.mjs",
+  "dependencies": {
+    "ox": "0.14.20"
+  }
+}

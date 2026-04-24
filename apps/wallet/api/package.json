@@ -21,6 +21,7 @@
     "clean": "rimraf .turbo .wrangler"
   },
   "dependencies": {
+    "@cloudflare/containers": "^0.3.3",
     "@hono/zod-validator": "^0.4.2",
     "@paralleldrive/cuid2": "^2.2.2",
     "@remix-run/headers": "^0.17.2",
@@ -30,7 +31,7 @@
     "drizzle-orm": "^0.38.3",
     "hono": "^4.6.16",
     "mppx": "^0.5.11",
-    "viem": "^2.47.10",
+    "viem": "^2.48.4",
     "zod": "^3.24.1"
   },
   "devDependencies": {
