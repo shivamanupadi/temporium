@@ -286,7 +286,11 @@ export const registerVirtualMasterSchema = z.object({
 });
 
 export const createVirtualAddressSchema = z.object({
-  label: z.string().trim().min(1, 'Label is required').max(64, 'Label must be 64 characters or less'),
+  label: z
+    .string()
+    .trim()
+    .min(1, 'Label is required')
+    .max(64, 'Label must be 64 characters or less'),
 });
 
 export const lookupVirtualMasterSchema = z.object({
@@ -295,7 +299,11 @@ export const lookupVirtualMasterSchema = z.object({
 
 export const importVirtualAddressSchema = z.object({
   address: ethereumAddress,
-  label: z.string().trim().min(1, 'Label is required').max(64, 'Label must be 64 characters or less'),
+  label: z
+    .string()
+    .trim()
+    .min(1, 'Label is required')
+    .max(64, 'Label must be 64 characters or less'),
 });
 
 export type RegisterVirtualMasterRequest = z.infer<typeof registerVirtualMasterSchema>;

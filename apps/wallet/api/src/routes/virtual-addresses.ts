@@ -271,8 +271,7 @@ router.post('/master/recover', async c => {
 
   let toBlock = latest;
   while (toBlock >= minBlock) {
-    const fromBlockRaw =
-      toBlock > CHUNK_SIZE - 1n ? toBlock - (CHUNK_SIZE - 1n) : 0n;
+    const fromBlockRaw = toBlock > CHUNK_SIZE - 1n ? toBlock - (CHUNK_SIZE - 1n) : 0n;
     const effectiveFrom = fromBlockRaw < minBlock ? minBlock : fromBlockRaw;
 
     let logs;
@@ -286,10 +285,7 @@ router.post('/master/recover', async c => {
       });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      console.error(
-        `[recover] getLogs failed for [${effectiveFrom}, ${toBlock}]:`,
-        msg
-      );
+      console.error(`[recover] getLogs failed for [${effectiveFrom}, ${toBlock}]:`, msg);
       // Surface to the client so we can see what's actually wrong instead of
       // silently failing the whole scan.
       throw new BadRequestError(
