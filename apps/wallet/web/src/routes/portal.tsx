@@ -34,6 +34,7 @@ import {
   Gift,
   ArrowLeftRight,
   Link2,
+  Inbox,
 } from 'lucide-react';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 import { useTempo } from '@/hooks/useTempo';
@@ -64,6 +65,7 @@ const navSections = [
     items: [
       { to: '/portal/send', label: 'Send', icon: Send },
       { to: '/portal/receive', label: 'Receive', icon: QrCode },
+      { to: '/portal/virtual-addresses', label: 'Virtual addresses', icon: Inbox },
       { to: '/portal/dex-swap', label: 'Swap', icon: ArrowLeftRight },
     ],
   },

@@ -227,3 +227,67 @@ export const paymentLinkPayments = sqliteTable(
 
 export type PaymentLink = typeof paymentLinks.$inferSelect;
 export type PaymentLinkPayment = typeof paymentLinkPayments.$inferSelect;
+
+// ============ TIP-1022 Virtual Master Registration ============
+// Cache of on-chain AddressRegistry state. Always reverifiable via
+// publicClient.virtualAddress.getMasterAddress(masterId) — we store it to
+// avoid a chain round-trip on every virtual-address create.
+export const virtualMasterDiscoveredFromValues = ['portal', 'onchain'] as const;
+export type VirtualMasterDiscoveredFrom = (typeof virtualMasterDiscoveredFromValues)[number];
+
+// `pending` = mined locally, salt persisted, waiting for user wallet to broadcast registerVirtualMaster.
+// `registered` = on-chain confirmation observed.
+// Pending rows let us resume the registration wizard if the user closes the
+// tab between mining and signing. Added in migration 0003.
+export const virtualMasterStatusValues = ['pending', 'registered'] as const;
+export type VirtualMasterStatus = (typeof virtualMasterStatusValues)[number];
+
+export const virtualMasters = sqliteTable(
+  'virtual_masters',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    owner: text('owner').notNull(), // wallet address (lowercased)
+    masterId: text('master_id').notNull(), // bytes4 hex, e.g. "0x07a3b1c2"
+    salt: text('salt'), // bytes32 hex; null when linked from elsewhere (event scan / lookup)
+    txHash: text('tx_hash'), // null while pending or when discovered via lookup
+    status: text('status').$type<VirtualMasterStatus>().notNull().default('registered'),
+    discoveredFrom: text('discovered_from')
+      .$type<VirtualMasterDiscoveredFrom>()
+      .notNull()
+      .default('portal'),
+    network: text('network').notNull(), // 'testnet' | 'mainnet'
+    registeredAt: integer('registered_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  },
+  table => [
+    uniqueIndex('virtual_masters_owner_idx').on(table.owner),
+    uniqueIndex('virtual_masters_master_id_idx').on(table.masterId),
+  ]
+);
+
+// ============ TIP-1022 Virtual Addresses ============
+// Off-chain bookkeeping for the operator-managed userTag -> label mapping.
+// This data exists nowhere on-chain: userTags are generated client-/server-side
+// without a transaction per the TIP-1022 spec.
+export const virtualAddresses = sqliteTable(
+  'virtual_addresses',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    owner: text('owner').notNull(), // wallet address (lowercased)
+    masterId: text('master_id').notNull(), // bytes4 hex (denormalized from virtualMasters)
+    userTag: text('user_tag').notNull(), // bytes6 hex
+    address: text('address').notNull(), // composed 20-byte address, lowercased
+    label: text('label').notNull(), // 1-64 chars, required
+    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  },
+  table => [
+    uniqueIndex('virtual_addresses_owner_address_idx').on(table.owner, table.address),
+    index('virtual_addresses_owner_created_idx').on(table.owner, table.createdAt),
+  ]
+);
+
+export type VirtualMaster = typeof virtualMasters.$inferSelect;
+export type VirtualAddress = typeof virtualAddresses.$inferSelect;

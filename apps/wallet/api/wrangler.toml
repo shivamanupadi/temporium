@@ -19,6 +19,7 @@ migrations_dir = "src/db/migrations"
 [durable_objects]
 bindings = [
   { name = "SCHEDULED_TX", class_name = "ScheduledTransactionDO" },
+  { name = "MINE_SALT_CONTAINER", class_name = "MineSaltContainer" },
 ]
 
 [[migrations]]
@@ -35,6 +36,24 @@ new_sqlite_classes = ["RecurringPaymentDO"]
 [[migrations]]
 tag = "v3"
 deleted_classes = ["RecurringPaymentDO"]
+
+# v4 introduces the TIP-1022 salt-mining container (Cloudflare Containers,
+# standard-4 = 4 vCPU). This is a Container DO — same migration syntax as a
+# regular SQLite DO, the runtime infers it's container-backed from the
+# [[containers]] block below.
+[[migrations]]
+tag = "v4"
+new_sqlite_classes = ["MineSaltContainer"]
+
+# TIP-1022 salt-mining container.
+# standard-4 = 4 vCPU / 12 GiB / 20 GB disk — sized for parallel WASM keccak
+# workers. max_instances caps concurrent grinds; bump if registration volume
+# spikes.
+[[containers]]
+class_name = "MineSaltContainer"
+image = "./containers/mine-salt/Dockerfile"
+instance_type = "standard-4"
+max_instances = 5
 
 # Single worker serving both testnet and mainnet via X-Tempo-Network header.
 #
@@ -69,6 +88,7 @@ migrations_dir = "src/db/migrations"
 [env.production.durable_objects]
 bindings = [
   { name = "SCHEDULED_TX", class_name = "ScheduledTransactionDO" },
+  { name = "MINE_SALT_CONTAINER", class_name = "MineSaltContainer" },
 ]
 
 [[env.production.migrations]]
@@ -82,3 +102,13 @@ new_sqlite_classes = ["RecurringPaymentDO"]
 [[env.production.migrations]]
 tag = "v3"
 deleted_classes = ["RecurringPaymentDO"]
+
+[[env.production.migrations]]
+tag = "v4"
+new_sqlite_classes = ["MineSaltContainer"]
+
+[[env.production.containers]]
+class_name = "MineSaltContainer"
+image = "./containers/mine-salt/Dockerfile"
+instance_type = "standard-4"
+max_instances = 5

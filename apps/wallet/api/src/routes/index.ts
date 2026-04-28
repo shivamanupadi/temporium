@@ -10,6 +10,7 @@ import accessKeysRouter from './access-keys';
 import watchedSpendersRouter from './watched-spenders';
 import paymentLinksRouter from './payment-links';
 import swapRouter from './swap';
+import virtualAddressesRouter from './virtual-addresses';
 import tokenlistRouter from './tokenlist';
 import authRouter from './auth';
 import keysRouter from './keys';
@@ -32,6 +33,7 @@ routes.route('/v1/access-keys', accessKeysRouter);
 routes.route('/v1/watched-spenders', watchedSpendersRouter);
 routes.route('/v1/payment-links', paymentLinksRouter);
 routes.route('/v1/swap', swapRouter);
+routes.route('/v1/virtual-addresses', virtualAddressesRouter);
 
 // Non-versioned routes
 routes.route('/tokenlist', tokenlistRouter);

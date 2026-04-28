@@ -256,3 +256,57 @@ export const paymentLinkQuerySchema = z.object({
   cursor: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(100).default(20),
 });
+
+// ============ Virtual Address (TIP-1022) Schemas ============
+
+const hexLength = (bytes: number) => new RegExp(`^0x[a-fA-F0-9]{${bytes * 2}}$`);
+
+export const hex4Schema = z
+  .string()
+  .regex(hexLength(4), 'Expected 4-byte hex (0x + 8 chars)')
+  .transform(val => val.toLowerCase());
+
+export const hex6Schema = z
+  .string()
+  .regex(hexLength(6), 'Expected 6-byte hex (0x + 12 chars)')
+  .transform(val => val.toLowerCase());
+
+export const hex32Schema = z
+  .string()
+  .regex(hexLength(32), 'Expected 32-byte hex (0x + 64 chars)')
+  .transform(val => val.toLowerCase());
+
+export const networkSchema = z.enum(['testnet', 'mainnet']);
+
+export const registerVirtualMasterSchema = z.object({
+  masterId: hex4Schema,
+  salt: hex32Schema,
+  txHash: transactionHash,
+  network: networkSchema,
+});
+
+export const createVirtualAddressSchema = z.object({
+  label: z
+    .string()
+    .trim()
+    .min(1, 'Label is required')
+    .max(64, 'Label must be 64 characters or less'),
+});
+
+export const lookupVirtualMasterSchema = z.object({
+  masterId: hex4Schema,
+});
+
+export const importVirtualAddressSchema = z.object({
+  address: ethereumAddress,
+  label: z
+    .string()
+    .trim()
+    .min(1, 'Label is required')
+    .max(64, 'Label must be 64 characters or less'),
+});
+
+export type RegisterVirtualMasterRequest = z.infer<typeof registerVirtualMasterSchema>;
+export type LookupVirtualMasterRequest = z.infer<typeof lookupVirtualMasterSchema>;
+export type CreateVirtualAddressRequest = z.infer<typeof createVirtualAddressSchema>;
+export type ImportVirtualAddressRequest = z.infer<typeof importVirtualAddressSchema>;

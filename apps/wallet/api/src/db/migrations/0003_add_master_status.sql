@@ -1,0 +1,1 @@
+ALTER TABLE `virtual_masters` ADD `status` text DEFAULT 'registered' NOT NULL;

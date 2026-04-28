@@ -11,15 +11,17 @@ import {
   type Chain,
 } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
+import { tempoActions } from 'viem/tempo';
 
 /**
- * Create a public client for reading from blockchain (free)
+ * Create a public client for reading from blockchain (free).
+ * Extended with tempoActions so `.virtualAddress.*`, `.token.*`, etc. are available.
  */
-export function createTempoPublicClient(rpcUrl: string, chain: Chain): PublicClient {
+export function createTempoPublicClient(rpcUrl: string, chain: Chain) {
   return createPublicClient({
     chain,
     transport: http(rpcUrl),
-  });
+  }).extend(tempoActions());
 }
 
 /**
@@ -79,5 +81,7 @@ export function validateAndNormalizePublicKey(publicKey: string): Hex {
 
   return normalizePublicKey(publicKey);
 }
+
+export type TempoPublicClient = ReturnType<typeof createTempoPublicClient>;
 
 export type { Address, Hex, PublicClient, WalletClient };
