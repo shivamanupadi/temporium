@@ -56,8 +56,8 @@ export function CreateVirtualAddressDialog({ open, onOpenChange }: CreateProps):
               New virtual address
             </DialogTitle>
             <DialogDescription className="text-[13px] text-[#6B6560] leading-relaxed">
-              Give this address a label so you remember what it&apos;s for. Deposits forward to
-              your main wallet automatically.
+              Give this address a label so you remember what it&apos;s for. Deposits forward to your
+              main wallet automatically.
             </DialogDescription>
           </div>
 
@@ -299,8 +299,8 @@ export function LookupMasterDialog({ open, onOpenChange }: LookupProps): ReactEl
               Link existing master ID
             </DialogTitle>
             <DialogDescription className="text-[13px] text-[#6B6560] leading-relaxed">
-              Already registered elsewhere? Paste your 4-byte masterId. We&apos;ll verify it
-              against the on-chain registry.
+              Already registered elsewhere? Paste your 4-byte masterId. We&apos;ll verify it against
+              the on-chain registry.
             </DialogDescription>
           </div>
 

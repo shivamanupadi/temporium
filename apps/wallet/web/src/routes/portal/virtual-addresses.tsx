@@ -19,10 +19,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@temporium/shared-ui';
 import { useVirtualAddresses, useVirtualMaster } from '@/hooks/useVirtualAddresses';
 import { RegisterMasterDialog } from '@/components/RegisterMasterDialog';
-import {
-  CreateVirtualAddressDialog,
-  LookupMasterDialog,
-} from '@/components/VirtualAddressDialogs';
+import { CreateVirtualAddressDialog, LookupMasterDialog } from '@/components/VirtualAddressDialogs';
 import type { VirtualAddress } from '@/lib/virtual-addresses-api';
 import { copyToClipboard, formatAddress } from '@/lib/utils';
 import { getExplorerAddressUrl } from '@/lib/tempo-client';
@@ -323,8 +320,8 @@ function UnregisteredState({
         </div>
         <h3 className="text-[16px] font-semibold text-[#2D3436]">Setup is half-done</h3>
         <p className="text-[13px] text-[#9B9590] mt-1.5 max-w-sm mx-auto leading-relaxed">
-          You started master ID setup earlier — we saved your progress. Resume to sign the
-          on-chain transaction (no re-preparation needed).
+          You started master ID setup earlier — we saved your progress. Resume to sign the on-chain
+          transaction (no re-preparation needed).
         </p>
         <Button
           onClick={onRegister}
@@ -341,7 +338,9 @@ function UnregisteredState({
       <div className="w-14 h-14 rounded-2xl bg-[#F5F2ED] flex items-center justify-center mx-auto mb-4">
         <ShieldCheck className="w-7 h-7 text-[#B5B0AA]" />
       </div>
-      <h3 className="text-[16px] font-semibold text-[#2D3436]">Get started with virtual addresses</h3>
+      <h3 className="text-[16px] font-semibold text-[#2D3436]">
+        Get started with virtual addresses
+      </h3>
       <p className="text-[13px] text-[#9B9590] mt-1.5 max-w-sm mx-auto leading-relaxed">
         Set up your wallet to hand out unlimited deposit addresses that all forward to you. If
         you&apos;ve already set up elsewhere, link your existing masterId.

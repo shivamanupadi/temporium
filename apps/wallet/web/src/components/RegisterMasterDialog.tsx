@@ -273,11 +273,7 @@ function StepShell({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -6 }}
       transition={{ duration: 0.18 }}
-      className={
-        centered
-          ? 'px-6 py-10 flex flex-col items-center text-center'
-          : 'px-6 pt-5 pb-6'
-      }
+      className={centered ? 'px-6 py-10 flex flex-col items-center text-center' : 'px-6 pt-5 pb-6'}
     >
       {children}
     </motion.div>
@@ -309,9 +305,7 @@ function IntroStep({
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-[13.5px] font-semibold text-[#2D3436]">Register a new master ID</p>
-          <p className="text-[11.5px] text-[#9B9590] mt-0.5">
-            Takes 1–2 minutes. One-time setup.
-          </p>
+          <p className="text-[11.5px] text-[#9B9590] mt-0.5">Takes 1–2 minutes. One-time setup.</p>
         </div>
         <ArrowRight className="w-4 h-4 text-[#B5B0AA] group-hover:text-[#E07A5F] group-hover:translate-x-0.5 transition-all shrink-0" />
       </button>
@@ -397,8 +391,8 @@ function SignStep({ masterId }: { masterId: string }): ReactElement {
     <>
       <div className="mb-3 px-1">
         <p className="text-[12.5px] text-[#6B6560] leading-relaxed">
-          Your master ID is ready. Approve the transaction in your wallet to register it on-chain.
-          A small one-time fee applies.
+          Your master ID is ready. Approve the transaction in your wallet to register it on-chain. A
+          small one-time fee applies.
         </p>
       </div>
 
@@ -519,8 +513,8 @@ function AlreadyStep({
     <>
       <div className="mb-3 px-1">
         <p className="text-[12.5px] text-[#6B6560] leading-relaxed">
-          This wallet is already registered on-chain (likely from another tool). Link your
-          existing master ID to start using it here.
+          This wallet is already registered on-chain (likely from another tool). Link your existing
+          master ID to start using it here.
         </p>
       </div>
       <button
@@ -542,11 +536,7 @@ function AlreadyStep({
         <ArrowRight className="w-4 h-4 text-[#B5B0AA] group-hover:text-[#9B72CF] group-hover:translate-x-0.5 transition-all shrink-0" />
       </button>
       <p className="text-[11.5px] text-center text-[#9B9590] mt-5">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="hover:text-[#6B6560] transition-colors"
-        >
+        <button type="button" onClick={onCancel} className="hover:text-[#6B6560] transition-colors">
           Cancel
         </button>
       </p>
