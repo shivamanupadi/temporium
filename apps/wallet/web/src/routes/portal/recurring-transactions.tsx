@@ -59,7 +59,10 @@ const FREQUENCY_PRESETS: { id: FrequencyId; label: string; seconds: number }[] =
   { id: 'custom', label: 'Custom', seconds: 0 },
 ];
 
-const STATUS_STYLE: Record<RecurringTransaction['status'], { bg: string; fg: string; icon: typeof Clock }> = {
+const STATUS_STYLE: Record<
+  RecurringTransaction['status'],
+  { bg: string; fg: string; icon: typeof Clock }
+> = {
   active: { bg: 'bg-[#6B8F71]/10', fg: 'text-[#6B8F71]', icon: Play },
   paused: { bg: 'bg-[#D4A574]/10', fg: 'text-[#D4A574]', icon: Pause },
   completed: { bg: 'bg-[#9B72CF]/10', fg: 'text-[#9B72CF]', icon: CheckCircle },
@@ -310,13 +313,7 @@ function RecurringRow({
   );
 }
 
-function ExecutionRow({
-  ex,
-  symbol,
-}: {
-  ex: RecurringExecution;
-  symbol: string;
-}): ReactElement {
+function ExecutionRow({ ex, symbol }: { ex: RecurringExecution; symbol: string }): ReactElement {
   const Icon =
     ex.status === 'success' ? CheckCircle : ex.status === 'skipped' ? SkipForward : XCircle;
   const color =
@@ -478,9 +475,7 @@ function CreateRecurringModal({
       // for safety while effectively unlimited from the user's perspective.
       const FAR_FUTURE_SECONDS = Math.floor(Date.now() / 1000) + 100 * 365 * 86_400;
       const expirySeconds =
-        endMode === 'until' && endAt
-          ? Math.floor(endAt.getTime() / 1000)
-          : FAR_FUTURE_SECONDS;
+        endMode === 'until' && endAt ? Math.floor(endAt.getTime() / 1000) : FAR_FUTURE_SECONDS;
       // Fee-token allowance for the access key. Tempo charges gas in feeToken
       // on each tx and the access keychain enforces limits for ALL tokens the
       // key wants to spend, so we must explicitly include feeToken in the
@@ -681,10 +676,10 @@ function CreateRecurringModal({
 
           {/* Safety note */}
           <div className="rounded-xl bg-[#FAF8F5] border border-[#EDE9E3] p-3 text-[12px] text-[#6B6560] leading-relaxed">
-            We&apos;ll mint a dedicated access key restricted to <strong>this exact transfer</strong>{' '}
-            (token, recipient, per-period amount cap). The key is stored encrypted at rest. You can
-            revoke it on-chain at any time from the Access Keys page to instantly stop this
-            recurring task.
+            We&apos;ll mint a dedicated access key restricted to{' '}
+            <strong>this exact transfer</strong> (token, recipient, per-period amount cap). The key
+            is stored encrypted at rest. You can revoke it on-chain at any time from the Access Keys
+            page to instantly stop this recurring task.
           </div>
 
           {error && (
@@ -695,9 +690,7 @@ function CreateRecurringModal({
         </div>
 
         {validationReason && phase === 'form' && (
-          <p className="px-6 pb-2 text-[12px] text-[#9B9590]">
-            {validationReason}
-          </p>
+          <p className="px-6 pb-2 text-[12px] text-[#9B9590]">{validationReason}</p>
         )}
         <div className="px-6 py-4 border-t border-[#EDE9E3] flex gap-3">
           <Button
@@ -733,13 +726,7 @@ function CreateRecurringModal({
   );
 }
 
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}): ReactElement {
+function Field({ label, children }: { label: string; children: ReactNode }): ReactElement {
   return (
     <div>
       <label className="block text-[12px] font-semibold text-[#6B6560] mb-1.5">{label}</label>

@@ -109,10 +109,9 @@ export function useRecurringTransactions(): UseRecurringTransactionsReturn {
 
   const updateStatus = useMutation({
     mutationFn: async (params: { id: string; status: 'active' | 'paused' | 'cancelled' }) => {
-      return apiPatch<RecurringTransaction>(
-        `/v1/recurring-transactions/${params.id}`,
-        { status: params.status }
-      );
+      return apiPatch<RecurringTransaction>(`/v1/recurring-transactions/${params.id}`, {
+        status: params.status,
+      });
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: [RECURRING_QUERY_KEY] }),
   });

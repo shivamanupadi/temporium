@@ -45,21 +45,14 @@ async function importKek(env: Env): Promise<CryptoKey> {
   return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
 }
 
-export async function encryptAccessKey(
-  privateKeyHex: string,
-  env: Env
-): Promise<EncryptedKey> {
+export async function encryptAccessKey(privateKeyHex: string, env: Env): Promise<EncryptedKey> {
   const kek = await importKek(env);
 
   // Fresh random DEK per record
   const dekRaw = crypto.getRandomValues(new Uint8Array(32));
-  const dekKey = await crypto.subtle.importKey(
-    'raw',
-    dekRaw,
-    { name: 'AES-GCM' },
-    false,
-    ['encrypt']
-  );
+  const dekKey = await crypto.subtle.importKey('raw', dekRaw, { name: 'AES-GCM' }, false, [
+    'encrypt',
+  ]);
 
   const iv = crypto.getRandomValues(new Uint8Array(12));
   const dekIv = crypto.getRandomValues(new Uint8Array(12));
@@ -94,13 +87,9 @@ export async function decryptAccessKey(blob: EncryptedKey, env: Env): Promise<st
       b64ToBytes(blob.dek)
     )
   );
-  const dekKey = await crypto.subtle.importKey(
-    'raw',
-    dekRaw,
-    { name: 'AES-GCM' },
-    false,
-    ['decrypt']
-  );
+  const dekKey = await crypto.subtle.importKey('raw', dekRaw, { name: 'AES-GCM' }, false, [
+    'decrypt',
+  ]);
   dekRaw.fill(0);
 
   const pt = await crypto.subtle.decrypt(

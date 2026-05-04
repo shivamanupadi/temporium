@@ -136,10 +136,7 @@ recurringRouter.get('/', zValidator('query', recurringTxQuerySchema), async c =>
       conditions.push(
         or(
           lt(recurringTransactions.createdAt, new Date(ts)),
-          and(
-            eq(recurringTransactions.createdAt, new Date(ts)),
-            lt(recurringTransactions.id, id)
-          )
+          and(eq(recurringTransactions.createdAt, new Date(ts)), lt(recurringTransactions.id, id))
         )!
       );
     } catch {
@@ -254,11 +251,7 @@ recurringRouter.patch(
       const doId = c.env.RECURRING_TX.idFromName(id);
       const doStub = c.env.RECURRING_TX.get(doId);
       const path =
-        data.status === 'paused'
-          ? '/pause'
-          : data.status === 'cancelled'
-            ? '/cancel'
-            : '/resume';
+        data.status === 'paused' ? '/pause' : data.status === 'cancelled' ? '/cancel' : '/resume';
       try {
         await doStub.fetch(new Request(`http://do${path}`, { method: 'POST' }));
       } catch {

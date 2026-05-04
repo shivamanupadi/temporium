@@ -141,8 +141,7 @@ export class RecurringTransactionDO implements DurableObject {
       // envelope — testnet rejects v1 with "legacy V1 keychain signature is
       // no longer accepted, use V2 (type 0x04)".
       const privateKey = (await decryptAccessKey(payload.encryptedKey, this.env)) as Hex;
-      const accountFn =
-        payload.signatureType === 'p256' ? Account.fromP256 : Account.fromSecp256k1;
+      const accountFn = payload.signatureType === 'p256' ? Account.fromP256 : Account.fromSecp256k1;
       const accessKeyAccount = accountFn(privateKey, { access: payload.owner });
 
       const walletClient = createWalletClient({
@@ -345,9 +344,7 @@ export class RecurringTransactionDO implements DurableObject {
   }
 
   private async markCompleted(id: string) {
-    await this.env.DB.prepare(
-      "UPDATE recurring_transactions SET status = 'completed' WHERE id = ?"
-    )
+    await this.env.DB.prepare("UPDATE recurring_transactions SET status = 'completed' WHERE id = ?")
       .bind(id)
       .run();
   }
