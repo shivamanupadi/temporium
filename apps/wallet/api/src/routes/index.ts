@@ -9,6 +9,7 @@ import customTokensRouter from './custom-tokens';
 import accessKeysRouter from './access-keys';
 import watchedSpendersRouter from './watched-spenders';
 import paymentLinksRouter from './payment-links';
+import recurringTxsRouter from './recurring-transactions';
 import swapRouter from './swap';
 import virtualAddressesRouter from './virtual-addresses';
 import tokenlistRouter from './tokenlist';
@@ -32,6 +33,7 @@ routes.route('/v1/custom-tokens', customTokensRouter);
 routes.route('/v1/access-keys', accessKeysRouter);
 routes.route('/v1/watched-spenders', watchedSpendersRouter);
 routes.route('/v1/payment-links', paymentLinksRouter);
+routes.route('/v1/recurring-transactions', recurringTxsRouter);
 routes.route('/v1/swap', swapRouter);
 routes.route('/v1/virtual-addresses', virtualAddressesRouter);
 

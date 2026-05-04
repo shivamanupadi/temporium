@@ -130,6 +130,89 @@ export const accessKeys = sqliteTable(
 
 export type AccessKeyRow = typeof accessKeys.$inferSelect;
 
+// ============ Recurring Transactions ============
+// Server-side scheduler that signs each recurrence with a dedicated access key.
+// On-chain access-key spending limits + allowed-call scopes are the safety
+// firewall — even if this server is compromised, the worst case is the exact
+// recurrence the user already authorized.
+export const recurringStatusValues = [
+  'active',
+  'paused',
+  'completed',
+  'failed',
+  'cancelled',
+] as const;
+export type RecurringStatus = (typeof recurringStatusValues)[number];
+
+export const recurringExecutionStatusValues = ['success', 'skipped', 'failed'] as const;
+export type RecurringExecutionStatus = (typeof recurringExecutionStatusValues)[number];
+
+export const recurringTransactions = sqliteTable(
+  'recurring_transactions',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    owner: text('owner').notNull(),
+    accessKeyDbId: text('access_key_db_id').notNull(),
+    accessKeyId: text('access_key_id').notNull(),
+    accessKeySignatureType: text('access_key_signature_type')
+      .$type<AccessKeySignatureType>()
+      .notNull(),
+    network: text('network').notNull(),
+    to: text('to').notNull(),
+    token: text('token').notNull(),
+    tokenSymbol: text('token_symbol').notNull(),
+    tokenDecimals: integer('token_decimals').notNull(),
+    amount: text('amount').notNull(),
+    feeToken: text('fee_token').notNull(),
+    memo: text('memo'),
+    intervalSeconds: integer('interval_seconds').notNull(),
+    startAt: integer('start_at', { mode: 'timestamp' }).notNull(),
+    endAt: integer('end_at', { mode: 'timestamp' }),
+    maxExecutions: integer('max_executions'),
+    status: text('status').$type<RecurringStatus>().notNull().default('active'),
+    executionsCompleted: integer('executions_completed').notNull().default(0),
+    consecutiveFailures: integer('consecutive_failures').notNull().default(0),
+    nextRunAt: integer('next_run_at', { mode: 'timestamp' }).notNull(),
+    lastRunAt: integer('last_run_at', { mode: 'timestamp' }),
+    lastTxHash: text('last_tx_hash'),
+    lastFailReason: text('last_fail_reason'),
+    label: text('label'),
+    notes: text('notes'),
+    createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
+  },
+  table => [
+    index('recurring_tx_owner_idx').on(table.owner),
+    index('recurring_tx_owner_status_idx').on(table.owner, table.status),
+    index('recurring_tx_next_run_idx').on(table.status, table.nextRunAt),
+  ]
+);
+
+export const recurringExecutions = sqliteTable(
+  'recurring_executions',
+  {
+    id: text('id')
+      .primaryKey()
+      .$defaultFn(() => createId()),
+    recurringId: text('recurring_id')
+      .notNull()
+      .references(() => recurringTransactions.id),
+    runNumber: integer('run_number').notNull(),
+    status: text('status').$type<RecurringExecutionStatus>().notNull(),
+    txHash: text('tx_hash'),
+    failReason: text('fail_reason'),
+    executedAt: integer('executed_at', { mode: 'timestamp' }).notNull(),
+  },
+  table => [
+    index('recurring_exec_recurring_idx').on(table.recurringId),
+    index('recurring_exec_recurring_run_idx').on(table.recurringId, table.runNumber),
+  ]
+);
+
+export type RecurringTransactionRow = typeof recurringTransactions.$inferSelect;
+export type RecurringExecutionRow = typeof recurringExecutions.$inferSelect;
+
 // ============ Watched Spenders ============
 export const watchedSpenders = sqliteTable(
   'watched_spenders',

@@ -4,6 +4,7 @@ import {
   transactionStatusValues,
   accessKeyTypeValues,
   paymentLinkStatusValues,
+  recurringStatusValues,
 } from '../db/schema';
 
 // ============ Common Validators ============
@@ -205,6 +206,59 @@ export const updateScheduledTxSchema = z.object({
 
 export type CreateScheduledTxRequest = z.infer<typeof createScheduledTxSchema>;
 export type UpdateScheduledTxRequest = z.infer<typeof updateScheduledTxSchema>;
+
+// ============ Recurring Transactions Schemas ============
+
+export const recurringStatusSchema = z.enum(recurringStatusValues);
+
+// secp256k1 / p256 private keys are 32 bytes ⇒ 64 hex chars after 0x.
+const accessKeyPrivateKey = z
+  .string()
+  .regex(/^0x[a-fA-F0-9]{64}$/, 'Invalid private key (expected 32-byte hex)');
+
+export const createRecurringTxSchema = z.object({
+  accessKeyDbId: cuid2Id,
+  accessKeyId: ethereumAddress,
+  accessKeySignatureType: z.enum(['secp256k1', 'p256']), // webAuthn cannot sign server-side
+  accessKeyPrivateKey,
+  to: ethereumAddress,
+  token: ethereumAddress,
+  tokenSymbol: z.string().min(1).max(20).trim(),
+  tokenDecimals: z.number().int().min(0).max(18),
+  amount: z.string().min(1).regex(/^\d+$/, 'Amount must be a valid integer string'),
+  feeToken: ethereumAddress,
+  memo: z.string().max(500).optional(),
+  intervalSeconds: z
+    .number()
+    .int('Interval must be an integer')
+    .min(60, 'Interval must be at least 60 seconds')
+    .max(365 * 24 * 60 * 60, 'Interval must be at most 1 year'),
+  startAt: z.string().datetime({ message: 'Invalid start date format' }),
+  endAt: z.string().datetime({ message: 'Invalid end date format' }).optional(),
+  maxExecutions: z.number().int().min(1).max(10_000).optional(),
+  label: z.string().max(100).trim().optional(),
+  notes: z.string().max(500).trim().optional(),
+});
+
+export const updateRecurringTxSchema = z
+  .object({
+    label: z.string().max(100).trim().optional(),
+    notes: z.string().max(500).trim().optional(),
+    status: z.enum(['active', 'paused', 'cancelled']).optional(),
+  })
+  .refine(d => d.label !== undefined || d.notes !== undefined || d.status !== undefined, {
+    message: 'At least one field (label, notes, status) must be provided',
+  });
+
+export const recurringTxQuerySchema = z.object({
+  status: recurringStatusSchema.optional(),
+  cursor: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(50).default(20),
+});
+
+export type CreateRecurringTxRequest = z.infer<typeof createRecurringTxSchema>;
+export type UpdateRecurringTxRequest = z.infer<typeof updateRecurringTxSchema>;
+export type RecurringTxQuery = z.infer<typeof recurringTxQuerySchema>;
 
 // ============ Watched Spenders Schemas ============
 

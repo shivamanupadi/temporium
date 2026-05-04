@@ -22,6 +22,9 @@ export interface Env {
   SCHEDULED_TX: DurableObjectNamespace;
   // TIP-1022 salt-mining container (DO-backed, see lib/mine-salt-container.ts).
   MINE_SALT_CONTAINER: DurableObjectNamespace;
+  // Recurring transactions — per-task DO that signs each recurrence with
+  // a user-uploaded access-key private key (encrypted at rest in DO storage).
+  RECURRING_TX: DurableObjectNamespace;
 
   // JWT config (shared across networks)
   JWT_EXPIRATION: string;
@@ -50,6 +53,12 @@ export interface Env {
    * the tx payload, not the key).
    */
   RELAYER_PRIVATE_KEY: string;
+  /**
+   * 32-byte AES-256 key encoded as base64. Wraps per-record DEKs for the
+   * RecurringTransactionDO encrypted access-key store. Rotate by re-encrypting
+   * existing records with both the new and old KEK; never reuse across envs.
+   */
+  RECURRING_KEK: string;
 }
 
 /**

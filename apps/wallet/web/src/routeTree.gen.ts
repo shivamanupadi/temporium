@@ -19,6 +19,7 @@ import { Route as PortalSettingsRouteImport } from './routes/portal/settings'
 import { Route as PortalSendRouteImport } from './routes/portal/send'
 import { Route as PortalScheduledPaymentsRouteImport } from './routes/portal/scheduled-payments'
 import { Route as PortalRewardsRouteImport } from './routes/portal/rewards'
+import { Route as PortalRecurringTransactionsRouteImport } from './routes/portal/recurring-transactions'
 import { Route as PortalReceiveRouteImport } from './routes/portal/receive'
 import { Route as PortalPaymentLinksRouteImport } from './routes/portal/payment-links'
 import { Route as PortalFeeAmmSwapRouteImport } from './routes/portal/fee-amm-swap'
@@ -91,6 +92,12 @@ const PortalRewardsRoute = PortalRewardsRouteImport.update({
   path: '/rewards',
   getParentRoute: () => PortalRoute,
 } as any)
+const PortalRecurringTransactionsRoute =
+  PortalRecurringTransactionsRouteImport.update({
+    id: '/recurring-transactions',
+    path: '/recurring-transactions',
+    getParentRoute: () => PortalRoute,
+  } as any)
 const PortalReceiveRoute = PortalReceiveRouteImport.update({
   id: '/receive',
   path: '/receive',
@@ -219,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/portal/fee-amm-swap': typeof PortalFeeAmmSwapRoute
   '/portal/payment-links': typeof PortalPaymentLinksRoute
   '/portal/receive': typeof PortalReceiveRoute
+  '/portal/recurring-transactions': typeof PortalRecurringTransactionsRoute
   '/portal/rewards': typeof PortalRewardsRoute
   '/portal/scheduled-payments': typeof PortalScheduledPaymentsRoute
   '/portal/send': typeof PortalSendRoute
@@ -252,6 +260,7 @@ export interface FileRoutesByTo {
   '/portal/fee-amm-swap': typeof PortalFeeAmmSwapRoute
   '/portal/payment-links': typeof PortalPaymentLinksRoute
   '/portal/receive': typeof PortalReceiveRoute
+  '/portal/recurring-transactions': typeof PortalRecurringTransactionsRoute
   '/portal/rewards': typeof PortalRewardsRoute
   '/portal/scheduled-payments': typeof PortalScheduledPaymentsRoute
   '/portal/send': typeof PortalSendRoute
@@ -284,6 +293,7 @@ export interface FileRoutesById {
   '/portal/fee-amm-swap': typeof PortalFeeAmmSwapRoute
   '/portal/payment-links': typeof PortalPaymentLinksRoute
   '/portal/receive': typeof PortalReceiveRoute
+  '/portal/recurring-transactions': typeof PortalRecurringTransactionsRoute
   '/portal/rewards': typeof PortalRewardsRoute
   '/portal/scheduled-payments': typeof PortalScheduledPaymentsRoute
   '/portal/send': typeof PortalSendRoute
@@ -319,6 +329,7 @@ export interface FileRouteTypes {
     | '/portal/fee-amm-swap'
     | '/portal/payment-links'
     | '/portal/receive'
+    | '/portal/recurring-transactions'
     | '/portal/rewards'
     | '/portal/scheduled-payments'
     | '/portal/send'
@@ -352,6 +363,7 @@ export interface FileRouteTypes {
     | '/portal/fee-amm-swap'
     | '/portal/payment-links'
     | '/portal/receive'
+    | '/portal/recurring-transactions'
     | '/portal/rewards'
     | '/portal/scheduled-payments'
     | '/portal/send'
@@ -383,6 +395,7 @@ export interface FileRouteTypes {
     | '/portal/fee-amm-swap'
     | '/portal/payment-links'
     | '/portal/receive'
+    | '/portal/recurring-transactions'
     | '/portal/rewards'
     | '/portal/scheduled-payments'
     | '/portal/send'
@@ -480,6 +493,13 @@ declare module '@tanstack/react-router' {
       path: '/rewards'
       fullPath: '/portal/rewards'
       preLoaderRoute: typeof PortalRewardsRouteImport
+      parentRoute: typeof PortalRoute
+    }
+    '/portal/recurring-transactions': {
+      id: '/portal/recurring-transactions'
+      path: '/recurring-transactions'
+      fullPath: '/portal/recurring-transactions'
+      preLoaderRoute: typeof PortalRecurringTransactionsRouteImport
       parentRoute: typeof PortalRoute
     }
     '/portal/receive': {
@@ -732,6 +752,7 @@ interface PortalRouteChildren {
   PortalFeeAmmSwapRoute: typeof PortalFeeAmmSwapRoute
   PortalPaymentLinksRoute: typeof PortalPaymentLinksRoute
   PortalReceiveRoute: typeof PortalReceiveRoute
+  PortalRecurringTransactionsRoute: typeof PortalRecurringTransactionsRoute
   PortalRewardsRoute: typeof PortalRewardsRoute
   PortalScheduledPaymentsRoute: typeof PortalScheduledPaymentsRoute
   PortalSendRoute: typeof PortalSendRoute
@@ -752,6 +773,7 @@ const PortalRouteChildren: PortalRouteChildren = {
   PortalFeeAmmSwapRoute: PortalFeeAmmSwapRoute,
   PortalPaymentLinksRoute: PortalPaymentLinksRoute,
   PortalReceiveRoute: PortalReceiveRoute,
+  PortalRecurringTransactionsRoute: PortalRecurringTransactionsRoute,
   PortalRewardsRoute: PortalRewardsRoute,
   PortalScheduledPaymentsRoute: PortalScheduledPaymentsRoute,
   PortalSendRoute: PortalSendRoute,

@@ -20,6 +20,7 @@ migrations_dir = "src/db/migrations"
 bindings = [
   { name = "SCHEDULED_TX", class_name = "ScheduledTransactionDO" },
   { name = "MINE_SALT_CONTAINER", class_name = "MineSaltContainer" },
+  { name = "RECURRING_TX", class_name = "RecurringTransactionDO" },
 ]
 
 [[migrations]]
@@ -44,6 +45,12 @@ deleted_classes = ["RecurringPaymentDO"]
 [[migrations]]
 tag = "v4"
 new_sqlite_classes = ["MineSaltContainer"]
+
+# v5 introduces RecurringTransactionDO — per-task DO that signs each recurrence
+# with a user-uploaded access-key private key (encrypted at rest in DO storage).
+[[migrations]]
+tag = "v5"
+new_sqlite_classes = ["RecurringTransactionDO"]
 
 # TIP-1022 salt-mining container.
 # standard-4 = 4 vCPU / 12 GiB / 20 GB disk — sized for parallel WASM keccak
@@ -89,6 +96,7 @@ migrations_dir = "src/db/migrations"
 bindings = [
   { name = "SCHEDULED_TX", class_name = "ScheduledTransactionDO" },
   { name = "MINE_SALT_CONTAINER", class_name = "MineSaltContainer" },
+  { name = "RECURRING_TX", class_name = "RecurringTransactionDO" },
 ]
 
 [[env.production.migrations]]
@@ -106,6 +114,10 @@ deleted_classes = ["RecurringPaymentDO"]
 [[env.production.migrations]]
 tag = "v4"
 new_sqlite_classes = ["MineSaltContainer"]
+
+[[env.production.migrations]]
+tag = "v5"
+new_sqlite_classes = ["RecurringTransactionDO"]
 
 [[env.production.containers]]
 class_name = "MineSaltContainer"
