@@ -69,7 +69,23 @@ export interface CreateRecurringInput {
 
 export const RECURRING_QUERY_KEY = 'recurringTransactions';
 
-export function useRecurringTransactions() {
+interface UseRecurringTransactionsReturn {
+  items: RecurringTransaction[];
+  isLoading: boolean;
+  create: (input: CreateRecurringInput) => Promise<RecurringTransaction>;
+  creating: boolean;
+  pause: (id: string) => Promise<RecurringTransaction>;
+  resume: (id: string) => Promise<RecurringTransaction>;
+  cancel: (id: string) => Promise<void>;
+  updateMetadata: (params: {
+    id: string;
+    label?: string;
+    notes?: string;
+  }) => Promise<RecurringTransaction>;
+  fetchExecutions: (id: string) => Promise<RecurringExecution[]>;
+}
+
+export function useRecurringTransactions(): UseRecurringTransactionsReturn {
   const { address } = useAccount();
   const qc = useQueryClient();
 

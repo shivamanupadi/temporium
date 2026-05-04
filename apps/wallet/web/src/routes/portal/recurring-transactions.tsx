@@ -457,7 +457,7 @@ function CreateRecurringModal({
     return null;
   }, [address, recipient, token, amount, intervalSeconds, startAt, endMode, endAt, maxRuns]);
 
-  async function handleSubmit() {
+  async function handleSubmit(): Promise<void> {
     if (validationReason) {
       setError(validationReason);
       return;
@@ -568,7 +568,7 @@ function CreateRecurringModal({
             New recurring transaction
           </DialogTitle>
           <DialogDescription className="text-[13px] text-[#6B6560] mt-1">
-            Authorize a dedicated access key, then we'll fire the transfer on schedule.
+            Authorize a dedicated access key, then we&apos;ll fire the transfer on schedule.
           </DialogDescription>
         </div>
 
@@ -681,7 +681,7 @@ function CreateRecurringModal({
 
           {/* Safety note */}
           <div className="rounded-xl bg-[#FAF8F5] border border-[#EDE9E3] p-3 text-[12px] text-[#6B6560] leading-relaxed">
-            We'll mint a dedicated access key restricted to <strong>this exact transfer</strong>{' '}
+            We&apos;ll mint a dedicated access key restricted to <strong>this exact transfer</strong>{' '}
             (token, recipient, per-period amount cap). The key is stored encrypted at rest. You can
             revoke it on-chain at any time from the Access Keys page to instantly stop this
             recurring task.
@@ -733,7 +733,13 @@ function CreateRecurringModal({
   );
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: ReactNode;
+}): ReactElement {
   return (
     <div>
       <label className="block text-[12px] font-semibold text-[#6B6560] mb-1.5">{label}</label>
