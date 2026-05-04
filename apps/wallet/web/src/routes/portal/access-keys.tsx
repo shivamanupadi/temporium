@@ -22,6 +22,7 @@ import {
   Trash2,
   ExternalLink,
   CheckCircle,
+  MapPin,
 } from 'lucide-react';
 import { toast } from '@/lib/toast';
 import { format } from 'date-fns';
@@ -51,11 +52,15 @@ import {
   generateSecp256k1Key,
   generateP256Key,
   formatExpiry,
+  formatLastUsed,
+  formatPeriod,
+  SPENDING_PERIOD_PRESETS,
   isKeyExpired,
   getKeyStatus,
   type GeneratedKey,
 } from '@/lib/access-keys-utils';
 import { SpendingLimitsModal } from '@/components/SpendingLimitsModal';
+import { ContactPicker } from '@/components/ContactPicker';
 import { TokenAddressPicker } from '@/components/TokenAddressPicker';
 import type { AccessKeyType, TokenMetadata } from '@/types';
 
@@ -88,7 +93,7 @@ const KEY_TYPES: { id: AccessKeyType; label: string; description: string }[] = [
   },
 ];
 
-type WizardStep = 'type' | 'config' | 'limits' | 'save' | 'review' | 'success';
+type WizardStep = 'type' | 'config' | 'limits' | 'destinations' | 'save' | 'review' | 'success';
 
 const STEP_LABELS: Record<WizardStep, { title: string; description: string }> = {
   type: { title: 'Key Type', description: 'Choose the cryptographic key type to generate.' },
@@ -96,6 +101,10 @@ const STEP_LABELS: Record<WizardStep, { title: string; description: string }> = 
   limits: {
     title: 'Spending Limits',
     description: 'Configure token spending limits for this key.',
+  },
+  destinations: {
+    title: 'Allowed Destinations',
+    description: 'Optionally restrict which contracts this key can call.',
   },
   save: { title: 'Save Key', description: 'Save your private key securely before proceeding.' },
   review: {
@@ -116,6 +125,8 @@ interface SpendingLimitEntry {
   name: string;
   symbol: string;
   decimals: number;
+  /** Refresh period in seconds. 0 = one-time (legacy default). */
+  period?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -199,6 +210,8 @@ function AccessKeysPage(): ReactElement {
     authorizeKey,
     revokeKey,
     updateSpendingLimit,
+    setAllowedCalls,
+    getAllowedCalls,
     getKey,
     getRemainingLimit,
     refresh,
@@ -233,6 +246,13 @@ function AccessKeysPage(): ReactElement {
   const [customExpiry, setCustomExpiry] = useState<Date | undefined>(undefined);
   const [enforceLimits, setEnforceLimits] = useState(false);
   const [spendingLimits, setSpendingLimits] = useState<SpendingLimitEntry[]>([]);
+  // Optional pre-authorize destination allowlist (T3+ allowedCalls). When
+  // `restrictDestinations` is false, this list is ignored and the key is
+  // authorized with allowAnyCalls = true. When true, each entry becomes a
+  // CallScope { target, selectorRules: [] } — i.e. any function on that target.
+  const [restrictDestinations, setRestrictDestinations] = useState(false);
+  const [allowedDestinations, setAllowedDestinations] = useState<string[]>([]);
+  const [newWizardDest, setNewWizardDest] = useState('');
 
   // --- Add Token Limit modal state (wizard only) ---
   const [isTokenLimitModalOpen, setIsTokenLimitModalOpen] = useState(false);
@@ -240,6 +260,7 @@ function AccessKeysPage(): ReactElement {
   const [tlAmount, setTlAmount] = useState('');
   const [tlMetadata, setTlMetadata] = useState<TokenMetadata | null>(null);
   const [tlStep, setTlStep] = useState<'address' | 'amount'>('address');
+  const [tlPeriod, setTlPeriod] = useState<number>(0);
   const [tlValidating, setTlValidating] = useState(false);
   const [tlError, setTlError] = useState<string | null>(null);
   const [generatedKey, setGeneratedKey] = useState<GeneratedKey | null>(null);
@@ -260,8 +281,11 @@ function AccessKeysPage(): ReactElement {
   );
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Steps are always 5: type → config → limits → save → review
-  const steps = useMemo<WizardStep[]>(() => ['type', 'config', 'limits', 'save', 'review'], []);
+  // Steps: type → config → limits → destinations → save → review
+  const steps = useMemo<WizardStep[]>(
+    () => ['type', 'config', 'limits', 'destinations', 'save', 'review'],
+    []
+  );
 
   const currentStepIndex = steps.indexOf(wizardStep);
   const totalSteps = steps.length;
@@ -282,6 +306,9 @@ function AccessKeysPage(): ReactElement {
     setCustomExpiry(undefined);
     setEnforceLimits(false);
     setSpendingLimits([]);
+    setRestrictDestinations(false);
+    setAllowedDestinations([]);
+    setNewWizardDest('');
     setGeneratedKey(null);
     setKeySaved(false);
     setShowPrivateKey(false);
@@ -292,6 +319,7 @@ function AccessKeysPage(): ReactElement {
   const resetTokenLimitModal = useCallback(() => {
     setTlAddress('');
     setTlAmount('');
+    setTlPeriod(0);
     setTlMetadata(null);
     setTlStep('address');
     setTlValidating(false);
@@ -349,12 +377,13 @@ function AccessKeysPage(): ReactElement {
         name: tlMetadata.name,
         symbol: tlMetadata.symbol,
         decimals: tlMetadata.decimals,
+        period: tlPeriod,
       },
     ]);
 
     setIsTokenLimitModalOpen(false);
     resetTokenLimitModal();
-  }, [tlMetadata, tlAddress, tlAmount, spendingLimits, resetTokenLimitModal]);
+  }, [tlMetadata, tlAddress, tlAmount, tlPeriod, spendingLimits, resetTokenLimitModal]);
 
   const handleOpenAddDialog = useCallback(() => {
     resetForm();
@@ -428,6 +457,7 @@ function AccessKeysPage(): ReactElement {
             .map(l => ({
               token: l.token as `0x${string}`,
               amount: BigInt(Math.floor(parseFloat(l.amount) * 10 ** (l.decimals || 18))),
+              period: l.period ?? 0,
             }))
         : [];
 
@@ -437,6 +467,17 @@ function AccessKeysPage(): ReactElement {
         expiry,
         enforceLimits,
         limits,
+        // Pre-authorize destination allowlist. Only forwarded when the user
+        // explicitly enabled restrictions AND added at least one entry.
+        // Otherwise the hook leaves `allowedCalls` unset and the key is
+        // authorized with allowAnyCalls = true.
+        allowedCalls:
+          restrictDestinations && allowedDestinations.length > 0
+            ? allowedDestinations.map(target => ({
+                target: target as `0x${string}`,
+                selectors: [],
+              }))
+            : undefined,
         feeToken: feeToken?.address,
       });
 
@@ -455,6 +496,9 @@ function AccessKeysPage(): ReactElement {
     computedExpirySeconds,
     enforceLimits,
     spendingLimits,
+    restrictDestinations,
+    allowedDestinations,
+    feeToken,
     authorizeKey,
     resetForm,
   ]);
@@ -555,6 +599,11 @@ function AccessKeysPage(): ReactElement {
         return selectedExpiry !== 'custom' || computedExpirySeconds !== null;
       case 'limits':
         return limitsValid;
+      case 'destinations':
+        // Always allowed: the step is optional. If the user toggled
+        // restrictions on but added zero entries, handleAuthorizeKey omits
+        // `allowedCalls`, so the key falls back to allowAnyCalls = true.
+        return true;
       case 'save':
         return keySaved;
       case 'review':
@@ -735,6 +784,21 @@ function AccessKeysPage(): ReactElement {
                                 }`}
                               >
                                 {formatExpiry(key.expiry)}
+                              </span>
+                            </span>
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="text-[11px] font-medium text-[#B5B0AA]">
+                                Last used
+                              </span>
+                              <span
+                                className="text-[12px] text-[#9B9590]"
+                                title={
+                                  key.lastUsedAt
+                                    ? `${new Date(key.lastUsedAt).toLocaleString()}${key.lastUsedIp ? ` from ${key.lastUsedIp}` : ''}${key.lastUsedNetwork ? ` (${key.lastUsedNetwork})` : ''}`
+                                    : 'This key has never been used to sign a request.'
+                                }
+                              >
+                                {formatLastUsed(key.lastUsedAt)}
                               </span>
                             </span>
                           </div>
@@ -1076,9 +1140,32 @@ function AccessKeysPage(): ReactElement {
                 />
                 {tlMetadata && (
                   <p className="text-[11px] text-[#B5B0AA]">
-                    Maximum amount of {tlMetadata.symbol} this key can spend.
+                    {tlPeriod === 0
+                      ? `Maximum ${tlMetadata.symbol} this key can ever spend.`
+                      : `Maximum ${tlMetadata.symbol} this key can spend ${formatPeriod(tlPeriod)}; refreshes automatically.`}
                   </p>
                 )}
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[11px] font-semibold text-[#9B9590] uppercase tracking-wider">
+                  Refresh Period
+                </Label>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {SPENDING_PERIOD_PRESETS.map(preset => (
+                    <button
+                      key={preset.seconds}
+                      type="button"
+                      onClick={() => setTlPeriod(preset.seconds)}
+                      className={`h-9 rounded-lg text-[11px] font-medium border transition-colors ${
+                        tlPeriod === preset.seconds
+                          ? 'bg-coral text-white border-coral'
+                          : 'bg-white text-[#6B6560] border-[#EDE9E3] hover:bg-[#F5F2ED]'
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
               </div>
               {tlError && (
                 <div className="flex items-center gap-1.5">
@@ -1148,8 +1235,12 @@ function AccessKeysPage(): ReactElement {
             isOpen={limitsModalKeyId !== null}
             onClose={() => setLimitsModalKeyId(null)}
             enforceLimits={targetKey?.enforceLimits ?? false}
+            expiry={targetKey?.expiry ?? 0}
+            isRevoked={targetKey?.isRevoked ?? false}
             updateSpendingLimit={updateSpendingLimit}
             getRemainingLimit={getRemainingLimit}
+            getAllowedCalls={getAllowedCalls}
+            setAllowedCalls={setAllowedCalls}
             onUpdated={refresh}
           />
         );
@@ -1428,6 +1519,130 @@ function AccessKeysPage(): ReactElement {
                 </motion.div>
               )}
 
+              {/* Step: Allowed Destinations (T3+ call scopes) ----------------- */}
+              {wizardStep === 'destinations' && (
+                <motion.div
+                  key="step-destinations"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.15 }}
+                  className="space-y-3"
+                >
+                  {/* Enable/Disable toggle (matches the limits step pattern) */}
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-[#EDE9E3]">
+                    <div>
+                      <Label className="text-[12px] font-semibold text-[#6B6560]">
+                        Restrict Destinations
+                      </Label>
+                      <p className="text-[11px] text-[#B5B0AA] mt-0.5">
+                        Limit this key to specific contracts. Optional.
+                      </p>
+                    </div>
+                    <Switch
+                      checked={restrictDestinations}
+                      onCheckedChange={checked => {
+                        setRestrictDestinations(checked);
+                        if (!checked) {
+                          setAllowedDestinations([]);
+                          setNewWizardDest('');
+                        }
+                      }}
+                    />
+                  </div>
+
+                  {!restrictDestinations && (
+                    <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#F5F2ED]">
+                      <MapPin className="w-4 h-4 text-[#9B9590] shrink-0 mt-0.5" />
+                      <p className="text-[11px] text-[#9B9590] leading-relaxed">
+                        Destination restrictions are off. This key will be able to call any contract
+                        on your behalf. You can add restrictions later from Manage Limits.
+                      </p>
+                    </div>
+                  )}
+
+                  {restrictDestinations && (
+                    <>
+                      {allowedDestinations.length > 0 && (
+                        <div className="space-y-1.5">
+                          {allowedDestinations.map(target => (
+                            <div
+                              key={target}
+                              className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-[#FDFBF8] border border-[#EDE9E3]"
+                            >
+                              <span className="text-[11.5px] font-mono text-[#2D3436] truncate">
+                                {formatAddress(target, 8)}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setAllowedDestinations(
+                                    allowedDestinations.filter(
+                                      d => d.toLowerCase() !== target.toLowerCase()
+                                    )
+                                  )
+                                }
+                                className="p-1 rounded text-[#9B9590] hover:text-[#E5484D] hover:bg-white"
+                                aria-label="Remove destination"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      <div className="flex items-end gap-2">
+                        <div className="flex-1 min-w-0">
+                          <ContactPicker
+                            value={newWizardDest}
+                            onChange={setNewWizardDest}
+                            placeholder="0x… contract address"
+                            compact
+                            showValidation={false}
+                          />
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            const trimmed = newWizardDest.trim();
+                            if (!isAddress(trimmed)) return;
+                            if (
+                              allowedDestinations.some(
+                                d => d.toLowerCase() === trimmed.toLowerCase()
+                              )
+                            )
+                              return;
+                            setAllowedDestinations([...allowedDestinations, trimmed]);
+                            setNewWizardDest('');
+                          }}
+                          disabled={
+                            !isAddress(newWizardDest.trim()) ||
+                            allowedDestinations.some(
+                              d => d.toLowerCase() === newWizardDest.trim().toLowerCase()
+                            )
+                          }
+                          className="h-9 px-3 rounded-lg text-[12px] font-semibold bg-[#5B9A6F] hover:bg-[#4F8961] text-white gap-1 shrink-0 disabled:opacity-50"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          Add
+                        </Button>
+                      </div>
+
+                      {allowedDestinations.length === 0 && (
+                        <div className="flex items-start gap-2.5 p-3 rounded-xl bg-[#F5F2ED]">
+                          <MapPin className="w-4 h-4 text-[#9B9590] shrink-0 mt-0.5" />
+                          <p className="text-[11px] text-[#9B9590] leading-relaxed">
+                            No destinations added yet. Add at least one contract above, or turn off
+                            the toggle to keep this key unrestricted.
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </motion.div>
+              )}
+
               {/* Step: Save Generated Key */}
               {wizardStep === 'save' && generatedKey && (
                 <motion.div
@@ -1573,7 +1788,32 @@ function AccessKeysPage(): ReactElement {
                             : 'Disabled'}
                         </span>
                       </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[12px] text-[#9B9590]">Allowed Destinations</span>
+                        <span className="text-[12px] font-medium text-[#2D3436]">
+                          {restrictDestinations && allowedDestinations.length > 0
+                            ? `${allowedDestinations.length} contract${allowedDestinations.length === 1 ? '' : 's'}`
+                            : 'Any contract'}
+                        </span>
+                      </div>
                     </div>
+
+                    {/* Show individual destinations in summary */}
+                    {restrictDestinations && allowedDestinations.length > 0 && (
+                      <div className="px-4 py-2.5 border-t border-[#EDE9E3]/60 space-y-1.5">
+                        {allowedDestinations.map(target => (
+                          <div key={target} className="flex items-center justify-between">
+                            <span className="text-[11px] font-medium text-[#9B9590] inline-flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              destination
+                            </span>
+                            <span className="text-[11px] font-mono text-[#2D3436]">
+                              {formatAddress(target, 6)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
                     {/* Show individual limits in summary */}
                     {enforceLimits &&

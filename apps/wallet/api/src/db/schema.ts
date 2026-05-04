@@ -116,6 +116,10 @@ export const accessKeys = sqliteTable(
     signatureType: text('signature_type').$type<AccessKeySignatureType>().notNull(),
     txHash: text('tx_hash'),
     label: text('label'), // Optional user-friendly label
+    notes: text('notes'), // Optional free-form notes
+    lastUsedAt: integer('last_used_at', { mode: 'timestamp' }),
+    lastUsedIp: text('last_used_ip'),
+    lastUsedNetwork: text('last_used_network'), // 'testnet' | 'mainnet'
     createdAt: integer('created_at', { mode: 'timestamp' }).$defaultFn(() => new Date()),
   },
   table => [
@@ -123,6 +127,8 @@ export const accessKeys = sqliteTable(
     index('access_keys_owner_idx').on(table.owner),
   ]
 );
+
+export type AccessKeyRow = typeof accessKeys.$inferSelect;
 
 // ============ Watched Spenders ============
 export const watchedSpenders = sqliteTable(

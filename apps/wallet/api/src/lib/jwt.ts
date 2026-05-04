@@ -27,7 +27,10 @@ export async function generateToken(
     exp: now + expiresIn,
   };
 
-  const accessToken = await sign(payload, jwtSecret);
+  // Explicit alg keeps sign + middleware/auth.ts verify in lockstep.
+  // hono v4 requires the algorithm on verify(); pin it here so signed tokens
+  // are guaranteed to match what the middleware expects.
+  const accessToken = await sign(payload, jwtSecret, 'HS256');
 
   return {
     accessToken,

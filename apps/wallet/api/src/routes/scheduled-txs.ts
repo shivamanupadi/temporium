@@ -88,7 +88,8 @@ scheduledTxsRouter.post('/', zValidator('json', createScheduledTxSchema), async 
   }
   let owner: string;
   try {
-    const decoded = await verify(authHeader.slice(7), c.env.JWT_SECRET);
+    // hono v4 verify() requires an explicit alg; must match lib/jwt.ts.
+    const decoded = await verify(authHeader.slice(7), c.env.JWT_SECRET, 'HS256');
     owner = (decoded.walletAddress as string).toLowerCase();
   } catch {
     return c.json({ error: 'Unauthorized', message: 'Invalid or expired token' }, 401);

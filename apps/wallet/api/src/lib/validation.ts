@@ -121,14 +121,38 @@ export type CreateCustomTokenRequest = z.infer<typeof createCustomTokenSchema>;
 
 export const accessKeyTypeSchema = z.enum(accessKeyTypeValues);
 
+// bytes4 function selector, e.g. "0xa9059cbb" (transfer)
+export const selectorSchema = z
+  .string()
+  .regex(/^0x[a-fA-F0-9]{8}$/, 'Invalid 4-byte function selector')
+  .transform(val => val.toLowerCase());
+
 export const createAccessKeySchema = z.object({
   keyId: ethereumAddress,
   signatureType: accessKeyTypeSchema,
   txHash: transactionHash.optional(),
   label: z.string().max(100, 'Label must be 100 characters or less').trim().optional(),
+  notes: z.string().max(500, 'Notes must be 500 characters or less').trim().optional(),
 });
 
+export const updateAccessKeySchema = z
+  .object({
+    label: z.string().max(100, 'Label must be 100 characters or less').trim().optional(),
+    notes: z.string().max(500, 'Notes must be 500 characters or less').trim().optional(),
+  })
+  .refine(d => d.label !== undefined || d.notes !== undefined, {
+    message: 'At least one field (label, notes) must be provided',
+  });
+
+// Optional payload — caller may post empty body and we still record lastUsedAt = now().
+export const touchAccessKeySchema = z
+  .object({
+    network: z.enum(['testnet', 'mainnet']).optional(),
+  })
+  .optional();
+
 export type CreateAccessKeyRequest = z.infer<typeof createAccessKeySchema>;
+export type UpdateAccessKeyRequest = z.infer<typeof updateAccessKeySchema>;
 
 // ============ Policies Schemas ============
 

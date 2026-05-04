@@ -20,7 +20,12 @@ export const jwtAuth = createMiddleware<{ Bindings: Env; Variables: Variables }>
     const token = authHeader.slice(7);
 
     try {
-      const decoded = await verify(token, c.env.JWT_SECRET);
+      // hono v4 requires an explicit `alg` arg on verify (sign defaults to HS256
+      // but verify throws JwtAlgorithmRequired without it). Must match the
+      // algorithm used in lib/jwt.ts → generateToken. Without this, every authed
+      // request 401s right after sign-in, which the web app interprets as "log
+      // me out" — the original "auto-logout on sign-in" bug.
+      const decoded = await verify(token, c.env.JWT_SECRET, 'HS256');
 
       // Map the decoded JWT to our JwtPayload structure
       const payload: JwtPayload = {
@@ -33,6 +38,10 @@ export const jwtAuth = createMiddleware<{ Bindings: Env; Variables: Variables }>
       c.set('user', payload);
       await next();
     } catch (error) {
+      console.error(
+        `[auth] verify failed on ${c.req.path}:`,
+        error instanceof Error ? `${error.name}: ${error.message}` : error
+      );
       return c.json({ error: 'Unauthorized', message: 'Invalid or expired token' }, 401);
     }
   }
