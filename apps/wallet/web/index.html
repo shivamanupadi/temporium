@@ -19,6 +19,7 @@
     />
 
     <!-- Favicons -->
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
@@ -27,19 +28,24 @@
 
     <!-- Open Graph -->
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://temporium.xyz/" />
+    <meta property="og:site_name" content="Temporium" />
     <meta property="og:title" content="Temporium Wallet" />
     <meta
       property="og:description"
       content="Your wallet for the Tempo blockchain. Send, receive, create tokens, and manage access keys with sub-cent fees."
     />
-    <meta property="og:image" content="/og-image.png" />
+    <meta property="og:image" content="https://temporium.xyz/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Temporium — your wallet for the Tempo blockchain" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Temporium Wallet" />
     <meta
       name="twitter:description"
       content="Your wallet for the Tempo blockchain. Send, receive, create tokens, and manage access keys with sub-cent fees."
     />
-    <meta name="twitter:image" content="/og-image.png" />
+    <meta name="twitter:image" content="https://temporium.xyz/og-image.png" />
   </head>
   <body>
     <div id="root"></div>
@@ -48,10 +54,17 @@
       style="position: fixed; inset: 0; z-index: 2147483647; pointer-events: none"
     ></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      window.traks =
+        window.traks ||
+        function () {
+          (window.traks.q = window.traks.q || []).push(arguments);
+        };
+    </script>
     <script
       defer
-      data-site="pb_live_npcpi77x9q97j9v4li0nro8b"
-      src="https://collect.traks.dev/t.js"
+      data-site="pb_live_u5v4aq6fjnk1v6u9flpz295q"
+      src="https://analytics-collect.papermint.studio/t.js"
     ></script>
   </body>
 </html>

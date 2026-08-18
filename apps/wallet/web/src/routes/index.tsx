@@ -622,7 +622,7 @@ function LandingPage(): ReactElement {
       {/* Header */}
       <header className="relative z-10 py-5 max-w-5xl mx-auto w-full px-6 flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <img src="/logo-dark.png" alt="Temporium" className="w-8 h-8 rounded-full" />
+          <img src="/logo.svg" alt="Temporium" className="w-8 h-8" />
           <span className="text-[17px] font-bold text-[#2D3436] tracking-tight">Temporium</span>
         </div>
         <nav className="flex items-center gap-1">

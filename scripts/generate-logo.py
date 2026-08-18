@@ -1,128 +1,103 @@
 #!/usr/bin/env python3
 """
 Temporium Logo Generator
-Generates all brand assets matching sketchmat convention:
-  - logo{32,64,128,192,256,512}.png  (tricolor, dark bg)
-  - logo_coral.png, logo_lavender.png, logo_sage.png  (single-color variants at 512)
-  - logo_tricolor.png  (master 512 tricolor)
-  - favicon.ico, favicon.png, favicon-{16,32,48}x{16,32,48}.png
-  - favicon.svg
-  - apple-touch-icon.png
-  - og.png  (1200x630 Open Graph)
-  - twitter-banner.png  (1500x500)
+
+The mark: a metronome and a coin — an ink metronome body, a light-coral
+needle mid-swing, and a coral disc as the sliding weight, bleeding past the
+body's edge. Tempo (the chain) + a wallet, in three flat geometric shapes.
+Same family as the PayWeave P and the Papermint sheet.
+
+Generates the assets served from apps/wallet/web/public:
+  - logo.svg                       (master vector, used by headers)
+  - logo-dark.svg                  (cream body, for dark backgrounds)
+  - logo-mono.svg                  (single-color ink, for print/embeds)
+  - logo{32,64,128,192,256,512}.png (raster mark, transparent)
+  - logo-dark512.png               (raster of the dark-background variant)
+  - favicon.svg, favicon.ico, favicon-{16,32}x*.png
+  - favicon-{192,512}x*.png        (PWA manifest, opaque cream tile)
+  - apple-touch-icon.png           (opaque cream tile)
+  - og-image.png                   (1200x630 Open Graph)
+  - twitter-banner.png             (1500x500 X profile banner)
+
+Run:  python3 scripts/generate-logo.py   (needs Pillow)
 """
 
-from PIL import Image, ImageDraw, ImageFont
 import os
 
+from PIL import Image, ImageDraw, ImageFont
+
 # Brand colors
-CORAL = (224, 122, 95)
+CORAL = (224, 122, 95)  # #E07A5F
+CORAL_LIGHT = (240, 176, 152)  # #F0B098
 LAVENDER = (155, 114, 207)
-SAGE = (91, 154, 111)
-
-# Light tints
-CORAL_LIGHT = (255, 245, 240)
-LAVENDER_LIGHT = (248, 244, 255)
-SAGE_LIGHT = (240, 253, 244)
-
-BG_DARK = (35, 35, 45)
-CREAM = (253, 251, 248)
+SAGE = (107, 143, 113)
+INK = (45, 52, 54)  # #2D3436
+INK_2 = (107, 101, 96)
+CREAM = (253, 251, 248)  # #FDFBF8
 WHITE = (255, 255, 255)
 
-OUTPUT = '/Users/shivaprasadmanupadi/devbox/projects/temporium/apps/home/public'
+OUTPUT = os.path.join(os.path.dirname(__file__), '..', 'apps', 'wallet', 'web', 'public')
+
+# ── Mark geometry (fractions of the canvas) ───────────────────────────
+#
+# Trapezoid body, needle from a pivot near the base up to the top right,
+# disc (the weight) riding the needle and overhanging the body's edge.
+BODY = [(0.1875, 0.906), (0.656, 0.906), (0.547, 0.094), (0.297, 0.094)]
+NEEDLE_A = (0.422, 0.828)  # pivot
+NEEDLE_B = (0.734, 0.172)  # tip
+NEEDLE_W = 0.0703
+DISC_C = (0.633, 0.383)
+DISC_R = 0.172
 
 
-def lerp(c1, c2, t):
-    return tuple(int(c1[i] + (c2[i] - c1[i]) * t) for i in range(3))
+def draw_mark(draw, s, body_color=INK, disc_color=CORAL, needle_color=CORAL_LIGHT):
+    draw.polygon([(x * s, y * s) for x, y in BODY], fill=(*body_color, 255))
+
+    ax, ay = NEEDLE_A[0] * s, NEEDLE_A[1] * s
+    bx, by = NEEDLE_B[0] * s, NEEDLE_B[1] * s
+    w = NEEDLE_W * s
+    draw.line([(ax, ay), (bx, by)], fill=(*needle_color, 255), width=int(round(w)))
+    for x, y in ((ax, ay), (bx, by)):
+        draw.ellipse([x - w / 2, y - w / 2, x + w / 2, y + w / 2], fill=(*needle_color, 255))
+
+    cx, cy, r = DISC_C[0] * s, DISC_C[1] * s, DISC_R * s
+    draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill=(*disc_color, 255))
 
 
-def rounded_rect(draw, bbox, r, fill):
-    x0, y0, x1, y1 = bbox
-    draw.rectangle([x0 + r, y0, x1 - r, y1], fill=fill)
-    draw.rectangle([x0, y0 + r, x1, y1 - r], fill=fill)
-    draw.pieslice([x0, y0, x0 + 2*r, y0 + 2*r], 180, 270, fill=fill)
-    draw.pieslice([x1 - 2*r, y0, x1, y0 + 2*r], 270, 360, fill=fill)
-    draw.pieslice([x0, y1 - 2*r, x0 + 2*r, y1], 90, 180, fill=fill)
-    draw.pieslice([x1 - 2*r, y1 - 2*r, x1, y1], 0, 90, fill=fill)
+def make_icon(size, background=None, supersample=4, pad=0.0, **colors):
+    """Mark on a transparent (or solid) square. `pad` insets the mark."""
+    s = size * supersample
+    bg = (0, 0, 0, 0) if background is None else (*background, 255)
+    canvas = Image.new('RGBA', (s, s), bg)
+    if pad:
+        inner = int(s * (1 - 2 * pad))
+        layer = Image.new('RGBA', (inner, inner), (0, 0, 0, 0))
+        draw_mark(ImageDraw.Draw(layer), inner, **colors)
+        off = (s - inner) // 2
+        canvas.alpha_composite(layer, (off, off))
+    else:
+        draw_mark(ImageDraw.Draw(canvas), s, **colors)
+    return canvas.resize((size, size), Image.LANCZOS)
 
 
-def rounded_rect_mask(size, radius):
-    mask = Image.new('L', (size, size), 0)
-    d = ImageDraw.Draw(mask)
-    rounded_rect(d, [0, 0, size-1, size-1], radius, 255)
-    return mask
+def logo_svg(size=64, body='#2D3436', needle='#F0B098', disc='#E07A5F'):
+    s = size
+    pts = ' '.join(f'{x * s:.2f},{y * s:.2f}' for x, y in BODY)
+    ax, ay = NEEDLE_A[0] * s, NEEDLE_A[1] * s
+    bx, by = NEEDLE_B[0] * s, NEEDLE_B[1] * s
+    cx, cy, r = DISC_C[0] * s, DISC_C[1] * s, DISC_R * s
+    return (
+        f'<svg width="{s}" height="{s}" viewBox="0 0 {s} {s}" '
+        f'xmlns="http://www.w3.org/2000/svg">\n'
+        f'  <polygon points="{pts}" fill="{body}"/>\n'
+        f'  <line x1="{ax:.2f}" y1="{ay:.2f}" x2="{bx:.2f}" y2="{by:.2f}" '
+        f'stroke="{needle}" stroke-width="{NEEDLE_W * s:.2f}" stroke-linecap="round"/>\n'
+        f'  <circle cx="{cx:.2f}" cy="{cy:.2f}" r="{r:.2f}" fill="{disc}"/>\n'
+        f'</svg>\n'
+    )
 
 
-def bolt_points(s):
-    cx = s * 0.5
-    pad = s * 0.12
-    return [
-        (cx - s*0.02, pad),
-        (cx + s*0.22, pad),
-        (cx + s*0.06, s*0.42),
-        (cx + s*0.24, s*0.42),
-        (cx + s*0.02, s - pad),
-        (cx - s*0.22, s - pad),
-        (cx - s*0.06, s*0.58),
-        (cx - s*0.24, s*0.58),
-    ]
-
-
-def bolt_mask(size):
-    mask = Image.new('L', (size, size), 0)
-    ImageDraw.Draw(mask).polygon(bolt_points(size), fill=255)
-    return mask
-
-
-def gradient_bolt(size, top_color, bottom_color, mid_color=None):
-    if mid_color is None:
-        mid_color = lerp(top_color, bottom_color, 0.5)
-    mask = bolt_mask(size)
-    img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
-    for y in range(size):
-        t = y / max(size - 1, 1)
-        if t < 0.5:
-            c = lerp(top_color, mid_color, t * 2)
-        else:
-            c = lerp(mid_color, bottom_color, (t - 0.5) * 2)
-        for x in range(size):
-            if mask.getpixel((x, y)) > 0:
-                img.putpixel((x, y), (*c, 255))
-    return img
-
-
-def solid_bolt(size, color):
-    mask = bolt_mask(size)
-    img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
-    for y in range(size):
-        for x in range(size):
-            if mask.getpixel((x, y)) > 0:
-                img.putpixel((x, y), (*color, 255))
-    return img
-
-
-def make_icon(size, bolt_img, bg_color=BG_DARK, glow=True):
-    canvas = Image.new('RGBA', (size, size), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(canvas)
-    radius = int(size * 0.22)
-    rounded_rect(draw, [0, 0, size-1, size-1], radius, bg_color)
-
-    if glow and bg_color == BG_DARK:
-        glow_layer = Image.new('RGBA', (size, size), (0, 0, 0, 0))
-        gd = ImageDraw.Draw(glow_layer)
-        gs = int(size * 0.55)
-        for i in range(gs, 0, -2):
-            a = int(10 * (i / gs))
-            gd.ellipse([size*0.05 - i//2, size*0.05 - i//2, size*0.05 + i//2, size*0.05 + i//2], fill=(*CORAL, a))
-        for i in range(gs, 0, -2):
-            a = int(8 * (i / gs))
-            gd.ellipse([size*0.95 - i//2, size*0.95 - i//2, size*0.95 + i//2, size*0.95 + i//2], fill=(*SAGE, a))
-        canvas = Image.alpha_composite(canvas, glow_layer)
-
-    bs = int(size * 0.72)
-    off = (size - bs) // 2
-    canvas.paste(bolt_img.resize((bs, bs), Image.LANCZOS), (off, off), bolt_img.resize((bs, bs), Image.LANCZOS))
-    return canvas
+# ── Marketing images ──────────────────────────────────────────────────
 
 
 def get_font(size, bold=True):
@@ -133,230 +108,158 @@ def get_font(size, bold=True):
     ]
     for p in paths:
         try:
+            if p.endswith('Helvetica.ttc') and bold:
+                return ImageFont.truetype(p, size, index=1)
             return ImageFont.truetype(p, size)
         except (OSError, IOError):
             continue
     return ImageFont.load_default()
 
 
-def text_width(draw, text, font):
-    bb = draw.textbbox((0, 0), text, font=font)
-    return bb[2] - bb[0]
-
-
-def create_og(master_icon):
-    """OG image: 1200x630, layout like sketchmat — logo left, text right, warm bg."""
-    w, h = 1200, 630
-    img = Image.new('RGBA', (w, h), CREAM)
-    draw = ImageDraw.Draw(img)
-
-    # Subtle color orbs in background
+def soft_orbs(w, h, spots):
+    """Blurry brand-color orbs on a transparent layer."""
     orb = Image.new('RGBA', (w, h), (0, 0, 0, 0))
     od = ImageDraw.Draw(orb)
-    for r in range(350, 0, -3):
-        a = int(8 * (r / 350))
-        od.ellipse([80 - r, 100 - r, 80 + r, 100 + r], fill=(*CORAL, a))
-    for r in range(300, 0, -3):
-        a = int(6 * (r / 300))
-        od.ellipse([1100 - r, 500 - r, 1100 + r, 500 + r], fill=(*SAGE, a))
-    img = Image.alpha_composite(img, orb)
+    for (x, y, radius, color, peak) in spots:
+        for rr in range(radius, 0, -3):
+            a = int(peak * (rr / radius))
+            od.ellipse([x - rr, y - rr, x + rr, y + rr], fill=(*color, a))
+    return orb
+
+
+def tag_line(draw, x, y, font):
+    """Tempo · sub-cent fees · access keys in brand colors."""
+    parts = [
+        ('Tempo', CORAL),
+        ('  ·  ', (168, 160, 153)),
+        ('sub-cent fees', LAVENDER),
+        ('  ·  ', (168, 160, 153)),
+        ('access keys', SAGE),
+    ]
+    for text, color in parts:
+        draw.text((x, y), text, fill=(*color, 255), font=font)
+        bb = draw.textbbox((x, y), text, font=font)
+        x = bb[2]
+
+
+def create_og(mark_512, title="Temporium", subtitle="Your wallet for the Tempo blockchain"):
+    w, h = 1200, 630
+    img = Image.new('RGBA', (w, h), (*CREAM, 255))
+    img = Image.alpha_composite(
+        img, soft_orbs(w, h, [(120, 90, 360, CORAL, 9), (1110, 560, 320, LAVENDER, 8)])
+    )
     draw = ImageDraw.Draw(img)
 
-    # Logo icon on the left
-    icon_size = 200
-    icon = master_icon.resize((icon_size, icon_size), Image.LANCZOS)
-    icon_x = 200
-    icon_y = (h - icon_size) // 2
+    icon = mark_512.resize((190, 190), Image.LANCZOS)
+    icon_x, icon_y = 150, (h - 190) // 2
     img.paste(icon, (icon_x, icon_y), icon)
 
-    # Text on the right
-    font_title = get_font(56, bold=True)
-    font_sub = get_font(22, bold=False)
-
-    text_x = icon_x + icon_size + 80
-    title_y = icon_y + 40
-    draw.text((text_x, title_y), "Temporium", fill=(45, 52, 54, 255), font=font_title)
-    draw.text((text_x, title_y + 75), "Tempo at Your Fingertips", fill=(107, 101, 96, 200), font=font_sub)
-
-    # Three dots under subtitle
-    dot_y = title_y + 130
-    for i, c in enumerate([CORAL, LAVENDER, SAGE]):
-        draw.ellipse([text_x + i*24 - 5, dot_y - 5, text_x + i*24 + 5, dot_y + 5], fill=(*c, 255))
+    text_x = icon_x + 190 + 76
+    title_y = icon_y + 22
+    draw.text((text_x, title_y), title, fill=(*INK, 255), font=get_font(64, bold=True))
+    draw.text(
+        (text_x, title_y + 92),
+        subtitle,
+        fill=(*INK_2, 230),
+        font=get_font(27, bold=False),
+    )
+    tag_line(draw, text_x, title_y + 148, get_font(21, bold=True))
 
     return img
 
 
-def create_twitter_banner(master_icon):
-    """Twitter/X banner: 1500x500."""
+def create_twitter_banner(mark_512):
     w, h = 1500, 500
-    img = Image.new('RGBA', (w, h), CREAM)
+    img = Image.new('RGBA', (w, h), (*CREAM, 255))
+    img = Image.alpha_composite(
+        img, soft_orbs(w, h, [(180, 60, 340, CORAL, 8), (1380, 460, 340, LAVENDER, 8)])
+    )
+
+    # Oversized ghost mark bleeding off the right edge for depth
+    ghost = mark_512.resize((640, 640), Image.LANCZOS)
+    alpha = ghost.split()[3].point(lambda a: int(a * 0.08))
+    ghost.putalpha(alpha)
+    img.paste(ghost, (w - 430, h - 480), ghost)
+
     draw = ImageDraw.Draw(img)
+    icon = mark_512.resize((150, 150), Image.LANCZOS)
+    icon_x, icon_y = 130, (h - 150) // 2 - 14
+    img.paste(icon, (icon_x, icon_y), icon)
 
-    # Subtle orbs
-    orb = Image.new('RGBA', (w, h), (0, 0, 0, 0))
-    od = ImageDraw.Draw(orb)
-    for r in range(400, 0, -3):
-        a = int(6 * (r / 400))
-        od.ellipse([150 - r, 50 - r, 150 + r, 50 + r], fill=(*CORAL, a))
-    for r in range(350, 0, -3):
-        a = int(5 * (r / 350))
-        od.ellipse([750 - r, 450 - r, 750 + r, 450 + r], fill=(*LAVENDER, a))
-    for r in range(400, 0, -3):
-        a = int(6 * (r / 400))
-        od.ellipse([1350 - r, 80 - r, 1350 + r, 80 + r], fill=(*SAGE, a))
-    img = Image.alpha_composite(img, orb)
-    draw = ImageDraw.Draw(img)
-
-    # Decorative line — tricolor gradient across top
-    for x in range(w):
-        t = x / w
-        if t < 0.33:
-            c = lerp(CORAL, LAVENDER, t * 3)
-        elif t < 0.66:
-            c = lerp(LAVENDER, SAGE, (t - 0.33) * 3)
-        else:
-            c = lerp(SAGE, SAGE, 0)
-        draw.line([(x, 0), (x, 3)], fill=(*c, 180))
-
-    # Center layout: icon + text
-    icon_size = 120
-    icon = master_icon.resize((icon_size, icon_size), Image.LANCZOS)
-
-    font_title = get_font(52, bold=True)
-    font_sub = get_font(20, bold=False)
-
-    title_text = "Temporium"
-    sub_text = "Tools for Tempo Blockchain"
-
-    tw_title = text_width(draw, title_text, font_title)
-    tw_sub = text_width(draw, sub_text, font_sub)
-
-    gap = 36
-    total_w = icon_size + gap + max(tw_title, tw_sub)
-    start_x = (w - total_w) // 2
-
-    icon_y = (h - icon_size) // 2
-    img.paste(icon, (start_x, icon_y), icon)
-
-    text_x = start_x + icon_size + gap
-    draw.text((text_x, icon_y + 18), title_text, fill=(45, 52, 54, 255), font=font_title)
-    draw.text((text_x, icon_y + 80), sub_text, fill=(107, 101, 96, 180), font=font_sub)
-
-    # Three color dots bottom center
-    dot_cx = w // 2
-    dot_y = h - 40
-    for i, c in enumerate([CORAL, LAVENDER, SAGE]):
-        dx = dot_cx + (i - 1) * 22
-        draw.ellipse([dx - 4, dot_y - 4, dx + 4, dot_y + 4], fill=(*c, 255))
+    text_x = icon_x + 150 + 56
+    title_y = icon_y + 8
+    draw.text((text_x, title_y), "Temporium", fill=(*INK, 255), font=get_font(58, bold=True))
+    draw.text(
+        (text_x, title_y + 82),
+        "Your wallet for the Tempo blockchain",
+        fill=(*INK_2, 230),
+        font=get_font(25, bold=False),
+    )
+    tag_line(draw, text_x + 2, title_y + 130, get_font(20, bold=True))
 
     return img
-
-
-def favicon_svg():
-    return '''<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <linearGradient id="bolt-grad" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#E07A5F"/>
-      <stop offset="50%" stop-color="#9B72CF"/>
-      <stop offset="100%" stop-color="#5B9A6F"/>
-    </linearGradient>
-  </defs>
-  <rect width="32" height="32" rx="7" fill="#23232D"/>
-  <path d="M15.4 3.8 L22 3.8 L17.9 13.4 L24.7 13.4 L16.6 28.2 L10 28.2 L14.1 18.6 L7.3 18.6 Z" fill="url(#bolt-grad)"/>
-</svg>'''
 
 
 def main():
     os.makedirs(OUTPUT, exist_ok=True)
 
-    # Remove old files that don't match new naming
-    old_files = [
-        'logo-dark.png', 'logo-light.png', 'logo-gradient.png',
-        'logo-16.png', 'logo-32.png', 'logo-64.png', 'logo-128.png',
-        'logo-192.png', 'logo-256.png', 'logo-512.png',
-        'favicon-16x16.png', 'favicon-32x32.png', 'favicon-192x192.png', 'favicon-512x512.png',
-        'full-logo-dark.png', 'full-logo-light.png', 'og-image.png',
-    ]
-    for f in old_files:
+    print("Temporium Logo Generator (metronome + coin)")
+    print("=" * 40)
+
+    # Retire assets from the old bolt-on-tile mark.
+    for f in ['logo.png', 'logo-dark.png', 'logo-white.png', 'logo256.png']:
         p = os.path.join(OUTPUT, f)
         if os.path.exists(p):
             os.remove(p)
-            print(f"  Removed old: {f}")
+            print(f"  removed old: {f}")
 
-    # === Master bolt images at 512px ===
-    print("\n--- Generating master bolts ---")
-    tricolor_bolt = gradient_bolt(512, CORAL, SAGE, LAVENDER)
-    coral_bolt = solid_bolt(512, CORAL)
-    lavender_bolt = solid_bolt(512, LAVENDER)
-    sage_bolt = solid_bolt(512, SAGE)
+    print("\n--- Rendering master mark ---")
+    master = make_icon(512)
 
-    # === logo_tricolor.png (512, dark bg) — the canonical logo ===
-    master = make_icon(512, tricolor_bolt)
-    master.save(os.path.join(OUTPUT, 'logo_tricolor.png'), 'PNG')
-    print("  logo_tricolor.png")
+    with open(os.path.join(OUTPUT, 'logo.svg'), 'w') as f:
+        f.write(logo_svg())
+    print("  logo.svg")
 
-    # === Single-color variants at 512 ===
-    for name, b in [('coral', coral_bolt), ('lavender', lavender_bolt), ('sage', sage_bolt)]:
-        icon = make_icon(512, b)
-        icon.save(os.path.join(OUTPUT, f'logo_{name}.png'), 'PNG')
-        print(f"  logo_{name}.png")
+    with open(os.path.join(OUTPUT, 'logo-dark.svg'), 'w') as f:
+        f.write(logo_svg(body='#FDFBF8', needle='#F0B098', disc='#E07A5F'))
+    with open(os.path.join(OUTPUT, 'logo-mono.svg'), 'w') as f:
+        f.write(logo_svg(body='#2D3436', needle='#FDFBF8', disc='#2D3436'))
+    print("  logo-dark.svg logo-mono.svg")
 
-    # === Sized logos: logo32..logo512 (from tricolor master) ===
-    print("\n--- Generating sized logos ---")
-    for s in [32, 64, 128, 192, 256, 512]:
-        resized = master.resize((s, s), Image.LANCZOS)
-        resized.save(os.path.join(OUTPUT, f'logo{s}.png'), 'PNG')
-        print(f"  logo{s}.png")
+    for s in (32, 64, 128, 192, 256, 512):
+        master.resize((s, s), Image.LANCZOS).save(os.path.join(OUTPUT, f'logo{s}.png'), 'PNG')
+    print("  logo{32,64,128,192,256,512}.png")
 
-    # === Favicons ===
-    print("\n--- Generating favicons ---")
+    make_icon(512, body_color=CREAM).save(os.path.join(OUTPUT, 'logo-dark512.png'), 'PNG')
+    print("  logo-dark512.png")
 
-    # favicon.png (64x64, like sketchmat)
-    fav64 = master.resize((64, 64), Image.LANCZOS)
-    fav64.save(os.path.join(OUTPUT, 'favicon.png'), 'PNG')
-    print("  favicon.png (64x64)")
-
-    # favicon-NNxNN.png
-    for s in [16, 32, 48]:
-        r = master.resize((s, s), Image.LANCZOS)
-        r.save(os.path.join(OUTPUT, f'favicon-{s}x{s}.png'), 'PNG')
-        print(f"  favicon-{s}x{s}.png")
-
-    # favicon.ico (multi-size)
-    ico_16 = master.resize((16, 16), Image.LANCZOS)
-    ico_32 = master.resize((32, 32), Image.LANCZOS)
-    ico_48 = master.resize((48, 48), Image.LANCZOS)
-    ico_16.save(
+    for s in (16, 32):
+        master.resize((s, s), Image.LANCZOS).save(os.path.join(OUTPUT, f'favicon-{s}x{s}.png'), 'PNG')
+    ico_sizes = [master.resize((s, s), Image.LANCZOS) for s in (16, 32, 48)]
+    ico_sizes[0].save(
         os.path.join(OUTPUT, 'favicon.ico'),
         format='ICO',
         sizes=[(16, 16), (32, 32), (48, 48)],
-        append_images=[ico_32, ico_48],
+        append_images=ico_sizes[1:],
     )
-    print("  favicon.ico")
-
-    # favicon.svg
     with open(os.path.join(OUTPUT, 'favicon.svg'), 'w') as f:
-        f.write(favicon_svg())
-    print("  favicon.svg")
+        f.write(logo_svg(32))
+    print("  favicon-{16,32} favicon.ico favicon.svg")
 
-    # apple-touch-icon.png (180x180)
-    apple = master.resize((180, 180), Image.LANCZOS)
-    apple.save(os.path.join(OUTPUT, 'apple-touch-icon.png'), 'PNG')
-    print("  apple-touch-icon.png")
+    # Opaque cream tiles: iOS home screen + PWA manifest (also used as maskable,
+    # so the mark is inset to stay inside the safe zone).
+    make_icon(180, background=CREAM, pad=0.1).save(os.path.join(OUTPUT, 'apple-touch-icon.png'), 'PNG')
+    for s in (192, 512):
+        make_icon(s, background=CREAM, pad=0.14).save(os.path.join(OUTPUT, f'favicon-{s}x{s}.png'), 'PNG')
+    print("  apple-touch-icon.png favicon-{192,512}")
 
-    # === OG image (1200x630) ===
-    print("\n--- Generating OG image ---")
-    og = create_og(master)
-    og.save(os.path.join(OUTPUT, 'og.png'), 'PNG')
-    print("  og.png (1200x630)")
-
-    # === Twitter banner (1500x500) ===
-    print("\n--- Generating Twitter banner ---")
-    banner = create_twitter_banner(master)
-    banner.save(os.path.join(OUTPUT, 'twitter-banner.png'), 'PNG')
+    print("\n--- Generating marketing images ---")
+    create_og(master).save(os.path.join(OUTPUT, 'og-image.png'), 'PNG')
+    print("  og-image.png (1200x630)")
+    create_twitter_banner(master).save(os.path.join(OUTPUT, 'twitter-banner.png'), 'PNG')
     print("  twitter-banner.png (1500x500)")
 
-    print(f"\nDone! All assets in: {OUTPUT}")
+    print(f"\nDone! Assets in: {os.path.abspath(OUTPUT)}")
 
 
 if __name__ == '__main__':

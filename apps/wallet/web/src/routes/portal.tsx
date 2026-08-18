@@ -211,7 +211,7 @@ function PortalLayout(): ReactElement | null {
           className={`flex items-start py-4 ${collapsed ? 'justify-center px-2' : 'justify-between px-4'}`}
         >
           <div className="flex items-center gap-2.5">
-            <img src="/logo-dark.png" alt="Temporium" className="w-6 h-6 shrink-0 rounded-full" />
+            <img src="/logo.svg" alt="Temporium" className="w-6 h-6 shrink-0" />
             {!collapsed && (
               <span className="text-[15px] font-bold text-[#2D3436] tracking-tight leading-none">
                 Temporium
@@ -527,7 +527,7 @@ function PortalLayout(): ReactElement | null {
         {/* Mobile header */}
         <header className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-[#EDE9E3] bg-white">
           <div className="flex items-center gap-2.5">
-            <img src="/logo-dark.png" alt="Temporium" className="w-6 h-6 rounded-full" />
+            <img src="/logo.svg" alt="Temporium" className="w-6 h-6" />
             <span className="text-[14px] font-bold text-[#2D3436]">Temporium</span>
             <span className="text-[14px] font-medium text-[#B5B0AA]">| Wallet</span>
           </div>
