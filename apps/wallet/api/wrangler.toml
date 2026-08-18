@@ -1,4 +1,5 @@
 name = "temporium-api"
+account_id = "4cf68c768770ccda55d287d6ecbdeb4f"
 main = "src/index.ts"
 compatibility_date = "2024-12-26"
 compatibility_flags = ["nodejs_compat"]

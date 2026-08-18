@@ -2,6 +2,7 @@
   "name": "temporium",
   "private": true,
   "version": "0.0.1",
+  "license": "MIT",
   "packageManager": "yarn@1.22.22",
   "description": "Tempo Gateway - Payments-first gateway for Tempo blockchain",
   "workspaces": [
@@ -21,6 +22,8 @@
     "check:push": "yarn lint && yarn build",
     "dev:wallet": "turbo run dev --filter=@temporium/wallet-api --filter=@temporium/wallet-web",
     "build:wallet": "turbo run build --filter=@temporium/wallet-api --filter=@temporium/wallet-web",
+    "release:prod": "yarn workspace @temporium/wallet-api release:prod && yarn workspace @temporium/wallet-web deploy:prod",
+    "release:prod:web": "yarn workspace @temporium/wallet-web deploy:prod",
     "postinstall": "patch-package && node scripts/patch-ox.js",
     "prepare": "husky"
   },
